@@ -1,0 +1,3 @@
+/home/clo/Codes/speech-analysis/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/clo/Codes/speech-analysis/cmake-build-debug/CMakeFiles/speech_analysis.dir
+/home/clo/Codes/speech-analysis/cmake-build-debug/CMakeFiles/edit_cache.dir
