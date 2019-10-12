@@ -6,6 +6,8 @@
 #include "AudioCapture.h"
 #include <iostream>
 
+using namespace Eigen;
+
 void AudioCapture::readCallback(struct SoundIoInStream *instream, int frame_count_min, int frame_count_max) {
 
     auto ctx = static_cast<RecordContext *>(instream->userdata);
@@ -13,18 +15,18 @@ void AudioCapture::readCallback(struct SoundIoInStream *instream, int frame_coun
     struct SoundIoChannelArea *areas;
     int ret;
 
-    char *writePtr = soundio_ring_buffer_write_ptr(ctx->buffer);
+    const int writeFrames = frame_count_max;
 
-    const int freeBytes = soundio_ring_buffer_free_count(ctx->buffer);
-    const int freeCount = freeBytes / instream->bytes_per_frame;
+    ArrayXd block(writeFrames);
+    int blockIndex = 0;
 
-    if (freeCount < frame_count_min) {
-        throw SioException("Read callback", "ring buffer overflow");
-    }
+    const bool isDoublePrecision = (instream->format == SoundIoFormatFloat64NE)
+                                    || (instream->format == SoundIoFormatFloat64FE);
 
-    const int writeFrames = std::min(freeCount, frame_count_max);
+    const bool isNativeEndian = (instream->format == SoundIoFormatFloat32NE)
+                                || (instream->format == SoundIoFormatFloat64NE);
+
     int framesLeft = writeFrames;
-
     while (true) {
         int frameCount = framesLeft;
 
@@ -39,14 +41,42 @@ void AudioCapture::readCallback(struct SoundIoInStream *instream, int frame_coun
 
         if (areas == nullptr) {
             //overflow; fill the ring buffer with silence.
-            memset(writePtr, 0, frameCount * instream->bytes_per_frame);
+            block.setZero();
         } else {
+            // For each frame...
             for (int frame = 0; frame < frameCount; ++frame) {
+                // Average the values of each channel...
+                double sum = 0.0;
+
                 for (int ch = 0; ch < instream->layout.channel_count; ++ch) {
-                    memcpy(writePtr, areas[ch].ptr, instream->bytes_per_sample);
-                    areas[ch].ptr += areas[ch].step;
-                    writePtr += instream->bytes_per_sample;
+                    if (isDoublePrecision) {
+                        double y;
+
+                        memcpy(&y, areas[ch].ptr, instream->bytes_per_sample);
+                        areas[ch].ptr += areas[ch].step;
+
+                        if (!isNativeEndian) {
+                            swapEndian(&y);
+                        }
+
+                        sum += y;
+                    } else {
+                        float y;
+
+                        memcpy(&y, areas[ch].ptr, instream->bytes_per_sample);
+                        areas[ch].ptr += areas[ch].step;
+
+                        if (!isNativeEndian) {
+                            swapEndian(&y);
+                        }
+
+                        sum += y;
+                    }
                 }
+
+                sum /= static_cast<double>(instream->layout.channel_count);
+
+                block(blockIndex++) = sum;
             }
         }
 
@@ -61,8 +91,7 @@ void AudioCapture::readCallback(struct SoundIoInStream *instream, int frame_coun
         }
     }
 
-    int advanceBytes = writeFrames * instream->bytes_per_frame;
-    soundio_ring_buffer_advance_write_ptr(ctx->buffer, advanceBytes);
+    ctx->buffer.writeInto(block);
 
 }
 

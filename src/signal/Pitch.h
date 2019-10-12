@@ -17,8 +17,6 @@ namespace Pitch {
 
     void estimate_AMDF(const Eigen::ArrayXd & x, double fs, Pitch::Estimation & result);
 
-    void estimate_DynWav(const Eigen::ArrayXd & x, double fs, Pitch::Estimation & result);
-
 }
 
 #endif //SPEECH_ANALYSIS_PITCH_H

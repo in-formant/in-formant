@@ -15,17 +15,33 @@ set(SOURCES
         src/audio/AudioCapture.cpp
         src/audio/AudioCapture_callbacks.cpp
         src/audio/AudioCapture.h
-        src/signal/LPC.cpp
-        src/signal/LPC.h
-        src/signal/Filter.cpp
-        src/signal/Filter.h
-        src/signal/Polynomial_impl.h
-        src/signal/Polynomial.h
+        src/audio/RingBuffer.cpp
+        src/audio/RingBuffer.h
         src/gui/Spectrogram.cpp
         src/gui/Spectrogram.h
         src/signal/Pitch.h
         src/signal/Pitch_AMDF.cpp
-        src/signal/Pitch_DynWav.cpp)
+        src/signal/Filter.cpp
+        src/signal/Filter.h
+        src/signal/Window.cpp
+        src/signal/Window.h
+        src/signal/Polynomial_impl.h
+        src/signal/Polynomial.h
+        src/signal/Resample.cpp
+        src/signal/Resample.h
+        src/signal/FFT.cpp
+        src/signal/FFT.h
+        src/signal/FFT_core.h
+        src/signal/LPC_filter.cpp
+        src/signal/LPC_Frame_auto.cpp
+        src/signal/LPC_Frame_covar.cpp
+        src/signal/LPC_Frame_huber.cpp
+        src/signal/LPC_Frame.h
+        src/signal/LPC_huber_stat.cpp
+        src/signal/LPC_huber.h
+        src/signal/LPC.cpp
+        src/signal/LPC_huber.cpp
+        src/signal/LPC.h)
 
 add_executable(speech_analysis ${SOURCES})
 

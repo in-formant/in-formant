@@ -2,6 +2,7 @@
 // Created by clo on 12/09/2019.
 //
 
+#include <iostream>
 #include <sstream>
 #include "AnalyserWindow.h"
 #include "../Exceptions.h"
@@ -9,6 +10,8 @@
 #include "../signal/LPC.h"
 #include "../signal/Filter.h"
 #include "../signal/Pitch.h"
+#include "../signal/Window.h"
+#include "../signal/Resample.h"
 
 using namespace Eigen;
 
@@ -17,7 +20,7 @@ AnalyserWindow::AnalyserWindow() noexcept(false) {
     targetHeight = WINDOW_HEIGHT;
     headerTex = nullptr;
 
-    audioData.setZero(1024);
+    audioData.setZero(500);
 
     int ret;
 
@@ -136,8 +139,8 @@ void AnalyserWindow::initTextures() {
     spectrumTex = SDL_CreateTexture(renderer,
                                    SDL_PIXELFORMAT_RGBA32,
                                    SDL_TEXTUREACCESS_TARGET,
-                                   400,
-                                   300);
+                                   800,
+                                   600);
 }
 
 void AnalyserWindow::render() {
@@ -164,33 +167,44 @@ void AnalyserWindow::render() {
 
 void AnalyserWindow::update() {
 
-    // Calculate LP spectrum.
+    // Read captured audio.
+    audioCapture.readBlock(audioData);
 
-    auto& x = audioData;
-    double fs = audioCapture.getSampleRate();
+    // Downsample to 16kHz;
+    double fs = 16000;
+    ArrayXd x = Resample::resample(audioData, audioCapture.getSampleRate(), fs, 5);
 
-    audioCapture.readBlock(x);
+    // Remove DC component if there is any.
+    x -= x.mean();
+
+    // Apply windowing.
+    Window::applyHamming(x);
 
     // Estimate pitch with two methods.
     std::stringstream builder(std::ios_base::out);
-    Pitch::Estimation est;
+    Pitch::Estimation est{};
 
     Pitch::estimate_AMDF(x, fs, est);
-    builder << "Pitch (AMDF) = " << std::round(est.pitch) << "    ";
+    if (est.isVoiced) {
+        builder << "Voiced: " << std::round(est.pitch) << " Hz";
+    }
+    else {
+        builder << "Voiceless";
+    }
 
-    //Pitch::estimate_DynWav(x, fs, est);
-    //builder << "Pitch (DynWav) = " << std::round(est.pitch);
+    /*Pitch::estimate_DynWav(x, fs, est);
+    builder << "Pitch (DynWav) = " << std::round(est.pitch);*/
 
     pitchString = builder.str();
 
     // Estimate LPC coefficients.
-    ArrayXd a;
-    LPC::analyse(x, 120, a);
+    /*ArrayXd a;
+    LPC::analyse_auto(x, 22, a);
 
     ArrayXcd h;
     Filter::responseFIR(a, spectrogram.getFrequencyArray(), fs, h);
 
-    spectrogram.setSpectrumArray(abs(h));
+    spectrogram.setSpectrumArray(abs(h));*/
 
 }
 

@@ -11,7 +11,7 @@ static constexpr double maxFrequency = 600;
 static constexpr double ratio = 5.0;
 static constexpr double sensitivity = 0.1;
 
-void Pitch::estimate_AMDF(const ArrayXd &x, double fs, Pitch::Estimation & result) {
+void Pitch::estimate_AMDF(const ArrayXd & x, double fs, Pitch::Estimation & result) {
 
     const int maxShift = x.size();
 

@@ -27,6 +27,7 @@ void Spectrogram::calculateFrequencyArray() {
     frequencies.resize(binCount);
 
     for (int k = 0; k < binCount; ++k) {
+        //frequencies(k) = minFrequency + (static_cast<double>(k) * (maxFrequency - minFrequency)) / static_cast<double>(binCount);
         frequencies(k) = std::pow(10.0, logMin + (static_cast<double>(k) * (logMax - logMin)) / static_cast<double>(binCount));
     }
 
@@ -65,12 +66,13 @@ void Spectrogram::render(SDL_Renderer * renderer, SDL_Texture * texture, SDL_Col
 
     for (int k = 0; k < binCount; ++k) {
 
-        SDL_FPoint p;
+        SDL_FPoint & p = points.at(k);
 
-        p.x = static_cast<float>(width * (frequencies(k) - minFrequency) / (maxFrequency - minFrequency));
-        p.y = static_cast<float>(height * (1 - .5 * spectrum(k)));
+        double freq = frequencies(k);
+        double gain = spectrum(k);
 
-        points.push_back(p);
+        p.x = static_cast<float>(width * (freq - minFrequency) / (maxFrequency - minFrequency));
+        p.y = static_cast<float>(height * (1 - 0.05 * gain));
 
     }
 

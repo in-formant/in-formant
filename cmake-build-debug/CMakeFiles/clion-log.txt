@@ -1,4 +1,0 @@
-/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/clo/Codes/speech-analysis
--- Configuring done
--- Generating done
--- Build files have been written to: /home/clo/Codes/speech-analysis/cmake-build-debug

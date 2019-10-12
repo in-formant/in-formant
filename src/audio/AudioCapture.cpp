@@ -14,11 +14,10 @@ static constexpr std::array<SoundIoFormat, 4> prioritisedFormats = {
 };
 
 static constexpr std::array<int, 5> prioritisedSampleRates = {
-        48000,
+        32000,
+        22050,
         44100,
-        24000,
-        16000,
-        8000,
+        48000,
 };
 
 template<typename T>
@@ -147,17 +146,7 @@ void AudioCapture::openInputStream() {
               << soundio_format_string(inputStream->format) << " interleaved" << std::endl;
 
     // Create the ring buffer.
-
-    if (audioContext.buffer != nullptr) {
-        soundio_ring_buffer_destroy(audioContext.buffer);
-    }
-
-    int capacity = BUFFER_SAMPLE_COUNT(inputStream->sample_rate) * inputStream->bytes_per_frame;
-
-    audioContext.buffer = soundio_ring_buffer_create(soundio, capacity);
-    if (audioContext.buffer == nullptr) {
-        throw SioException("Unable to create ring buffer", "out of memory");
-    }
+    audioContext.buffer.setCapacity(BUFFER_SAMPLE_COUNT(inputStream->sample_rate));
 
     // Start the input stream.
 
@@ -172,62 +161,9 @@ int AudioCapture::getSampleRate() const noexcept {
     return inputStream->sample_rate;
 }
 
-void AudioCapture::readBlock(Eigen::ArrayXd &capture) const noexcept {
-
-    using namespace Eigen;
-
-    soundio_flush_events(soundio);
-
-    int length = CAPTURE_SAMPLE_COUNT(inputStream->sample_rate);
-    int captureBytes = length * inputStream->bytes_per_frame;
-
-    if (soundio_ring_buffer_fill_count(audioContext.buffer) < captureBytes) {
-        return;
-    }
-
-    int channelCount = inputStream->layout.channel_count;
-
-    char *readPtr = soundio_ring_buffer_read_ptr(audioContext.buffer);
-    void *targetBuf = malloc(captureBytes);
-
-    memcpy(targetBuf, readPtr, captureBytes);
-
-    // Check if format is double- or single-precision.
-
-    enum SoundIoFormat format = inputStream->format;
-
-    ArrayXXd data(channelCount, length);
-
-    if (format == SoundIoFormatFloat64NE || format == SoundIoFormatFloat64FE) {
-
-        auto array = static_cast<double *>(targetBuf);
-
-        // If foreign endian, convert to native endian.
-        if (format == SoundIoFormatFloat64FE) {
-            convertEndian(array, length);
-        }
-
-        data = Map<ArrayXXd>(array, channelCount, length);
-
-    } else {
-
-        auto array = static_cast<float *>(targetBuf);
-
-        // If foreign endian, convert to native endian.
-        if (format == SoundIoFormatFloat32FE) {
-            convertEndian(array, length);
-        }
-
-        data = Map<ArrayXXf>(array, channelCount, length).cast<double>();
-
-    }
-
-    // Average over all channels.
-    capture = data.colwise().mean();
-
-    free(targetBuf);
-    soundio_ring_buffer_advance_read_ptr(audioContext.buffer, captureBytes);
-
+void AudioCapture::readBlock(Eigen::ArrayXd & capture) noexcept {
+    capture.resize(CAPTURE_SAMPLE_COUNT(inputStream->sample_rate));
+    audioContext.buffer.readFrom(capture);
 }
 
 template<typename T>

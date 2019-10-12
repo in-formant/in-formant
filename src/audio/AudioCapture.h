@@ -10,14 +10,15 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include "RingBuffer.h"
 
 #define CAPTURE_DURATION 60
 #define CAPTURE_SAMPLE_COUNT(sampleRate) ((CAPTURE_DURATION * sampleRate) / 1000)
 
-#define BUFFER_SAMPLE_COUNT(sampleRate) ((5 * CAPTURE_DURATION * sampleRate) / 1000)
+#define BUFFER_SAMPLE_COUNT(sampleRate) ((20 * CAPTURE_DURATION * sampleRate) / 1000)
 
 struct RecordContext {
-    struct SoundIoRingBuffer * buffer;
+    RingBuffer buffer;
 };
 
 class AudioCapture {
@@ -37,7 +38,7 @@ public:
     [[nodiscard]]
     const std::vector<std::string> & getAvailableCaptureDevices() const noexcept;
 
-    void readBlock(Eigen::ArrayXd & capture) const noexcept;
+    void readBlock(Eigen::ArrayXd & capture) noexcept;
 
 private:
     struct SoundIo * soundio;
