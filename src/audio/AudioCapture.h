@@ -5,20 +5,21 @@
 #ifndef SPEECH_ANALYSIS_AUDIOCAPTURE_H
 #define SPEECH_ANALYSIS_AUDIOCAPTURE_H
 
-#include <soundio/soundio.h>
+#include <portaudio.h>
 #include <Eigen/Core>
 #include <string>
 #include <memory>
 #include <vector>
 #include "RingBuffer.h"
 
-#define CAPTURE_DURATION 60
+#define CAPTURE_DURATION 60.0
 #define CAPTURE_SAMPLE_COUNT(sampleRate) ((CAPTURE_DURATION * sampleRate) / 1000)
 
-#define BUFFER_SAMPLE_COUNT(sampleRate) ((20 * CAPTURE_DURATION * sampleRate) / 1000)
+#define BUFFER_SAMPLE_COUNT(sampleRate) ((10 * CAPTURE_DURATION * sampleRate) / 1000)
 
 struct RecordContext {
     RingBuffer buffer;
+    PaSampleFormat format;
 };
 
 class AudioCapture {
@@ -26,28 +27,26 @@ public:
     AudioCapture();
     ~AudioCapture();
 
-    void selectCaptureDevice(int index = -1);
     void openInputStream();
+    void startInputStream();
 
-    static void readCallback(struct SoundIoInStream * instream, int frame_count_min, int frame_count_max);
-    static void overflowCallback(struct SoundIoInStream * instream);
+    static int readCallback(const void * input, void * output,
+                     unsigned long frameCount,
+                     const PaStreamCallbackTimeInfo * timeInfo,
+                     PaStreamCallbackFlags statusFlags,
+                     void * userData);
 
     [[nodiscard]]
     int getSampleRate() const noexcept;
 
-    [[nodiscard]]
-    const std::vector<std::string> & getAvailableCaptureDevices() const noexcept;
-
     void readBlock(Eigen::ArrayXd & capture) noexcept;
 
 private:
-    struct SoundIo * soundio;
+    PaError err;
+    PaStream * stream;
 
-    struct SoundIoDevice * inputDevice;
-    int selectedSampleRate;
-    enum SoundIoFormat selectedFormat;
-
-    struct SoundIoInStream * inputStream;
+    PaStreamParameters inputParameters;
+    double sampleRate;
 
     // Ring buffer
     struct RecordContext audioContext;

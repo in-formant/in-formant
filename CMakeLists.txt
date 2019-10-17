@@ -35,6 +35,7 @@ set(SOURCES
         src/signal/LPC_filter.cpp
         src/signal/LPC_Frame_auto.cpp
         src/signal/LPC_Frame_covar.cpp
+        src/signal/LPC_Frame_burg.cpp
         src/signal/LPC_Frame_huber.cpp
         src/signal/LPC_Frame.h
         src/signal/LPC_huber_stat.cpp
@@ -47,19 +48,20 @@ add_executable(speech_analysis ${SOURCES})
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(SDL2 REQUIRED)
+find_package(SDL2_image REQUIRED)
 find_package(SDL2_ttf REQUIRED)
-find_package(SoundIo REQUIRED)
+find_package(PortAudio REQUIRED)
 
 include_directories(
         ${SDL2_INCLUDE_DIR}
         ${SDL2_IMAGE_INCLUDE_DIR}
         ${SDL2_TTF_INCLUDE_DIR}
         ${EIGEN_INCLUDE_DIR}
-        ${SOUNDIO_INCLUDE_DIR})
+        ${PORTAUDIO_INCLUDE_DIRS})
 
 target_link_libraries(speech_analysis
         ${SDL2_LIBRARY}
         ${SDL2_IMAGE_LIBRARIES}
         ${SDL2_TTF_LIBRARIES}
         Eigen3::Eigen
-        ${SOUNDIO_LIBRARY})
+        ${PORTAUDIO_LIBRARIES})

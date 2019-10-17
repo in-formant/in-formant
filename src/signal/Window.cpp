@@ -42,7 +42,6 @@ void Window::applyBlackmanHarris(ArrayXd & x) {
 }
 
 ArrayXd Window::createGaussian(int size) {
-
     ArrayXd win(size);
     double imid = 0.5 * size, edge = std::exp(-12.0);
     for (int i = 1; i <= size; ++i) {

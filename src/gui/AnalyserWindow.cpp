@@ -8,6 +8,7 @@
 #include "../Exceptions.h"
 #include "SDLUtils.h"
 #include "../signal/LPC.h"
+#include "../signal/LPC_Frame.h"
 #include "../signal/Filter.h"
 #include "../signal/Pitch.h"
 #include "../signal/Window.h"
@@ -110,22 +111,22 @@ void AnalyserWindow::mainLoop() {
             continue;
         }
 
-        // Check for update.
-        update();
-
-        // Check for render.
-
         currentTime = SDL_GetTicks();
 
-        if (currentTime - previousRender > RENDER_DELAY) {
+        // Check for update.
+        if (currentTime - previousUpdate > UPDATE_DELAY) {
+            update();
+            previousUpdate = SDL_GetTicks();
+        }
 
+        // Check for render.
+        if (currentTime - previousRender > RENDER_DELAY) {
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
             SDL_RenderClear(renderer);
             render();
             SDL_RenderPresent(renderer);
 
             previousRender = SDL_GetTicks();
-
         }
 
     }
@@ -174,12 +175,6 @@ void AnalyserWindow::update() {
     double fs = 16000;
     ArrayXd x = Resample::resample(audioData, audioCapture.getSampleRate(), fs, 5);
 
-    // Remove DC component if there is any.
-    x -= x.mean();
-
-    // Apply windowing.
-    Window::applyHamming(x);
-
     // Estimate pitch with two methods.
     std::stringstream builder(std::ios_base::out);
     Pitch::Estimation est{};
@@ -191,20 +186,29 @@ void AnalyserWindow::update() {
     else {
         builder << "Voiceless";
     }
-
-    /*Pitch::estimate_DynWav(x, fs, est);
-    builder << "Pitch (DynWav) = " << std::round(est.pitch);*/
-
     pitchString = builder.str();
 
     // Estimate LPC coefficients.
-    /*ArrayXd a;
-    LPC::analyse_auto(x, 22, a);
+    const double preemph = 50.0;
+    if (preemph < fs / 2.0) {
+        Filter::preEmphasis(x, fs, preemph);
+    }
 
-    ArrayXcd h;
-    Filter::responseFIR(a, spectrogram.getFrequencyArray(), fs, h);
+    Window::applyBlackmanHarris(x);
 
-    spectrogram.setSpectrumArray(abs(h));*/
+    LPC::Frame lpc = { .nCoefficients = 18 };
+
+    if (LPC::frame_auto(x, lpc)) {
+
+        ArrayXcd h;
+        Filter::responseFIR(lpc.a, spectrogram.getFrequencyArray(), fs, h);
+
+        // Normalize.
+        ArrayXd gain = abs(h);
+        gain /= gain.maxCoeff();
+
+        spectrogram.setSpectrumArray(gain);
+    }
 
 }
 

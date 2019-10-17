@@ -2,101 +2,55 @@
 // Created by clo on 13/09/2019.
 //
 
-#include "../Exceptions.h"
 #include "AudioCapture.h"
 #include <iostream>
 
 using namespace Eigen;
 
-void AudioCapture::readCallback(struct SoundIoInStream *instream, int frame_count_min, int frame_count_max) {
+template<typename T>
+static void convertToFloat(ArrayXd & dst, T * src, unsigned long len, T offset, T max);
 
-    auto ctx = static_cast<RecordContext *>(instream->userdata);
+int AudioCapture::readCallback(const void * input, void * output,
+                               unsigned long frameCount,
+                               const PaStreamCallbackTimeInfo * timeInfo,
+                               PaStreamCallbackFlags statusFlags,
+                               void * userData)
+{
+    auto ctx = static_cast<RecordContext *>(userData);
 
-    struct SoundIoChannelArea *areas;
-    int ret;
+    ArrayXd block;
 
-    const int writeFrames = frame_count_max;
-
-    ArrayXd block(writeFrames);
-    int blockIndex = 0;
-
-    const bool isDoublePrecision = (instream->format == SoundIoFormatFloat64NE)
-                                    || (instream->format == SoundIoFormatFloat64FE);
-
-    const bool isNativeEndian = (instream->format == SoundIoFormatFloat32NE)
-                                || (instream->format == SoundIoFormatFloat64NE);
-
-    int framesLeft = writeFrames;
-    while (true) {
-        int frameCount = framesLeft;
-
-        ret = soundio_instream_begin_read(instream, &areas, &frameCount);
-        if (ret != 0) {
-            throw SioException("Unable to begin read", ret);
-        }
-
-        if (frameCount == 0) {
-            break;
-        }
-
-        if (areas == nullptr) {
-            //overflow; fill the ring buffer with silence.
-            block.setZero();
-        } else {
-            // For each frame...
-            for (int frame = 0; frame < frameCount; ++frame) {
-                // Average the values of each channel...
-                double sum = 0.0;
-
-                for (int ch = 0; ch < instream->layout.channel_count; ++ch) {
-                    if (isDoublePrecision) {
-                        double y;
-
-                        memcpy(&y, areas[ch].ptr, instream->bytes_per_sample);
-                        areas[ch].ptr += areas[ch].step;
-
-                        if (!isNativeEndian) {
-                            swapEndian(&y);
-                        }
-
-                        sum += y;
-                    } else {
-                        float y;
-
-                        memcpy(&y, areas[ch].ptr, instream->bytes_per_sample);
-                        areas[ch].ptr += areas[ch].step;
-
-                        if (!isNativeEndian) {
-                            swapEndian(&y);
-                        }
-
-                        sum += y;
-                    }
-                }
-
-                sum /= static_cast<double>(instream->layout.channel_count);
-
-                block(blockIndex++) = sum;
-            }
-        }
-
-        ret = soundio_instream_end_read(instream);
-        if (ret != 0) {
-            throw SioException("Unable to end read", ret);
-        }
-
-        framesLeft -= frameCount;
-        if (framesLeft <= 0) {
-            break;
-        }
+    if (ctx->format == paFloat32) {
+        auto inPtr = static_cast<const float *>(input);
+        block = Map<const ArrayXf>(inPtr, frameCount).cast<double>();
+    }
+    else if (ctx->format == paInt32) {
+        auto inPtr = static_cast<const int32_t *>(input);
+        convertToFloat<const int32_t>(block, inPtr, frameCount, 0, INT32_MAX);
+    }
+    else if (ctx->format == paInt16) {
+        auto inPtr = static_cast<const int16_t *>(input);
+        convertToFloat<const int16_t>(block, inPtr, frameCount, 0, INT16_MAX);
+    }
+    else if (ctx->format == paInt8) {
+        auto inPtr = static_cast<const int8_t *>(input);
+        convertToFloat<const int8_t>(block, inPtr, frameCount, 0, INT8_MAX);
+    }
+    else if (ctx->format == paUInt8) {
+        auto inPtr = static_cast<const u_int8_t *>(input);
+        convertToFloat<const u_int8_t>(block, inPtr, frameCount, 128, INT8_MAX);
     }
 
     ctx->buffer.writeInto(block);
 
+    return paContinue;
+
 }
 
-void AudioCapture::overflowCallback(struct SoundIoInStream *instream) {
-    static int count = 0;
-
-    std::cerr << "Overflow " << ++count << std::endl;
+template<typename T>
+void convertToFloat(ArrayXd & dst, T * src, unsigned long len, T offset, T max)
+{
+    for (int i = 0; i < len; ++i) {
+        dst(i) = static_cast<double>(offset + src[i]) / static_cast<double>(max);
+    }
 }

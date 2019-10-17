@@ -13,7 +13,6 @@ bool LPC::frame_covar(const ArrayXd & x, LPC::Frame & lpc) {
     const int n = x.size();
     const int m = lpc.nCoefficients;
     int i = 1;
-    double gain;
 
     lpc.a.setZero(m);
 
@@ -23,14 +22,14 @@ bool LPC::frame_covar(const ArrayXd & x, LPC::Frame & lpc) {
     ArrayXd beta = ArrayXd::Zero(m + 1);
     ArrayXd cc = ArrayXd::Zero(m + 2);
 
-    gain = 0.0;
+    lpc.gain = 0.0;
     for (i = m + 1; i <= n; ++i) {
-        gain += x(i - 1) * x(i - 1);
+        lpc.gain += x(i - 1) * x(i - 1);
         cc(1) += x(i - 1) * x(i - 2);
         cc(2) += x(i - 2) * x(i - 2);
     }
 
-    if (gain == 0.0) {
+    if (lpc.gain == 0.0) {
         i = 1;
         goto end;
     }
@@ -40,7 +39,7 @@ bool LPC::frame_covar(const ArrayXd & x, LPC::Frame & lpc) {
     a(1) = 1.0;
     a(2) = grc(1) = -cc(1) / cc(2);
 
-    gain += grc(1) * cc(1);
+    lpc.gain += grc(1) * cc(1);
 
     for (i = 2; i <= m; ++i) {
         double s = 0.0;
@@ -89,8 +88,8 @@ bool LPC::frame_covar(const ArrayXd & x, LPC::Frame & lpc) {
         }
         a(i + 1) = grc(i);
         s = grc(i) * grc(i) * beta(i);
-        gain -= s;
-        if (gain <= 0.0)
+        lpc.gain -= s;
+        if (lpc.gain <= 0.0)
             goto end;
     }
 

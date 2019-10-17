@@ -13,7 +13,25 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
+      <change afterPath="$PROJECT_DIR$/cmake/FindPortAudio.cmake" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/signal/LPC_Frame_burg.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake/FindSoundIo.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Exceptions.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Exceptions.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture_callbacks.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture_callbacks.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/Filter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/Filter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/Filter.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/Filter.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC_Frame.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC_Frame.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC_Frame_auto.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC_Frame_auto.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC_Frame_covar.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC_Frame_covar.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/Window.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/Window.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -59,17 +77,17 @@
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
+    <property name="settings.editor.selected.configurable" value="dynamic.analysis.tools.profiler" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/src/signal" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/gui" />
       <recent name="$PROJECT_DIR$/src/audio" />
       <recent name="$PROJECT_DIR$/fonts/cruft" />
       <recent name="$PROJECT_DIR$/src" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/signal" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -121,6 +139,12 @@
       <workItem from="1570874671894" duration="1122000" />
       <workItem from="1570881739905" duration="10560000" />
       <workItem from="1571009557720" duration="786000" />
+      <workItem from="1571116183542" duration="122000" />
+      <workItem from="1571151530540" duration="822000" />
+      <workItem from="1571311158356" duration="3431000" />
+      <workItem from="1571329982221" duration="1974000" />
+      <workItem from="1571335132830" duration="2516000" />
+      <workItem from="1571337755377" duration="4960000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>

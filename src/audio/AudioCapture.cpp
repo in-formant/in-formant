@@ -6,18 +6,24 @@
 #include "AudioCapture.h"
 #include "../Exceptions.h"
 
-static constexpr std::array<SoundIoFormat, 4> prioritisedFormats = {
-        SoundIoFormatFloat64NE,
-        SoundIoFormatFloat32NE,
-        SoundIoFormatFloat64FE,
-        SoundIoFormatFloat32FE,
+static constexpr std::array<int, 2> preferredLayouts = {
+    1, 2
 };
 
-static constexpr std::array<int, 5> prioritisedSampleRates = {
-        32000,
-        22050,
-        44100,
-        48000,
+static constexpr std::array<PaSampleFormat, 5> preferredFormats = {
+    paFloat32,
+    paInt32,
+    paInt16,
+    paInt8,
+    paUInt8,
+};
+
+static constexpr std::array<double, 5> preferredSampleRates = {
+    16000,
+    22050,
+    32000,
+    44100,
+    48000,
 };
 
 template<typename T>
@@ -25,144 +31,92 @@ static void convertEndian(T array[], int length);
 
 AudioCapture::AudioCapture() {
 
-    SDL_zero(audioContext);
-
-    int ret;
-
-    soundio = soundio_create();
-    if (soundio == nullptr) {
-        throw SioException("Unable to create instance", "out of memory");
+    err = Pa_Initialize();
+    if (err != paNoError) {
+        throw PaException("Unable to initialise", err);
     }
-
-    ret = soundio_connect(soundio);
-    if (ret != 0) {
-        throw SioException("Unable to connect to a backend", ret);
-    }
-
-    soundio_flush_events(soundio);
-
-    // Select default input device.
-    selectCaptureDevice();
 
     // Open and start input stream.
     openInputStream();
+    startInputStream();
 
 }
 
 AudioCapture::~AudioCapture() {
 
-    soundio_instream_destroy(inputStream);
-    soundio_device_unref(inputDevice);
-    soundio_destroy(soundio);
-
-}
-
-void AudioCapture::selectCaptureDevice(int index) {
-
-    if (index < 0) {
-        // Select default input device.
-        index = soundio_default_input_device_index(soundio);
-    } else if (index >= soundio_input_device_count(soundio)) {
-        throw SioException("Unable to select input device", "index out of range");
+    err = Pa_CloseStream(stream);
+    if (err != paNoError) {
+        std::cerr << "Unable to close stream: " << Pa_GetErrorText(err) << std::endl;
     }
 
-    // Retrieve device description.
-    inputDevice = soundio_get_input_device(soundio, index);
-    if (inputDevice == nullptr) {
-        throw SioException("Unable to select input device", "no input devices available");
+    err = Pa_Terminate();
+    if (err != paNoError) {
+        std::cerr << "Unable to terminate: " << Pa_GetErrorText(err) << std::endl;
     }
 
-    std::cout << "Selected input device: " << inputDevice->name << std::endl;
-
-    if (inputDevice->probe_error != 0) {
-        throw SioException("Unable to probe device", inputDevice->probe_error);
-    }
-
-    soundio_device_sort_channel_layouts(inputDevice);
-
-    // Find preferred channel layout.
-    const struct SoundIoChannelLayout *preferredLayout;
-    const struct SoundIoChannelLayout *layout;
-
-    preferredLayout = soundio_channel_layout_get_default(1);
-    layout = soundio_best_matching_channel_layout(preferredLayout, 1,
-                                                  inputDevice->layouts, inputDevice->layout_count);
-
-    // Find preferred sample rate.
-    int sampleRate = 0;
-
-    for (int preferredSampleRate : prioritisedSampleRates) {
-        if (soundio_device_supports_sample_rate(inputDevice, preferredSampleRate)) {
-            sampleRate = preferredSampleRate;
-            break;
-        }
-    }
-
-    if (sampleRate == 0) {
-        sampleRate = inputDevice->sample_rates[0].max;
-    }
-
-    // Find preferred format.
-    enum SoundIoFormat format = SoundIoFormatInvalid;
-
-    for (auto preferredFormat : prioritisedFormats) {
-        if (soundio_device_supports_format(inputDevice, preferredFormat)) {
-            format = preferredFormat;
-            break;
-        }
-    }
-
-    if (format == SoundIoFormatInvalid) {
-        throw SioException("Unable to create input stream", "floating point format unsupported");
-    }
-
-    // Create input stream.
-    inputStream = soundio_instream_create(inputDevice);
-    if (inputStream == nullptr) {
-        throw SioException("Unable to create input stream", "out of memory");
-    }
-
-    inputStream->layout = *layout;
-    inputStream->format = format;
-    inputStream->sample_rate = sampleRate;
-    inputStream->read_callback = &readCallback;
-    inputStream->overflow_callback = &AudioCapture::overflowCallback;
-    inputStream->userdata = &audioContext;
 }
 
 void AudioCapture::openInputStream() {
 
-    int ret;
+    inputParameters.device = Pa_GetDefaultInputDevice();
+    if (inputParameters.device == paNoDevice) {
+        throw PaException("Unable to open stream", "no default input device");
+    }
+    inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
+    inputParameters.hostApiSpecificStreamInfo = nullptr;
 
-    // Open the input stream.
+    for (int channelCount : preferredLayouts) {
+        inputParameters.channelCount = channelCount;
 
-    ret = soundio_instream_open(inputStream);
-    if (ret != 0) {
-        throw SioException("Unable to open input stream", ret);
+        for (PaSampleFormat format : preferredFormats) {
+            inputParameters.sampleFormat = format;
+
+            for (double preferredSampleRate : preferredSampleRates) {
+
+                err = Pa_IsFormatSupported(&inputParameters, nullptr, preferredSampleRate);
+                if (err == paFormatIsSupported) {
+                    sampleRate = preferredSampleRate;
+                    goto found;
+                }
+            }
+        }
     }
 
-    std::cout << inputStream->layout.name << " "
-              << inputStream->sample_rate << "Hz "
-              << soundio_format_string(inputStream->format) << " interleaved" << std::endl;
+found:
 
-    // Create the ring buffer.
-    audioContext.buffer.setCapacity(BUFFER_SAMPLE_COUNT(inputStream->sample_rate));
+    audioContext.format = inputParameters.sampleFormat;
+    audioContext.buffer.setCapacity(BUFFER_SAMPLE_COUNT(sampleRate));
 
-    // Start the input stream.
+    err = Pa_OpenStream(
+            &stream,
+            &inputParameters,
+            nullptr,
+            sampleRate,
+            paFramesPerBufferUnspecified,
+            paClipOff,
+            &readCallback,
+            &audioContext);
 
-    ret = soundio_instream_start(inputStream);
-    if (ret != 0) {
-        throw SioException("Unable to start input stream", ret);
+    if (err != paNoError) {
+        throw PaException("Unable to open stream", err);
+    }
+}
+
+void AudioCapture::startInputStream() {
+
+    err = Pa_StartStream(stream);
+    if (err != paNoError) {
+        throw PaException("Unable to start stream", err);
     }
 
 }
 
 int AudioCapture::getSampleRate() const noexcept {
-    return inputStream->sample_rate;
+    return sampleRate;
 }
 
 void AudioCapture::readBlock(Eigen::ArrayXd & capture) noexcept {
-    capture.resize(CAPTURE_SAMPLE_COUNT(inputStream->sample_rate));
+    capture.conservativeResize(CAPTURE_SAMPLE_COUNT(sampleRate));
     audioContext.buffer.readFrom(capture);
 }
 

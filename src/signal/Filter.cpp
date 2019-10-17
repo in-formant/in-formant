@@ -44,3 +44,12 @@ void Filter::responseIIR(const ArrayXd & b, const ArrayXd & a, const ArrayXd & f
     h = hb / ha;
 
 }
+
+void Filter::preEmphasis(ArrayXd & x, double samplingFrequency, double preEmphasisFrequency)
+{
+    double preEmphasis = std::exp(-2.0 * M_PI * preEmphasisFrequency / samplingFrequency);
+
+    for (int i = x.size() - 1; i >= 1; --i) {
+        x(i) -= preEmphasis * x(i - 1);
+    }
+}

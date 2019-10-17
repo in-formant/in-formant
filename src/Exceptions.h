@@ -11,7 +11,7 @@
 #include <string>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include <soundio/soundio.h>
+#include <portaudio.h>
 
 
 class GenericException : public std::exception {
@@ -39,10 +39,10 @@ public:
     TTFException(const char * msg) : GenericException("TTF", msg, TTF_GetError) {}
 };
 
-class SioException : public GenericException {
+class PaException : public GenericException {
 public:
-    SioException(const char * msg, int error) : GenericException("Sio", msg, [error]() { return soundio_strerror(error); }) {}
-    SioException(const char * msg, const char * error) : GenericException("Sio", msg, [error]() { return error; }) {}
+    PaException(const char * msg, int error) : GenericException("PortAudio", msg, [error]() { return Pa_GetErrorText(error); }) {}
+    PaException(const char * msg, const char * error) : GenericException("PortAudio", msg, [error]() { return error; }) {}
 
 };
 
