@@ -189,26 +189,24 @@ void AnalyserWindow::update() {
     pitchString = builder.str();
 
     // Estimate LPC coefficients.
-    const double preemph = 50.0;
-    if (preemph < fs / 2.0) {
-        Filter::preEmphasis(x, fs, preemph);
-    }
+    LPC::Frames lpc = LPC::analyseAuto(
+            x,
+            22,
+            30.0 / 1000.0,
+            fs,
+            100.0);
 
-    Window::applyBlackmanHarris(x);
+    ArrayXcd h;
+    Filter::responseFIR(lpc.d_frames.at(0).a,
+                        spectrogram.getFrequencyArray(),
+                        fs,
+                        h);
 
-    LPC::Frame lpc = { .nCoefficients = 18 };
+    // Normalize.
+    ArrayXd gain = abs(h);
+    gain /= gain.maxCoeff();
 
-    if (LPC::frame_auto(x, lpc)) {
-
-        ArrayXcd h;
-        Filter::responseFIR(lpc.a, spectrogram.getFrequencyArray(), fs, h);
-
-        // Normalize.
-        ArrayXd gain = abs(h);
-        gain /= gain.maxCoeff();
-
-        spectrogram.setSpectrumArray(gain);
-    }
+    spectrogram.setSpectrumArray(gain);
 
 }
 

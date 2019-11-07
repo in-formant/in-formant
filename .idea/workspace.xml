@@ -12,25 +12,14 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
-      <change afterPath="$PROJECT_DIR$/cmake/FindPortAudio.cmake" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/signal/LPC_Frame_burg.cpp" afterDir="false" />
+    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Replaced use of soundio with portaudio">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake/FindSoundIo.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Exceptions.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Exceptions.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture_callbacks.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture_callbacks.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/signal/Filter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/Filter.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/signal/Filter.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/Filter.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/signal/LPC.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/signal/LPC.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/signal/LPC_Frame.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC_Frame.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/signal/LPC_Frame_auto.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC_Frame_auto.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/signal/LPC_Frame_covar.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC_Frame_covar.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC_huber.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC_huber.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/signal/Window.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/Window.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -144,7 +133,12 @@
       <workItem from="1571311158356" duration="3431000" />
       <workItem from="1571329982221" duration="1974000" />
       <workItem from="1571335132830" duration="2516000" />
-      <workItem from="1571337755377" duration="4960000" />
+      <workItem from="1571337755377" duration="5147000" />
+      <workItem from="1571343470370" duration="58000" />
+      <workItem from="1571395899412" duration="2849000" />
+      <workItem from="1571401902145" duration="1347000" />
+      <workItem from="1571406709606" duration="149000" />
+      <workItem from="1573110564161" duration="2668000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -174,7 +168,14 @@
       <option name="project" value="LOCAL" />
       <updated>1570904715810</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Replaced use of soundio with portaudio">
+      <created>1571342897170</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1571342897170</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -239,6 +240,7 @@
     </ignored-roots>
     <MESSAGE value="Added gitignore" />
     <MESSAGE value="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat." />
-    <option name="LAST_COMMIT_MESSAGE" value="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat." />
+    <MESSAGE value="Replaced use of soundio with portaudio" />
+    <option name="LAST_COMMIT_MESSAGE" value="Replaced use of soundio with portaudio" />
   </component>
 </project>

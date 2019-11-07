@@ -22,7 +22,7 @@ LPC::Frames robust(const LPC::Frames & lpc1, const ArrayXd & _sound,
     int p = lpc1.maxnCoefficients;
     int frameLength = std::round(windowDuration * samplingFrequency);
 
-    LPC::shortTermAnalysis(_sound, windowDuration, samplingFrequency, &numberOfFrames, &t1);
+    LPC::shortTermAnalysis(_sound, windowDuration, samplingFrequency, 5.0 / 1000.0, &numberOfFrames, &t1);
 
     ArrayXd sound(_sound);
     ArrayXd sframe(frameLength);

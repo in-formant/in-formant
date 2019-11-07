@@ -30,7 +30,7 @@ namespace LPC {
         Robust = 3,
     };
 
-    void shortTermAnalysis(const Eigen::ArrayXd & sound, double windowDuration, double timeStep, int * numberOfFrames, double * firstTime);
+    void shortTermAnalysis(const Eigen::ArrayXd & sound, double windowDuration, double samplingFrequency, double timeStep, int * numberOfFrames, double * firstTime);
 
     Frames refineRobust(const Frames & lpc, const Eigen::ArrayXd & sound,
                         double analysisWidth, double preEmphasisFrequency,
