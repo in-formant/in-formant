@@ -3,7 +3,7 @@
 //
 
 #include "LPC.h"
-#include "LPC_Frame.h"
+#include "Frame/LPC_Frame.h"
 
 using namespace Eigen;
 

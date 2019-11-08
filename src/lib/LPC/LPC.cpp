@@ -4,9 +4,9 @@
 
 #include <iostream>
 #include "LPC.h"
-#include "LPC_Frame.h"
-#include "Window.h"
-#include "Filter.h"
+#include "Frame/LPC_Frame.h"
+#include "../Signal/Window.h"
+#include "../Signal/Filter.h"
 
 using namespace Eigen;
 

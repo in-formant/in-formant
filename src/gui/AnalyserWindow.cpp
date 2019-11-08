@@ -7,12 +7,14 @@
 #include "AnalyserWindow.h"
 #include "../Exceptions.h"
 #include "SDLUtils.h"
-#include "../signal/LPC.h"
-#include "../signal/LPC_Frame.h"
-#include "../signal/Filter.h"
-#include "../signal/Pitch.h"
-#include "../signal/Window.h"
-#include "../signal/Resample.h"
+#include "../lib/LPC/LPC.h"
+#include "../lib/LPC/Frame/LPC_Frame.h"
+#include "../lib/LPC/LPC_huber.h"
+#include "../lib/Pitch/Pitch.h"
+#include "../lib/Formant/Formant.h"
+#include "../lib/Signal/Filter.h"
+#include "../lib/Signal/Window.h"
+#include "../lib/Signal/Resample.h"
 
 using namespace Eigen;
 
@@ -147,23 +149,35 @@ void AnalyserWindow::initTextures() {
 void AnalyserWindow::render() {
     // Some variables for drawing.
     SDL_FPoint pos;
+    SDL_Texture * pitchTex;
+    SDL_Texture * formantTex;
+
+    // Draw spectrogram first.
+    spectrogram.render(renderer, spectrumTex);
+    pos = {0.5, 0.5};
+    SDL::renderRelativeToCenter(renderer, spectrumTex, targetWidth, targetHeight, &pos);
 
     // Draw header text.
     pos = {0.1, 0.05};
     SDL::renderRelativeToCenter(renderer, headerTex, targetWidth, targetHeight, &pos);
 
-    // Draw spectrogram
-    spectrogram.render(renderer, spectrumTex);
-    pos = {0.5, 0.5};
-    SDL::renderRelativeToCenter(renderer, spectrumTex, targetWidth, targetHeight, &pos);
-
-    // Draw pitch estimation(s)
-    SDL_Texture * pitchTex = SDL::renderText(renderer, font, pitchString.c_str(), {255,255,255});
+    // Draw pitch estimation.
+    pitchTex = SDL::renderText(renderer, font, pitchString.c_str(), {255,255,255});
 
     pos = {0.7, 0.05};
     SDL::renderRelativeToCenter(renderer, pitchTex, targetWidth, targetHeight, &pos);
 
     SDL_DestroyTexture(pitchTex);
+
+    // Draw formant estimations.
+    for (int i = 0; i < formantString.size(); ++i) {
+        formantTex = SDL::renderText(renderer, font, formantString.at(i).c_str(), {255, 255, 255});
+
+        pos = {0.1, 0.2f + i * 0.05f};
+        SDL::renderRelativeToCenter(renderer, formantTex, targetWidth, targetHeight, &pos);
+
+        SDL_DestroyTexture(formantTex);
+    }
 }
 
 void AnalyserWindow::update() {
@@ -171,42 +185,62 @@ void AnalyserWindow::update() {
     // Read captured audio.
     audioCapture.readBlock(audioData);
 
-    // Downsample to 16kHz;
-    double fs = 16000;
-    ArrayXd x = Resample::resample(audioData, audioCapture.getSampleRate(), fs, 5);
+    // Downsample.
+    double fs = 10000;
+    ArrayXd x = Resample::resample(audioData, audioCapture.getSampleRate(), fs, 50);
 
     // Estimate pitch with two methods.
-    std::stringstream builder(std::ios_base::out);
     Pitch::Estimation est{};
 
+    std::stringstream pitchSB(std::ios_base::out);
     Pitch::estimate_AMDF(x, fs, est);
     if (est.isVoiced) {
-        builder << "Voiced: " << std::round(est.pitch) << " Hz";
+        pitchSB << "Voiced: " << std::round(est.pitch) << " Hz";
     }
     else {
-        builder << "Voiceless";
+        pitchSB << "Voiceless";
     }
-    pitchString = builder.str();
+    pitchString = pitchSB.str();
 
     // Estimate LPC coefficients.
-    LPC::Frames lpc = LPC::analyseAuto(
+    /*LPC::Frames lpc = LPC::analyse(
             x,
-            22,
+            5,
             30.0 / 1000.0,
             fs,
-            100.0);
+            20.0,
+            LPC::Burg);
+    LPC::Frame lpcFrame = lpc.d_frames.at(0);*/
 
+    LPC::Frame lpcFrame = {.nCoefficients = 11};
+    LPC::frame_burg(x, lpcFrame);
+
+    // Calculate filter response for spectrogram.
     ArrayXcd h;
-    Filter::responseFIR(lpc.d_frames.at(0).a,
+    Filter::responseFIR(lpcFrame.a,
                         spectrogram.getFrequencyArray(),
                         fs,
                         h);
 
-    // Normalize.
-    ArrayXd gain = abs(h);
-    gain /= gain.maxCoeff();
+    // Estimate formants.
+    Formant::Frame fFrame;
+    LPC::toFormantFrame(lpcFrame, fFrame, fs, 90.0);
 
-    spectrogram.setSpectrumArray(gain);
+    formantString.resize(fFrame.nFormants);
+    for (int i = 0; i < fFrame.nFormants; ++i) {
+        const auto & Fi = fFrame.formant.at(i);
+
+        std::stringstream formantSB(std::ios_base::out);
+        formantSB << "F" << (i + 1) << " = ";
+        formantSB << Fi.frequency << " Hz  ";
+        formantSB << "(band: " << Fi.bandwidth << " Hz)";
+
+        formantString[i] = formantSB.str();
+    }
+
+    // Normalize.
+
+    spectrogram.setSpectrumArray(abs(h));
 
 }
 

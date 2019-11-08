@@ -12,15 +12,40 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Replaced use of soundio with portaudio">
+    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Math/Polynomial.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/signal/Filter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/Filter.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/signal/LPC.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/signal/LPC.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/signal/LPC_huber.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/LPC_huber.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/signal/Window.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/signal/Window.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/Spectrogram.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/Spectrogram.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/FFT.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/FFT/FFT.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/FFT.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/FFT/FFT.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/FFT_core.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/FFT/FFT_core.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/Filter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Filter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/Filter.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Filter.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC_Frame.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC_Frame_auto.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame_auto.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC_Frame_burg.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame_burg.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC_Frame_covar.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame_covar.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC_Frame_huber.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame_huber.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC_filter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC_filter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC_huber.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC_huber.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC_huber.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC_huber.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/LPC_huber_stat.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC_huber_stat.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/Pitch.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/Pitch_AMDF.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch_AMDF.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/Polynomial.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Math/Polynomial.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/Polynomial_impl.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/Resample.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Resample.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/Resample.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Resample.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/Window.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Window.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/signal/Window.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Window.h" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -69,14 +94,15 @@
     <property name="settings.editor.selected.configurable" value="dynamic.analysis.tools.profiler" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/src/gui" />
-      <recent name="$PROJECT_DIR$/src/audio" />
-      <recent name="$PROJECT_DIR$/fonts/cruft" />
-      <recent name="$PROJECT_DIR$/src" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/signal" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/lib/Math" />
+      <recent name="$PROJECT_DIR$/src/lib/Signal" />
+      <recent name="$PROJECT_DIR$/src/lib/Pitch" />
+      <recent name="$PROJECT_DIR$/src/lib/FFT" />
+      <recent name="$PROJECT_DIR$/src/lib/LPC/LPC_Frame" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -138,7 +164,11 @@
       <workItem from="1571395899412" duration="2849000" />
       <workItem from="1571401902145" duration="1347000" />
       <workItem from="1571406709606" duration="149000" />
-      <workItem from="1573110564161" duration="2668000" />
+      <workItem from="1573110564161" duration="5782000" />
+      <workItem from="1573127376740" duration="176000" />
+      <workItem from="1573206468547" duration="6969000" />
+      <workItem from="1573223585456" duration="116000" />
+      <workItem from="1573223836540" duration="2299000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -175,7 +205,14 @@
       <option name="project" value="LOCAL" />
       <updated>1571342897170</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Fixed inconsistent LPC results">
+      <created>1573123018160</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1573123018160</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -241,6 +278,7 @@
     <MESSAGE value="Added gitignore" />
     <MESSAGE value="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat." />
     <MESSAGE value="Replaced use of soundio with portaudio" />
-    <option name="LAST_COMMIT_MESSAGE" value="Replaced use of soundio with portaudio" />
+    <MESSAGE value="Fixed inconsistent LPC results" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed inconsistent LPC results" />
   </component>
 </project>

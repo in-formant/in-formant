@@ -3,7 +3,7 @@
 //
 
 #include "Resample.h"
-#include "FFT.h"
+#include "../FFT/FFT.h"
 
 using namespace Eigen;
 
@@ -103,7 +103,7 @@ double Resample::interpolate_sinc(const ArrayXd & y, double x, int maxDepth)
     if (x == midleft) return y(midleft);
     // 1 < x < y.size && x not integer: interpolate
     if (maxDepth > midright - 1) maxDepth = midright - 1;
-    if (maxDepth > y.size() - midleft) maxDepth = y.size() - midleft;
+    if (maxDepth >= y.size() - midleft) maxDepth = y.size() - midleft - 1;
     if (maxDepth <= Resample::Nearest) return y(static_cast<int>(std::floor(x + 0.5)));
     if (maxDepth == Resample::Linear) return y(midleft) + (x - midleft) * (y(midright) - y(midleft));
     if (maxDepth == Resample::Cubic) {
@@ -120,7 +120,7 @@ double Resample::interpolate_sinc(const ArrayXd & y, double x, int maxDepth)
     aa = a / (x - left + 1);
     daa = M_PI / (x - left + 1);
     for (ix = midleft; ix >= left; --ix) {
-        double d = halfsina / a * (1.0 + std::cos(aa)), help;
+        double d = halfsina / a * (1.0 + std::cos(aa));
         result += y(ix) * d;
         a += M_PI;
         aa += daa;
@@ -132,7 +132,7 @@ double Resample::interpolate_sinc(const ArrayXd & y, double x, int maxDepth)
     aa = a / (right - x + 1);
     daa = M_PI / (right - x + 1);
     for (ix = midright; ix <= right; ++ix) {
-        double d = halfsina / a * (1.0 + std::cos(aa)), help;
+        double d = halfsina / a * (1.0 + std::cos(aa));
         result += y(ix) * d;
         a += M_PI;
         aa += daa;

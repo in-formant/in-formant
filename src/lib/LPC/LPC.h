@@ -52,7 +52,6 @@ namespace LPC {
                         double analysisWidth, double samplingFrequency,
                         double preEmphasisFrequency);
 
-
 };
 
 #endif //SPEECH_ANALYSIS_LPC_H

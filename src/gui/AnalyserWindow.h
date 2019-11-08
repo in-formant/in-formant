@@ -23,7 +23,7 @@
 #define RENDER_RATE 60
 #define RENDER_DELAY (1000 / RENDER_RATE)
 
-#define UPDATE_RATE 30
+#define UPDATE_RATE 60
 #define UPDATE_DELAY (1000 / UPDATE_RATE)
 
 class AnalyserWindow {
@@ -49,6 +49,7 @@ private:
     SDL_Texture * spectrumTex;
 
     std::string pitchString;
+    std::vector<std::string> formantString;
 
     // Other components.
     AudioCapture audioCapture;

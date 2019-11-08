@@ -19,30 +19,29 @@ set(SOURCES
         src/audio/RingBuffer.h
         src/gui/Spectrogram.cpp
         src/gui/Spectrogram.h
-        src/signal/Pitch.h
-        src/signal/Pitch_AMDF.cpp
-        src/signal/Filter.cpp
-        src/signal/Filter.h
-        src/signal/Window.cpp
-        src/signal/Window.h
-        src/signal/Polynomial_impl.h
-        src/signal/Polynomial.h
-        src/signal/Resample.cpp
-        src/signal/Resample.h
-        src/signal/FFT.cpp
-        src/signal/FFT.h
-        src/signal/FFT_core.h
-        src/signal/LPC_filter.cpp
-        src/signal/LPC_Frame_auto.cpp
-        src/signal/LPC_Frame_covar.cpp
-        src/signal/LPC_Frame_burg.cpp
-        src/signal/LPC_Frame_huber.cpp
-        src/signal/LPC_Frame.h
-        src/signal/LPC_huber_stat.cpp
-        src/signal/LPC_huber.h
-        src/signal/LPC.cpp
-        src/signal/LPC_huber.cpp
-        src/signal/LPC.h)
+        src/lib/Pitch/Pitch.h
+        src/lib/Pitch/Pitch_AMDF.cpp
+        src/lib/Signal/Filter.cpp
+        src/lib/Signal/Filter.h
+        src/lib/Signal/Window.cpp
+        src/lib/Signal/Window.h
+        src/lib/Math/Polynomial.h
+        src/lib/Signal/Resample.cpp
+        src/lib/Signal/Resample.h
+        src/lib/FFT/FFT.cpp
+        src/lib/FFT/FFT.h
+        src/lib/FFT/FFT_core.h
+        src/lib/LPC/LPC_filter.cpp
+        src/lib/LPC/Frame/LPC_Frame_auto.cpp
+        src/lib/LPC/Frame/LPC_Frame_covar.cpp
+        src/lib/LPC/Frame/LPC_Frame_burg.cpp
+        src/lib/LPC/Frame/LPC_Frame_huber.cpp
+        src/lib/LPC/Frame/LPC_Frame.h
+        src/lib/LPC/LPC_huber_stat.cpp
+        src/lib/LPC/LPC_huber.h
+        src/lib/LPC/LPC.cpp
+        src/lib/LPC/LPC_huber.cpp
+        src/lib/LPC/LPC.h src/lib/LPC/Frame/LPC_Frame.cpp src/lib/Formant/Formant.cpp src/lib/Formant/Formant.h src/lib/Math/Polynomial.cpp)
 
 add_executable(speech_analysis ${SOURCES})
 

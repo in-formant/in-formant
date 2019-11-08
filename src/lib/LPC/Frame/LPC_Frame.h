@@ -7,6 +7,10 @@
 
 #include <Eigen/Core>
 
+namespace Formant {
+    struct Frame;
+}
+
 namespace LPC {
 
     struct Frame;
@@ -23,6 +27,9 @@ namespace LPC {
     bool frame_burg(const Eigen::ArrayXd & sound, Frame & lpc);
 
     void frame_huber(const Eigen::ArrayXd & sound, const Frame & lpc1, Frame & lpc2, Huber::huber_s & hs);
+
+    void toRoots(const Frame & lpc, Eigen::ArrayXcd & z);
+    void toFormantFrame(const Frame & lpc, Formant::Frame & frm, double samplingFrequency, double margin);
 
 }
 

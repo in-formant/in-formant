@@ -3,7 +3,7 @@
 //
 
 #include "Filter.h"
-#include "Polynomial.h"
+#include "../Math/Polynomial.h"
 
 using namespace Eigen;
 

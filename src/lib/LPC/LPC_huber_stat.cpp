@@ -87,7 +87,7 @@ void LPC::Huber::init(huber_s & hs, double windowDuration, int p, double samplin
     hs.work.setZero(n);
     hs.a.setZero(p);
     hs.c.setZero(p);
-    hs.covar = JacobiSVD<MatrixXd>(p, p, ComputeThinU | ComputeThinV);
+    hs.covar.setZero(p, p);
 }
 
 void LPC::Huber::getWeights(huber_s & hs, const ArrayXd & e)
@@ -127,6 +127,7 @@ void LPC::Huber::getWeightedCovars(huber_s & hs, const ArrayXd & s)
 
 void LPC::Huber::solveLpc(huber_s & hs)
 {
+    hs.svd = JacobiSVD<MatrixXd>(hs.p, hs.p, ComputeThinU | ComputeThinV);
     hs.svd.setThreshold(hs.tol_svd);
     hs.svd.compute(hs.covar);
 

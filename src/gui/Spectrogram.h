@@ -11,7 +11,7 @@
 class Spectrogram {
 public:
     explicit Spectrogram(int minFrequency = 20,
-                         int maxFrequency = 4000,
+                         int maxFrequency = 5000,
                          int binCount = 4096);
 
     void setMinFrequency(int minFrequency);

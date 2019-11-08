@@ -3,9 +3,9 @@
 //
 
 #include "LPC.h"
-#include "LPC_Frame.h"
+#include "Frame/LPC_Frame.h"
 #include "LPC_huber.h"
-#include "Window.h"
+#include "../Signal/Window.h"
 
 using namespace Eigen;
 using LPC::Huber::huber_s;

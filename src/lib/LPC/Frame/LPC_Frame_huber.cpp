@@ -2,9 +2,9 @@
 // Created by rika on 12/10/2019.
 //
 
-#include "LPC.h"
+#include "../LPC.h"
 #include "LPC_Frame.h"
-#include "LPC_huber.h"
+#include "../LPC_huber.h"
 
 using namespace Eigen;
 using LPC::Huber::huber_s;
