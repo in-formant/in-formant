@@ -12,18 +12,8 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/SDLUtils.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/SDLUtils.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/Spectrogram.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/Spectrogram.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/Spectrogram.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/Spectrogram.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/LPC/LPC_huber_stat.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC_huber_stat.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Math/Polynomial.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Math/Polynomial.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Math/Polynomial.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Math/Polynomial.h" afterDir="false" />
+    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/cmake/FindSDL2_gfx.cmake" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -190,7 +180,14 @@
       <option name="project" value="LOCAL" />
       <updated>1573123018160</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Real-time formant analysis w/ time-frequency graph">
+      <created>1573339182283</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1573339182283</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -257,6 +254,7 @@
     <MESSAGE value="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat." />
     <MESSAGE value="Replaced use of soundio with portaudio" />
     <MESSAGE value="Fixed inconsistent LPC results" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed inconsistent LPC results" />
+    <MESSAGE value="Real-time formant analysis w/ time-frequency graph" />
+    <option name="LAST_COMMIT_MESSAGE" value="Real-time formant analysis w/ time-frequency graph" />
   </component>
 </project>
