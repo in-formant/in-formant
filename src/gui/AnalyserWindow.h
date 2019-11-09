@@ -22,7 +22,7 @@
 #define WINDOW_FONT     "fonts/open-sans/OpenSans-Regular.ttf"
 #define WINDOW_FONTSIZE 24
 
-#define RENDER_RATE 60
+#define RENDER_RATE 120
 #define RENDER_DELAY (1000 / RENDER_RATE)
 
 #define UPDATE_RATE 120

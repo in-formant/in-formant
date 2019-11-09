@@ -24,7 +24,7 @@ AnalyserWindow::AnalyserWindow() noexcept(false) {
     headerTex = nullptr;
 
     audioData.setZero(500);
-    formantFrames.resize(800, {550, 1650, 2750, 3850, 4950});
+    formantFrames.resize(1000, {550, 1650, 2750, 3850, 4950});
 
     int ret;
 
@@ -169,7 +169,7 @@ void AnalyserWindow::render() {
     for (int i = 0; i < formantString.size(); ++i) {
         formantTex = SDL::renderText(renderer, font, formantString.at(i).c_str(), {255, 255, 255, 255});
 
-        pos = {0.1, 0.15f + i * 0.05f};
+        pos = {0.1, static_cast<float>(0.15 + i * 0.05)};
         SDL::renderRelativeToCenter(renderer, formantTex, targetWidth, targetHeight, &pos);
 
         SDL_DestroyTexture(formantTex);
@@ -181,18 +181,20 @@ void AnalyserWindow::render() {
     const double ymin = targetHeight * 0.97;
     const double ymax = targetHeight * 0.2;
 
+    SDL_SetRenderDrawColor(renderer, 255, 167, 0 ,255);
+
+    SDL_Rect rect;
+    rect.w = (xmax - xmin) / n + 1;
+    rect.h = 1;
+
     double k = 0;
     for (const auto & fFrame : formantFrames) {
-        double x = xmin + (k * (xmax - xmin)) / n;
+        rect.x = xmin + (k * (xmax - xmin)) / n;
 
         for (const double & frequency : fFrame) {
-            double y = ymin + (frequency * (ymax - ymin)) / 6000.0;
+            rect.y = ymin + (frequency * (ymax - ymin)) / 6000.0;
 
-            if ((xmax - xmin) / n < 1) {
-                pixelRGBA(renderer, x, y, 255, 167, 0, 255);
-            } else {
-                hlineRGBA(renderer, x, x + ((xmax - xmin) / n) - 1, y, 255, 167, 0, 255);
-            }
+            SDL_RenderFillRect(renderer, &rect);
         }
 
         k++;

@@ -13,7 +13,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/cmake/FindSDL2_gfx.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -187,7 +189,14 @@
       <option name="project" value="LOCAL" />
       <updated>1573339182283</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Added SDL2_gfx cmake module file.">
+      <created>1573339420726</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1573339420726</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -255,6 +264,7 @@
     <MESSAGE value="Replaced use of soundio with portaudio" />
     <MESSAGE value="Fixed inconsistent LPC results" />
     <MESSAGE value="Real-time formant analysis w/ time-frequency graph" />
-    <option name="LAST_COMMIT_MESSAGE" value="Real-time formant analysis w/ time-frequency graph" />
+    <MESSAGE value="Added SDL2_gfx cmake module file." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added SDL2_gfx cmake module file." />
   </component>
 </project>
