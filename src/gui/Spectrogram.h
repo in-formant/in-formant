@@ -11,7 +11,7 @@
 class Spectrogram {
 public:
     explicit Spectrogram(int minFrequency = 20,
-                         int maxFrequency = 5000,
+                         int maxFrequency = 6000,
                          int binCount = 4096);
 
     void setMinFrequency(int minFrequency);
@@ -23,7 +23,7 @@ public:
 
     void render(SDL_Renderer * renderer,
                 SDL_Texture * texture,
-                SDL_Color stroke = {255, 165, 0});
+                SDL_Color stroke = {255, 165, 0, 255});
 
 private:
     void calculateFrequencyArray();

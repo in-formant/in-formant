@@ -28,7 +28,7 @@ void Formant::frameFromRoots(
             continue;
         }
 
-        double f = std::arg(v) * samplingFrequency / (2.0 * M_PI);
+        double f = std::abs(std::arg(v)) * samplingFrequency / (2.0 * M_PI);
         if (f >= fLow && f <= fHigh) {
             double b = -std::log10(std::abs(v)) * samplingFrequency / M_PI;
 

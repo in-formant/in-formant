@@ -24,6 +24,7 @@ AnalyserWindow::AnalyserWindow() noexcept(false) {
     headerTex = nullptr;
 
     audioData.setZero(500);
+    formantFrames.resize(800, {550, 1650, 2750, 3850, 4950});
 
     int ret;
 
@@ -152,17 +153,12 @@ void AnalyserWindow::render() {
     SDL_Texture * pitchTex;
     SDL_Texture * formantTex;
 
-    // Draw spectrogram first.
-    spectrogram.render(renderer, spectrumTex);
-    pos = {0.5, 0.5};
-    SDL::renderRelativeToCenter(renderer, spectrumTex, targetWidth, targetHeight, &pos);
-
     // Draw header text.
     pos = {0.1, 0.05};
     SDL::renderRelativeToCenter(renderer, headerTex, targetWidth, targetHeight, &pos);
 
     // Draw pitch estimation.
-    pitchTex = SDL::renderText(renderer, font, pitchString.c_str(), {255,255,255});
+    pitchTex = SDL::renderText(renderer, font, pitchString.c_str(), {255, 255, 255, 255});
 
     pos = {0.7, 0.05};
     SDL::renderRelativeToCenter(renderer, pitchTex, targetWidth, targetHeight, &pos);
@@ -171,12 +167,35 @@ void AnalyserWindow::render() {
 
     // Draw formant estimations.
     for (int i = 0; i < formantString.size(); ++i) {
-        formantTex = SDL::renderText(renderer, font, formantString.at(i).c_str(), {255, 255, 255});
+        formantTex = SDL::renderText(renderer, font, formantString.at(i).c_str(), {255, 255, 255, 255});
 
-        pos = {0.1, 0.2f + i * 0.05f};
+        pos = {0.1, 0.15f + i * 0.05f};
         SDL::renderRelativeToCenter(renderer, formantTex, targetWidth, targetHeight, &pos);
 
         SDL_DestroyTexture(formantTex);
+    }
+
+    const double n = formantFrames.size();
+    const double xmin = targetWidth * 0.03;
+    const double xmax = targetWidth * 0.97;
+    const double ymin = targetHeight * 0.97;
+    const double ymax = targetHeight * 0.2;
+
+    double k = 0;
+    for (const auto & fFrame : formantFrames) {
+        double x = xmin + (k * (xmax - xmin)) / n;
+
+        for (const double & frequency : fFrame) {
+            double y = ymin + (frequency * (ymax - ymin)) / 6000.0;
+
+            if ((xmax - xmin) / n < 1) {
+                pixelRGBA(renderer, x, y, 255, 167, 0, 255);
+            } else {
+                hlineRGBA(renderer, x, x + ((xmax - xmin) / n) - 1, y, 255, 167, 0, 255);
+            }
+        }
+
+        k++;
     }
 }
 
@@ -186,7 +205,7 @@ void AnalyserWindow::update() {
     audioCapture.readBlock(audioData);
 
     // Downsample.
-    double fs = 10000;
+    double fs = 12000;
     ArrayXd x = Resample::resample(audioData, audioCapture.getSampleRate(), fs, 50);
 
     // Estimate pitch with two methods.
@@ -203,28 +222,18 @@ void AnalyserWindow::update() {
     pitchString = pitchSB.str();
 
     // Estimate LPC coefficients.
-    /*LPC::Frames lpc = LPC::analyse(
+    LPC::Frames lpc = LPC::analyse(
             x,
-            5,
+            11,
             30.0 / 1000.0,
             fs,
-            20.0,
+            50.0,
             LPC::Burg);
-    LPC::Frame lpcFrame = lpc.d_frames.at(0);*/
-
-    LPC::Frame lpcFrame = {.nCoefficients = 11};
-    LPC::frame_burg(x, lpcFrame);
-
-    // Calculate filter response for spectrogram.
-    ArrayXcd h;
-    Filter::responseFIR(lpcFrame.a,
-                        spectrogram.getFrequencyArray(),
-                        fs,
-                        h);
+    LPC::Frame lpcFrame = lpc.d_frames.at(0);
 
     // Estimate formants.
     Formant::Frame fFrame;
-    LPC::toFormantFrame(lpcFrame, fFrame, fs, 90.0);
+    LPC::toFormantFrame(lpcFrame, fFrame, fs, 50.0);
 
     formantString.resize(fFrame.nFormants);
     for (int i = 0; i < fFrame.nFormants; ++i) {
@@ -232,15 +241,15 @@ void AnalyserWindow::update() {
 
         std::stringstream formantSB(std::ios_base::out);
         formantSB << "F" << (i + 1) << " = ";
-        formantSB << Fi.frequency << " Hz  ";
-        formantSB << "(band: " << Fi.bandwidth << " Hz)";
+        formantSB << std::round(Fi.frequency) << " Hz";
 
         formantString[i] = formantSB.str();
     }
 
-    // Normalize.
-
-    spectrogram.setSpectrumArray(abs(h));
+    formantFrames.pop_front();
+    std::vector<double> fFrameFreq(fFrame.nFormants);
+    std::transform(fFrame.formant.begin(), fFrame.formant.end(), fFrameFreq.begin(), [](const auto & Fi) { return Fi.frequency; });
+    formantFrames.push_back(fFrameFreq);
 
 }
 

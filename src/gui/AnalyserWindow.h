@@ -8,8 +8,10 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <deque>
 #include <vector>
 #include "../audio/AudioCapture.h"
+#include "../lib/Formant/Formant.h"
 #include "Spectrogram.h"
 #include "../Exceptions.h"
 
@@ -23,7 +25,7 @@
 #define RENDER_RATE 60
 #define RENDER_DELAY (1000 / RENDER_RATE)
 
-#define UPDATE_RATE 60
+#define UPDATE_RATE 120
 #define UPDATE_DELAY (1000 / UPDATE_RATE)
 
 class AnalyserWindow {
@@ -55,7 +57,10 @@ private:
     AudioCapture audioCapture;
     Spectrogram spectrogram;
 
+    // Data.
     Eigen::ArrayXd audioData;
+
+    std::deque<std::vector<double>> formantFrames;
 
 };
 

@@ -47,20 +47,20 @@ add_executable(speech_analysis ${SOURCES})
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
 find_package(SDL2_ttf REQUIRED)
+find_package(SDL2_gfx REQUIRED)
 find_package(PortAudio REQUIRED)
 
 include_directories(
         ${SDL2_INCLUDE_DIR}
-        ${SDL2_IMAGE_INCLUDE_DIR}
         ${SDL2_TTF_INCLUDE_DIR}
+        ${SDL2_GFX_INCLUDE_DIRS}
         ${EIGEN_INCLUDE_DIR}
         ${PORTAUDIO_INCLUDE_DIRS})
 
 target_link_libraries(speech_analysis
         ${SDL2_LIBRARY}
-        ${SDL2_IMAGE_LIBRARIES}
         ${SDL2_TTF_LIBRARIES}
+        ${SDL2_GFX_LIBRARIES}
         Eigen3::Eigen
         ${PORTAUDIO_LIBRARIES})

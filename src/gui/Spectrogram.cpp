@@ -27,8 +27,8 @@ void Spectrogram::calculateFrequencyArray() {
     frequencies.resize(binCount);
 
     for (int k = 0; k < binCount; ++k) {
-        //frequencies(k) = minFrequency + (static_cast<double>(k) * (maxFrequency - minFrequency)) / static_cast<double>(binCount);
-        frequencies(k) = std::pow(10.0, logMin + (static_cast<double>(k) * (logMax - logMin)) / static_cast<double>(binCount));
+        frequencies(k) = minFrequency + (static_cast<double>(k) * (maxFrequency - minFrequency)) / static_cast<double>(binCount);
+        //frequencies(k) = std::pow(10.0, logMin + (static_cast<double>(k) * (logMax - logMin)) / static_cast<double>(binCount));
     }
 
 }
@@ -62,45 +62,37 @@ void Spectrogram::render(SDL_Renderer * renderer, SDL_Texture * texture, SDL_Col
     SDL::queryTextureSize(texture, &width, &height);
 
     // Create the array of points.
-    std::vector<SDL_FPoint> points(binCount);
+    Sint16 vx[binCount];
+    Sint16 vy[binCount];
 
     for (int k = 0; k < binCount; ++k) {
-
-        SDL_FPoint & p = points.at(k);
-
         double freq = frequencies(k);
         double gain = spectrum(k);
 
-        p.x = static_cast<float>(width * (freq - minFrequency) / (maxFrequency - minFrequency));
-        p.y = static_cast<float>(height * (1 - 0.05 * gain));
-
+        vx[k] = static_cast<Sint16>(width * (freq - minFrequency) / (maxFrequency - minFrequency));
+        vy[k] = static_cast<Sint16>(height * (1 - 0.5 * gain));
     }
 
-    // Render the spectrograph.
-
-    int ret;
-
-    ret = SDL_SetRenderTarget(renderer, texture);
+    // Set renderer target to the provided texture.
+    int ret = SDL_SetRenderTarget(renderer, texture);
     if (ret < 0) {
         throw SDLException("Unable to set render target to texture");
     }
 
-    Uint8 r, g, b, a;
-    SDL_GetRenderDrawColor(renderer, &r, &g, &b, &a);
+    // Render the spectrogram.
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 1);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    SDL_SetRenderDrawColor(renderer, stroke.r, stroke.g, stroke.b, stroke.a);
-    SDL_RenderDrawLinesF(renderer, points.data(), points.size());
-
-    SDL_SetRenderDrawColor(renderer, r, g, b, a);
+    for (int k = 0; k < binCount - 1; ++k) {
+        aalineRGBA(renderer, vx[k], vy[k], vx[k + 1], vy[k + 1], stroke.r, stroke.g, stroke.b, stroke.a);
+    }
 
     SDL_RenderPresent(renderer);
 
+    // Set renderer target back to default.
     ret = SDL_SetRenderTarget(renderer, nullptr);
     if (ret < 0) {
         throw SDLException("Unable to reset render target to default");
     }
-
 }
