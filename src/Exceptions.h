@@ -43,7 +43,6 @@ class PaException : public GenericException {
 public:
     PaException(const char * msg, int error) : GenericException("PortAudio", msg, [error]() { return Pa_GetErrorText(error); }) {}
     PaException(const char * msg, const char * error) : GenericException("PortAudio", msg, [error]() { return error; }) {}
-
 };
 
 #endif //SPEECH_ANALYSIS_EXCEPTIONS_H

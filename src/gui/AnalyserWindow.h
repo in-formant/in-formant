@@ -16,8 +16,8 @@
 #include "../Exceptions.h"
 
 #define WINDOW_TITLE  "Speech analysis"
-#define WINDOW_WIDTH  800
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH  1280
+#define WINDOW_HEIGHT 720
 
 #define WINDOW_FONT     "fonts/open-sans/OpenSans-Regular.ttf"
 #define WINDOW_FONTSIZE 24
@@ -47,20 +47,18 @@ private:
     TTF_Font * font;
 
     int targetWidth, targetHeight;
-    SDL_Texture * headerTex;
-    SDL_Texture * spectrumTex;
+    SDL_Texture * formantTex;
+    SDL_Texture * formantTexCopy;
 
     std::string pitchString;
     std::vector<std::string> formantString;
 
     // Other components.
     AudioCapture audioCapture;
-    Spectrogram spectrogram;
 
     // Data.
     Eigen::ArrayXd audioData;
-
-    std::deque<std::vector<double>> formantFrames;
+    Formant::Frames formantFrames;
 
 };
 

@@ -41,7 +41,13 @@ set(SOURCES
         src/lib/LPC/LPC_huber.h
         src/lib/LPC/LPC.cpp
         src/lib/LPC/LPC_huber.cpp
-        src/lib/LPC/LPC.h src/lib/LPC/Frame/LPC_Frame.cpp src/lib/Formant/Formant.cpp src/lib/Formant/Formant.h src/lib/Math/Polynomial.cpp)
+        src/lib/LPC/LPC.h
+        src/lib/LPC/Frame/LPC_Frame.cpp
+        src/lib/Formant/Formant.cpp
+        src/lib/Formant/Formant.h
+        src/lib/Math/Polynomial.cpp
+        src/lib/Math/Viterbi.cpp
+        src/lib/Math/Viterbi.h)
 
 add_executable(speech_analysis ${SOURCES})
 

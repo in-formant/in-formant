@@ -21,10 +21,9 @@ using namespace Eigen;
 AnalyserWindow::AnalyserWindow() noexcept(false) {
     targetWidth = WINDOW_WIDTH;
     targetHeight = WINDOW_HEIGHT;
-    headerTex = nullptr;
 
     audioData.setZero(500);
-    formantFrames.resize(1000, {550, 1650, 2750, 3850, 4950});
+    formantFrames.frames.resize(500);
 
     int ret;
 
@@ -44,10 +43,12 @@ AnalyserWindow::AnalyserWindow() noexcept(false) {
             WINDOW_TITLE,
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
             WINDOW_WIDTH, WINDOW_HEIGHT,
-            SDL_WINDOW_RESIZABLE);
+            SDL_WINDOW_SHOWN);
     if (window == nullptr) {
         throw SDLException("Unable to create window");
     }
+
+    SDL_SetWindowMinimumSize(window, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     renderer = SDL_CreateRenderer(
             window,
@@ -137,91 +138,86 @@ void AnalyserWindow::mainLoop() {
 }
 
 void AnalyserWindow::initTextures() {
-    SDL_Color headerFg{255, 255, 255};
+    formantTex = SDL_CreateTexture(
+            renderer,
+            SDL_PIXELFORMAT_RGBA32,
+            SDL_TEXTUREACCESS_TARGET,
+            1280, 720);
 
-    headerTex = SDL::renderText(renderer, font, "Speech analysis", headerFg);
-    spectrumTex = SDL_CreateTexture(renderer,
-                                   SDL_PIXELFORMAT_RGBA32,
-                                   SDL_TEXTUREACCESS_TARGET,
-                                   800,
-                                   600);
+    formantTexCopy = SDL_CreateTexture(
+            renderer,
+            SDL_PIXELFORMAT_RGBA32,
+            SDL_TEXTUREACCESS_TARGET,
+            1280, 720);
 }
 
 void AnalyserWindow::render() {
     // Some variables for drawing.
     SDL_FPoint pos;
-    SDL_Texture * pitchTex;
-    SDL_Texture * formantTex;
+    SDL_Rect src;
+    SDL_FRect dst;
+    SDL_Texture * pitchStrTex;
+    SDL_Texture * formantStrTex;
 
-    // Draw header text.
-    pos = {0.1, 0.05};
-    SDL::renderRelativeToCenter(renderer, headerTex, targetWidth, targetHeight, &pos);
+    //--- BACKGROUND
+
+    // Draw formant estimation tracks.
+    pos = {0.6, 0.5};
+    SDL::renderRelativeToCenter(renderer, formantTex, targetWidth, targetHeight, &pos);
+
+    //--- FOREGROUND
 
     // Draw pitch estimation.
-    pitchTex = SDL::renderText(renderer, font, pitchString.c_str(), {255, 255, 255, 255});
+    pitchStrTex = SDL::renderText(renderer, font, pitchString.c_str(), {255, 255, 255, 255});
 
-    pos = {0.7, 0.05};
-    SDL::renderRelativeToCenter(renderer, pitchTex, targetWidth, targetHeight, &pos);
+    pos = {0.9, 0.01};
+    SDL::renderRelativeToCenter(renderer, pitchStrTex, targetWidth, targetHeight, &pos);
 
-    SDL_DestroyTexture(pitchTex);
+    SDL_DestroyTexture(pitchStrTex);
 
-    // Draw formant estimations.
+    // Draw formant estimation strings.
     for (int i = 0; i < formantString.size(); ++i) {
-        formantTex = SDL::renderText(renderer, font, formantString.at(i).c_str(), {255, 255, 255, 255});
+        formantStrTex = SDL::renderText(renderer, font, formantString.at(i).c_str(), {255, 255, 255, 255});
 
-        pos = {0.1, static_cast<float>(0.15 + i * 0.05)};
-        SDL::renderRelativeToCenter(renderer, formantTex, targetWidth, targetHeight, &pos);
+        pos = {0.01, static_cast<float>(0.02 + i * 0.06)};
+        SDL::renderRelativeToCenter(renderer, formantStrTex, targetWidth, targetHeight, &pos);
 
-        SDL_DestroyTexture(formantTex);
+        SDL_DestroyTexture(formantStrTex);
     }
 
-    const double n = formantFrames.size();
-    const double xmin = targetWidth * 0.03;
-    const double xmax = targetWidth * 0.97;
-    const double ymin = targetHeight * 0.97;
-    const double ymax = targetHeight * 0.2;
-
-    SDL_SetRenderDrawColor(renderer, 255, 167, 0 ,255);
-
-    SDL_Rect rect;
-    rect.w = (xmax - xmin) / n + 1;
-    rect.h = 1;
-
-    double k = 0;
-    for (const auto & fFrame : formantFrames) {
-        rect.x = xmin + (k * (xmax - xmin)) / n;
-
-        for (const double & frequency : fFrame) {
-            rect.y = ymin + (frequency * (ymax - ymin)) / 6000.0;
-
-            SDL_RenderFillRect(renderer, &rect);
-        }
-
-        k++;
-    }
 }
 
 void AnalyserWindow::update() {
 
     // Read captured audio.
     audioCapture.readBlock(audioData);
+    double fs_orig = audioCapture.getSampleRate();
+    ArrayXd x_orig = audioData;
 
-    // Downsample.
-    double fs = 12000;
-    ArrayXd x = Resample::resample(audioData, audioCapture.getSampleRate(), fs, 50);
-
-    // Estimate pitch with two methods.
+    // Estimate pitch with AMDF, then refine with AMDF.
     Pitch::Estimation est{};
 
     std::stringstream pitchSB(std::ios_base::out);
-    Pitch::estimate_AMDF(x, fs, est);
-    if (est.isVoiced) {
-        pitchSB << "Voiced: " << std::round(est.pitch) << " Hz";
+    Pitch::estimate_AMDF(x_orig, fs_orig, est, 70, 1000, 1.2, 0.1);
+    if (est.isVoiced && (est.pitch > 70 && est.pitch < 1000)) {
+        double pitch = est.pitch;
+        Pitch::estimate_AMDF(x_orig, fs_orig, est, 0.4 * pitch, 2.2 * pitch, 2.0, 0.2);
+        if (est.isVoiced && (est.pitch > 0.4 * pitch && est.pitch < 2.2 * pitch)) {
+            pitchSB << "Voiced: " << std::round(est.pitch) << " Hz";
+        } else {
+            est.isVoiced = false;
+            pitchSB << "Voiceless";
+        }
     }
     else {
+        est.isVoiced = false;
         pitchSB << "Voiceless";
     }
     pitchString = pitchSB.str();
+
+    // Downsample.
+    double fs = 11000;
+    ArrayXd x = Resample::resample(x_orig, fs_orig, fs, 50);
 
     // Estimate LPC coefficients.
     LPC::Frames lpc = LPC::analyse(
@@ -239,7 +235,7 @@ void AnalyserWindow::update() {
 
     formantString.resize(fFrame.nFormants);
     for (int i = 0; i < fFrame.nFormants; ++i) {
-        const auto & Fi = fFrame.formant.at(i);
+        const auto &Fi = fFrame.formant.at(i);
 
         std::stringstream formantSB(std::ios_base::out);
         formantSB << "F" << (i + 1) << " = ";
@@ -248,11 +244,43 @@ void AnalyserWindow::update() {
         formantString[i] = formantSB.str();
     }
 
-    formantFrames.pop_front();
-    std::vector<double> fFrameFreq(fFrame.nFormants);
-    std::transform(fFrame.formant.begin(), fFrame.formant.end(), fFrameFreq.begin(), [](const auto & Fi) { return Fi.frequency; });
-    formantFrames.push_back(fFrameFreq);
+    formantFrames.frames.pop_back();
+    formantFrames.frames.push_front(fFrame);
 
+    // UPDATE FORMANT TEXTURE
+    SDL_FRect dst;
+
+    float xstep = 1280.0f / static_cast<float>(formantFrames.frames.size());
+
+    SDL_SetRenderTarget(renderer, formantTexCopy);
+    SDL_RenderClear(renderer);
+    dst = {-xstep, 0, 1280, 720};
+    SDL_RenderCopyF(renderer, formantTex, nullptr, &dst);
+    SDL_RenderPresent(renderer);
+
+    SDL_SetRenderTarget(renderer, formantTex);
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, formantTexCopy, nullptr, nullptr);
+
+    // Color differently if voicing detected or not.
+    if (est.isVoiced) {
+        SDL_SetRenderDrawColor(renderer, 255, 167, 0, 255);
+    }
+    else {
+        SDL_SetRenderDrawColor(renderer, 139, 0, 0, 255);
+    }
+    for (const auto & formant : fFrame.formant) {
+        SDL_RenderDrawPointF(renderer, 1280 - xstep, 720.0 - (600.0 * formant.frequency) / 5500.0);
+    }
+
+    if (est.isVoiced) {
+        SDL_SetRenderDrawColor(renderer, 0, 167, 255, 255);
+        dst = {1280 - xstep, static_cast<float>(720.0 - (600.0 * est.pitch) / 5500.0), xstep, 1};
+        SDL_RenderFillRectF(renderer, &dst);
+    }
+
+    SDL_RenderPresent(renderer);
+    SDL_SetRenderTarget(renderer, nullptr);
 }
 
 void AnalyserWindow::handleKeyDown(const Uint8 * state) {

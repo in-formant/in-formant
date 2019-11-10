@@ -13,9 +13,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/src/lib/Math/Viterbi.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Math/Viterbi.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Exceptions.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Exceptions.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/Pitch.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/Pitch_AMDF.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch_AMDF.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -61,6 +68,7 @@
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
+    <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="dynamic.analysis.tools.profiler" />
   </component>
   <component name="RecentsManager">
@@ -139,6 +147,7 @@
       <workItem from="1573206468547" duration="6969000" />
       <workItem from="1573223585456" duration="116000" />
       <workItem from="1573223836540" duration="2299000" />
+      <workItem from="1573347548434" duration="16487000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -196,7 +205,21 @@
       <option name="project" value="LOCAL" />
       <updated>1573339420726</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Modified render strategy for formant tracks">
+      <created>1573341019447</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1573341019447</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Added Viterbi in preparation for formant tracking">
+      <created>1573393329269</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1573393329269</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -256,6 +279,7 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <ignored-roots>
       <path value="$PROJECT_DIR$/cmake" />
     </ignored-roots>
@@ -265,6 +289,8 @@
     <MESSAGE value="Fixed inconsistent LPC results" />
     <MESSAGE value="Real-time formant analysis w/ time-frequency graph" />
     <MESSAGE value="Added SDL2_gfx cmake module file." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added SDL2_gfx cmake module file." />
+    <MESSAGE value="Modified render strategy for formant tracks" />
+    <MESSAGE value="Added Viterbi in preparation for formant tracking" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added Viterbi in preparation for formant tracking" />
   </component>
 </project>

@@ -7,6 +7,7 @@
 
 #include <Eigen/Core>
 #include <vector>
+#include <deque>
 
 #include "../LPC/LPC.h"
 
@@ -21,6 +22,10 @@ namespace Formant
         int nFormants;
         std::vector<Formant> formant;
         double intensity;
+    };
+
+    struct Frames {
+        std::deque<Frame> frames;
     };
 
     void sort(Frame & frm);

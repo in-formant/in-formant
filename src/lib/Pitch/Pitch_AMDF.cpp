@@ -6,17 +6,12 @@
 
 using namespace Eigen;
 
-static constexpr double minFrequency = 70;
-static constexpr double maxFrequency = 600;
-static constexpr double ratio = 5.0;
-static constexpr double sensitivity = 0.1;
-
-void Pitch::estimate_AMDF(const ArrayXd & x, double fs, Pitch::Estimation & result) {
+void Pitch::estimate_AMDF(const ArrayXd & x, double fs, Pitch::Estimation & result, double F0min, double F0max, double ratio, double sensitivity) {
 
     const int maxShift = x.size();
 
-    const int maxPeriod = std::ceil(fs / minFrequency);
-    const int minPeriod = std::floor(fs / maxFrequency);
+    const int maxPeriod = std::ceil(fs / F0min);
+    const int minPeriod = std::floor(fs / F0max);
 
     ArrayXd amd = ArrayXd::Zero(maxShift);
 
@@ -56,7 +51,6 @@ void Pitch::estimate_AMDF(const ArrayXd & x, double fs, Pitch::Estimation & resu
         }
     }
 
-    result.probability = -1;
     result.isVoiced = (std::round(minVal * ratio) < maxVal);
 
     if (result.isVoiced) {
