@@ -151,32 +151,30 @@ void Viterbi::viterbiMulti(
      *    2 3 4
      */
 
-    ArrayXXi indices(ncomb, ntrack);
+    ArrayXXi indices = ArrayXXi::Zero(ncomb, ntrack);
     ArrayXi icand(ntrack);
 
     for (int itrack = 0; itrack < ntrack; ++itrack) {
-        icand(itrack) = itrack; // start out with "1 2 3"
+        icand(itrack) = itrack; // start out with 0 1 2
     }
 
     int jcomb = 0;
     for (;;) {
         jcomb++;
         for (int itrack = 0; itrack < ntrack; ++itrack) {
-            indices(jcomb, itrack) = icand(itrack);
+            indices(jcomb-1, itrack) = icand(itrack);
         }
         int itrack = ntrack;
-        for (; itrack >= 0; --itrack) {
-            if (++icand(itrack) <= ncand - (ntrack - itrack)) {
-                for (int jtrack = itrack + 1; jtrack < ntrack; ++jtrack) {
-                    icand(jtrack) = icand(itrack) + jtrack - itrack;
+        for (; itrack >= 1; --itrack) {
+            if (++icand(itrack-1) <= ncand - (ntrack - (itrack-1))) {
+                for (int jtrack = itrack + 1; jtrack <= ntrack; ++jtrack) {
+                    icand(jtrack-1) = icand(itrack-1) + (jtrack-1) - (itrack-1);
                 }
                 break;
             }
         }
         if (itrack == 0) break;
     }
-
-    std::cout << indices << std::endl;
 
     assert(jcomb == ncomb);
 

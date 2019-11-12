@@ -56,3 +56,29 @@ void Filter::preEmphasis(ArrayXd & x, double samplingFrequency, double preEmphas
         x(i) -= preEmphasis * x(i - 1);
     }
 }
+
+void Filter::apply(const Eigen::ArrayXd & b, const Eigen::ArrayXd & x, Eigen::ArrayXd & y)
+{
+    y.resize(x.size());
+    for (int n = 0; n < x.size(); ++n) {
+        y(n) = 0.0;
+        for (int i = 0; i < b.size() && n - i >= 0 && n - i < x.size(); ++i) {
+            y(n) += b(i) * x(n - i);
+        }
+    }
+}
+
+void Filter::apply(const Eigen::ArrayXd & b, const Eigen::ArrayXd & a, const Eigen::ArrayXd & x, Eigen::ArrayXd & y)
+{
+    y.resize(x.size());
+    for (int n = 0; n < x.size(); ++n) {
+        y(n) = 0.0;
+        for (int i = 0; i < b.size() && n - i >= 0 && n - i < x.size(); ++i) {
+            y(n) += b(i) * x(n - i);
+        }
+        for (int j = 1; j < a.size() && n - j >= 0 && n - j < x.size(); ++j) {
+            y(n) -= a(j) * x(n - j);
+        }
+        y(n) /= a(0);
+    }
+}

@@ -9,12 +9,11 @@
 
 namespace Window {
 
-    void applyHamming(Eigen::ArrayXd & x);
-    void applyHanning(Eigen::ArrayXd & x);
-
-    void applyBlackmanHarris(Eigen::ArrayXd & x);
-
+    Eigen::ArrayXd createHamming(int size);
+    Eigen::ArrayXd createHanning(int size);
+    Eigen::ArrayXd createBlackmanHarris(int size);
     Eigen::ArrayXd createGaussian(int size);
+    Eigen::ArrayXd createKaiser(int size);
 
 }
 

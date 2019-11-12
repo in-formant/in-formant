@@ -40,10 +40,10 @@ void fftForward(FFT_Table & table, ArrayXd & data)
     if (table.n == 1) return;
 
     drftf1(table.n,
-            data.data(),
-            table.trigcache.data(),
-            table.trigcache.data() + table.n,
-            table.splitcache.data());
+           data.data(),
+           table.trigcache.data(),
+           table.trigcache.data() + table.n,
+           table.splitcache.data());
 }
 
 void fftBackward(FFT_Table & table, ArrayXd & data)
@@ -51,10 +51,10 @@ void fftBackward(FFT_Table & table, ArrayXd & data)
     if (table.n == 1) return;
 
     drftb1(table.n,
-            data.data(),
-            table.trigcache.data(),
-            table.trigcache.data() + table.n,
-            table.splitcache.data());
+           data.data(),
+           table.trigcache.data(),
+           table.trigcache.data() + table.n,
+           table.splitcache.data());
 }
 
 void fftTableInit(FFT_Table & table, int n)

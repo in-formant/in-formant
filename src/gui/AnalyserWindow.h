@@ -39,7 +39,7 @@ private:
     void initTextures();
     void render();
     void update();
-    void handleKeyDown(const Uint8 * state);
+    void handleKey(const Uint8 * state);
 
     // Graphics-related members
     SDL_Window * window;
@@ -47,6 +47,8 @@ private:
     TTF_Font * font;
 
     int targetWidth, targetHeight;
+    SDL_Texture * rawFormantTex;
+    SDL_Texture * rawFormantTexCopy;
     SDL_Texture * formantTex;
     SDL_Texture * formantTexCopy;
 
@@ -58,7 +60,11 @@ private:
 
     // Data.
     Eigen::ArrayXd audioData;
-    Formant::Frames formantFrames;
+
+    bool renderRaw, pauseScroll;
+    Formant::Frames rawFormantTrack;
+    Formant::Frames formantTrack;
+    std::deque<double> pitchTrack;
 
 };
 

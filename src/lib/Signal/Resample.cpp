@@ -47,7 +47,7 @@ ArrayXd Resample::resample(const ArrayXd & x, double sourceFs, double targetFs, 
             double index = (i * sourceFs) / targetFs;
             int leftSample = std::floor(index);
             double fraction = index - leftSample;
-            y(i) = (leftSample < 0 || leftSample > nx) ? 0.0 :
+            y(i) = (leftSample < 0 || leftSample >= nx - 1) ? 0.0 :
                     (1 - fraction) * z(leftSample) + fraction * z(leftSample + 1);
         }
     }

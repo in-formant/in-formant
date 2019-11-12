@@ -15,6 +15,7 @@
 #include "../lib/Signal/Filter.h"
 #include "../lib/Signal/Window.h"
 #include "../lib/Signal/Resample.h"
+#include "../lib/Pitch/YAAPT/YAAPT.h"
 
 using namespace Eigen;
 
@@ -23,7 +24,11 @@ AnalyserWindow::AnalyserWindow() noexcept(false) {
     targetHeight = WINDOW_HEIGHT;
 
     audioData.setZero(500);
-    formantFrames.frames.resize(500);
+    rawFormantTrack.frames.resize(250, {5, {{550}, {1650}, {2750}, {3850}, {4950}}});
+    pitchTrack.resize(250, 0);
+
+    renderRaw = false;
+    pauseScroll = false;
 
     int ret;
 
@@ -99,8 +104,12 @@ void AnalyserWindow::mainLoop() {
                     running = false;
                 }
                 else {
-                    handleKeyDown(state);
+                    handleKey(state);
                 }
+            }
+            else if (evt.type == SDL_KEYUP) {
+                const Uint8 * state = SDL_GetKeyboardState(nullptr);
+                handleKey(state);
             }
             else if (evt.type == SDL_WINDOWEVENT && evt.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
                 targetWidth = evt.window.data1;
@@ -125,7 +134,7 @@ void AnalyserWindow::mainLoop() {
 
         // Check for render.
         if (currentTime - previousRender > RENDER_DELAY) {
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderClear(renderer);
             render();
             SDL_RenderPresent(renderer);
@@ -138,12 +147,22 @@ void AnalyserWindow::mainLoop() {
 }
 
 void AnalyserWindow::initTextures() {
-    formantTex = SDL_CreateTexture(
+    rawFormantTex = SDL_CreateTexture(
+            renderer,
+            SDL_PIXELFORMAT_RGBA32,
+            SDL_TEXTUREACCESS_TARGET,
+            1280, 720);
+    rawFormantTexCopy = SDL_CreateTexture(
             renderer,
             SDL_PIXELFORMAT_RGBA32,
             SDL_TEXTUREACCESS_TARGET,
             1280, 720);
 
+    formantTex = SDL_CreateTexture(
+            renderer,
+            SDL_PIXELFORMAT_RGBA32,
+            SDL_TEXTUREACCESS_TARGET,
+            1280, 720);
     formantTexCopy = SDL_CreateTexture(
             renderer,
             SDL_PIXELFORMAT_RGBA32,
@@ -163,7 +182,7 @@ void AnalyserWindow::render() {
 
     // Draw formant estimation tracks.
     pos = {0.6, 0.5};
-    SDL::renderRelativeToCenter(renderer, formantTex, targetWidth, targetHeight, &pos);
+    SDL::renderRelativeToCenter(renderer, renderRaw ? rawFormantTex : formantTex, targetWidth, targetHeight, &pos);
 
     //--- FOREGROUND
 
@@ -200,19 +219,28 @@ void AnalyserWindow::update() {
     std::stringstream pitchSB(std::ios_base::out);
     Pitch::estimate_AMDF(x_orig, fs_orig, est, 70, 1000, 1.2, 0.1);
     if (est.isVoiced && (est.pitch > 70 && est.pitch < 1000)) {
-        double pitch = est.pitch;
+        /*double pitch = est.pitch;
         Pitch::estimate_AMDF(x_orig, fs_orig, est, 0.4 * pitch, 2.2 * pitch, 2.0, 0.2);
-        if (est.isVoiced && (est.pitch > 0.4 * pitch && est.pitch < 2.2 * pitch)) {
+        if (est.isVoiced && (est.pitch > 0.4 * pitch && est.pitch < 2.2 * pitch)) {*/
             pitchSB << "Voiced: " << std::round(est.pitch) << " Hz";
-        } else {
+        /*} else {
             est.isVoiced = false;
             pitchSB << "Voiceless";
-        }
+        }*/
     }
     else {
         est.isVoiced = false;
         pitchSB << "Voiceless";
     }
+
+    /*YAAPT::Result yaaptEst;
+    YAAPT::Params yaaptPar;
+    YAAPT::getF0_slow(x_orig, fs_orig, yaaptEst, yaaptPar);
+    pitchSB << "YAAPT: avg = " << round(yaaptEst.pitch);*/
+
+    pitchTrack.pop_front();
+    pitchTrack.push_back(est.isVoiced ? est.pitch : 0.0);
+
     pitchString = pitchSB.str();
 
     // Downsample.
@@ -226,7 +254,7 @@ void AnalyserWindow::update() {
             30.0 / 1000.0,
             fs,
             50.0,
-            LPC::Burg);
+            LPC::Auto);
     LPC::Frame lpcFrame = lpc.d_frames.at(0);
 
     // Estimate formants.
@@ -244,45 +272,129 @@ void AnalyserWindow::update() {
         formantString[i] = formantSB.str();
     }
 
-    formantFrames.frames.pop_back();
-    formantFrames.frames.push_front(fFrame);
+    rawFormantTrack.frames.pop_front();
+    rawFormantTrack.frames.push_back(fFrame);
 
-    // UPDATE FORMANT TEXTURE
-    SDL_FRect dst;
-
-    float xstep = 1280.0f / static_cast<float>(formantFrames.frames.size());
-
-    SDL_SetRenderTarget(renderer, formantTexCopy);
-    SDL_RenderClear(renderer);
-    dst = {-xstep, 0, 1280, 720};
-    SDL_RenderCopyF(renderer, formantTex, nullptr, &dst);
-    SDL_RenderPresent(renderer);
-
-    SDL_SetRenderTarget(renderer, formantTex);
-    SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, formantTexCopy, nullptr, nullptr);
-
-    // Color differently if voicing detected or not.
-    if (est.isVoiced) {
-        SDL_SetRenderDrawColor(renderer, 255, 167, 0, 255);
-    }
-    else {
-        SDL_SetRenderDrawColor(renderer, 139, 0, 0, 255);
-    }
-    for (const auto & formant : fFrame.formant) {
-        SDL_RenderDrawPointF(renderer, 1280 - xstep, 720.0 - (600.0 * formant.frequency) / 5500.0);
+    // Track formants.
+    int maxnFormants = 0;
+    for (int i = 0; i < rawFormantTrack.frames.size(); ++i) {
+        maxnFormants = std::max(maxnFormants, rawFormantTrack.frames[i].nFormants);
     }
 
-    if (est.isVoiced) {
-        SDL_SetRenderDrawColor(renderer, 0, 167, 255, 255);
-        dst = {1280 - xstep, static_cast<float>(720.0 - (600.0 * est.pitch) / 5500.0), xstep, 1};
-        SDL_RenderFillRectF(renderer, &dst);
-    }
+    Formant::tracker(
+            rawFormantTrack, formantTrack, maxnFormants, 4,
+            550, 1650, 2750, 3850, 4950,
+            1.0, 1.0, 1.0);
 
-    SDL_RenderPresent(renderer);
-    SDL_SetRenderTarget(renderer, nullptr);
+    SDL_Rect src, dst;
+    int xstep = 4;
+
+    // CHECK TO UPDATE TEXTURES
+    if (!pauseScroll) {
+
+        // UPDATE RAW FORMANT TEXTURE
+
+        SDL_SetRenderTarget(renderer, rawFormantTexCopy);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+        dst = {-xstep, 0, 1280, 720};
+        SDL_RenderCopy(renderer, rawFormantTex, nullptr, &dst);
+        SDL_RenderPresent(renderer);
+
+        SDL_SetRenderTarget(renderer, rawFormantTex);
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, rawFormantTexCopy, nullptr, nullptr);
+
+        // Color differently if voicing detected or not.
+        if (est.isVoiced) {
+            SDL_SetRenderDrawColor(renderer, 255, 167, 0, 255);
+        } else {
+            SDL_SetRenderDrawColor(renderer, 139, 0, 0, 255);
+        }
+        for (const auto &formant : fFrame.formant) {
+            SDL_RenderDrawPoint(renderer, 1280 - xstep, 720 - (600 * formant.frequency) / 5500);
+        }
+
+        if (est.isVoiced) {
+            SDL_SetRenderDrawColor(renderer, 0, 167, 255, 255);
+            dst = {1280 - xstep, static_cast<int>(720 - (600 * est.pitch) / 5500), xstep, 1};
+            SDL_RenderFillRect(renderer, &dst);
+        }
+
+        SDL_RenderPresent(renderer);
+        SDL_SetRenderTarget(renderer, nullptr);
+
+        // UPDATE FORMANT TEXTURE
+
+        int nframes = formantTrack.frames.size();
+        int xoff = xstep * nframes;
+
+        SDL_SetRenderTarget(renderer, formantTexCopy);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+        src = {0, 0, 1280 - xoff, 720};
+        dst = {-xstep, 0, 1280 - xoff, 720};
+        SDL_RenderCopy(renderer, formantTex, &src, &dst);
+        SDL_RenderPresent(renderer);
+
+        SDL_SetRenderTarget(renderer, formantTex);
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, formantTexCopy, nullptr, nullptr);
+
+        // Color differently if voicing detected or not.
+        int xt = 1280 - xoff - 1;
+        for (int iframe = 0; iframe < nframes - 1; ++iframe) {
+            const auto &curFrame = formantTrack.frames.at(iframe);
+            const auto &nextFrame = formantTrack.frames.at(iframe + 1);
+            const double pitch = pitchTrack.at(iframe);
+
+            int r, g, b;
+            if (pitch > 0) {
+                SDL_SetRenderDrawColor(renderer, 255, 167, 0, 255);
+                r = 255;
+                g = 167;
+                b = 0;
+            } else {
+                SDL_SetRenderDrawColor(renderer, 139, 0, 0, 255);
+                r = 139;
+                g = 0;
+                b = 0;
+            }
+
+            int nfrm = 0;
+            for (const auto &formant : curFrame.formant) {
+                if (nfrm < nextFrame.nFormants) {
+                    double freq = nextFrame.formant[nfrm].frequency;
+                    if (std::max(freq, formant.frequency) / std::min(freq, formant.frequency) < 1.5) {
+                        lineRGBA(renderer,
+                                 xt, 720 - (600 * formant.frequency) / 5500,
+                                 xt + xstep - 1, 720 - (600 * nextFrame.formant[nfrm].frequency) / 5500,
+                                 r, g, b, 255);
+                    } else {
+                        SDL_RenderDrawPoint(renderer, xt, 720 - (600 * formant.frequency) / 5500);
+                    }
+                } else {
+                    SDL_RenderDrawPoint(renderer, xt, 720 - (600 * formant.frequency) / 5500);
+                }
+                nfrm++;
+            }
+
+            if (pitch > 0) {
+                SDL_SetRenderDrawColor(renderer, 0, 167, 255, 255);
+                dst = {xt, static_cast<int>(720 - (600 * pitch) / 5500), xstep, 1};
+                SDL_RenderFillRect(renderer, &dst);
+            }
+
+            xt += xstep;
+        }
+
+        SDL_RenderPresent(renderer);
+        SDL_SetRenderTarget(renderer, nullptr);
+
+    }
 }
 
-void AnalyserWindow::handleKeyDown(const Uint8 * state) {
-
+void AnalyserWindow::handleKey(const Uint8 * state) {
+    renderRaw = state[SDL_SCANCODE_R];
+    pauseScroll = state[SDL_SCANCODE_P];
 }

@@ -15,6 +15,9 @@ namespace Filter {
 
     void preEmphasis(Eigen::ArrayXd & x, double samplingFrequency, double preEmphasisFrequency);
 
+    void apply(const Eigen::ArrayXd & b, const Eigen::ArrayXd & x, Eigen::ArrayXd & y);
+    void apply(const Eigen::ArrayXd & b, const Eigen::ArrayXd & a, const Eigen::ArrayXd & x, Eigen::ArrayXd & y);
+
 }
 
 #endif //SPEECH_ANALYSIS_FILTER_H

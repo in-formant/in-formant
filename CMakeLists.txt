@@ -28,15 +28,15 @@ set(SOURCES
         src/lib/Math/Polynomial.h
         src/lib/Signal/Resample.cpp
         src/lib/Signal/Resample.h
-        src/lib/FFT/FFT.cpp
-        src/lib/FFT/FFT.h
         src/lib/FFT/FFT_core.h
-        src/lib/LPC/LPC_filter.cpp
+        src/lib/FFT/FFT_d.cpp
+        src/lib/FFT/FFT.h
         src/lib/LPC/Frame/LPC_Frame_auto.cpp
         src/lib/LPC/Frame/LPC_Frame_covar.cpp
         src/lib/LPC/Frame/LPC_Frame_burg.cpp
         src/lib/LPC/Frame/LPC_Frame_huber.cpp
         src/lib/LPC/Frame/LPC_Frame.h
+        src/lib/LPC/LPC_filter.cpp
         src/lib/LPC/LPC_huber_stat.cpp
         src/lib/LPC/LPC_huber.h
         src/lib/LPC/LPC.cpp
@@ -47,7 +47,26 @@ set(SOURCES
         src/lib/Formant/Formant.h
         src/lib/Math/Polynomial.cpp
         src/lib/Math/Viterbi.cpp
-        src/lib/Math/Viterbi.h)
+        src/lib/Math/Viterbi.h
+        src/lib/Pitch/YAAPT/YAAPT.h
+        src/lib/Pitch/YAAPT/nonlinear.cpp
+        src/lib/Pitch/YAAPT/util/fir1.cpp
+        src/lib/Pitch/YAAPT/util/fir2.cpp
+        src/lib/Pitch/YAAPT/util/interp1.cpp
+        src/lib/Pitch/YAAPT/util/medfilt1.cpp
+        src/lib/Pitch/YAAPT/util/specgram.cpp
+        src/lib/Pitch/YAAPT/cmp_rate.cpp
+        src/lib/Pitch/YAAPT/crs_corr.cpp
+        src/lib/Pitch/YAAPT/dynamic5.cpp
+        src/lib/Pitch/YAAPT/dynamic.cpp
+        src/lib/Pitch/YAAPT/nlfer.cpp
+        src/lib/Pitch/YAAPT/path1.cpp
+        src/lib/Pitch/YAAPT/peaks.cpp
+        src/lib/Pitch/YAAPT/refine.cpp
+        src/lib/Pitch/YAAPT/tm_trk.cpp
+        src/lib/Pitch/YAAPT/spec_trk.cpp
+        src/lib/Pitch/YAAPT/YAAPT.cpp
+        src/lib/Formant/Formant_track.cpp)
 
 add_executable(speech_analysis ${SOURCES})
 
@@ -56,17 +75,20 @@ find_package(SDL2 REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 find_package(SDL2_gfx REQUIRED)
 find_package(PortAudio REQUIRED)
+find_package(FFTW REQUIRED DOUBLE_LIB)
 
 include_directories(
         ${SDL2_INCLUDE_DIR}
         ${SDL2_TTF_INCLUDE_DIR}
         ${SDL2_GFX_INCLUDE_DIRS}
         ${EIGEN_INCLUDE_DIR}
-        ${PORTAUDIO_INCLUDE_DIRS})
+        ${PORTAUDIO_INCLUDE_DIRS}
+        ${FFTW_INCLUDE_DIRS})
 
 target_link_libraries(speech_analysis
         ${SDL2_LIBRARY}
         ${SDL2_TTF_LIBRARIES}
         ${SDL2_GFX_LIBRARIES}
         Eigen3::Eigen
-        ${PORTAUDIO_LIBRARIES})
+        ${PORTAUDIO_LIBRARIES}
+        ${FFTW_LIBRARIES})

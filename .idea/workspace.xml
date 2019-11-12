@@ -12,17 +12,39 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/lib/Math/Viterbi.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Math/Viterbi.h" afterDir="false" />
+    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Impleme">
+      <change afterPath="$PROJECT_DIR$/src/lib/Formant/Formant_track.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/YAAPT.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/YAAPT.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/cmp_rate.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/crs_corr.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic5.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nlfer.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nonlinear.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/path1.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/peaks.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/refine.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/spec_trk.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/tm_trk.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir1.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir2.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/interp1.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/medfilt1.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/specgram.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Exceptions.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Exceptions.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/FFT/FFT.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/FFT/FFT_d.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/FFT/FFT.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/FFT/FFT.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/Pitch.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/Pitch_AMDF.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch_AMDF.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Math/Viterbi.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Math/Viterbi.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Filter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Filter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Filter.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Filter.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Resample.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Resample.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Window.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Window.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Window.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Window.h" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -58,7 +80,7 @@
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="ignore_missing_gitignore" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/signal" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/lib/Pitch/YAAPT" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -73,14 +95,15 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/lib/Pitch/YAAPT" />
       <recent name="$PROJECT_DIR$/src/signal" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util" />
       <recent name="$PROJECT_DIR$/src/lib/Math" />
       <recent name="$PROJECT_DIR$/src/lib/Signal" />
       <recent name="$PROJECT_DIR$/src/lib/Pitch" />
       <recent name="$PROJECT_DIR$/src/lib/FFT" />
-      <recent name="$PROJECT_DIR$/src/lib/LPC/LPC_Frame" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -147,7 +170,15 @@
       <workItem from="1573206468547" duration="6969000" />
       <workItem from="1573223585456" duration="116000" />
       <workItem from="1573223836540" duration="2299000" />
-      <workItem from="1573347548434" duration="16487000" />
+      <workItem from="1573347548434" duration="23317000" />
+      <workItem from="1573405861967" duration="10645000" />
+      <workItem from="1573421693923" duration="611000" />
+      <workItem from="1573432590286" duration="11749000" />
+      <workItem from="1573476801751" duration="6421000" />
+      <workItem from="1573490492883" duration="842000" />
+      <workItem from="1573491433618" duration="5130000" />
+      <workItem from="1573538909820" duration="12054000" />
+      <workItem from="1573562875759" duration="5073000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -219,7 +250,14 @@
       <option name="project" value="LOCAL" />
       <updated>1573393329269</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Added pitch tracker to the display, refined accuracy.">
+      <created>1573393352498</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1573393352498</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -291,6 +329,14 @@
     <MESSAGE value="Added SDL2_gfx cmake module file." />
     <MESSAGE value="Modified render strategy for formant tracks" />
     <MESSAGE value="Added Viterbi in preparation for formant tracking" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added Viterbi in preparation for formant tracking" />
+    <MESSAGE value="Added pitch tracker to the display, refined accuracy." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added pitch tracker to the display, refined accuracy." />
+  </component>
+  <component name="XDebuggerManager">
+    <watches-manager>
+      <configuration name="CMakeRunConfiguration">
+        <watch expression="cl-&gt;src.frames._M_impl._M_map_size" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>
