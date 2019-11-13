@@ -66,7 +66,7 @@ set(SOURCES
         src/lib/Pitch/YAAPT/tm_trk.cpp
         src/lib/Pitch/YAAPT/spec_trk.cpp
         src/lib/Pitch/YAAPT/YAAPT.cpp
-        src/lib/Formant/Formant_track.cpp)
+        src/lib/Formant/Formant_track.cpp src/lib/Math/Integration.cpp src/lib/Math/Integration.h)
 
 add_executable(speech_analysis ${SOURCES})
 

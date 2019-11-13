@@ -128,7 +128,7 @@ void Viterbi::viterbiMulti(
         void * closure)
 {
     if (ntrack > ncand) {
-        std::cout << "Number of tracks should not except number of candidates" << std::endl;
+        std::cout << "Number of tracks should not excess number of candidates" << std::endl;
         return;
     }
 

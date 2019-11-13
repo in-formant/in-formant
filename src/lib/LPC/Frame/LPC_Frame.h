@@ -28,7 +28,6 @@ namespace LPC {
 
     void frame_huber(const Eigen::ArrayXd & sound, const Frame & lpc1, Frame & lpc2, Huber::huber_s & hs);
 
-    void toRoots(const Frame & lpc, Eigen::ArrayXcd & z);
     void toFormantFrame(const Frame & lpc, Formant::Frame & frm, double samplingFrequency, double margin);
 
 }

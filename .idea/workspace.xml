@@ -13,38 +13,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Impleme">
-      <change afterPath="$PROJECT_DIR$/src/lib/Formant/Formant_track.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/YAAPT.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/YAAPT.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/cmp_rate.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/crs_corr.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic5.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nlfer.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nonlinear.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/path1.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/peaks.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/refine.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/spec_trk.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/tm_trk.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir1.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir2.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/interp1.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/medfilt1.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/specgram.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Math/Integration.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Math/Integration.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/FFT/FFT.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/FFT/FFT_d.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/FFT/FFT.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/FFT/FFT.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/LPC/LPC.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Math/Viterbi.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Math/Viterbi.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Filter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Filter.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Filter.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Filter.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Resample.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Resample.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Window.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Window.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Window.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Window.h" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -91,7 +71,7 @@
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="dynamic.analysis.tools.profiler" />
+    <property name="settings.editor.selected.configurable" value="CPPToolchains" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -119,7 +99,7 @@
     </option>
   </component>
   <component name="RunManager">
-    <configuration name="speech_analysis" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="speech_analysis" TARGET_NAME="speech_analysis" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="speech_analysis" RUN_TARGET_NAME="speech_analysis">
+    <configuration name="speech_analysis" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="speech_analysis" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="Project" RUN_TARGET_NAME="speech_analysis">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -179,6 +159,10 @@
       <workItem from="1573491433618" duration="5130000" />
       <workItem from="1573538909820" duration="12054000" />
       <workItem from="1573562875759" duration="5073000" />
+      <workItem from="1573580402027" duration="10953000" />
+      <workItem from="1573598619154" duration="7042000" />
+      <workItem from="1573643675528" duration="6258000" />
+      <workItem from="1573660249339" duration="1089000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>

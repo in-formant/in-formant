@@ -9,17 +9,6 @@
 
 using namespace Eigen;
 
-void LPC::toRoots(const LPC::Frame & lpc, ArrayXcd & r)
-{
-    const int n = lpc.nCoefficients;
-
-    ArrayXd p(n + 1);
-    p(0) = 1.0;
-    p.tail(n) = lpc.a;
-
-    Polynomial::roots(p, r);
-}
-
 void LPC::toFormantFrame(
         const LPC::Frame & lpc, Formant::Frame & frm,
         double samplingFrequency, double margin)
@@ -32,8 +21,13 @@ void LPC::toFormantFrame(
     }
     else {
         ArrayXcd r;
-        LPC::toRoots(lpc, r);
+
+        ArrayXd p(lpc.nCoefficients + 1);
+        p(0) = 1.0;
+        p.tail(lpc.nCoefficients) = lpc.a;
+
+        Polynomial::roots(p, r);
         Polynomial::fixRootsIntoUnitCircle(r);
-        Formant::frameFromRoots(r, frm, samplingFrequency, margin);
+        Formant::frameFromRoots(p, r, frm, samplingFrequency, margin);
     }
 }

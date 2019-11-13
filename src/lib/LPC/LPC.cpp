@@ -32,7 +32,7 @@ LPC::Frames LPC::analyse(const Eigen::ArrayXd & _sound, int predictionOrder,
         windowDuration = frameLength / samplingFrequency;
     }
 
-    LPC::shortTermAnalysis(_sound, windowDuration, samplingFrequency, 5.0 / 1000.0, &numberOfFrames, &t1);
+    LPC::shortTermAnalysis(_sound, windowDuration, samplingFrequency, samplingFrequency, &numberOfFrames, &t1);
 
     ArrayXd sound(_sound);
     ArrayXd sframe(frameLength);
