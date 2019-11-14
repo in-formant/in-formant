@@ -17,14 +17,13 @@
       <change afterPath="$PROJECT_DIR$/src/lib/Math/Integration.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture_callbacks.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture_callbacks.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/LPC/LPC.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Math/Viterbi.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Math/Viterbi.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/Pitch_AMDF.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch_AMDF.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/cmp_rate.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/cmp_rate.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Filter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Filter.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -49,7 +48,7 @@
     <expand />
     <select />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Release" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="MIXED" />
@@ -99,7 +98,7 @@
     </option>
   </component>
   <component name="RunManager">
-    <configuration name="speech_analysis" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="speech_analysis" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="Project" RUN_TARGET_NAME="speech_analysis">
+    <configuration name="speech_analysis" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="speech_analysis" TARGET_NAME="speech_analysis" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="speech_analysis" RUN_TARGET_NAME="speech_analysis">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -163,6 +162,9 @@
       <workItem from="1573598619154" duration="7042000" />
       <workItem from="1573643675528" duration="6258000" />
       <workItem from="1573660249339" duration="1089000" />
+      <workItem from="1573670291019" duration="1715000" />
+      <workItem from="1573672444342" duration="6000" />
+      <workItem from="1573740387752" duration="2820000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -241,7 +243,14 @@
       <option name="project" value="LOCAL" />
       <updated>1573393352498</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Attempt to add better formant estimation.&#10;Added some UI controls">
+      <created>1573670364486</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1573670364486</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -314,7 +323,8 @@
     <MESSAGE value="Modified render strategy for formant tracks" />
     <MESSAGE value="Added Viterbi in preparation for formant tracking" />
     <MESSAGE value="Added pitch tracker to the display, refined accuracy." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added pitch tracker to the display, refined accuracy." />
+    <MESSAGE value="Attempt to add better formant estimation.&#10;Added some UI controls" />
+    <option name="LAST_COMMIT_MESSAGE" value="Attempt to add better formant estimation.&#10;Added some UI controls" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>

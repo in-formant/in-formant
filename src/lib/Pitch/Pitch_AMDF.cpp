@@ -10,8 +10,8 @@ void Pitch::estimate_AMDF(const ArrayXd & x, double fs, Pitch::Estimation & resu
 
     const int maxShift = x.size();
 
-    const int maxPeriod = std::ceil(fs / F0min);
-    const int minPeriod = std::floor(fs / F0max);
+    const int maxPeriod = ceil(fs / F0min);
+    const int minPeriod = floor(fs / F0max);
 
     ArrayXd amd = ArrayXd::Zero(maxShift);
 
@@ -28,7 +28,7 @@ void Pitch::estimate_AMDF(const ArrayXd & x, double fs, Pitch::Estimation & resu
     double minVal = validAmd.minCoeff();
     double maxVal = validAmd.maxCoeff();
 
-    const double cutoff = std::round((sensitivity * (maxVal - minVal)) + minVal);
+    const double cutoff = round((sensitivity * (maxVal - minVal)) + minVal);
 
     int j = minPeriod;
     while (j <= maxPeriod && amd(j) > cutoff) {
@@ -51,7 +51,7 @@ void Pitch::estimate_AMDF(const ArrayXd & x, double fs, Pitch::Estimation & resu
         }
     }
 
-    result.isVoiced = (std::round(minVal * ratio) < maxVal);
+    result.isVoiced = (round(minVal * ratio) < maxVal);
 
     if (result.isVoiced) {
         result.pitch = fs / static_cast<double>(minPos);

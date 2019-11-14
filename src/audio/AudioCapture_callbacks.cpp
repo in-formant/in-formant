@@ -37,8 +37,8 @@ int AudioCapture::readCallback(const void * input, void * output,
         convertToFloat<const int8_t>(block, inPtr, frameCount, 0, INT8_MAX);
     }
     else if (ctx->format == paUInt8) {
-        auto inPtr = static_cast<const u_int8_t *>(input);
-        convertToFloat<const u_int8_t>(block, inPtr, frameCount, 128, INT8_MAX);
+        auto inPtr = static_cast<const uint8_t *>(input);
+        convertToFloat<const uint8_t>(block, inPtr, frameCount, 128, INT8_MAX);
     }
 
     ctx->buffer.writeInto(block);

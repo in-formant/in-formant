@@ -17,7 +17,7 @@ void YAAPT::cmp_rate(
     // Width of the window used in the first pass of peak picking.
     double width = prm.nccfPWidth;
     // The center of the window is defined as the peak location.
-    int center = std::round(width / 2.0);
+    int center = round(width / 2.0);
 
     // The threshold value used for the first pass of
     // peak picking for each frame. Any peaks found greater than this

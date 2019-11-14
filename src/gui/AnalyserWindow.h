@@ -25,7 +25,7 @@
 #define RENDER_RATE 60
 #define RENDER_DELAY (1000 / RENDER_RATE)
 
-#define UPDATE_RATE 240
+#define UPDATE_RATE 120
 #define UPDATE_DELAY (1000 / UPDATE_RATE)
 
 class AnalyserWindow {

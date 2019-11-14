@@ -48,10 +48,8 @@ void Formant::frameFromRoots(
             continue;
         }
 
-        std::cout << "r = " << r << ", phi = " << std::arg(v) << std::endl;
-
         // Magnitude condition for forming a formant
-        if (0.62 <= r && r < 1.0) {
+        if (0.7 <= r && r < 1.0) {
             roots.push_back({r, phi});
         }
     }

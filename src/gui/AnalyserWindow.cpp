@@ -19,7 +19,7 @@
 
 using namespace Eigen;
 
-static constexpr double maxFrequency = 6000;
+static constexpr double maxFrequency = 5300;
 static constexpr Uint8 formantColors[6][3] = {
     {255, 167, 0},
     {255, 87, 217},
@@ -35,9 +35,9 @@ AnalyserWindow::AnalyserWindow() noexcept(false) {
 
     audioData.setZero(500);
 
-    rawFormantTrack.frames.resize(200, {5, {{550}, {1650}, {2750}, {3850}, {4950}}});
-    formantTrack.frames.resize(200, {5, {{550}, {1650}, {2750}, {3850}, {4950}}});
-    pitchTrack.resize(200, 0);
+    rawFormantTrack.frames.resize(500, {5, {{550}, {1650}, {2750}, {3850}, {4950}}});
+    formantTrack.frames.resize(500, {5, {{550}, {1650}, {2750}, {3850}, {4950}}});
+    pitchTrack.resize(500, 0);
     selectedFrame = 199;
 
     tailFormantLength = 15;
@@ -181,7 +181,7 @@ void AnalyserWindow::preRender() {
         const auto & Fi = frame.formant.at(i);
 
         sb << "F" << (i + 1) << " = ";
-        sb << std::round(Fi.frequency) << " Hz";
+        sb << round(Fi.frequency) << " Hz";
 
         str = sb.str().c_str();
 
@@ -192,7 +192,7 @@ void AnalyserWindow::preRender() {
     }
 
     if (pitch > 0) {
-        sb << "Voiced: " << std::round(pitch) << " Hz";
+        sb << "Voiced: " << round(pitch) << " Hz";
     }
     else {
         sb << "Unvoiced";
@@ -243,10 +243,10 @@ void AnalyserWindow::update() {
     // Estimate pitch with AMDF, then refine with AMDF.
     Pitch::Estimation est{};
 
-    Pitch::estimate_AMDF(x_orig, fs_orig, est, 70, 1000, 1.2, 0.1);
+    Pitch::estimate_AMDF(x_orig, fs_orig, est, 70, 1000, 2.0, 0.01);
     if (est.isVoiced && (est.pitch > 70 && est.pitch < 1000)) {
         double pitch = est.pitch;
-        Pitch::estimate_AMDF(x_orig, fs_orig, est, 0.4 * pitch, 2.2 * pitch, 2.0, 0.2);
+        Pitch::estimate_AMDF(x_orig, fs_orig, est, 0.8 * pitch, 1.1 * pitch, 1.0, 0.1);
         est.isVoiced &= (est.pitch > 0.4 * pitch && est.pitch < 2.2 * pitch);
     }
     else {
@@ -265,7 +265,7 @@ void AnalyserWindow::update() {
     // Estimate LPC coefficients.
     LPC::Frames lpc = LPC::analyse(
             x,
-            13,
+            10,
             30.0 / 1000.0,
             fs,
             50.0,
@@ -293,7 +293,7 @@ void AnalyserWindow::update() {
 
     int maxnFormants = 0;
     for (const auto &frame : tailRawFrames.frames) {
-        maxnFormants = std::max(maxnFormants, frame.nFormants);
+        maxnFormants = max(maxnFormants, frame.nFormants);
     }
 
     Formant::tracker(
@@ -326,7 +326,7 @@ void AnalyserWindow::handleMouse(int x, int y) {
     const int nframe = formantTrack.frames.size();
     const double xstep = static_cast<double>(targetWidth) / static_cast<double>(nframe - 1);
 
-    selectedFrame = std::clamp<int>(std::round(x / xstep), 0, nframe - 1);
+    selectedFrame = std::min<int>(std::max<int>(std::round(x / xstep), 0), nframe - 1);
 }
 
 void AnalyserWindow::renderGraph() {
@@ -351,7 +351,7 @@ void AnalyserWindow::renderGraph() {
             y = targetHeight - (targetHeight * formant.frequency) / maxFrequency;
 
             if (pitch > 0) {
-                filledCircleRGBA(renderer, x, y, xstep / 2, formantColors[formantNb][0], formantColors[formantNb][1], formantColors[formantNb][2], 255);
+                filledCircleRGBA(renderer, x, y, 1.25 * xstep, formantColors[formantNb][0], formantColors[formantNb][1], formantColors[formantNb][2], 255);
                 //filledCircleRGBA(renderer, x, y, xstep / 2, 255,167, 0, 255);
             }
             else {
@@ -365,7 +365,7 @@ void AnalyserWindow::renderGraph() {
 
         if (pitch > 0) {
             y = targetHeight - (targetHeight * pitch) / maxFrequency;
-            boxRGBA(renderer, x, y - 1, x + xstep, y + 1, 0, 167, 255, 255);
+            boxRGBA(renderer, x, y - 1, x + xstep - 1, y + 1, 0, 167, 255, 255);
         }
 
         x += xstep;
