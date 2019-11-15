@@ -1,6 +1,6 @@
 #include "gui/AnalyserWindow.h"
 
-int main() {
+int main(int argc, char **argv) {
 
     AnalyserWindow window;
 

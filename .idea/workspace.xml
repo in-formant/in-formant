@@ -12,18 +12,21 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Impleme">
-      <change afterPath="$PROJECT_DIR$/src/lib/Math/Integration.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Math/Integration.h" afterDir="false" />
+    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Added build scripts. Tweaked default parameters.">
+      <change afterPath="$PROJECT_DIR$/src/lib/Math/Bairstow.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Math/Bairstow.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture_callbacks.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture_callbacks.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build-lin.sh" beforeDir="false" afterPath="$PROJECT_DIR$/build-lin.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build-win-mxe.sh" beforeDir="false" afterPath="$PROJECT_DIR$/build-win-mxe.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/Pitch_AMDF.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch_AMDF.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/cmp_rate.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/cmp_rate.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Filter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Filter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant_track.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant_track.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Math/Integration.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Math/Integration.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -48,14 +51,16 @@
     <expand />
     <select />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Release" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="MIXED" />
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectId" id="1Qj5Ob0jjQ3AHZtFWDYKPqmif7X" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="ignore_missing_gitignore" value="true" />
@@ -70,7 +75,7 @@
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="CPPToolchains" />
+    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -164,7 +169,10 @@
       <workItem from="1573660249339" duration="1089000" />
       <workItem from="1573670291019" duration="1715000" />
       <workItem from="1573672444342" duration="6000" />
-      <workItem from="1573740387752" duration="2820000" />
+      <workItem from="1573740387752" duration="3071000" />
+      <workItem from="1573758130487" duration="6177000" />
+      <workItem from="1573805985665" duration="7699000" />
+      <workItem from="1573814296078" duration="1203000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -250,7 +258,14 @@
       <option name="project" value="LOCAL" />
       <updated>1573670364486</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Added build scripts. Tweaked default parameters.">
+      <created>1573743460616</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1573743460616</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -324,7 +339,8 @@
     <MESSAGE value="Added Viterbi in preparation for formant tracking" />
     <MESSAGE value="Added pitch tracker to the display, refined accuracy." />
     <MESSAGE value="Attempt to add better formant estimation.&#10;Added some UI controls" />
-    <option name="LAST_COMMIT_MESSAGE" value="Attempt to add better formant estimation.&#10;Added some UI controls" />
+    <MESSAGE value="Added build scripts. Tweaked default parameters." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added build scripts. Tweaked default parameters." />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>

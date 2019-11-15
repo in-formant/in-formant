@@ -19,14 +19,17 @@
 
 using namespace Eigen;
 
-static constexpr double maxFrequency = 5300;
-static constexpr Uint8 formantColors[6][3] = {
+static constexpr double maxFrequency = 6000;
+static constexpr Uint8 formantColors[9][3] = {
     {255, 167, 0},
     {255, 87, 217},
     {127, 255, 0},
     {87, 200, 200},
     {200, 167, 255},
     {0, 165, 156},
+    {255, 255, 255}, // unused
+    {255, 255, 255},
+    {255, 255, 255},
 };
 
 AnalyserWindow::AnalyserWindow() noexcept(false) {
@@ -40,7 +43,7 @@ AnalyserWindow::AnalyserWindow() noexcept(false) {
     pitchTrack.resize(500, 0);
     selectedFrame = 199;
 
-    tailFormantLength = 15;
+    tailFormantLength = 20;
     renderRaw = false;
     pauseScroll = false;
 
@@ -185,7 +188,8 @@ void AnalyserWindow::preRender() {
 
         str = sb.str().c_str();
 
-        formantStrTex.push_back(SDL::renderText(renderer, font, str, {255, 255, 255, 255}));
+        formantStrTex.push_back(SDL::renderText(renderer, font, str,
+                {formantColors[i][0], formantColors[i][1], formantColors[i][2], 255}));
 
         sb.str("");
         sb.clear();
@@ -243,10 +247,10 @@ void AnalyserWindow::update() {
     // Estimate pitch with AMDF, then refine with AMDF.
     Pitch::Estimation est{};
 
-    Pitch::estimate_AMDF(x_orig, fs_orig, est, 70, 1000, 2.0, 0.01);
+    Pitch::estimate_AMDF(x_orig, fs_orig, est, 70, 1000, 1.2, 0.01);
     if (est.isVoiced && (est.pitch > 70 && est.pitch < 1000)) {
         double pitch = est.pitch;
-        Pitch::estimate_AMDF(x_orig, fs_orig, est, 0.8 * pitch, 1.1 * pitch, 1.0, 0.1);
+        Pitch::estimate_AMDF(x_orig, fs_orig, est, 0.8 * pitch, 1.1 * pitch, 2.0, 0.1);
         est.isVoiced &= (est.pitch > 0.4 * pitch && est.pitch < 2.2 * pitch);
     }
     else {
@@ -269,7 +273,7 @@ void AnalyserWindow::update() {
             30.0 / 1000.0,
             fs,
             50.0,
-            LPC::Burg);
+            LPC::Auto);
     LPC::Frame lpcFrame = lpc.d_frames.at(0);
 
     // Estimate formants.
@@ -293,7 +297,7 @@ void AnalyserWindow::update() {
 
     int maxnFormants = 0;
     for (const auto &frame : tailRawFrames.frames) {
-        maxnFormants = max(maxnFormants, frame.nFormants);
+        maxnFormants = std::max(maxnFormants, frame.nFormants);
     }
 
     Formant::tracker(
@@ -301,14 +305,7 @@ void AnalyserWindow::update() {
             550, 1650, 2750, 3850, 4950,
             1.0, 1.0, 1.0);
 
-    formantTrack.frames.pop_front();
-    formantTrack.frames.push_back({});
-    std::copy(tailFrames.frames.begin(), tailFrames.frames.end(), formantTrack.frames.end() - tailFormantLength);
-
-    if (!pauseScroll) {
-        formantTrack.frames.pop_front();
-        formantTrack.frames.push_back(fFrame);
-    }*/
+    std::copy(tailFrames.frames.begin(), tailFrames.frames.end(), formantTrack.frames.end() - tailFormantLength);*/
 }
 
 void AnalyserWindow::handleKeyDown(const Uint8 * state, SDL_Scancode scanCode) {

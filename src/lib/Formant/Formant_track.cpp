@@ -46,7 +46,7 @@ static void putResult(int iframe, int place, int itrack, void * closure)
 }
 
 void Formant::tracker(
-        const Frames & src, Frames & dst, int ncand, int ntrack,
+        Frames & src, Frames & dst, int ncand, int ntrack,
         double refF1, double refF2, double refF3, double refF4, double refF5,
         double dfCost, double bfCost, double octaveJumpCost)
 {

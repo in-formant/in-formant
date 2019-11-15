@@ -423,3 +423,4 @@ tags
 # Persistent undo
 [._]*.un~
 
+pkg/

@@ -4,11 +4,6 @@ project(speech_analysis)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${speech_analysis_SOURCE_DIR}/cmake")
 
-if (${CMAKE_SYSTEM_NAME} EQUAL "Windows")
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-    set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
-endif()
-
 set(SOURCES
         src/main.cpp
         src/gui/AnalyserWindow.cpp
@@ -71,7 +66,7 @@ set(SOURCES
         src/lib/Pitch/YAAPT/tm_trk.cpp
         src/lib/Pitch/YAAPT/spec_trk.cpp
         src/lib/Pitch/YAAPT/YAAPT.cpp
-        src/lib/Formant/Formant_track.cpp)
+        src/lib/Formant/Formant_track.cpp src/lib/Math/Bairstow.cpp src/lib/Math/Bairstow.h)
 
 add_executable(speech_analysis ${SOURCES})
 
@@ -94,6 +89,7 @@ target_link_libraries(speech_analysis
         ${SDL2_LIBRARY}
         ${SDL2_TTF_LIBRARIES}
         ${SDL2_GFX_LIBRARIES}
+        ${SDL2_LIBRARY}
         Eigen3::Eigen
         ${PORTAUDIO_LIBRARIES}
         ${FFTW_LIBRARIES})
