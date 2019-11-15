@@ -39,10 +39,7 @@ void Formant::frameFromRoots(
 
     std::vector<root> roots;
     std::vector<root> peakMergers;
-    std::vector<dcomplex> polishRoots;
     std::vector<dcomplex> finalRoots;
-
-    std::cout << "=== one frame" << std::endl;
 
     for (const auto & v : r) {
         if (v.imag() < 0) {
@@ -59,10 +56,10 @@ void Formant::frameFromRoots(
         }
 
         // Magnitude condition for forming a formant
-        if (0.65 <= r && r < 1.0) {
+        //if (0.5 <= r && r < 1.0) {
             double b = -std::log(r) * samplingFrequency / M_PI;
             roots.push_back({r, phi, f, b});
-        }
+        //}
     }
 
     std::sort(roots.begin(), roots.end(),
@@ -104,15 +101,13 @@ void Formant::frameFromRoots(
 
         int n = abs(n4 - n3);
 
-        std::cout << "n = " << n << std::endl;
-
         // If there is only one pole in the section, add it as a single formant.
         if (n == 1) {
             frm.formant.push_back({v.f, v.b});
         }
         else if (n == 2) {
-            dcomplex z1 = std::polar(0.9, phiPeak);
-            dcomplex z2 = std::polar(0.9, phiPeak);
+            dcomplex z1 = std::polar(0.9, phiPeak - deltaPhi / 4.0);
+            dcomplex z2 = std::polar(0.9, phiPeak + deltaPhi / 4.0);
 
             std::vector<dcomplex> polished;
 

@@ -12,21 +12,13 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Added build scripts. Tweaked default parameters.">
-      <change afterPath="$PROJECT_DIR$/src/lib/Math/Bairstow.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Math/Bairstow.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build-lin.sh" beforeDir="false" afterPath="$PROJECT_DIR$/build-lin.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build-win-mxe.sh" beforeDir="false" afterPath="$PROJECT_DIR$/build-win-mxe.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant_track.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant_track.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Math/Integration.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Math/Integration.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Math/Bairstow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Math/Bairstow.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Math/Bairstow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Math/Bairstow.h" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -51,7 +43,7 @@
     <expand />
     <select />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Release" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="MIXED" />
@@ -172,7 +164,9 @@
       <workItem from="1573740387752" duration="3071000" />
       <workItem from="1573758130487" duration="6177000" />
       <workItem from="1573805985665" duration="7699000" />
-      <workItem from="1573814296078" duration="1203000" />
+      <workItem from="1573814296078" duration="1508000" />
+      <workItem from="1573815895077" duration="198000" />
+      <workItem from="1573816116590" duration="484000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -265,7 +259,14 @@
       <option name="project" value="LOCAL" />
       <updated>1573743460616</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Added merged peak resolving and root polishing using Bairstow's method.">
+      <created>1573815618468</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1573815618468</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -340,7 +341,8 @@
     <MESSAGE value="Added pitch tracker to the display, refined accuracy." />
     <MESSAGE value="Attempt to add better formant estimation.&#10;Added some UI controls" />
     <MESSAGE value="Added build scripts. Tweaked default parameters." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added build scripts. Tweaked default parameters." />
+    <MESSAGE value="Added merged peak resolving and root polishing using Bairstow's method." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added merged peak resolving and root polishing using Bairstow's method." />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>

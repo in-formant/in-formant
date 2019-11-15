@@ -41,7 +41,7 @@ AnalyserWindow::AnalyserWindow() noexcept(false) {
     rawFormantTrack.frames.resize(500, {5, {{550}, {1650}, {2750}, {3850}, {4950}}});
     formantTrack.frames.resize(500, {5, {{550}, {1650}, {2750}, {3850}, {4950}}});
     pitchTrack.resize(500, 0);
-    selectedFrame = 199;
+    selectedFrame = 499;
 
     tailFormantLength = 20;
     renderRaw = false;
@@ -247,10 +247,10 @@ void AnalyserWindow::update() {
     // Estimate pitch with AMDF, then refine with AMDF.
     Pitch::Estimation est{};
 
-    Pitch::estimate_AMDF(x_orig, fs_orig, est, 70, 1000, 1.2, 0.01);
+    Pitch::estimate_AMDF(x_orig, fs_orig, est, 70, 600, 1.0, 0.5);
     if (est.isVoiced && (est.pitch > 70 && est.pitch < 1000)) {
         double pitch = est.pitch;
-        Pitch::estimate_AMDF(x_orig, fs_orig, est, 0.8 * pitch, 1.1 * pitch, 2.0, 0.1);
+        Pitch::estimate_AMDF(x_orig, fs_orig, est, 0.8 * pitch, 1.2 * pitch, 1.5, 0.1);
         est.isVoiced &= (est.pitch > 0.4 * pitch && est.pitch < 2.2 * pitch);
     }
     else {
@@ -292,7 +292,8 @@ void AnalyserWindow::update() {
 
     // Track formants. We'll only look at a small amount of trailing formant frames to save CPU load.
     // The number will be truncated to the largest number of consecutive voiced frames.
-    /*Formant::Frames tailRawFrames, tailFrames;
+    /*
+ *  Formant::Frames tailRawFrames, tailFrames;
     std::copy(rawFormantTrack.frames.end() - tailFormantLength, rawFormantTrack.frames.end(), std::back_inserter(tailRawFrames.frames));
 
     int maxnFormants = 0;
@@ -305,7 +306,8 @@ void AnalyserWindow::update() {
             550, 1650, 2750, 3850, 4950,
             1.0, 1.0, 1.0);
 
-    std::copy(tailFrames.frames.begin(), tailFrames.frames.end(), formantTrack.frames.end() - tailFormantLength);*/
+    std::copy(tailFrames.frames.begin(), tailFrames.frames.end(), formantTrack.frames.end() - tailFormantLength);
+    */
 }
 
 void AnalyserWindow::handleKeyDown(const Uint8 * state, SDL_Scancode scanCode) {

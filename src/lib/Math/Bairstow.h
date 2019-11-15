@@ -11,7 +11,7 @@ namespace Bairstow {
 
     void solve(const Eigen::ArrayXd & poly, const Eigen::dcomplex & z0, const Eigen::dcomplex & z1,
                std::vector<Eigen::dcomplex> & roots,
-               int maxIter = 20, double eps1 = 0.001, double eps2 = 0.0001);
+               int maxTotalIter = 200, int maxIter = 20, double eps1 = 0.001, double eps2 = 0.0001);
 
 }
 

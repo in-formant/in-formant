@@ -24,9 +24,9 @@ static void getRoots(double u, double v, double eps, std::vector<dcomplex> & roo
     }
 }
 
-void Bairstow::solve(const ArrayXd & poly, const dcomplex & z0, const dcomplex & z1, std::vector<dcomplex> & roots, int maxIter, double eps1, double eps2)
+void Bairstow::solve(const ArrayXd & poly, const dcomplex & z0, const dcomplex & z1, std::vector<dcomplex> & roots, int maxTotalIter, int maxIter, double eps1, double eps2)
 {
-    int n, iter;
+    int n, iter, totalIter;
     double u, v, du, dv, denom;
     bool isCloseToZero;
 
@@ -40,6 +40,7 @@ void Bairstow::solve(const ArrayXd & poly, const dcomplex & z0, const dcomplex &
 
     for (const auto & initialRoot : z) {
         // Step 1
+        totalIter = 0;
         iter = 0;
         isCloseToZero = false;
         u = -2 * real(initialRoot);
@@ -73,6 +74,10 @@ void Bairstow::solve(const ArrayXd & poly, const dcomplex & z0, const dcomplex &
             // Step 5
             u += du;
             v += dv;
+            totalIter++;
+            if (totalIter >= maxTotalIter) {
+                break;
+            }
             if (iter < maxIter) {
                 iter++;
             } else {
