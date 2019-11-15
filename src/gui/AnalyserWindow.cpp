@@ -19,7 +19,6 @@
 
 using namespace Eigen;
 
-static constexpr double maxFrequency = 6000;
 static constexpr Uint8 formantColors[9][3] = {
     {255, 167, 0},
     {255, 87, 217},
@@ -43,9 +42,11 @@ AnalyserWindow::AnalyserWindow() noexcept(false) {
     pitchTrack.resize(500, 0);
     selectedFrame = 499;
 
-    tailFormantLength = 20;
     renderRaw = false;
     pauseScroll = false;
+
+    maximumFrequency = 5500;
+    lpOrder = 10;
 
     int ret;
 
@@ -64,8 +65,7 @@ AnalyserWindow::AnalyserWindow() noexcept(false) {
     window = SDL_CreateWindow(
             WINDOW_TITLE,
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-            WINDOW_WIDTH, WINDOW_HEIGHT,
-            SDL_WINDOW_SHOWN);
+            WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     if (window == nullptr) {
         throw SDLException("Unable to create window");
     }
@@ -75,7 +75,7 @@ AnalyserWindow::AnalyserWindow() noexcept(false) {
     renderer = SDL_CreateRenderer(
             window,
             -1,
-            SDL_RENDERER_ACCELERATED);
+            SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
     if (renderer == nullptr) {
         throw SDLException("Unable to create renderer");
     }
@@ -84,6 +84,9 @@ AnalyserWindow::AnalyserWindow() noexcept(false) {
     if (font == nullptr) {
         throw TTFException("Unable to open font");
     }
+
+    SDL_initFramerate(&fpsManager);
+    SDL_setFramerate(&fpsManager, 120);
 
 }
 
@@ -103,10 +106,6 @@ void AnalyserWindow::mainLoop() {
 
     bool running = true;
     SDL_Event evt;
-
-    int currentTime;
-    int previousUpdate = 0;
-    int previousRender = 0;
 
     while (running) {
 
@@ -141,29 +140,20 @@ void AnalyserWindow::mainLoop() {
             continue;
         }
 
-        currentTime = SDL_GetTicks();
+        int x, y;
+        SDL_GetMouseState(&x, &y);
+        handleMouse(x, y);
 
-        // Check for update.
-        if (currentTime - previousUpdate > UPDATE_DELAY) {
-            update();
-            previousUpdate = SDL_GetTicks();
-        }
+        update();
 
-        // Check for render.
-        if (currentTime - previousRender > RENDER_DELAY) {
-            int x, y;
-            SDL_GetMouseState(&x, &y);
-            handleMouse(x, y);
+        preRender();
 
-            preRender();
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+        render();
+        SDL_RenderPresent(renderer);
 
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-            SDL_RenderClear(renderer);
-            render();
-            SDL_RenderPresent(renderer);
-
-            previousRender = SDL_GetTicks();
-        }
+        SDL_framerateDelay(&fpsManager);
 
     }
 
@@ -178,7 +168,6 @@ void AnalyserWindow::preRender() {
     double pitch = pitchTrack[selectedFrame];
 
     std::stringstream sb(std::ios_base::out);
-    const char * str;
 
     for (int i = 0; i < frame.nFormants; ++i) {
         const auto & Fi = frame.formant.at(i);
@@ -186,26 +175,29 @@ void AnalyserWindow::preRender() {
         sb << "F" << (i + 1) << " = ";
         sb << round(Fi.frequency) << " Hz";
 
-        str = sb.str().c_str();
-
-        formantStrTex.push_back(SDL::renderText(renderer, font, str,
+        formantStrTex.push_back(SDL::renderText(renderer, font, sb.str().c_str(),
                 {formantColors[i][0], formantColors[i][1], formantColors[i][2], 255}));
 
         sb.str("");
         sb.clear();
     }
 
-    if (pitch > 0) {
+    if (pitch > 0)
         sb << "Voiced: " << round(pitch) << " Hz";
-    }
-    else {
+    else
         sb << "Unvoiced";
-    }
+    pitchStrTex = SDL::renderText(renderer, font, sb.str().c_str(), {255, 255, 255, 255});
 
-    str = sb.str().c_str();
+    sb.str("");
+    sb.clear();
 
-    pitchStrTex = SDL::renderText(renderer, font, str, {255, 255, 255, 255});
+    sb << "LP order: " << lpOrder;
+    lpOrderStrTex = SDL::renderText(renderer, font, sb.str().c_str(), {187, 187, 187, 255});
+    sb.str("");
+    sb.clear();
 
+    sb << "F.max: " << round(maximumFrequency) << " Hz";
+    maxFreqStrTex = SDL::renderText(renderer, font, sb.str().c_str(), {187, 187, 187, 255});
     sb.str("");
     sb.clear();
 
@@ -229,15 +221,26 @@ void AnalyserWindow::render() {
     pos = {0.9, 0.01};
     SDL::renderRelativeToCenter(renderer, pitchStrTex, targetWidth, targetHeight, &pos);
 
+    pos = {0.2, 0.01};
+    SDL::renderRelativeToCenter(renderer, lpOrderStrTex, targetWidth, targetHeight, &pos);
+
+    pos = {0.2, 0.06};
+    SDL::renderRelativeToCenter(renderer, maxFreqStrTex, targetWidth, targetHeight, &pos);
+
     // Free textures.
     for (int i = 0; i < formantStrTex.size(); ++i) {
         SDL_DestroyTexture(formantStrTex[i]);
     }
     formantStrTex.clear();
     SDL_DestroyTexture(pitchStrTex);
+    SDL_DestroyTexture(lpOrderStrTex);
 }
 
 void AnalyserWindow::update() {
+
+    if (pauseScroll) {
+        return;
+    }
 
     // Read captured audio.
     audioCapture.readBlock(audioData);
@@ -247,8 +250,8 @@ void AnalyserWindow::update() {
     // Estimate pitch with AMDF, then refine with AMDF.
     Pitch::Estimation est{};
 
-    Pitch::estimate_AMDF(x_orig, fs_orig, est, 70, 600, 1.0, 0.5);
-    if (est.isVoiced && (est.pitch > 70 && est.pitch < 1000)) {
+    Pitch::estimate_AMDF(x_orig, fs_orig, est, 70, 600, 1.0, 0.01);
+    if (est.isVoiced && (est.pitch > 70 && est.pitch < 600)) {
         double pitch = est.pitch;
         Pitch::estimate_AMDF(x_orig, fs_orig, est, 0.8 * pitch, 1.2 * pitch, 1.5, 0.1);
         est.isVoiced &= (est.pitch > 0.4 * pitch && est.pitch < 2.2 * pitch);
@@ -263,37 +266,34 @@ void AnalyserWindow::update() {
     pitchSB << "YAAPT: avg = " << round(yaaptEst.pitch);*/
 
     // Only read a 25ms frame. Downsample.
-    double fs = maxFrequency * 2;
+    double fs = maximumFrequency * 2;
     ArrayXd x = Resample::resample(x_orig, fs_orig, fs, 50);
 
     // Estimate LPC coefficients.
     LPC::Frames lpc = LPC::analyse(
             x,
-            10,
+            lpOrder,
             30.0 / 1000.0,
             fs,
             50.0,
-            LPC::Auto);
+            LPC::Burg);
     LPC::Frame lpcFrame = lpc.d_frames.at(0);
 
     // Estimate formants.
     Formant::Frame fFrame{};
-    LPC::toFormantFrame(lpcFrame, fFrame, fs, 50.0);
+    LPC::toFormantFrame(lpcFrame, fFrame, fs);
 
-    if (!pauseScroll) {
-        pitchTrack.pop_front();
-        rawFormantTrack.frames.pop_front();
-        formantTrack.frames.pop_front();
+    pitchTrack.pop_front();
+    rawFormantTrack.frames.pop_front();
+    formantTrack.frames.pop_front();
 
-        pitchTrack.push_back(est.isVoiced ? est.pitch : 0);
-        rawFormantTrack.frames.push_back(fFrame);
-        formantTrack.frames.push_back(fFrame);
-    }
+    pitchTrack.push_back(est.isVoiced ? est.pitch : 0);
+    rawFormantTrack.frames.push_back(fFrame);
+    formantTrack.frames.push_back(fFrame);
 
     // Track formants. We'll only look at a small amount of trailing formant frames to save CPU load.
     // The number will be truncated to the largest number of consecutive voiced frames.
-    /*
- *  Formant::Frames tailRawFrames, tailFrames;
+    /*Formant::Frames tailRawFrames, tailFrames;
     std::copy(rawFormantTrack.frames.end() - tailFormantLength, rawFormantTrack.frames.end(), std::back_inserter(tailRawFrames.frames));
 
     int maxnFormants = 0;
@@ -302,12 +302,12 @@ void AnalyserWindow::update() {
     }
 
     Formant::tracker(
-            tailRawFrames, tailFrames, maxnFormants, 2,
+            tailRawFrames, tailFrames, maxnFormants, 3,
             550, 1650, 2750, 3850, 4950,
             1.0, 1.0, 1.0);
 
-    std::copy(tailFrames.frames.begin(), tailFrames.frames.end(), formantTrack.frames.end() - tailFormantLength);
-    */
+    std::copy(tailFrames.frames.begin(), tailFrames.frames.end(), formantTrack.frames.end() - tailFormantLength);*/
+
 }
 
 void AnalyserWindow::handleKeyDown(const Uint8 * state, SDL_Scancode scanCode) {
@@ -319,13 +319,25 @@ void AnalyserWindow::handleKeyUp(const Uint8 * state, SDL_Scancode scanCode) {
     if (scanCode == SDL_SCANCODE_P) {
         pauseScroll = !pauseScroll;
     }
+
+    int parIncr = (scanCode == SDL_SCANCODE_UP ? 1
+                    : (scanCode == SDL_SCANCODE_DOWN ? -1 : 0));
+    if (parIncr != 0) {
+        // LPC Order
+        if (state[SDL_SCANCODE_L]) {
+            lpOrder = std::clamp(lpOrder + parIncr, 5, 22);
+        }
+        else if (state[SDL_SCANCODE_F]) {
+            maximumFrequency = std::clamp(maximumFrequency + 100.0 * parIncr, 3000.0, 6000.0);
+        }
+    }
 }
 
 void AnalyserWindow::handleMouse(int x, int y) {
     const int nframe = formantTrack.frames.size();
     const double xstep = static_cast<double>(targetWidth) / static_cast<double>(nframe - 1);
 
-    selectedFrame = std::min<int>(std::max<int>(std::round(x / xstep), 0), nframe - 1);
+    selectedFrame = std::clamp<int>(std::round(x / xstep), 0, nframe - 1);
 }
 
 void AnalyserWindow::renderGraph() {
@@ -347,7 +359,7 @@ void AnalyserWindow::renderGraph() {
 
         int formantNb = 0;
         for (const auto & formant : frame->formant) {
-            y = targetHeight - (targetHeight * formant.frequency) / maxFrequency;
+            y = targetHeight - (targetHeight * formant.frequency) / maximumFrequency;
 
             if (pitch > 0) {
                 filledCircleRGBA(renderer, x, y, 1.25 * xstep, formantColors[formantNb][0], formantColors[formantNb][1], formantColors[formantNb][2], 255);
@@ -355,7 +367,8 @@ void AnalyserWindow::renderGraph() {
             }
             else {
                 for (int xp = x; xp < x + xstep - 1; ++xp) {
-                    pixelRGBA(renderer, xp, y, 139, 0, 0, 196);
+                    pixelRGBA(renderer, xp, y, 139, 0, 0, 160);
+                    pixelRGBA(renderer, xp, y + 1, 139, 0, 0, 160);
                 }
             }
 
@@ -363,7 +376,7 @@ void AnalyserWindow::renderGraph() {
         }
 
         if (pitch > 0) {
-            y = targetHeight - (targetHeight * pitch) / maxFrequency;
+            y = targetHeight - (targetHeight * pitch) / maximumFrequency;
             boxRGBA(renderer, x, y - 1, x + xstep - 1, y + 1, 0, 167, 255, 255);
         }
 

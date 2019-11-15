@@ -9,9 +9,9 @@
 
 namespace Bairstow {
 
-    void solve(const Eigen::ArrayXd & poly, const Eigen::dcomplex & z0, const Eigen::dcomplex & z1,
+    void solve(const Eigen::ArrayXd & poly, double initialMag, double initialPha,
                std::vector<Eigen::dcomplex> & roots,
-               int maxTotalIter = 200, int maxIter = 20, double eps1 = 0.001, double eps2 = 0.0001);
+               int maxTotalIter = 50, int maxIter = 200, double eps1 = 0.001, double eps2 = 0.0001);
 
 }
 

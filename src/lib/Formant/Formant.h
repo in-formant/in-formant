@@ -32,7 +32,7 @@ namespace Formant
 
     void frameFromRoots(const Eigen::ArrayXd & p,
                         const Eigen::ArrayXcd & r, Frame & frm,
-                        double samplingFrequency, double margin);
+                        double samplingFrequency);
 
     void tracker(Frames & src, Frames & dst, int ncand, int ntrack,
                  double refF1, double refF2, double refF3, double refF4, double refF5,

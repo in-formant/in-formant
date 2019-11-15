@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export MXE=/mnt/Fast/mxe
+
 ./build-lin.sh
 ./build-win-mxe.sh
 

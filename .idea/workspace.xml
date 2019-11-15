@@ -13,10 +13,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build-win-mxe.sh" beforeDir="false" afterPath="$PROJECT_DIR$/build-win-mxe.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.sh" beforeDir="false" afterPath="$PROJECT_DIR$/package.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Math/Bairstow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Math/Bairstow.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Math/Bairstow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Math/Bairstow.h" afterDir="false" />
     </list>
@@ -167,6 +172,7 @@
       <workItem from="1573814296078" duration="1508000" />
       <workItem from="1573815895077" duration="198000" />
       <workItem from="1573816116590" duration="484000" />
+      <workItem from="1573840211922" duration="4875000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>

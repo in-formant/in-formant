@@ -30,12 +30,10 @@ void Formant::sort(Frame & frm)
 void Formant::frameFromRoots(
         const Eigen::ArrayXd & p,
         const Eigen::ArrayXcd & r, Frame & frm,
-        double samplingFrequency, double margin)
+        double samplingFrequency)
 {
     frm.formant.clear();
     frm.formant.reserve(r.size());
-
-    double fLow = margin, fHigh = samplingFrequency / 2.0 - margin;
 
     std::vector<root> roots;
     std::vector<root> peakMergers;
@@ -49,17 +47,12 @@ void Formant::frameFromRoots(
         double r = std::abs(v);
         double phi = std::arg(v);
 
-        // Check that the frequency isn't aberrant.
-        double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
-        if (f <= fLow || f >= fHigh) {
-            continue;
-        }
-
         // Magnitude condition for forming a formant
-        //if (0.5 <= r && r < 1.0) {
+        if (0.7 <= r && r < 1.0) {
+            double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
             double b = -std::log(r) * samplingFrequency / M_PI;
             roots.push_back({r, phi, f, b});
-        //}
+        }
     }
 
     std::sort(roots.begin(), roots.end(),
@@ -96,34 +89,34 @@ void Formant::frameFromRoots(
             phi3 = minPhi;
         }
 
-        int n3 = cauchyIntegral(p, 0, 2, phi3, 8);
-        int n4 = cauchyIntegral(p, 0, 2, phi4, 8);
+        int n3 = cauchyIntegral(p, 0, 2, phi3, 20);
+        int n4 = cauchyIntegral(p, 0, 2, phi4, 20);
 
         int n = abs(n4 - n3);
 
-        // If there is only one pole in the section, add it as a single formant.
-        if (n == 1) {
-            frm.formant.push_back({v.f, v.b});
-        }
-        else if (n == 2) {
-            dcomplex z1 = std::polar(0.9, phiPeak - deltaPhi / 4.0);
-            dcomplex z2 = std::polar(0.9, phiPeak + deltaPhi / 4.0);
-
+        // If there *are* two poles in the section, polish them as a pair and add them.
+        if (n == 2) {
             std::vector<dcomplex> polished;
-
-            Bairstow::solve(p, z1, z2, polished);
+            Bairstow::solve(p, 0.9, phiPeak, polished);
             finalRoots.insert(finalRoots.end(), polished.begin(), polished.end());
+        }
+        else {
+            frm.formant.push_back({v.f, v.b});
         }
     }
 
     for (const auto & v : finalRoots) {
         double r = std::abs(v);
-        double phi = std::arg(v);
 
-        double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
-        double b = -std::log(r) * samplingFrequency / M_PI;
+        // Magnitude test
+        if (0.7 <= r && r < 1.0) {
+            double phi = std::arg(v);
 
-        frm.formant.push_back({f, b});
+            double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
+            double b = -std::log(r) * samplingFrequency / M_PI;
+
+            frm.formant.push_back({f, b});
+        }
     }
 
     frm.nFormants = frm.formant.size();

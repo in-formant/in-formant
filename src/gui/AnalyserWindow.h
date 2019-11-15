@@ -8,6 +8,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2_framerate.h>
 #include <deque>
 #include <vector>
 #include "../audio/AudioCapture.h"
@@ -21,12 +22,6 @@
 
 #define WINDOW_FONT     "fonts/open-sans/OpenSans-Regular.ttf"
 #define WINDOW_FONTSIZE 24
-
-#define RENDER_RATE 60
-#define RENDER_DELAY (1000 / RENDER_RATE)
-
-#define UPDATE_RATE 120
-#define UPDATE_DELAY (1000 / UPDATE_RATE)
 
 class AnalyserWindow {
 public:
@@ -48,20 +43,26 @@ private:
     SDL_Window * window;
     SDL_Renderer * renderer;
     TTF_Font * font;
+    FPSmanager fpsManager;
 
     int targetWidth, targetHeight;
     SDL_Texture * pitchStrTex;
     std::vector<SDL_Texture *> formantStrTex;
+    SDL_Texture * lpOrderStrTex;
+    SDL_Texture * maxFreqStrTex;
 
     void renderGraph();
 
     // Other components.
     AudioCapture audioCapture;
 
-    // Parameters
-    int tailFormantLength;
-    bool renderRaw, pauseKeyDown, pauseScroll;
+    // Rendering parameters
+    bool renderRaw, pauseScroll;
     int selectedFrame;
+
+    // Analysis parameters
+    double maximumFrequency;
+    int lpOrder;
 
     // Data.
     Eigen::ArrayXd audioData;

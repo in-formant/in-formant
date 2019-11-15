@@ -24,7 +24,7 @@ static void getRoots(double u, double v, double eps, std::vector<dcomplex> & roo
     }
 }
 
-void Bairstow::solve(const ArrayXd & poly, const dcomplex & z0, const dcomplex & z1, std::vector<dcomplex> & roots, int maxTotalIter, int maxIter, double eps1, double eps2)
+void Bairstow::solve(const ArrayXd & poly, double initialMag, double initialPha, std::vector<dcomplex> & roots, int maxTotalIter, int maxIter, double eps1, double eps2)
 {
     int n, iter, totalIter;
     double u, v, du, dv, denom;
@@ -36,16 +36,13 @@ void Bairstow::solve(const ArrayXd & poly, const dcomplex & z0, const dcomplex &
     ArrayXd b(n + 1);
     ArrayXd c(n + 1);
 
-    std::array<dcomplex, 2> z{z0, z1};
-
-    for (const auto & initialRoot : z) {
+    // Pairs of roots.
+    for (int nroot = 0; nroot < 2; ++nroot ) {
         // Step 1
         totalIter = 0;
         iter = 0;
-        isCloseToZero = false;
-        u = -2 * real(initialRoot);
-        v = abs(initialRoot);
-        v *= v;
+        u = -2 * initialMag * cos(initialPha);
+        v = initialMag * initialMag;
 
         do {
             // Step 2
@@ -74,20 +71,20 @@ void Bairstow::solve(const ArrayXd & poly, const dcomplex & z0, const dcomplex &
             // Step 5
             u += du;
             v += dv;
-            totalIter++;
-            if (totalIter >= maxTotalIter) {
-                break;
-            }
             if (iter < maxIter) {
                 iter++;
             } else {
                 iter = 0;
+                totalIter++;
+                if (totalIter >= maxTotalIter) {
+                    break;
+                }
                 u = poly(n - 1) / poly(n - 2);
                 v = poly(n) / poly(n - 2);
                 continue;
             }
-            isCloseToZero = (std::abs(du) < eps1 && std::abs(dv) < eps2) || (std::abs(du) + std::abs(dv)) < eps2;
-        } while (!isCloseToZero);
+        } while (abs(du) > eps1 * abs(u) && abs(u) > eps2
+                    && abs(dv) > eps1 * abs(v) && abs(v) > eps2);
 
         // Get roots.
         getRoots(u, v, eps1, roots);

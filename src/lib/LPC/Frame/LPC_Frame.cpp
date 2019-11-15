@@ -11,7 +11,7 @@ using namespace Eigen;
 
 void LPC::toFormantFrame(
         const LPC::Frame & lpc, Formant::Frame & frm,
-        double samplingFrequency, double margin)
+        double samplingFrequency)
 {
     frm.intensity = lpc.gain;
 
@@ -28,6 +28,6 @@ void LPC::toFormantFrame(
 
         Polynomial::roots(p, r);
         Polynomial::fixRootsIntoUnitCircle(r);
-        Formant::frameFromRoots(p, r, frm, samplingFrequency, margin);
+        Formant::frameFromRoots(p, r, frm, samplingFrequency);
     }
 }
