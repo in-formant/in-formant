@@ -12,18 +12,34 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="">
+    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Changed convergence criterion for Bairstow's method implementation.&#10;Added UI controls for LP order and maximum formant frequency.">
+      <change afterPath="$PROJECT_DIR$/src/analysis/Analyser.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/analysis/Analyser.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/analysis/parts/formants.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/analysis/parts/lpc.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/analysis/parts/resample.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build-win-mxe.sh" beforeDir="false" afterPath="$PROJECT_DIR$/build-win-mxe.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.sh" beforeDir="false" afterPath="$PROJECT_DIR$/package.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-Bold.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-BoldItalic.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-ExtraBold.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-ExtraBoldItalic.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-Italic.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-Light.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-LightItalic.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-Semibold.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-SemiboldItalic.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/Frame/LPC_Frame.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Math/Bairstow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Math/Bairstow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Math/Bairstow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Math/Bairstow.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant_track.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant_track.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/LPC/LPC.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/LPC/LPC.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/LPC/LPC_huber.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC_huber.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -75,16 +91,16 @@
     <property name="settings.editor.selected.configurable" value="CMakeSettings" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/src/lib/Pitch/YAAPT" />
-      <recent name="$PROJECT_DIR$/src/signal" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/analysis/parts" />
       <recent name="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util" />
       <recent name="$PROJECT_DIR$/src/lib/Math" />
       <recent name="$PROJECT_DIR$/src/lib/Signal" />
       <recent name="$PROJECT_DIR$/src/lib/Pitch" />
-      <recent name="$PROJECT_DIR$/src/lib/FFT" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/lib/Pitch/YAAPT" />
+      <recent name="$PROJECT_DIR$/src/signal" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -172,7 +188,10 @@
       <workItem from="1573814296078" duration="1508000" />
       <workItem from="1573815895077" duration="198000" />
       <workItem from="1573816116590" duration="484000" />
-      <workItem from="1573840211922" duration="4875000" />
+      <workItem from="1573840211922" duration="4980000" />
+      <workItem from="1573857318783" duration="988000" />
+      <workItem from="1573906024970" duration="2888000" />
+      <workItem from="1573909162829" duration="9125000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -272,7 +291,14 @@
       <option name="project" value="LOCAL" />
       <updated>1573815618468</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="Changed convergence criterion for Bairstow's method implementation.&#10;Added UI controls for LP order and maximum formant frequency.">
+      <created>1573849139422</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1573849139422</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -348,7 +374,8 @@
     <MESSAGE value="Attempt to add better formant estimation.&#10;Added some UI controls" />
     <MESSAGE value="Added build scripts. Tweaked default parameters." />
     <MESSAGE value="Added merged peak resolving and root polishing using Bairstow's method." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added merged peak resolving and root polishing using Bairstow's method." />
+    <MESSAGE value="Changed convergence criterion for Bairstow's method implementation.&#10;Added UI controls for LP order and maximum formant frequency." />
+    <option name="LAST_COMMIT_MESSAGE" value="Changed convergence criterion for Bairstow's method implementation.&#10;Added UI controls for LP order and maximum formant frequency." />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>

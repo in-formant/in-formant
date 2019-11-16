@@ -6,7 +6,7 @@
 #define SPEECH_ANALYSIS_LPC_H
 
 #include <Eigen/Core>
-#include <vector>
+#include <deque>
 
 // #define LPC_DEBUG
 
@@ -20,7 +20,7 @@ namespace LPC {
 
     struct Frames {
         int maxnCoefficients;
-        std::vector<Frame> d_frames;
+        std::deque<Frame> d_frames;
     };
 
     enum Method {
@@ -32,8 +32,8 @@ namespace LPC {
 
     void shortTermAnalysis(const Eigen::ArrayXd & sound, double windowDuration, double samplingFrequency, double timeStep, int * numberOfFrames, double * firstTime);
 
-    Frames refineRobust(const Frames & lpc, const Eigen::ArrayXd & sound,
-                        double analysisWidth, double preEmphasisFrequency,
+    Frames refineRobust(const Frames & lpc1, const Eigen::ArrayXd & _sound,
+                        double samplingFrequency, double analysisWidth, double preEmphasisFrequency,
                         double k_stdev, int itermax, double tol, bool wantLocation);
 
     Frames analyse(const Eigen::ArrayXd & sound, int predictionOrder,

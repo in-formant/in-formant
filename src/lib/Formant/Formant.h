@@ -24,9 +24,7 @@ namespace Formant
         double intensity;
     };
 
-    struct Frames {
-        std::deque<Frame> frames;
-    };
+    using Frames = std::deque<Frame>;
 
     void sort(Frame & frm);
 

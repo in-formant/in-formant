@@ -5,14 +5,16 @@
 #include "LPC.h"
 #include "Frame/LPC_Frame.h"
 #include "LPC_huber.h"
+#include "../Signal/Filter.h"
 #include "../Signal/Window.h"
 
 using namespace Eigen;
 using LPC::Huber::huber_s;
 
-LPC::Frames robust(const LPC::Frames & lpc1, const ArrayXd & _sound,
-                   double samplingFrequency, double analysisWidth, double preEmphasisFrequency,
-                   double k_stdev, int itermax, double tol, bool wantLocation)
+LPC::Frames LPC::refineRobust(
+        const LPC::Frames & lpc1, const ArrayXd & _sound,
+        double samplingFrequency, double analysisWidth, double preEmphasisFrequency,
+        double k_stdev, int itermax, double tol, bool wantLocation)
 {
     huber_s hs;
 
@@ -22,7 +24,7 @@ LPC::Frames robust(const LPC::Frames & lpc1, const ArrayXd & _sound,
     int p = lpc1.maxnCoefficients;
     int frameLength = std::round(windowDuration * samplingFrequency);
 
-    LPC::shortTermAnalysis(_sound, windowDuration, samplingFrequency, 5.0 / 1000.0, &numberOfFrames, &t1);
+    LPC::shortTermAnalysis(_sound, windowDuration, samplingFrequency, samplingFrequency, &numberOfFrames, &t1);
 
     ArrayXd sound(_sound);
     ArrayXd sframe(frameLength);
@@ -30,6 +32,10 @@ LPC::Frames robust(const LPC::Frames & lpc1, const ArrayXd & _sound,
 
     LPC::Frames lpc2 = lpc1;
     LPC::Huber::init(hs, windowDuration, p, samplingFrequency, location, wantLocation);
+
+    if (preEmphasisFrequency < samplingFrequency / 2.0) {
+        Filter::preEmphasis(sound, samplingFrequency, preEmphasisFrequency);
+    }
 
     hs.k_stdev = k_stdev;
     hs.tol = tol;
@@ -40,7 +46,20 @@ LPC::Frames robust(const LPC::Frames & lpc1, const ArrayXd & _sound,
         const auto & lpc = lpc1.d_frames.at(i);
         auto & lpcto = lpc2.d_frames.at(i);
 
-        sframe = sound.segment(std::round(frameLength * (i - 0.5)), frameLength);
+        // Copy sound frame.
+        int frameInd = 0;
+        int soundInd = std::round(frameLength * (i - 0.5));
+
+        for (; frameInd < frameLength; ++frameInd, ++soundInd) {
+            if (soundInd < 0 || soundInd >= sound.size()) {
+                sframe(frameInd) = 0.0;
+            }
+            else {
+                sframe(frameInd) = sound(soundInd);
+            }
+        }
+
+        // Remove DC and apply windowing.
         sframe = (sframe - sframe.mean()) * window;
 
         LPC::frame_huber(sframe, lpc, lpcto, hs);

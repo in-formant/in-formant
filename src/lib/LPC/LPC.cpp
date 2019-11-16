@@ -70,8 +70,7 @@ LPC::Frames LPC::analyse(const Eigen::ArrayXd & _sound, int predictionOrder,
         }
 
         // Remove DC and apply windowing.
-        sframe -= sframe.mean();
-        sframe *= window;
+        sframe = (sframe - sframe.mean()) * window;
 
         switch (method) {
         case Auto:

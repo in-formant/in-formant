@@ -3,19 +3,9 @@
 //
 
 #include <iostream>
-#include <sstream>
 #include "AnalyserWindow.h"
 #include "../Exceptions.h"
 #include "SDLUtils.h"
-#include "../lib/LPC/LPC.h"
-#include "../lib/LPC/Frame/LPC_Frame.h"
-#include "../lib/LPC/LPC_huber.h"
-#include "../lib/Pitch/Pitch.h"
-#include "../lib/Formant/Formant.h"
-#include "../lib/Signal/Filter.h"
-#include "../lib/Signal/Window.h"
-#include "../lib/Signal/Resample.h"
-#include "../lib/Pitch/YAAPT/YAAPT.h"
 
 using namespace Eigen;
 
@@ -31,23 +21,13 @@ static constexpr Uint8 formantColors[9][3] = {
     {255, 255, 255},
 };
 
-AnalyserWindow::AnalyserWindow() noexcept(false) {
-    targetWidth = WINDOW_WIDTH;
-    targetHeight = WINDOW_HEIGHT;
-
-    audioData.setZero(500);
-
-    rawFormantTrack.frames.resize(500, {5, {{550}, {1650}, {2750}, {3850}, {4950}}});
-    formantTrack.frames.resize(500, {5, {{550}, {1650}, {2750}, {3850}, {4950}}});
-    pitchTrack.resize(500, 0);
-    selectedFrame = 499;
-
-    renderRaw = false;
-    pauseScroll = false;
-
-    maximumFrequency = 5500;
-    lpOrder = 10;
-
+AnalyserWindow::AnalyserWindow(Analyser & analyser) noexcept(false)
+    : targetWidth(WINDOW_WIDTH),
+      targetHeight(WINDOW_HEIGHT),
+      selectedFrame(analysisFrameCount - 1),
+      renderRaw(false),
+      analyser(analyser)
+{
     int ret;
 
     // Initialise graphics stuff.
@@ -86,8 +66,7 @@ AnalyserWindow::AnalyserWindow() noexcept(false) {
     }
 
     SDL_initFramerate(&fpsManager);
-    SDL_setFramerate(&fpsManager, 120);
-
+    SDL_setFramerate(&fpsManager, 60);
 }
 
 AnalyserWindow::~AnalyserWindow() noexcept {
@@ -102,8 +81,6 @@ AnalyserWindow::~AnalyserWindow() noexcept {
 
 void AnalyserWindow::mainLoop() {
 
-    initTextures();
-
     bool running = true;
     SDL_Event evt;
 
@@ -113,25 +90,20 @@ void AnalyserWindow::mainLoop() {
         while (SDL_PollEvent(&evt)) {
             if (evt.type == SDL_QUIT) {
                 running = false;
-            }
-            else if (evt.type == SDL_KEYDOWN) {
-                const Uint8 * state = SDL_GetKeyboardState(nullptr);
+            } else if (evt.type == SDL_KEYDOWN) {
+                const Uint8 *state = SDL_GetKeyboardState(nullptr);
                 if (state[SDL_SCANCODE_ESCAPE]) {
                     running = false;
-                }
-                else {
+                } else {
                     handleKeyDown(state, evt.key.keysym.scancode);
                 }
-            }
-            else if (evt.type == SDL_KEYUP) {
-                const Uint8 * state = SDL_GetKeyboardState(nullptr);
+            } else if (evt.type == SDL_KEYUP) {
+                const Uint8 *state = SDL_GetKeyboardState(nullptr);
                 handleKeyUp(state, evt.key.keysym.scancode);
-            }
-            else if (evt.type == SDL_WINDOWEVENT && evt.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+            } else if (evt.type == SDL_WINDOWEVENT && evt.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
                 targetWidth = evt.window.data1;
                 targetHeight = evt.window.data2;
-            }
-            else {
+            } else {
                 // Ignore other events.
             }
         }
@@ -143,8 +115,6 @@ void AnalyserWindow::mainLoop() {
         int x, y;
         SDL_GetMouseState(&x, &y);
         handleMouse(x, y);
-
-        update();
 
         preRender();
 
@@ -159,47 +129,32 @@ void AnalyserWindow::mainLoop() {
 
 }
 
-void AnalyserWindow::initTextures() {
-}
-
 void AnalyserWindow::preRender() {
-    const auto & frames = renderRaw ? rawFormantTrack : formantTrack;
-    const auto & frame = frames.frames[selectedFrame];
-    double pitch = pitchTrack[selectedFrame];
+    const auto & frame = analyser.getFormantFrame(selectedFrame, renderRaw);
+    double pitch = analyser.getPitchFrame(selectedFrame);
 
-    std::stringstream sb(std::ios_base::out);
+    char str[64];
 
     for (int i = 0; i < frame.nFormants; ++i) {
         const auto & Fi = frame.formant.at(i);
 
-        sb << "F" << (i + 1) << " = ";
-        sb << round(Fi.frequency) << " Hz";
+        sprintf(str, "F%d = %.0f Hz", (i + 1), round(Fi.frequency));
 
-        formantStrTex.push_back(SDL::renderText(renderer, font, sb.str().c_str(),
+        formantStrTex.push_back(SDL::renderText(renderer, font, str,
                 {formantColors[i][0], formantColors[i][1], formantColors[i][2], 255}));
-
-        sb.str("");
-        sb.clear();
     }
 
     if (pitch > 0)
-        sb << "Voiced: " << round(pitch) << " Hz";
+        sprintf(str, "Voiced: %.0f Hz", round(pitch));
     else
-        sb << "Unvoiced";
-    pitchStrTex = SDL::renderText(renderer, font, sb.str().c_str(), {255, 255, 255, 255});
+        sprintf(str, "Unvoiced");
+    pitchStrTex = SDL::renderText(renderer, font, str, {255, 255, 255, 255});
 
-    sb.str("");
-    sb.clear();
+    sprintf(str, "LP order: %d", analyser.getLinearPredictionOrder());
+    lpOrderStrTex = SDL::renderText(renderer, font, str, {187, 187, 187, 255});
 
-    sb << "LP order: " << lpOrder;
-    lpOrderStrTex = SDL::renderText(renderer, font, sb.str().c_str(), {187, 187, 187, 255});
-    sb.str("");
-    sb.clear();
-
-    sb << "F.max: " << round(maximumFrequency) << " Hz";
-    maxFreqStrTex = SDL::renderText(renderer, font, sb.str().c_str(), {187, 187, 187, 255});
-    sb.str("");
-    sb.clear();
+    sprintf(str, "F.max: %.0f Hz", round(analyser.getMaximumFrequency()));
+    maxFreqStrTex = SDL::renderText(renderer, font, str, {187, 187, 187, 255});
 
 }
 
@@ -214,18 +169,18 @@ void AnalyserWindow::render() {
 
     // Draw formant estimation strings.
     for (int i = 0; i < formantStrTex.size(); ++i) {
-        pos = {0.01, static_cast<float>(0.02 + i * 0.06)};
-        SDL::renderRelativeToCenter(renderer, formantStrTex[i], targetWidth, targetHeight, &pos);
+        pos = {0.01, static_cast<float>(0.01 + i * 0.05)};
+        SDL::renderRelative(renderer, formantStrTex[i], targetWidth, targetHeight, &pos);
     }
 
-    pos = {0.9, 0.01};
-    SDL::renderRelativeToCenter(renderer, pitchStrTex, targetWidth, targetHeight, &pos);
+    pos = {0.8, 0.01};
+    SDL::renderRelative(renderer, pitchStrTex, targetWidth, targetHeight, &pos);
 
-    pos = {0.2, 0.01};
-    SDL::renderRelativeToCenter(renderer, lpOrderStrTex, targetWidth, targetHeight, &pos);
+    pos = {0.15, 0.01};
+    SDL::renderRelative(renderer, lpOrderStrTex, targetWidth, targetHeight, &pos);
 
-    pos = {0.2, 0.06};
-    SDL::renderRelativeToCenter(renderer, maxFreqStrTex, targetWidth, targetHeight, &pos);
+    pos = {0.15, 0.06};
+    SDL::renderRelative(renderer, maxFreqStrTex, targetWidth, targetHeight, &pos);
 
     // Free textures.
     for (int i = 0; i < formantStrTex.size(); ++i) {
@@ -234,80 +189,7 @@ void AnalyserWindow::render() {
     formantStrTex.clear();
     SDL_DestroyTexture(pitchStrTex);
     SDL_DestroyTexture(lpOrderStrTex);
-}
-
-void AnalyserWindow::update() {
-
-    if (pauseScroll) {
-        return;
-    }
-
-    // Read captured audio.
-    audioCapture.readBlock(audioData);
-    double fs_orig = audioCapture.getSampleRate();
-    ArrayXd x_orig = audioData;
-
-    // Estimate pitch with AMDF, then refine with AMDF.
-    Pitch::Estimation est{};
-
-    Pitch::estimate_AMDF(x_orig, fs_orig, est, 70, 600, 1.0, 0.01);
-    if (est.isVoiced && (est.pitch > 70 && est.pitch < 600)) {
-        double pitch = est.pitch;
-        Pitch::estimate_AMDF(x_orig, fs_orig, est, 0.8 * pitch, 1.2 * pitch, 1.5, 0.1);
-        est.isVoiced &= (est.pitch > 0.4 * pitch && est.pitch < 2.2 * pitch);
-    }
-    else {
-        est.isVoiced = false;
-    }
-
-    /*YAAPT::Result yaaptEst;
-    YAAPT::Params yaaptPar;
-    YAAPT::getF0_slow(x_orig, fs_orig, yaaptEst, yaaptPar);
-    pitchSB << "YAAPT: avg = " << round(yaaptEst.pitch);*/
-
-    // Only read a 25ms frame. Downsample.
-    double fs = maximumFrequency * 2;
-    ArrayXd x = Resample::resample(x_orig, fs_orig, fs, 50);
-
-    // Estimate LPC coefficients.
-    LPC::Frames lpc = LPC::analyse(
-            x,
-            lpOrder,
-            30.0 / 1000.0,
-            fs,
-            50.0,
-            LPC::Burg);
-    LPC::Frame lpcFrame = lpc.d_frames.at(0);
-
-    // Estimate formants.
-    Formant::Frame fFrame{};
-    LPC::toFormantFrame(lpcFrame, fFrame, fs);
-
-    pitchTrack.pop_front();
-    rawFormantTrack.frames.pop_front();
-    formantTrack.frames.pop_front();
-
-    pitchTrack.push_back(est.isVoiced ? est.pitch : 0);
-    rawFormantTrack.frames.push_back(fFrame);
-    formantTrack.frames.push_back(fFrame);
-
-    // Track formants. We'll only look at a small amount of trailing formant frames to save CPU load.
-    // The number will be truncated to the largest number of consecutive voiced frames.
-    /*Formant::Frames tailRawFrames, tailFrames;
-    std::copy(rawFormantTrack.frames.end() - tailFormantLength, rawFormantTrack.frames.end(), std::back_inserter(tailRawFrames.frames));
-
-    int maxnFormants = 0;
-    for (const auto &frame : tailRawFrames.frames) {
-        maxnFormants = std::max(maxnFormants, frame.nFormants);
-    }
-
-    Formant::tracker(
-            tailRawFrames, tailFrames, maxnFormants, 3,
-            550, 1650, 2750, 3850, 4950,
-            1.0, 1.0, 1.0);
-
-    std::copy(tailFrames.frames.begin(), tailFrames.frames.end(), formantTrack.frames.end() - tailFormantLength);*/
-
+    SDL_DestroyTexture(maxFreqStrTex);
 }
 
 void AnalyserWindow::handleKeyDown(const Uint8 * state, SDL_Scancode scanCode) {
@@ -317,7 +199,7 @@ void AnalyserWindow::handleKeyDown(const Uint8 * state, SDL_Scancode scanCode) {
 void AnalyserWindow::handleKeyUp(const Uint8 * state, SDL_Scancode scanCode) {
     renderRaw = state[SDL_SCANCODE_R];
     if (scanCode == SDL_SCANCODE_P) {
-        pauseScroll = !pauseScroll;
+        analyser.toggle();
     }
 
     int parIncr = (scanCode == SDL_SCANCODE_UP ? 1
@@ -325,64 +207,98 @@ void AnalyserWindow::handleKeyUp(const Uint8 * state, SDL_Scancode scanCode) {
     if (parIncr != 0) {
         // LPC Order
         if (state[SDL_SCANCODE_L]) {
-            lpOrder = std::clamp(lpOrder + parIncr, 5, 22);
+            int val = analyser.getLinearPredictionOrder();
+            analyser.setLinearPredictionOrder(val + parIncr);
         }
         else if (state[SDL_SCANCODE_F]) {
-            maximumFrequency = std::clamp(maximumFrequency + 100.0 * parIncr, 3000.0, 6000.0);
+            double val = analyser.getMaximumFrequency();
+            analyser.setMaximumFrequency(val + 100.0 * parIncr);
         }
     }
 }
 
 void AnalyserWindow::handleMouse(int x, int y) {
-    const int nframe = formantTrack.frames.size();
-    const double xstep = static_cast<double>(targetWidth) / static_cast<double>(nframe - 1);
+    constexpr int nframe = analysisFrameCount;
+    const double maximumFrequency = analyser.getMaximumFrequency();
 
-    selectedFrame = std::clamp<int>(std::round(x / xstep), 0, nframe - 1);
+    selectedFrame = std::clamp<int>((x * nframe) / targetWidth, 0, nframe - 1);
+    selectedFrequency = std::clamp<double>(maximumFrequency - (y * maximumFrequency) / targetHeight, 0.0, maximumFrequency);
 }
 
 void AnalyserWindow::renderGraph() {
+    constexpr int nframe = analysisFrameCount;
+    const int xstep = std::max(nframe / targetWidth, 1);
 
-    const int nframe = formantTrack.frames.size();
-    const double xstep = static_cast<double>(targetWidth) / static_cast<double>(nframe);
+    const double maximumFrequency = analyser.getMaximumFrequency();
 
-    double x, y;
+    const int formantRadius = 2;
+    const int ruleSmall = 4;
+    const int ruleBig = 8;
 
-    x = 0;
+    int x, y;
+
     for (int iframe = 0; iframe < nframe; ++iframe) {
-        double pitch = pitchTrack[iframe];
-        const Formant::Frame * frame;
-        if (renderRaw) {
-            frame = &rawFormantTrack.frames[iframe];
-        } else {
-            frame = &formantTrack.frames[iframe];
-        }
+        const auto &frame = analyser.getFormantFrame(iframe, renderRaw);
+        double pitch = analyser.getPitchFrame(iframe);
+
+        x = (iframe * targetWidth) / nframe;
 
         int formantNb = 0;
-        for (const auto & formant : frame->formant) {
-            y = targetHeight - (targetHeight * formant.frequency) / maximumFrequency;
+        for (const auto &formant : frame.formant) {
+            y = (targetHeight * (maximumFrequency - formant.frequency)) / maximumFrequency;
 
             if (pitch > 0) {
-                filledCircleRGBA(renderer, x, y, 1.25 * xstep, formantColors[formantNb][0], formantColors[formantNb][1], formantColors[formantNb][2], 255);
+                filledCircleRGBA(renderer, x, y, formantRadius, formantColors[formantNb][0],
+                                 formantColors[formantNb][1], formantColors[formantNb][2], 255);
                 //filledCircleRGBA(renderer, x, y, xstep / 2, 255,167, 0, 255);
-            }
-            else {
-                for (int xp = x; xp < x + xstep - 1; ++xp) {
-                    pixelRGBA(renderer, xp, y, 139, 0, 0, 160);
-                    pixelRGBA(renderer, xp, y + 1, 139, 0, 0, 160);
-                }
+            } else {
+                boxRGBA(renderer, x, y - 1, x + xstep - 1, y + 1, 139, 0, 0, 255);
             }
 
             formantNb++;
         }
 
         if (pitch > 0) {
-            y = targetHeight - (targetHeight * pitch) / maximumFrequency;
-            boxRGBA(renderer, x, y - 1, x + xstep - 1, y + 1, 0, 167, 255, 255);
+            y = (targetHeight * (maximumFrequency - pitch)) / maximumFrequency;
+            boxRGBA(renderer, x, y - 2, x, y + 2, 0, 167, 255, 255);
         }
 
         x += xstep;
     }
 
+    char str[32];
+
+    for (double frequency = 0.0; frequency <= maximumFrequency; frequency += 100.0) {
+        y = (targetHeight * (maximumFrequency - frequency)) / maximumFrequency;
+
+        if (fmod(frequency, 500.0) >= 1e-10) {
+            boxRGBA(renderer, targetWidth - ruleSmall, y - 1, targetWidth, y + 1, 187, 187, 187, 127);
+        }
+        else {
+            sprintf(str, "%.0f", frequency);
+
+            boxRGBA(renderer, targetWidth - ruleBig, y - 2, targetWidth, y + 1, 187, 187, 187, 255);
+            if (frequency == 0.0) {
+                y -= 9;
+            } else if (frequency == maximumFrequency) {
+                y += 2;
+            } else {
+                y -= 3;
+            }
+
+            gfxPrimitivesSetFont(nullptr, 0, 0);
+            stringRGBA(renderer, targetWidth - ruleBig - 9 * (frequency > 0.0 ? floor(log10(frequency) + 1) : 1), y, str, 187, 187, 187, 255);
+        }
+    }
+
+    x = (selectedFrame * targetWidth) / nframe;
+    y = (targetHeight * (maximumFrequency - selectedFrequency)) / maximumFrequency;
+
     // Draw a vertical line where the selected frame is.
-    vlineRGBA(renderer, selectedFrame * xstep, 0, targetHeight, 127,  127, 127, 127);
+    vlineRGBA(renderer, x, 0, targetHeight, 127, 127, 127, 127);
+    hlineRGBA(renderer, 0, targetWidth, y, 127, 127, 127, 127);
+    // Draw freq string right next to it.
+    sprintf(str, "%.0f Hz", selectedFrequency);
+    gfxPrimitivesSetFont(nullptr, 0, 0);
+    stringRGBA(renderer, x - 9 * (3 + (selectedFrequency > 0.0 ? floor(log10(selectedFrequency) + 1) : 1)), y - 13, str, 187, 187, 187, 127);
 }

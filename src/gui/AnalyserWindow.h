@@ -9,12 +9,9 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2_framerate.h>
-#include <deque>
 #include <vector>
-#include "../audio/AudioCapture.h"
-#include "../lib/Formant/Formant.h"
-#include "Spectrogram.h"
 #include "../Exceptions.h"
+#include "../analysis/Analyser.h"
 
 #define WINDOW_TITLE  "Speech analysis"
 #define WINDOW_WIDTH  1280
@@ -25,16 +22,16 @@
 
 class AnalyserWindow {
 public:
-    explicit AnalyserWindow() noexcept(false);
+    explicit AnalyserWindow(Analyser & analyser) noexcept(false);
     ~AnalyserWindow() noexcept;
 
     void mainLoop();
 
 private:
-    void initTextures();
     void preRender();
     void render();
-    void update();
+    void renderGraph();
+
     void handleKeyDown(const Uint8 * state, SDL_Scancode scanCode);
     void handleKeyUp(const Uint8 * state, SDL_Scancode scanCode);
     void handleMouse(int x, int y);
@@ -46,30 +43,19 @@ private:
     FPSmanager fpsManager;
 
     int targetWidth, targetHeight;
-    SDL_Texture * pitchStrTex;
     std::vector<SDL_Texture *> formantStrTex;
+    SDL_Texture * pitchStrTex;
     SDL_Texture * lpOrderStrTex;
     SDL_Texture * maxFreqStrTex;
 
-    void renderGraph();
-
-    // Other components.
-    AudioCapture audioCapture;
-
     // Rendering parameters
-    bool renderRaw, pauseScroll;
+    bool renderRaw;
     int selectedFrame;
+    double selectedFrequency;
 
-    // Analysis parameters
-    double maximumFrequency;
-    int lpOrder;
+    Analyser & analyser;
 
-    // Data.
-    Eigen::ArrayXd audioData;
-
-    Formant::Frames rawFormantTrack;
-    Formant::Frames formantTrack;
-    std::deque<double> pitchTrack;
+    friend class Analyser;
 
 };
 

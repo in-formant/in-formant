@@ -18,7 +18,7 @@ struct fparm {
 static double getLocalCost(int iframe, int icand, int itrack, void * closure)
 {
     auto cl = static_cast<fparm *>(closure);
-    const auto & frame = cl->src.frames[iframe];
+    const auto & frame = cl->src[iframe];
     if (icand >= frame.nFormants)
         return 1e30;
     const auto & candidate = frame.formant[icand];
@@ -29,8 +29,8 @@ static double getLocalCost(int iframe, int icand, int itrack, void * closure)
 static double getTransitionCost(int iframe, int icand1, int icand2, int itrack, void * closure)
 {
     auto cl = static_cast<fparm *>(closure);
-    const auto & prevFrame = cl->src.frames[iframe - 1];
-    const auto & curFrame = cl->src.frames[iframe];
+    const auto & prevFrame = cl->src[iframe - 1];
+    const auto & curFrame = cl->src[iframe];
     if (icand1 >= prevFrame.nFormants || icand2 >= curFrame.nFormants)
         return 1e30;
     const double f1 = prevFrame.formant[icand1].frequency;
@@ -42,7 +42,7 @@ static void putResult(int iframe, int place, int itrack, void * closure)
 {
     auto cl = static_cast<fparm *>(closure);
 
-    cl->dest.frames[iframe].formant[itrack] = cl->src.frames[iframe].formant[place];
+    cl->dest[iframe].formant[itrack] = cl->src[iframe].formant[place];
 }
 
 void Formant::tracker(
@@ -50,13 +50,13 @@ void Formant::tracker(
         double refF1, double refF2, double refF3, double refF4, double refF5,
         double dfCost, double bfCost, double octaveJumpCost)
 {
-    int nx = src.frames.size();
+    int nx = src.size();
 
-    dst.frames.resize(nx);
+    dst.resize(nx);
     for (int iframe = 0; iframe < nx; ++iframe) {
-        dst.frames[iframe].formant.resize(ntrack, {0, 0});
-        dst.frames[iframe].nFormants = ntrack;
-        dst.frames[iframe].intensity = src.frames[iframe].intensity;
+        dst[iframe].formant.resize(ntrack, {0, 0});
+        dst[iframe].nFormants = ntrack;
+        dst[iframe].intensity = src[iframe].intensity;
     }
 
     fparm parm = {

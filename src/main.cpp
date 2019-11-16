@@ -2,8 +2,10 @@
 
 int main(int argc, char **argv) {
 
-    AnalyserWindow window;
+    Analyser analyser;
+    AnalyserWindow window(analyser);
 
+    analyser.startThread();
     window.mainLoop();
 
     return EXIT_SUCCESS;

@@ -15,7 +15,7 @@
 #define CAPTURE_DURATION 60.0
 #define CAPTURE_SAMPLE_COUNT(sampleRate) ((CAPTURE_DURATION * sampleRate) / 1000)
 
-#define BUFFER_SAMPLE_COUNT(sampleRate) ((2 * CAPTURE_DURATION * sampleRate) / 1000)
+#define BUFFER_SAMPLE_COUNT(sampleRate) (3 * CAPTURE_SAMPLE_COUNT(sampleRate))
 
 struct RecordContext {
     RingBuffer buffer;
