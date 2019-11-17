@@ -4,7 +4,8 @@ project(speech_analysis)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${speech_analysis_SOURCE_DIR}/cmake")
 
-set(CMAKE_CXX_FLAGS_RELEASE "-Os -ftree-vectorize -s")
+set(CMAKE_CXX_FLAGS_DEBUG "-Og -g3")
+set(CMAKE_CXX_FLAGS_RELEASE "-Os -ftree-vectorize -s -g")
 
 set(SOURCES
         src/main.cpp
@@ -64,7 +65,7 @@ set(SOURCES
         src/lib/Pitch/YAAPT/refine.cpp
         src/lib/Pitch/YAAPT/tm_trk.cpp
         src/lib/Pitch/YAAPT/spec_trk.cpp
-        src/lib/Pitch/YAAPT/YAAPT.cpp
+        src/lib/Pitch/YAAPT/getF0.cpp
         src/lib/Pitch/YAAPT/YAAPT.h
         src/lib/Pitch/Pitch_AMDF.cpp
         src/lib/Pitch/Pitch.h

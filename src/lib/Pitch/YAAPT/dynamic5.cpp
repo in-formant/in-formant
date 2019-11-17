@@ -20,7 +20,7 @@ void YAAPT::dynamic5(
     // the various types of transitions which can occur, as well as weigh
     // the relative value of transition costs and local costs
     // forming the local cost matrix.
-    ArrayXd localCost = 1 - meritArray;
+    ArrayXXd localCost = 1 - meritArray;
 
     // Initialisation for the formation of the transition cost matrices
     Tensor<double, 3> transitionCost(numCands, numCands, numFrames);

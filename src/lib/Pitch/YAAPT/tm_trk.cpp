@@ -2,20 +2,18 @@
 // Created by rika on 11/11/2019.
 //
 
-#include <iostream>
 #include "YAAPT.h"
 
-using namespace Eigen;
-
 void YAAPT::tm_trk(
-        const ArrayXd & data, double fs, ArrayXd & sPitch,
+        const std::array<Eigen::ArrayXd, numFrames> & data, double fs,
+        Eigen::ArrayXd & sPitch,
         double pStd, double pAvg, const Params & prm,
-        ArrayXXd & pitch, ArrayXXd & merit)
+        Eigen::ArrayXXd & pitch, Eigen::ArrayXXd & merit)
 {
-    int frameSize = std::floor(prm.frameLength * fs / 1000.0);
-    int frameJump = std::floor(prm.frameSpace * fs / 1000.0);
-    int overlap = frameSize - frameJump;
-    int numFrames = std::floor((data.size() - overlap) / frameJump);
+    using namespace Eigen;
+
+    int frameSize = data[0].size();
+    int realNumFrames = numFrames;
 
     // This step is inserted for unifying numFrames of both temporal and spectral track
     int lenSpectral = sPitch.size();
@@ -23,7 +21,7 @@ void YAAPT::tm_trk(
         sPitch = sPitch.head(numFrames);
     }
     if (numFrames > lenSpectral) {
-        numFrames = lenSpectral;
+        realNumFrames = lenSpectral;
     }
 
     const double meritBoost = prm.meritBoost;
@@ -38,11 +36,11 @@ void YAAPT::tm_trk(
     sMax = (sMax <= prm.F0max).select(sMax, prm.F0max);
 
     // Initialisation
-    pitch.setZero(maxCands, numFrames);
-    merit.setZero(maxCands, numFrames);
+    pitch.setZero(maxCands, realNumFrames);
+    merit.setZero(maxCands, realNumFrames);
 
     for (int n = 0; n < numFrames; ++n) {
-        ArrayXd frame = data.segment(n * frameJump, frameSize);
+        ArrayXd frame = data[n];
 
         // Compute pitch candidates and corresponding merit values,
         // up to maxCands per frame. Merit values are normalized (0-1)

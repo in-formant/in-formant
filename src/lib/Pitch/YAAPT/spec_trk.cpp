@@ -2,22 +2,17 @@
 // Created by rika on 11/11/2019.
 //
 
-#include <fftw3.h>
 #include "YAAPT.h"
-#include "../../Signal/Filter.h"
-#include "../../Signal/Window.h"
-
-using namespace Eigen;
+#include "../../FFT/kissfft.hh"
 
 void YAAPT::spec_trk(
-        const ArrayXd & data, double fs, const ArrayXb & vUvEnergy, const Params & prm,
-        ArrayXd & sPitch, ArrayXd & vUvSPitch, double & pAvg, double & pStd)
+        const std::array<Eigen::ArrayXd, numFrames> & data, double fs,
+        const Eigen::ArrayXb & vUvEnergy, const Params & prm,
+        Eigen::ArrayXd & sPitch, Eigen::ArrayXd & vUvSPitch, double & pAvg, double & pStd)
 {
-    int frameSize = std::floor(prm.frameLength * fs / 1000.0);
-    int frameJump = std::floor(prm.frameSpace * fs / 1000.0);
-    int overlap = frameSize - frameJump;
-    int numFrames = std::floor((data.size() - overlap) / frameJump);
+    using namespace Eigen;
 
+    int frameSize = data[0].size();
     int maxPeaks = prm.shcMaxPeaks;
     int nfft = prm.fftLength;
     double delta = fs / static_cast<double>(nfft);
@@ -33,16 +28,15 @@ void YAAPT::spec_trk(
     int numHarmonics = prm.shcNumHarms;
 
     // Initialisation
-    ArrayXXd candsPitch = ArrayXXd::Zero(maxPeaks, numFrames);
-    ArrayXXd candsMerit = ArrayXXd::Ones(maxPeaks, numFrames);
-    // Zero padding.
-    ArrayXd dataPad(data.size() + frameSize);
-    dataPad.head(data.size()) = data;
-    dataPad.tail(frameSize).setZero();
+    ArrayXXd candsPitch;
+    ArrayXXd candsMerit;
+    candsPitch.setZero(maxPeaks, numFrames);
+    candsMerit.setOnes(maxPeaks, numFrames);
 
     // Compute SHC for voiced frames.
-    ArrayXd window = Window::createKaiser(frameSize);
-    ArrayXd shc = ArrayXd::Zero(maxSHC);
+    ArrayXd window = std::move(Window::createKaiser(frameSize));
+    ArrayXd shc(maxSHC);
+    shc.setZero();
 
     ArrayXXi winix(numHarmonics + 1, windowLength);
     ArrayXXi rowix(numHarmonics + 1, windowLength);
@@ -56,24 +50,22 @@ void YAAPT::spec_trk(
 
     int magnit1_len = std::floor((numHarmonics + 2) * prm.F0max / delta) + windowLength;
 
+    ArrayXcd signal(nfft);
+    ArrayXcd fftFrame(nfft);
+    kissfft<double> fft(nfft, false);
+
     for (int frame = 0; frame < numFrames; ++frame) {
         if (vUvEnergy(frame)) {
-            ArrayXd signal(nfft);
-            ArrayXcd fftFrame(frameSize);
-            fftw_plan plan;
+            signal.head(frameSize) = (data[frame] - data[frame].mean()) * window;
+            signal.tail(nfft - frameSize).setZero();
 
-            plan = fftw_plan_dft_r2c_1d(frameSize, signal.data(), (fftw_complex *) fftFrame.data(), 0);
-            signal.head(nfft - frameSize).setZero();
-            signal.tail(frameSize) = data.segment(frame * frameJump, frameSize) * window;
-
-            fftw_execute(plan);
-            fftw_destroy_plan(plan);
+            fft.transform(signal.data(), fftFrame.data());
 
             ArrayXd magnit(halfWindowLength + nfft);
             magnit.head(halfWindowLength).setZero();
-            magnit.tail(nfft) = fftFrame.abs();
+            magnit.tail(nfft) = fftFrame.tail(nfft).abs();
 
-            ArrayXd magnit1 = magnit.head(magnit1_len);
+            Ref<ArrayXd> magnit1 = magnit.head(magnit1_len);
             magnit1 /= magnit1.maxCoeff();
 
             // Compute SHC
@@ -107,7 +99,9 @@ void YAAPT::spec_trk(
 
     // Extract the pitch candidates of voiced frames for the future pitch selection.
     sPitch = candsPitch.row(0);
+    std::cout << "sPitch = \n" << sPitch << std::endl;
     ArrayXb idx_voiced = (sPitch > 0);
+    std::cout << "sPitch > 0 = \n" << (sPitch > 0) << std::endl;
     ArrayXXd vCandsPitch = candsPitch(all, idx_voiced);
     ArrayXXd vCandsMerit = candsMerit(all, idx_voiced);
     int numVCands = idx_voiced.cast<int>().sum();

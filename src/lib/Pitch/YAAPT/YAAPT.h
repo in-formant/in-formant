@@ -7,7 +7,12 @@
 
 #include <Eigen/Core>
 #include <unsupported/Eigen/CXX11/Tensor>
+#include <fftw3.h>
+#include <array>
 #include <iostream>
+#include "../../Signal/Filter.h"
+#include "../../Signal/Window.h"
+#include "../../../analysis/Analyser.h"
 
 namespace Eigen {
     using ArrayXb = Eigen::Array<bool, Eigen::Dynamic, 1>;
@@ -15,11 +20,11 @@ namespace Eigen {
 
 namespace YAAPT
 {
+    constexpr int numFrames = analysisAudioFrames;
+
     struct Params {
-        double frameLength = 35;    // Length of each analysis frame (ms)
-        double frameSpace = 10;     // Spacing between analysis frames (ms)
-        double F0min = 60;          // Minimum F0 searched (Hz)
-        double F0max = 400;         // Maximum F0 searched (Hz)
+        double F0min = 70;          // Minimum F0 searched (Hz)
+        double F0max = 600;         // Maximum F0 searched (Hz)
         int    fftLength = 8192;    // FFT length
         int    bpOrder = 150;       // Order of bandpass filter
         double bpLow = 50;          // Low frequency of filter passband (Hz)
@@ -52,8 +57,7 @@ namespace YAAPT
         double dp_w4 = 0.9;         // DP weight factor for local costs
 
         Params()
-            : frameLength(35), frameSpace(10),
-              F0min(60), F0max(400), fftLength(8192),
+            : F0min(70), F0max(600), fftLength(8192),
               bpOrder(150), bpLow(50), bpHigh(1500),
               nlferThresh1(0.75), nlferThresh2(0.1),
               shcNumHarms(3), shcWindow(40), shcMaxPeaks(4),
@@ -77,7 +81,7 @@ namespace YAAPT
     void interp1(const Eigen::ArrayXd & x, const Eigen::ArrayXd & v,
                  const Eigen::ArrayXd & xq, Eigen::ArrayXd & vq);
     void medfilt1(const Eigen::ArrayXd & x, int w, Eigen::ArrayXd & y);
-    void specgram(const Eigen::ArrayXd & x, int nfft, int windowSize, int overlap,
+    void specgram(const std::array<Eigen::ArrayXd, numFrames> & x, int nfft,
                   Eigen::ArrayXXcd & spec);
 
     // YAAPT utility functions.
@@ -97,11 +101,12 @@ namespace YAAPT
                  const Eigen::ArrayXd & energy, const Params & prm,
                   Eigen::ArrayXd & finalPitch);
 
-    void nlfer(const Eigen::ArrayXd & data, double fs, const Params & prm,
+    void nlfer(const std::array<Eigen::ArrayXd, numFrames> & data, double fs, const Params & prm,
                Eigen::ArrayXd & energy, Eigen::ArrayXb & vUvEnergy);
 
-    void nonlinear(const Eigen::ArrayXd & A, double fs, const Params & prm,
-                   Eigen::ArrayXd & B, Eigen::ArrayXd & C, Eigen::ArrayXd & D, double & newFs);
+    void nonlinear(const std::array<Eigen::ArrayXd, numFrames> & A, double fs, const Params & prm,
+                   std::array<Eigen::ArrayXd, numFrames> & B, std::array<Eigen::ArrayXd, numFrames> & C,
+                   std::array<Eigen::ArrayXd, numFrames> & D, double & newFs);
 
     void path1(const Eigen::ArrayXXd & local, const Eigen::Tensor<double, 3> & trans, Eigen::ArrayXi & path);
 
@@ -114,13 +119,15 @@ namespace YAAPT
                 const Eigen::ArrayXb & vUvEnergy, const Params & prm,
                 Eigen::ArrayXXd & pitch, Eigen::ArrayXXd & merit);
 
-    void spec_trk(const Eigen::ArrayXd & data, double fs, const Eigen::ArrayXb & vUvEnergy, const Params & prm,
+    void spec_trk(const std::array<Eigen::ArrayXd, numFrames> & data, double fs,
+                  const Eigen::ArrayXb & vUvEnergy, const Params & prm,
                   Eigen::ArrayXd & sPitch, Eigen::ArrayXd & vUvSPitch, double & pAvg, double & pStd);
 
-    void spec_trk2(const Eigen::ArrayXd & data, double fs, const Eigen::ArrayXb & vUvEnergy, const Params & prm,
-                  Eigen::ArrayXd & sPitch, Eigen::ArrayXd & vUvSPitch, double & pAvg, double & pStd);
+    void spec_trk2(const std::array<Eigen::ArrayXd, numFrames> & data, double fs,
+                   const Eigen::ArrayXb & vUvEnergy, const Params & prm,
+                   Eigen::ArrayXd & sPitch, Eigen::ArrayXd & vUvSPitch, double & pAvg, double & pStd);
 
-    void tm_trk(const Eigen::ArrayXd & data, double fs, Eigen::ArrayXd & sPitch,
+    void tm_trk(const std::array<Eigen::ArrayXd, numFrames> & data, double fs, Eigen::ArrayXd & sPitch,
                 double pStd, double pAvg, const Params & prm,
                 Eigen::ArrayXXd & pitch, Eigen::ArrayXXd & merit);
 
@@ -131,9 +138,14 @@ namespace YAAPT
         double framePeriod;    // Frame period (1/rate) of output pitch track in ms.
     };
 
-    void getF0_slow(const Eigen::ArrayXd & data, double fs, Result & res, const Params & prm = Params());
-    void getF0_fast(const Eigen::ArrayXd & data, double fs, Result & res, const Params & prm = Params());
-    void getF0_fastest(const Eigen::ArrayXd & data, double fs, Result & res, const Params & prm = Params());
+    void getF0_slow(const std::array<Eigen::ArrayXd, numFrames> & data, double fs,
+                    Result & res, const Params & prm = Params());
+
+    void getF0_fast(const std::array<Eigen::ArrayXd, numFrames> & data, double fs,
+                    Result & res, const Params & prm = Params());
+
+    void getF0_fastest(const Eigen::ArrayXd & data, double fs,
+                       Result & res, const Params & prm = Params());
 
 }
 

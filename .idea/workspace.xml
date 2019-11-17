@@ -7,39 +7,34 @@
   </component>
   <component name="CMakeSettings">
     <configurations>
-      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
-      <configuration PROFILE_NAME="Release" CONFIG_NAME="Release" />
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" BUILD_OPTIONS="-j 8" />
+      <configuration PROFILE_NAME="Release" CONFIG_NAME="Release" BUILD_OPTIONS="-j 8" />
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Changed convergence criterion for Bairstow's method implementation.&#10;Added UI controls for LP order and maximum formant frequency.">
-      <change afterPath="$PROJECT_DIR$/src/analysis/Analyser.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/analysis/Analyser.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/analysis/parts/formants.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/analysis/parts/lpc.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/analysis/parts/resample.cpp" afterDir="false" />
+    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Moved analysis code away from AnalyserWindow class and runs on its own thread.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-Bold.ttf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-BoldItalic.ttf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-ExtraBold.ttf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-ExtraBoldItalic.ttf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-Italic.ttf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-Light.ttf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-LightItalic.ttf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-Semibold.ttf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-SemiboldItalic.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant_track.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant_track.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/LPC/LPC.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/LPC/LPC.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/LPC/LPC_huber.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC_huber.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/YAAPT.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/getF0.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/YAAPT.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/YAAPT.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic5.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic5.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nlfer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nlfer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nonlinear.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nonlinear.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/peaks.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/peaks.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/refine.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/refine.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/spec_trk.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/spec_trk.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/tm_trk.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/tm_trk.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir2.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir2.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/medfilt1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/medfilt1.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/specgram.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/specgram.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -64,7 +59,7 @@
     <expand />
     <select />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Release" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="MIXED" />
@@ -191,7 +186,10 @@
       <workItem from="1573840211922" duration="4980000" />
       <workItem from="1573857318783" duration="988000" />
       <workItem from="1573906024970" duration="2888000" />
-      <workItem from="1573909162829" duration="9125000" />
+      <workItem from="1573909162829" duration="11134000" />
+      <workItem from="1573924149335" duration="9288000" />
+      <workItem from="1573934414793" duration="2999000" />
+      <workItem from="1574012544853" duration="1325000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -298,7 +296,14 @@
       <option name="project" value="LOCAL" />
       <updated>1573849139422</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="Moved analysis code away from AnalyserWindow class and runs on its own thread.">
+      <created>1573918377761</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1573918377761</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -375,13 +380,7 @@
     <MESSAGE value="Added build scripts. Tweaked default parameters." />
     <MESSAGE value="Added merged peak resolving and root polishing using Bairstow's method." />
     <MESSAGE value="Changed convergence criterion for Bairstow's method implementation.&#10;Added UI controls for LP order and maximum formant frequency." />
-    <option name="LAST_COMMIT_MESSAGE" value="Changed convergence criterion for Bairstow's method implementation.&#10;Added UI controls for LP order and maximum formant frequency." />
-  </component>
-  <component name="XDebuggerManager">
-    <watches-manager>
-      <configuration name="CMakeRunConfiguration">
-        <watch expression="cl-&gt;src.frames._M_impl._M_map_size" />
-      </configuration>
-    </watches-manager>
+    <MESSAGE value="Moved analysis code away from AnalyserWindow class and runs on its own thread." />
+    <option name="LAST_COMMIT_MESSAGE" value="Moved analysis code away from AnalyserWindow class and runs on its own thread." />
   </component>
 </project>

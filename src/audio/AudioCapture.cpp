@@ -19,8 +19,8 @@ static constexpr std::array<PaSampleFormat, 5> preferredFormats = {
 };
 
 static constexpr std::array<double, 5> preferredSampleRates = {
-    16000,
     22050,
+    16000,
     32000,
     44100,
     48000,

@@ -6,40 +6,35 @@
 
 using namespace Eigen;
 
-void YAAPT::medfilt1(const ArrayXd & x, int w, ArrayXd & y)
+void YAAPT::medfilt1(const ArrayXd & x, int k, ArrayXd & y)
 {
-    int w2 = std::floor(w / 2.0);
-    w = 2 * w2 + 1;
-
-    const int n = x.size();
-    if (n < 1) {
+    const int nx = x.size();
+    if (nx < 1) {
         y.resize(0);
         return;
     }
-
-    ArrayXXd m(w, n + w - 1);
-    double x0 = x(0);
-    double xl = x(n - 1);
-
-    y.resize(w);
-
-    for (int i = 0; i < w; ++i) {
-        m.row(i)(seq(0, i - 1)).setConstant(x0);
-        m.row(i)(seq(i, i + n - 1)) = x;
-        m.row(i)(seq(i + n, n + w - 2)).setConstant(xl);
-
-        std::vector<double> miv(m.cols());
-        std::copy(m.row(i).begin(), m.row(i).end(), miv.begin());
-
-        int k = (n + w - 1) / 2;
-        std::nth_element(miv.begin(), miv.begin() + k, miv.end());
-        if ((n + w - 1) % 2 == 0) {
-            y(i) = miv[k];
-        }
-        else {
-            y(i) = 0.5 * (miv[k] + miv[k - 1]);
-        }
+    if (nx == 1) {
+        y = x;
+        return;
     }
 
-    y = y.tail(n);
+    int k2 = (k - 1) / 2;
+    ArrayXXd m;
+    m.setZero(nx, k);
+
+    m.col(k2) = x;
+    for (int i = 0; i < k2; ++i) {
+        int j = k2 - i;
+        m(seq(j, last), i) = x(seq(0, (nx - j - 1)));
+        m(seq(0, j - 1), i) = x(0);
+        m(seq(0, (nx - j - 1)), (k - (i + 1) - 1)) = x(seq(j, last));
+        m(seq((nx - j - 1), last), (k - (i + 1) - 1)) = x(last);
+    }
+
+    y.resize(nx);
+    for (int i = 0; i < nx; ++i) {
+        ArrayXd row = m.row(i);
+        std::nth_element(row.begin(), row.begin() + k2, row.begin());
+        y(i++) = row(k2);
+    }
 }

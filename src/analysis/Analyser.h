@@ -11,9 +11,9 @@
 #include "../audio/AudioCapture.h"
 #include "../lib/Formant/Formant.h"
 
-constexpr double analysisUpdatesPerSecond = 1000.0 / 10.0; // This is to get a new frame every ~10ms.
+constexpr double analysisUpdatesPerSecond = 1000.0 / 15.0; // This is to get a new frame every ~15ms.
 constexpr int analysisFrameCount = 2000;
-constexpr int analysisAudioFrameCount = 4;
+constexpr int analysisAudioFrames = 10;
 
 class Analyser {
 public:
@@ -50,7 +50,7 @@ private:
     int lpOrder;
 
     // Intermediate variables for analysis.
-    std::array<Eigen::ArrayXd, analysisAudioFrameCount> audioFrames;
+    std::array<Eigen::ArrayXd, analysisAudioFrames> audioFrames;
     Eigen::ArrayXd x;
     double fs;
     LPC::Frame lpcFrame;

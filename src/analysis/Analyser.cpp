@@ -15,16 +15,19 @@ static const Formant::Frame defaultFrame = {
 Analyser::Analyser()
     : doAnalyse(true),
       lpOrder(10),
-      maximumFrequency(5500.0),
+      maximumFrequency(5000.0),
       running(false)
 {
+    fs = audioCapture.getSampleRate();
+
     rawFormantTrack.resize(analysisFrameCount, defaultFrame);
     formantTrack.resize(analysisFrameCount, defaultFrame);
     pitchTrack.resize(analysisFrameCount, 0.0);
 
     // Initialize the audio frames to zero.
-    for (auto & frm : audioFrames) {
-        frm.setZero(CAPTURE_SAMPLE_COUNT(audioCapture.getSampleRate()));
+    x.setZero(CAPTURE_SAMPLE_COUNT(fs));
+    for (int i = 0; i < analysisAudioFrames; ++i) {
+        audioFrames[i].setZero(CAPTURE_SAMPLE_COUNT(fs));
     }
 }
 

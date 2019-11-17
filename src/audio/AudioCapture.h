@@ -12,10 +12,10 @@
 #include <vector>
 #include "RingBuffer.h"
 
-#define CAPTURE_DURATION 60.0
+#define CAPTURE_DURATION 100.0
 #define CAPTURE_SAMPLE_COUNT(sampleRate) ((CAPTURE_DURATION * sampleRate) / 1000)
 
-#define BUFFER_SAMPLE_COUNT(sampleRate) (3 * CAPTURE_SAMPLE_COUNT(sampleRate))
+#define BUFFER_SAMPLE_COUNT(sampleRate) (CAPTURE_SAMPLE_COUNT(sampleRate))
 
 struct RecordContext {
     RingBuffer buffer;

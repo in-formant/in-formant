@@ -4,26 +4,25 @@
 
 #include "YAAPT.h"
 
-using namespace Eigen;
-
 void YAAPT::nlfer(
-        const ArrayXd & data, double fs, const Params & prm,
-        ArrayXd & energy, ArrayXb & vUvEnergy)
+        const std::array<Eigen::ArrayXd, numFrames> & data, double fs, const Params & prm,
+        Eigen::ArrayXd & energy, Eigen::ArrayXb & vUvEnergy)
 {
+    using namespace Eigen;
+
     int nfft = prm.fftLength;
-    int frameSize = std::floor(prm.frameLength * fs / 1000.0);
-    int frameJump = std::floor(prm.frameSpace * fs / 1000.0);
+    int frameSize = data[0].size();
 
     // If normalized low-frequency is below this, assume unvoiced frame.
     double nlfer_thresh1 = prm.nlferThresh1;
 
     // Low frequency range for NLFER.
-    int N_F0_min = std::round((prm.F0min * 2 / fs) * nfft);
-    int N_F0_max = std::round((prm.F0max / fs) * nfft);
+    int N_F0_min = round((prm.F0min * 2 / fs) * nfft);
+    int N_F0_max = round((prm.F0max / fs) * nfft);
 
     // Spectrogram of the data
     ArrayXXcd specData;
-    specgram(data, nfft, frameSize, frameSize - frameJump, specData);
+    specgram(data, nfft, specData);
 
     // Compute normalized low-frequency energy ratio
     ArrayXd frmEnergy = specData(seq(N_F0_min, N_F0_max), all).abs().colwise().sum();

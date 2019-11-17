@@ -300,5 +300,5 @@ void AnalyserWindow::renderGraph() {
     // Draw freq string right next to it.
     sprintf(str, "%.0f Hz", selectedFrequency);
     gfxPrimitivesSetFont(nullptr, 0, 0);
-    stringRGBA(renderer, x - 9 * (3 + (selectedFrequency > 0.0 ? floor(log10(selectedFrequency) + 1) : 1)), y - 13, str, 187, 187, 187, 127);
+    stringRGBA(renderer, targetWidth - 9 * (8 + (selectedFrequency > 0.0 ? floor(log10(selectedFrequency) + 1) : 1)), y - 13, str, 255, 255, 255, 255);
 }

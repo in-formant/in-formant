@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fftw3.h>
 #include "../YAAPT.h"
-#include "../../../FFT/FFT.h"
+#include "../../../FFT/kissfft.hh"
 #include "../../../Signal/Window.h"
 
 using namespace Eigen;
@@ -48,8 +48,9 @@ void YAAPT::fir2(int n, const ArrayXd & basef, const ArrayXd & basem,
                 f(i + 1) += (double) ramp_n / (double) grid_n / 2.0;
 
                 int modLenf = f.size();
-                f.conservativeResize(modLenf + 1);
-                f(modLenf) = basef(i);
+                ArrayXd newF(modLenf + 1);
+                newF << f, basef(i);
+                f = newF;
             }
         }
 
@@ -68,22 +69,18 @@ void YAAPT::fir2(int n, const ArrayXd & basef, const ArrayXd & basem,
     // Transform frequency response into time response and
     // center the response about n/2, truncating the excess
     if (n % 2 == 0) {
-        ArrayXcd cx_b(grid.size() + grid_n - 1);
-        auto plan = fftw_plan_dft_1d(cx_b.size(),
-                                     (fftw_complex *) cx_b.data(),
-                                     (fftw_complex *) cx_b.data(),
-                                     FFTW_BACKWARD, 0);
+        int nfft = grid.size() + grid_n - 1;
+        kissfft<double> fft(nfft, false);
 
-        cx_b << grid, grid(seq(grid_n - 1, 1, -1));
-        fftw_execute(plan);
-        cx_b /= cx_b.size();
+        ArrayXcd in(nfft), out(nfft);
+        in << grid, grid(seq(grid_n - 1, 1, -1));
+        fft.transform(in.data(), out.data());
+        out /= out.size();
 
         double mid = (n + 1) / 2.0;
         b.resize(n + 1);
-        b << cx_b(seq(last - floor(mid) + 1, last)).real(),
-             cx_b(seq(0, std::ceil(mid) - 1)).real();
-
-        fftw_destroy_plan(plan);
+        b << out(seq(last - floor(mid) + 1, last)).real(),
+             out(seq(0, std::ceil(mid) - 1)).real();
     }
     else {
         throw std::runtime_error("Unimplemented yet");

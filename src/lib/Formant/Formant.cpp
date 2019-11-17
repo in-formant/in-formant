@@ -89,8 +89,8 @@ void Formant::frameFromRoots(
             phi3 = minPhi;
         }
 
-        int n3 = cauchyIntegral(p, 0, 2, phi3, 20);
-        int n4 = cauchyIntegral(p, 0, 2, phi4, 20);
+        int n3 = cauchyIntegral(p, 0, 2, phi3, 10);
+        int n4 = cauchyIntegral(p, 0, 2, phi4, 10);
 
         int n = abs(n4 - n3);
 
@@ -133,7 +133,7 @@ static void snellCalcRegion(double t, std::map<double, int> & C, const ArrayXd &
 
         // Find the octant it is in.
         int Ci = static_cast<int>(16 + floor(std::arg(y) / (M_PI / 8.0))) % 8;
-        C.emplace(t, Ci);
+        C[t] = Ci;
     }
 }
 

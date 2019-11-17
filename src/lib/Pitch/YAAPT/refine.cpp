@@ -41,6 +41,7 @@ void YAAPT::refine(
     // A best pitch track is generated from the best candidates
     ArrayXd bestPitch;
     medfilt1(pitch.row(0), prm.medianValue, bestPitch);
+
     bestPitch = vUvEnergy.select(bestPitch, 0);
 
     // Refine pitch candidates

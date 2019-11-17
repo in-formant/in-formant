@@ -48,14 +48,14 @@ void Analyser::update()
     audioCapture.readBlock(x);
     fs = audioCapture.getSampleRate();
 
-    // Analyse pitch from several frames.
-    analysePitch();
-
-    // Shift the past frames.
-    for (int i = 1; i < analysisAudioFrameCount; ++i) {
-        audioFrames[i - 1] = std::move(audioFrames[i]);
+    // Shift the audio frames.
+    for (int i = 0; i < analysisAudioFrames - 1; ++i) {
+        audioFrames[i] = std::move(audioFrames[i + 1]);
     }
-    audioFrames[analysisAudioFrameCount - 1] = x;
+    audioFrames[analysisAudioFrames - 1] = x;
+
+    // Get a pitch estimate.
+    analysePitch();
 
     // Resample audio for LP analysis.
     resampleAudio();

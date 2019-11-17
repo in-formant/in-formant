@@ -3,14 +3,13 @@
 //
 
 #include "YAAPT.h"
-#include "../../Signal/Filter.h"
 
-using namespace Eigen;
-
-void YAAPT::nonlinear(
-        const ArrayXd & A, double fs, const Params & prm,
-        ArrayXd & B, ArrayXd & C, ArrayXd & D, double & newFs)
+void YAAPT::nonlinear(const std::array<Eigen::ArrayXd, numFrames> & A, double fs, const Params & prm,
+               std::array<Eigen::ArrayXd, numFrames> & B, std::array<Eigen::ArrayXd, numFrames> & C,
+               std::array<Eigen::ArrayXd, numFrames> & D, double & newFs)
 {
+    using namespace Eigen;
+
     constexpr double fsMin = 1000; // Do not decimate if fs less than this.
 
     // Parameters for filtering original signal, with a broader band.
@@ -30,22 +29,24 @@ void YAAPT::nonlinear(
     ArrayXd b_F1;
     fir1(filterOrder, w, b_F1);
 
-    ArrayXd tempData;
+    for (int i = 0; i < numFrames; ++i) {
+        ArrayXd tempData;
 
-    // Filtering the original data with the bandpass filter.
-    // Original signal filtered with F1
-    Filter::apply(b_F1, A, tempData);
-    // B = tempData(1:dec_factor:lenDataA)
-    B = tempData(seq(0, last, decFactor));
+        // Filtering the original data with the bandpass filter.
+        // Original signal filtered with F1
+        Filter::apply(b_F1, A[i], tempData);
+        // B = tempData(1:dec_factor:lenDataA)
+        B[i] = tempData(seq(0, last, decFactor));
 
-    // Create nonlinear version of signal
-    C = A * A;
+        // Create nonlinear version of signal
+        C[i] = A[i].square();
 
-    // Nonlinear version filtered with F1
-    Filter::apply(b_F1, C, tempData);
-    // D = tempData(1:dec_factor:lenDataA)
-    D = tempData(seq(0, last, decFactor));
+        // Nonlinear version filtered with F1
+        Filter::apply(b_F1, C[i], tempData);
+        // D = tempData(1:dec_factor:lenDataA)
+        D[i] = tempData(seq(0, last, decFactor));
 
-    newFs = fs / decFactor;
+        newFs = fs / decFactor;
+    }
 
 }
