@@ -7,8 +7,8 @@
 using namespace Eigen;
 
 void YAAPT::peaks(
-        const ArrayXd & data, double delta, int maxPeaks, const Params & prm,
-        ArrayXd & pitchOut, ArrayXd & meritOut)
+        ConstRefXd data, double delta, int maxPeaks, const Params & prm,
+        RefXd pitchOut, RefXd meritOut)
 {
     double peak_thresh1 = prm.shcThresh1;
     double peak_thresh2 = prm.shcThresh2;
@@ -24,9 +24,9 @@ void YAAPT::peaks(
     int center = std::ceil(width / 2.0);
 
     // Lowest frequency at which F0 is allowed
-    int minLag = std::floor(prm.F0min / delta - width / 4);
+    int minLag = std::floor(prm.F0min / delta - width / 4.0);
     // Highest frequency at which F0 is allowed
-    int maxLag = std::floor(prm.F0max / delta - width / 4);
+    int maxLag = std::floor(prm.F0max / delta - width / 4.0);
 
     if (minLag < 0) {
         minLag = 0;
@@ -40,8 +40,10 @@ void YAAPT::peaks(
     // Step 1.
     // Find all peaks for search range.
 
-    std::vector<double> pitch(maxPeaks);
-    std::vector<double> merit(maxPeaks);
+    std::vector<double> pitch;
+    std::vector<double> merit;
+    pitch.reserve(maxPeaks);
+    merit.reserve(maxPeaks);
 
     int numPeaks = 0;
     for (int n = minLag; n <= maxLag; ++n) {
@@ -51,38 +53,42 @@ void YAAPT::peaks(
         if (lag == center && y > peak_thresh2 * avgData) {
             // Note pitch(0) = delta, pitch(1) = 2 * delta...
             // Convert FFT indices to Pitch in Hz
-            pitch[numPeaks] = (n + center) * delta;
-            merit[numPeaks] = y;
-            numPeaks++;
+            pitch.push_back((n + center) * delta);
+            merit.push_back(y);
         }
     }
 
     // Step 2.
     // Be sure there is a large peak.
+    numPeaks = pitch.size();
     if (numPeaks < 1 || *(std::max_element(merit.begin(), merit.end())) / avgData < peak_thresh1) {
-        pitchOut.setZero(maxPeaks);
-        meritOut.setOnes(maxPeaks);
+        pitchOut.setZero();
+        meritOut.setOnes();
         return;
     }
 
     // Step 3.
     // Order the peaks according to size, considering at most maxPeaks.
-    std::vector<Index> idx(pitch.size());
+    std::vector<Index> idx(numPeaks);
     std::iota(idx.begin(), idx.end(), 0);
     std::sort(idx.begin(), idx.end(),
               [&merit](Index i, Index j) { return merit[i] > merit[i]; });
 
-    std::vector<double> sortedMerit(pitch.size());
-    std::vector<double> sortedPitch(pitch.size());
-    for (int i = 0; i < pitch.size(); ++i) {
-        sortedPitch[i] = pitch[idx[i]];
-        sortedMerit[i] = merit[idx[i]];
+    for (int i = 0; i < numPeaks; ++i) {
+        auto current = i;
+        while (i != idx[current]) {
+            auto next = idx[current];
+            std::swap(pitch[current], pitch[next]);
+            std::swap(merit[current], merit[next]);
+            idx[current] = current;
+            current = next;
+        }
+        idx[current] = current;
     }
-    pitch = std::move(sortedPitch);
-    merit = std::move(sortedMerit);
-    numPeaks = std::min<int>(pitch.size(), maxPeaks);
-    pitch.resize(numPeaks, 0.0);
-    merit.resize(numPeaks, 0.0);
+
+    numPeaks = std::min<int>(numPeaks, maxPeaks);
+    pitch.resize(maxPeaks, 0.0);
+    merit.resize(maxPeaks, 0.0);
 
     // Step 4.
     // Insert candidates to reduce pitch doubling and pitch halving, if needed
@@ -109,11 +115,11 @@ void YAAPT::peaks(
             }
         }
 
-        pitchOut = Map<ArrayXd>(pitch.data(), pitch.size());
-        meritOut = Map<ArrayXd>(merit.data(), merit.size());
+        pitchOut = Map<ArrayXd>(pitch.data(), maxPeaks);
+        meritOut = Map<ArrayXd>(merit.data(), maxPeaks);
     }
     else {
-        pitchOut.setZero(maxPeaks);
-        meritOut.setOnes(maxPeaks);
+        pitchOut.setZero();
+        meritOut.setOnes();
     }
 }

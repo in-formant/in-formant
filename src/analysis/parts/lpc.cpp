@@ -13,5 +13,5 @@ void Analyser::analyseLp() {
             (CAPTURE_DURATION / 2.0) / 1000.0,
             fs,
             50.0);
-    lpcFrame = std::move(lpc.d_frames.at(0));
+    lpcFrame = lpc.d_frames.at(0);
 }

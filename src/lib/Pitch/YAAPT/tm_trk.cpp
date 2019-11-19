@@ -4,11 +4,13 @@
 
 #include "YAAPT.h"
 
+using namespace Eigen;
+
 void YAAPT::tm_trk(
-        const std::array<Eigen::ArrayXd, numFrames> & data, double fs,
-        Eigen::ArrayXd & sPitch,
+        const AudioFrames & data, double fs,
+        RefXd sPitch,
         double pStd, double pAvg, const Params & prm,
-        Eigen::ArrayXXd & pitch, Eigen::ArrayXXd & merit)
+        ArrayXXd & pitch, ArrayXXd & merit)
 {
     using namespace Eigen;
 
@@ -40,7 +42,7 @@ void YAAPT::tm_trk(
     merit.setZero(maxCands, realNumFrames);
 
     for (int n = 0; n < numFrames; ++n) {
-        ArrayXd frame = data[n];
+        const ArrayXd & frame = data[n];
 
         // Compute pitch candidates and corresponding merit values,
         // up to maxCands per frame. Merit values are normalized (0-1)
@@ -49,15 +51,11 @@ void YAAPT::tm_trk(
         int lagMax = std::floor(fs / sMin(n)) + 3;
 
         // Compute correlation.
-        ArrayXd phi;
+        ArrayXd phi(frame.size());
         crs_corr(frame, lagMin, lagMax, phi);
 
         // The maxCands pitch candidates are collected into Pitch and Merit arrays.
-        ArrayXd pitchCol, meritCol;
-        cmp_rate(phi, fs, prm, maxCands, lagMin, lagMax, pitchCol, meritCol);
-
-        pitch.col(n) = pitchCol;
-        merit.col(n) = meritCol;
+        cmp_rate(phi, fs, prm, maxCands, lagMin, lagMax, pitch.col(n), merit.col(n));
     }
 
     // The following lines increase merit for peaks with are very

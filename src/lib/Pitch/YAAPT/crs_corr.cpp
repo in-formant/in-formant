@@ -6,15 +6,14 @@
 
 using namespace Eigen;
 
-void YAAPT::crs_corr(
-        const ArrayXd & data, int lagMin, int lagMax,
-        ArrayXd & phi)
+void YAAPT::crs_corr(ConstRefXd data, int lagMin, int lagMax, RefXd phi)
 {
     double eps1 = 0.0;
     int len = data.size();
     int N = len - lagMax;
 
-    phi.setZero(len);
+    phi.resize(len);
+    phi.setZero();
 
     // Remove DC level
     ArrayXd x = data - data.mean();
@@ -22,7 +21,7 @@ void YAAPT::crs_corr(
     VectorXd x_j = data.head(N);
     double p = x_j.dot(x_j);
 
-    for (int k = lagMin; k <= lagMax; ++k) {
+    for (int k = std::max(lagMin, 0); k < std::min(lagMax, N); ++k) {
         // To calculate the dot product of the signal and the displaced version.
         VectorXd x_jr = data.segment(k, N);
         double num = x_j.dot(x_jr);

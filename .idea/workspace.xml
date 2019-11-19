@@ -13,28 +13,43 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Moved analysis code away from AnalyserWindow class and runs on its own thread.">
+      <change afterPath="$PROJECT_DIR$/src/analysis/parts/normalize.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/analysis/parts/refinePitch.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/FFT/FFT.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/ptch_fix.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/parts/lpc.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/lpc.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/YAAPT.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/getF0.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/FFT/FFT.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/FFT/FFT.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/FFT/FFT_core.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/FFT/FFT_d.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/FFT/kissfft.hh" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/YAAPT.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/YAAPT.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/cmp_rate.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/cmp_rate.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/crs_corr.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/crs_corr.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic5.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic5.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/getF0.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/getF0.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nlfer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nlfer.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nonlinear.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nonlinear.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/path1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/path1.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/peaks.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/peaks.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/refine.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/refine.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/spec_trk.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/spec_trk.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/tm_trk.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/tm_trk.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir1.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir2.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir2.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/interp1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/interp1.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/medfilt1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/medfilt1.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/specgram.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/specgram.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Resample.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Resample.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -72,7 +87,7 @@
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="ignore_missing_gitignore" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/lib/Pitch/YAAPT" />
+    <property name="last_opened_file_path" value="$USER_HOME$/Builds/YAAPT_v4.0/private/ptch_fix.m" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -83,15 +98,15 @@
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
+    <property name="settings.editor.selected.configurable" value="CPPToolchains" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/lib/FFT" />
+      <recent name="$PROJECT_DIR$/src/lib/FFT/fftwpp" />
       <recent name="$PROJECT_DIR$/src/analysis/parts" />
       <recent name="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util" />
       <recent name="$PROJECT_DIR$/src/lib/Math" />
-      <recent name="$PROJECT_DIR$/src/lib/Signal" />
-      <recent name="$PROJECT_DIR$/src/lib/Pitch" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/lib/Pitch/YAAPT" />
@@ -190,6 +205,14 @@
       <workItem from="1573924149335" duration="9288000" />
       <workItem from="1573934414793" duration="2999000" />
       <workItem from="1574012544853" duration="1325000" />
+      <workItem from="1574070191257" duration="6705000" />
+      <workItem from="1574090800597" duration="5480000" />
+      <workItem from="1574096417568" duration="3439000" />
+      <workItem from="1574100238390" duration="2346000" />
+      <workItem from="1574102809455" duration="1112000" />
+      <workItem from="1574124858018" duration="6059000" />
+      <workItem from="1574170555256" duration="8652000" />
+      <workItem from="1574191053950" duration="213000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>

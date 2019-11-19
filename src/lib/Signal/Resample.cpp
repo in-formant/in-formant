@@ -27,14 +27,22 @@ ArrayXd Resample::resample(const ArrayXd & x, double sourceFs, double targetFs, 
         constexpr int numberOfPaddingSides = 2;
         int nfft = 1;
         while (nfft < nx + antiTurnAround * numberOfPaddingSides) nfft *= 2;
-        ArrayXd data = ArrayXd::Zero(nfft);
+
+        rfft_plan(nfft);
+        Map<ArrayXd> data(rfft_in(nfft), nfft);
+        Map<ArrayXd> data2(rfft_out(nfft), nfft);
+        data.setZero();
         data.segment(antiTurnAround, nx) = x;
-        FFT::realTransform(data, 1); // go to frequency domain
+        rfft(nfft); // go to frequency domain
         for (int i = std::floor(upfactor * nfft); i < nfft; ++i)
-            data(i) = 0.0; // filter away high frequencies
-        data(0) = 0.0;
-        FFT::realTransform(data, -1); // return to time domain
-        z = data.segment(antiTurnAround, nx) / static_cast<double>(nfft);
+            data2(i) = 0.0; // filter away high frequencies
+        data2(0) = 0.0;
+        irfft_plan(nfft);
+        Map<ArrayXd>(irfft_in(nfft), nfft) = data2;
+        Map<ArrayXd> data3(irfft_out(nfft), nfft);
+        irfft(nfft); // return to time domain
+
+        z = data3.segment(antiTurnAround, nx) / static_cast<double>(2 * nfft);
     }
     else {
         z = x;
@@ -74,19 +82,23 @@ ArrayXd Resample::upsample(const ArrayXd & x)
 
     const int numberOfSamples = nx * sampleRateFactor;
 
-    ArrayXd data = ArrayXd::Zero(sampleRateFactor * nfft);
+    int n = sampleRateFactor * nfft;
+
+    rfft_plan(n);
+    Map<ArrayXd> data(rfft_in(n), n);
+    Map<ArrayXd> data2(rfft_out(n), n);
+    data.setZero();
     data.segment(antiTurnAround, nx) = x;
-    FFT::realTransform(data, 1); // go to frequency domain
+    rfft(n); // go to frequency domain
     int imin = std::floor(nfft * 0.95);
     for (int i = imin; i < nfft; ++i)
-        data(i) *= static_cast<double>(nfft - i) / static_cast<double>(nfft - imin);
-    data(0) = 0.0;
-    FFT::realTransform(data, -1); // return to time domain
-
-    ArrayXd z(numberOfSamples);
-    for (int i = 0; i < numberOfPaddingSides; ++i) {
-        z(i) = data(i + sampleRateFactor * antiTurnAround) / static_cast<double>(nfft);
-    }
+        data[i] *= static_cast<double>(nfft - i) / static_cast<double>(nfft - imin);
+    data[0] = 0.0;
+    irfft_plan(n);
+    Map<ArrayXd>(irfft_in(n), n) = data2;
+    Map<ArrayXd> data3(irfft_out(n), n);
+    irfft(n); // return to time domain
+    ArrayXd z = data3.segment(antiTurnAround, nx) / static_cast<double>(nfft);
 
     return z;
 }

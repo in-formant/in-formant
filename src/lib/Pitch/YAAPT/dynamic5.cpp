@@ -7,9 +7,9 @@
 using namespace Eigen;
 
 void YAAPT::dynamic5(
-        const ArrayXXd &pitchArray, const ArrayXXd &meritArray,
+        ConstRefXXd pitchArray, ConstRefXXd meritArray,
         double k1, const Params & prm,
-        ArrayXd &finalPitch)
+        RefXd finalPitch)
 {
     const double F0min = prm.F0min;
 
@@ -40,11 +40,10 @@ void YAAPT::dynamic5(
     transitionCost *= transitionCost.constant(k1);
 
     // Search the best path.
-    ArrayXi path;
+    ArrayXi path(numFrames);
     path1(localCost, transitionCost, path);
 
     // Extract the final voiced F0 track which has the lowest cost.
-    finalPitch.setZero(numFrames);
     for (int n = 0; n < numFrames; ++n) {
         finalPitch(n) = pitchArray(path(n), n);
     }

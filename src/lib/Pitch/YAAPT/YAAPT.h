@@ -16,11 +16,44 @@
 
 namespace Eigen {
     using ArrayXb = Eigen::Array<bool, Eigen::Dynamic, 1>;
+
+    template<class Derived, class OtherDerived>
+    Array<typename Derived::Scalar, Dynamic, 1> filter(const ArrayBase<Derived> & x, const ArrayBase<OtherDerived> & cond) {
+        int nx = x.size();
+        int ny = cond.template cast<int>().sum();
+        Array<typename Derived::Scalar, Dynamic, 1> y(ny);
+        for (int i = 0, iy = 0; i < nx; ++i) {
+            if (cond(i)) {
+                y(iy++) = x(i);
+            }
+        }
+        return y;
+    }
 }
 
 namespace YAAPT
 {
-    constexpr int numFrames = analysisAudioFrames;
+    constexpr int numFrames = analysisPitchFrameCount;
+
+    using AudioFrames = std::array<Eigen::ArrayXd, numFrames>;
+
+    using Tensor3d = Eigen::Tensor<double, 3>;
+
+    using RefXd = Eigen::Ref<Eigen::ArrayXd>;
+    using RefXXd = Eigen::Ref<Eigen::ArrayXXd>;
+    using RefXXXd = Tensor3d &;
+    using RefXcd = Eigen::Ref<Eigen::ArrayXcd>;
+    using RefXXcd = Eigen::Ref<Eigen::ArrayXXcd>;
+    using RefXi = Eigen::Ref<Eigen::ArrayXi>;
+    using RefXb = Eigen::Ref<Eigen::ArrayXb>;
+
+    using ConstRefXd = const Eigen::Ref<const Eigen::ArrayXd>;
+    using ConstRefXXd = const Eigen::Ref<const Eigen::ArrayXXd>;
+    using ConstRefXXXd = const Tensor3d &;
+    using ConstRefXcd = const Eigen::Ref<const Eigen::ArrayXcd>;
+    using ConstRefXXcd = const Eigen::Ref<const Eigen::ArrayXXcd>;
+    using ConstRefXi = const Eigen::Ref<const Eigen::ArrayXi>;
+    using ConstRefXb = const Eigen::Ref<const Eigen::ArrayXb>;
 
     struct Params {
         double F0min = 70;          // Minimum F0 searched (Hz)
@@ -41,7 +74,7 @@ namespace YAAPT
         double F0half = 150;        // F0 halving decision threshold (Hz)
         double dp5_k1 = 11;         // Weight using in dynamic programming
         int    decFactor = 1;       // Factor for signal resampling
-        double nccfThresh1 = 0.25;  // Threshold for considering a peak in NCCF
+        double nccfThresh1 = 0.3;  // Threshold for considering a peak in NCCF3
         double nccfThresh2 = 0.9;   // Threshold for terminating search in NCCF
         int    nccfMaxCands = 3;    // Maximum number of candidates found
         double nccfPWidth = 5;      // Window width in NCCF peak picking
@@ -64,7 +97,7 @@ namespace YAAPT
               F0double(150), F0half(150),
               dp5_k1(11),
               decFactor(1),
-              nccfThresh1(0.25), nccfThresh2(0.9),
+              nccfThresh1(0.3), nccfThresh2(0.9),
               nccfMaxCands(3), nccfPWidth(5),
               meritBoost(0.2), meritPivot(0.99), meritExtra(0.4),
               medianValue(7),
@@ -75,59 +108,55 @@ namespace YAAPT
 
     // Signal processing / util utility functions.
 
-    void fir1(int n, const Eigen::ArrayXd & w, Eigen::ArrayXd & b);
-    void fir2(int n, const Eigen::ArrayXd & f, const Eigen::ArrayXd & m,
-              int grid_n, int ramp_n, Eigen::ArrayXd & b);
-    void interp1(const Eigen::ArrayXd & x, const Eigen::ArrayXd & v,
-                 const Eigen::ArrayXd & xq, Eigen::ArrayXd & vq);
-    void medfilt1(const Eigen::ArrayXd & x, int w, Eigen::ArrayXd & y);
-    void specgram(const std::array<Eigen::ArrayXd, numFrames> & x, int nfft,
-                  Eigen::ArrayXXcd & spec);
+    void fir1(int n, ConstRefXd w, RefXd b);
+    void fir2(int n, ConstRefXd f, ConstRefXd m, int grid_n, int ramp_n, RefXd b);
+    void interp1(ConstRefXd x, ConstRefXd v, ConstRefXd xq, RefXd vq);
+    void medfilt1(ConstRefXd x, int w, RefXd y);
+    void specgram(const AudioFrames & x, int nfft, RefXXcd spec);
 
     // YAAPT utility functions.
 
-    void cmp_rate(const Eigen::ArrayXd & phi, double fs, const Params & prm,
+    void cmp_rate(ConstRefXd phi, double fs, const Params & prm,
                   int maxCands, int lagMin, int lagMax,
-                  Eigen::ArrayXd & pitch, Eigen::ArrayXd & merit);
+                  RefXd pitch, RefXd merit);
 
-    void crs_corr(const Eigen::ArrayXd & data, int lagMin, int lagMax,
-                  Eigen::ArrayXd & phi);
+    void crs_corr(ConstRefXd data, int lagMin, int lagMax, RefXd phi);
 
-    void dynamic5(const Eigen::ArrayXXd & pitchArray, const Eigen::ArrayXXd & meritArray,
-                  double k1, const Params & prm,
-                  Eigen::ArrayXd & finalPitch);
+    void dynamic5(ConstRefXXd pitchArray, ConstRefXXd meritArray,
+                  double k1, const Params & prm, RefXd finalPitch);
 
-    void dynamic(const Eigen::ArrayXXd & pitchArray, const Eigen::ArrayXXd & meritArray,
-                 const Eigen::ArrayXd & energy, const Params & prm,
-                  Eigen::ArrayXd & finalPitch);
+    void dynamic(ConstRefXXd pitchArray, ConstRefXXd meritArray,
+                 ConstRefXd energy, const Params & prm,
+                 RefXd finalPitch);
 
-    void nlfer(const std::array<Eigen::ArrayXd, numFrames> & data, double fs, const Params & prm,
-               Eigen::ArrayXd & energy, Eigen::ArrayXb & vUvEnergy);
+    void nlfer(const AudioFrames & data, double fs, const Params & prm,
+               RefXd energy, RefXb vUvEnergy);
 
-    void nonlinear(const std::array<Eigen::ArrayXd, numFrames> & A, double fs, const Params & prm,
-                   std::array<Eigen::ArrayXd, numFrames> & B, std::array<Eigen::ArrayXd, numFrames> & C,
-                   std::array<Eigen::ArrayXd, numFrames> & D, double & newFs);
+    void nonlinear(const AudioFrames & A, double fs, const Params & prm,
+                   AudioFrames & B, AudioFrames & C,
+                   AudioFrames & D, double & newFs);
 
-    void path1(const Eigen::ArrayXXd & local, const Eigen::Tensor<double, 3> & trans, Eigen::ArrayXi & path);
+    void path1(ConstRefXXd local, ConstRefXXXd trans, RefXi path);
 
-    void peaks(const Eigen::ArrayXd & data, double delta, int maxPeaks, const Params & prm,
-               Eigen::ArrayXd & pitch, Eigen::ArrayXd & merit);
+    void peaks(ConstRefXd data, double delta, int maxPeaks, const Params & prm,
+               RefXd pitch, RefXd merit);
 
-    void refine(const Eigen::ArrayXXd & tPitch1, const Eigen::ArrayXXd & tMerit1,
-                const Eigen::ArrayXXd & tPitch2, const Eigen::ArrayXXd & tMerit2,
-                const Eigen::ArrayXd & sPitch, const Eigen::ArrayXd & energy,
-                const Eigen::ArrayXb & vUvEnergy, const Params & prm,
-                Eigen::ArrayXXd & pitch, Eigen::ArrayXXd & merit);
+    void refine(ConstRefXXd tPitch1, ConstRefXXd tMerit1,
+                ConstRefXXd tPitch2, ConstRefXXd tMerit2,
+                ConstRefXd sPitch, ConstRefXd energy, ConstRefXb vUvEnergy, const Params & prm,
+                RefXXd pitch, RefXXd merit);
 
-    void spec_trk(const std::array<Eigen::ArrayXd, numFrames> & data, double fs,
-                  const Eigen::ArrayXb & vUvEnergy, const Params & prm,
-                  Eigen::ArrayXd & sPitch, Eigen::ArrayXd & vUvSPitch, double & pAvg, double & pStd);
+    void ptch_fix(RefXd pitch, int pHalf, int pDouble);
 
-    void spec_trk2(const std::array<Eigen::ArrayXd, numFrames> & data, double fs,
-                   const Eigen::ArrayXb & vUvEnergy, const Params & prm,
-                   Eigen::ArrayXd & sPitch, Eigen::ArrayXd & vUvSPitch, double & pAvg, double & pStd);
+    void spec_trk(const AudioFrames & data, double fs,
+                  ConstRefXb vUvEnergy, const Params & prm,
+                  RefXd sPitch, RefXd vUvSPitch, double & pAvg, double & pStd);
 
-    void tm_trk(const std::array<Eigen::ArrayXd, numFrames> & data, double fs, Eigen::ArrayXd & sPitch,
+    void spec_trk2(const AudioFrames & data, double fs,
+                   ConstRefXb vUvEnergy, const Params & prm,
+                   RefXd sPitch, RefXd vUvSPitch, double & pAvg, double & pStd);
+
+    void tm_trk(const AudioFrames & data, double fs, RefXd sPitch,
                 double pStd, double pAvg, const Params & prm,
                 Eigen::ArrayXXd & pitch, Eigen::ArrayXXd & merit);
 
@@ -138,13 +167,13 @@ namespace YAAPT
         double framePeriod;    // Frame period (1/rate) of output pitch track in ms.
     };
 
-    void getF0_slow(const std::array<Eigen::ArrayXd, numFrames> & data, double fs,
+    void getF0_slow(const AudioFrames & data, double fs,
                     Result & res, const Params & prm = Params());
 
-    void getF0_fast(const std::array<Eigen::ArrayXd, numFrames> & data, double fs,
+    void getF0_fast(const AudioFrames & data, double fs,
                     Result & res, const Params & prm = Params());
 
-    void getF0_fastest(const Eigen::ArrayXd & data, double fs,
+    void getF0_fastest(const AudioFrames & data, double fs,
                        Result & res, const Params & prm = Params());
 
 }

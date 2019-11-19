@@ -4,19 +4,22 @@
 
 #include "YAAPT.h"
 
-void YAAPT::getF0_slow(const std::array<Eigen::ArrayXd, numFrames> & data, double fs, Result & res, const Params & prm)
-{
-    using namespace Eigen;
+using namespace Eigen;
 
-    std::array<ArrayXd, numFrames> B, C, D;
+void YAAPT::getF0_slow(const AudioFrames & data, double fs, Result & res, const Params & prm)
+{
+    res.pitch.setZero(numFrames);
+
+    AudioFrames B, C, D;
     double newFs;
     nonlinear(data, fs, prm, B, C, D, newFs);
 
-    ArrayXd energy;
-    ArrayXb vUvEnergy;
+    ArrayXd energy(numFrames);
+    ArrayXb vUvEnergy(numFrames);
     nlfer(B, newFs, prm, energy, vUvEnergy);
 
-    ArrayXd sPitch, vUvSPitch;
+    ArrayXd sPitch(numFrames);
+    ArrayXd vUvSPitch(numFrames);
     double pAvg, pStd;
     spec_trk(D, newFs, vUvEnergy, prm, sPitch, vUvSPitch, pAvg, pStd);
 
@@ -48,7 +51,8 @@ void YAAPT::getF0_slow(const std::array<Eigen::ArrayXd, numFrames> & data, doubl
         tMerit2 = tMerit2_pad;
     }
 
-    ArrayXXd rPitch, merit;
+    ArrayXXd rPitch(tPitch1.rows() + tPitch2.rows(), tPitch1.cols());
+    ArrayXXd merit(tMerit1.rows() + tMerit2.rows(), tMerit1.cols());
     refine(tPitch1, tMerit1, tPitch2, tMerit2, sPitch, energy, vUvEnergy, prm, rPitch, merit);
 
     dynamic(rPitch, merit, energy, prm, res.pitch);
@@ -56,19 +60,20 @@ void YAAPT::getF0_slow(const std::array<Eigen::ArrayXd, numFrames> & data, doubl
     res.framePeriod = 15;
 }
 
-void YAAPT::getF0_fast(const std::array<Eigen::ArrayXd, numFrames> & data, double fs, Result & res, const Params & prm)
+void YAAPT::getF0_fast(const AudioFrames & data, double fs, Result & res, const Params & prm)
 {
-    using namespace Eigen;
+    res.pitch.setZero(numFrames);
 
-    std::array<ArrayXd, numFrames> B, C, D;
+    AudioFrames B, C, D;
     double newFs;
     nonlinear(data, fs, prm, B, C, D, newFs);
 
-    ArrayXd energy;
-    ArrayXb vUvEnergy;
+    ArrayXd energy(numFrames);
+    ArrayXb vUvEnergy(numFrames);
     nlfer(B, newFs, prm, energy, vUvEnergy);
 
-    ArrayXd sPitch, vUvSPitch;
+    ArrayXd sPitch(numFrames);
+    ArrayXd vUvSPitch(numFrames);
     double pAvg, pStd;
     spec_trk(D, newFs, vUvEnergy, prm, sPitch, vUvSPitch, pAvg, pStd);
 
@@ -82,14 +87,16 @@ void YAAPT::getF0_fast(const std::array<Eigen::ArrayXd, numFrames> & data, doubl
 
         ArrayXXd tPitch1_pad(maxCands, lenSpectral);
         tPitch1_pad << tPitch1, ArrayXXd::Zero(3, lenSpectral - lenTemporal);
-        tPitch1 = tPitch1_pad;
+        tPitch1 = std::move(tPitch1_pad);
 
         ArrayXXd tMerit1_pad(maxCands, lenSpectral);
         tMerit1_pad << tMerit1, ArrayXXd::Zero(3, lenSpectral - lenTemporal);
-        tMerit1 = tMerit1_pad;
+        tMerit1 = std::move(tMerit1_pad);
     }
 
-    ArrayXXd rPitch, merit;
+    ArrayXXd rPitch(2 * tPitch1.rows(), tPitch1.cols());
+    ArrayXXd merit(2 * tMerit1.rows(), tMerit1.cols());
+
     refine(tPitch1, tMerit1, tPitch1, tMerit1, sPitch, energy, vUvEnergy, prm, rPitch, merit);
 
     dynamic(rPitch, merit, energy, prm, res.pitch);
@@ -97,9 +104,7 @@ void YAAPT::getF0_fast(const std::array<Eigen::ArrayXd, numFrames> & data, doubl
     res.framePeriod = 15;
 }
 
-void YAAPT::getF0_fastest(const Eigen::ArrayXd & data, double fs, Result & res, const Params & prm)
+void YAAPT::getF0_fastest(const AudioFrames & data, double fs, Result & res, const Params & prm)
 {
-    using namespace Eigen;
-
     throw std::runtime_error("Unimplemented yet");
 }

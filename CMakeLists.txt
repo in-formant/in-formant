@@ -4,6 +4,7 @@ project(speech_analysis)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${speech_analysis_SOURCE_DIR}/cmake")
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 set(CMAKE_CXX_FLAGS_DEBUG "-Og -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-Os -ftree-vectorize -s -g")
 
@@ -14,6 +15,10 @@ set(SOURCES
         src/analysis/Analyser_mainLoop.cpp
         src/analysis/Analyser.cpp
         src/analysis/Analyser.h
+        src/analysis/parts/formants.cpp
+        src/analysis/parts/lpc.cpp
+        src/analysis/parts/pitch.cpp
+        src/analysis/parts/resample.cpp
         src/audio/AudioCapture.cpp
         src/audio/AudioCapture_callbacks.cpp
         src/audio/AudioCapture.h
@@ -25,9 +30,6 @@ set(SOURCES
         src/gui/SDLUtils.h
         src/gui/Spectrogram.cpp
         src/gui/Spectrogram.h
-        src/lib/FFT/FFT_core.h
-        src/lib/FFT/FFT_d.cpp
-        src/lib/FFT/FFT.h
         src/lib/Formant/Formant.cpp
         src/lib/Formant/Formant.h
         src/lib/Formant/Formant_track.cpp
@@ -74,7 +76,7 @@ set(SOURCES
         src/lib/Signal/Resample.cpp
         src/lib/Signal/Resample.h
         src/lib/Signal/Window.cpp
-        src/lib/Signal/Window.h src/analysis/parts/pitch.cpp src/analysis/parts/resample.cpp src/analysis/parts/lpc.cpp src/analysis/parts/formants.cpp)
+        src/lib/Signal/Window.h src/lib/FFT/FFT.cpp src/lib/FFT/FFT.h src/analysis/parts/refinePitch.cpp src/analysis/parts/normalize.cpp src/lib/Pitch/YAAPT/ptch_fix.cpp)
 
 add_executable(speech_analysis ${SOURCES})
 

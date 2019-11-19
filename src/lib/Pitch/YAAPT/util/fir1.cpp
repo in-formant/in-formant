@@ -8,7 +8,7 @@
 
 using namespace Eigen;
 
-void YAAPT::fir1(int n, const Eigen::ArrayXd & w, Eigen::ArrayXd & b)
+void YAAPT::fir1(int n, ConstRefXd w, RefXd b)
 {
     constexpr bool scale = true;
     int ftype = (w.size() == 1);

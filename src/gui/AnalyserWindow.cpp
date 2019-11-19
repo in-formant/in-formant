@@ -127,6 +127,8 @@ void AnalyserWindow::mainLoop() {
 
     }
 
+    analyser.stopThread();
+
 }
 
 void AnalyserWindow::preRender() {

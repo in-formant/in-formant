@@ -10,9 +10,9 @@
 using namespace Eigen;
 
 void YAAPT::cmp_rate(
-        const ArrayXd & phi, double fs, const Params & prm,
+        ConstRefXd phi, double fs, const Params & prm,
         int maxCands, int lagMin, int lagMax,
-        ArrayXd & pitch, ArrayXd & merit)
+        RefXd pitch, RefXd merit)
 {
     // Width of the window used in the first pass of peak picking.
     double width = prm.nccfPWidth;
@@ -30,8 +30,8 @@ void YAAPT::cmp_rate(
     double Merit_thresh2 = prm.nccfThresh2;
 
     int numPeaks = 0;
-    pitch.setZero(maxCands);
-    merit.setZero(maxCands);
+    pitch.setZero();
+    merit.setZero();
 
     // Find all peaks for a (lagMin to lagMax) search range.
     //  A "peak" must be higher than a specified number of points on either side.
@@ -61,17 +61,17 @@ void YAAPT::cmp_rate(
     std::iota(idx.begin(), idx.end(), 0);
     std::sort(idx.begin(), idx.end(),
             [&meritvec](Index i, Index j) { return meritvec[i] > meritvec[j]; });
-    merit = Map<ArrayXd>(meritvec.data(), numPeaks)(idx);
-    pitch = Map<ArrayXd>(pitchvec.data(), numPeaks)(idx);
-    numPeaks = std::min(numPeaks, maxCands);
-    merit.conservativeResize(maxCands);
-    pitch.conservativeResize(maxCands);
-
-    // If the number of peaks in the frame are less than the maxCands, then we
-    // assign null values to remainder of peak and merit values in arrays.
-    if (numPeaks < maxCands) {
-        pitch.tail(maxCands - numPeaks).setZero();
-        merit.tail(maxCands - numPeaks).setConstant(0.001);
+    if (numPeaks >= maxCands) {
+        merit = Map<ArrayXd>(meritvec.data(), numPeaks)(idx).eval().head(maxCands);
+        pitch = Map<ArrayXd>(pitchvec.data(), numPeaks)(idx).eval().head(maxCands);
+    }
+    else {
+        // If the number of peaks in the frame are less than the maxCands, then we
+        // assign null values to remainder of peak and merit values in arrays.
+        merit.head(numPeaks) = Map<ArrayXd>(meritvec.data(), numPeaks)(idx).eval();
+        pitch.head(numPeaks) = Map<ArrayXd>(pitchvec.data(), numPeaks)(idx).eval();
+        merit.tail(maxCands - numPeaks) = 0.001;
+        pitch.tail(maxCands - numPeaks) = 0.0;
     }
 
     // Normalize merits.

@@ -6,35 +6,34 @@
 
 using namespace Eigen;
 
-void YAAPT::medfilt1(const ArrayXd & x, int k, ArrayXd & y)
+void YAAPT::medfilt1(ConstRefXd x, int k, RefXd y)
 {
     const int nx = x.size();
     if (nx < 1) {
-        y.resize(0);
         return;
     }
-    if (nx == 1) {
-        y = x;
+    else if (nx == 1) {
+        y(0) = x(0);
         return;
     }
 
-    int k2 = (k - 1) / 2;
-    ArrayXXd m;
-    m.setZero(nx, k);
+    std::vector<double> window;
+    window.reserve(k);
 
-    m.col(k2) = x;
-    for (int i = 0; i < k2; ++i) {
-        int j = k2 - i;
-        m(seq(j, last), i) = x(seq(0, (nx - j - 1)));
-        m(seq(0, j - 1), i) = x(0);
-        m(seq(0, (nx - j - 1)), (k - (i + 1) - 1)) = x(seq(j, last));
-        m(seq((nx - j - 1), last), (k - (i + 1) - 1)) = x(last);
-    }
+    int k2 = k / 2;
 
-    y.resize(nx);
-    for (int i = 0; i < nx; ++i) {
-        ArrayXd row = m.row(i);
-        std::nth_element(row.begin(), row.begin() + k2, row.begin());
-        y(i++) = row(k2);
+    for (int j = 0; j < nx; ++j) {
+        window.clear();
+        for (int m = j - k2; m <= j + k2; ++m) {
+            if (k < 0) {
+                window.push_back(x(0));
+            } else if (k >= nx) {
+                window.push_back(x(last));
+            } else {
+                window.push_back(x(j));
+            }
+        }
+        std::nth_element(window.begin(), window.begin() + k2, window.end());
+        y(j) = window[k2];
     }
 }

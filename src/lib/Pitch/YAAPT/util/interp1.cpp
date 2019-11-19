@@ -7,26 +7,28 @@
 
 using namespace Eigen;
 
-void YAAPT::interp1(const ArrayXd & x, const ArrayXd & v,
-                    const ArrayXd & xq, ArrayXd & vq)
+void YAAPT::interp1(ConstRefXd x, ConstRefXd v, ConstRefXd xq, RefXd vq)
 {
     const int nx = x.size();
     const int nq = xq.size();
 
-    vq.resize(nq);
     for (int i = 0; i < nq; ++i) {
-        int pindex = -1, index = -1;
         // pindex is the last index where xq(i) >= x
-        // index is the first index where xq(i) <= x
-        int idx = 0;
-        while (idx < nx) { //FIXME
-            if (xq(i) >= x(idx))
-                pindex = idx;
-            if (index < 0 && xq(i) <= x(idx))
-                index = idx;
-            if (index >= 0 && xq(i) < x(idx))
+        int pindex = -1;
+        for (int ix = 0; ix < nx; ++ix) {
+            if (xq(i) >= x(ix) && (ix == nx - 1 || xq(i) < x(ix + 1))) {
+                pindex = ix;
                 break;
-            idx++;
+            }
+        }
+
+        // index is the first index where xq(i) <= x
+        int index = -1;
+        for (int ix = 0; ix < nx; ++ix) {
+            if (xq(i) <= x(ix) || ix == nx - 1) {
+                index = ix;
+                break;
+            }
         }
 
         double slope;

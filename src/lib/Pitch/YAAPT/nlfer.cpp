@@ -5,8 +5,8 @@
 #include "YAAPT.h"
 
 void YAAPT::nlfer(
-        const std::array<Eigen::ArrayXd, numFrames> & data, double fs, const Params & prm,
-        Eigen::ArrayXd & energy, Eigen::ArrayXb & vUvEnergy)
+        const AudioFrames & data, double fs, const Params & prm,
+        RefXd energy, RefXb vUvEnergy)
 {
     using namespace Eigen;
 
@@ -21,7 +21,7 @@ void YAAPT::nlfer(
     int N_F0_max = round((prm.F0max / fs) * nfft);
 
     // Spectrogram of the data
-    ArrayXXcd specData;
+    ArrayXXcd specData(nfft, numFrames);
     specgram(data, nfft, specData);
 
     // Compute normalized low-frequency energy ratio

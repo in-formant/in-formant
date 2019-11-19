@@ -8,20 +8,17 @@
 using namespace Eigen;
 
 void YAAPT::refine(
-        const ArrayXXd & tPitch1, const ArrayXXd & tMerit1,
-        const ArrayXXd & tPitch2, const ArrayXXd & tMerit2,
-        const ArrayXd & sPitch, const ArrayXd & energy,
-        const ArrayXb & vUvEnergy, const Params & prm,
-        ArrayXXd & pitch, ArrayXXd & merit)
+        ConstRefXXd tPitch1, ConstRefXXd tMerit1,
+        ConstRefXXd tPitch2, ConstRefXXd tMerit2,
+        ConstRefXd sPitch, ConstRefXd energy,
+        ConstRefXb vUvEnergy, const Params & prm,
+        RefXXd pitch, RefXXd merit)
 {
     const double nlfer_thresh2 = prm.nlferThresh2;
     const double meritPivot = prm.meritPivot;
 
     // Merge pitch candidates and their merits from two types of the signal
-    pitch.resize(tPitch1.rows() + tPitch2.rows(), tPitch1.cols());
     pitch << tPitch1, tPitch2;
-
-    merit.resize(tMerit1.rows() + tMerit2.rows(), tMerit1.cols());
     merit << tMerit1, tMerit2;
 
     // Sort the pitch and merit arrays by descending merit.
@@ -34,12 +31,12 @@ void YAAPT::refine(
     for (int n = 0; n < numFrames; ++n) {
         std::sort(idx.begin(), idx.end(),
                   [n, &merit](Index i, Index j) { return merit(i, n) > merit(j, n); });
-        merit.col(n) = merit.col(n)(idx);
-        pitch.col(n) = pitch.col(n)(idx);
+        merit.col(n) = merit.col(n)(idx).eval();
+        pitch.col(n) = pitch.col(n)(idx).eval();
     }
 
     // A best pitch track is generated from the best candidates
-    ArrayXd bestPitch;
+    ArrayXd bestPitch(pitch.cols());
     medfilt1(pitch.row(0), prm.medianValue, bestPitch);
 
     bestPitch = vUvEnergy.select(bestPitch, 0);

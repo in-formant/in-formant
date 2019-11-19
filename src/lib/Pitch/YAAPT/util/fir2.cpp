@@ -3,15 +3,14 @@
 //
 
 #include <iostream>
-#include <fftw3.h>
 #include "../YAAPT.h"
-#include "../../../FFT/kissfft.hh"
+#include "../../../FFT/FFT.h"
 #include "../../../Signal/Window.h"
 
 using namespace Eigen;
 
-void YAAPT::fir2(int n, const ArrayXd & basef, const ArrayXd & basem,
-                 int grid_n, int ramp_n, ArrayXd & b) {
+void YAAPT::fir2(int n, ConstRefXd basef, ConstRefXd basem,
+                 int grid_n, int ramp_n, RefXd b) {
     // Default to Hamming window.
     ArrayXd window = Window::createHamming(n + 1);
 
@@ -59,26 +58,27 @@ void YAAPT::fir2(int n, const ArrayXd & basef, const ArrayXd & basem,
         std::sort(f.begin(), f.end());
 
         // Preserve window shape even though f may have changed
+        m.resize(f.size());
         interp1(basef, basem, f, m);
     }
 
     // Interpolate between grid points
-    ArrayXd grid;
+    ArrayXd grid(grid_n + 1);
     interp1(f, m, ArrayXd::LinSpaced(grid_n + 1, 0.0, 1.0), grid);
 
     // Transform frequency response into time response and
     // center the response about n/2, truncating the excess
     if (n % 2 == 0) {
         int nfft = grid.size() + grid_n - 1;
-        kissfft<double> fft(nfft, false);
 
-        ArrayXcd in(nfft), out(nfft);
-        in << grid, grid(seq(grid_n - 1, 1, -1));
-        fft.transform(in.data(), out.data());
-        out /= out.size();
+        crfft_plan(nfft);
+        Map<ArrayXcd> in(crfft_in(nfft), nfft / 2 + 1);
+        Map<ArrayXd> out(crfft_out(nfft), nfft);
+        in = grid.tail(nfft / 2 + 1);
+        crfft(nfft);
+        out /= static_cast<double>(nfft);
 
         double mid = (n + 1) / 2.0;
-        b.resize(n + 1);
         b << out(seq(last - floor(mid) + 1, last)).real(),
              out(seq(0, std::ceil(mid) - 1)).real();
     }

@@ -16,7 +16,9 @@ Analyser::Analyser()
     : doAnalyse(true),
       lpOrder(10),
       maximumFrequency(5000.0),
-      running(false)
+      running(false),
+      frameCount(0),
+      refineCount(0)
 {
     fs = audioCapture.getSampleRate();
 
@@ -26,7 +28,7 @@ Analyser::Analyser()
 
     // Initialize the audio frames to zero.
     x.setZero(CAPTURE_SAMPLE_COUNT(fs));
-    for (int i = 0; i < analysisAudioFrames; ++i) {
+    for (int i = 0; i < analysisPitchFrameCount; ++i) {
         audioFrames[i].setZero(CAPTURE_SAMPLE_COUNT(fs));
     }
 }
@@ -38,6 +40,7 @@ void Analyser::startThread() {
 
 void Analyser::stopThread() {
     running.store(false);
+    thread.join();
 }
 
 void Analyser::toggle() {

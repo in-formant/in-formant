@@ -7,17 +7,22 @@
 
 using namespace Eigen;
 
-void YAAPT::path1(const ArrayXXd & local, const Tensor<double, 3> & trans, ArrayXi & path)
+void YAAPT::path1(ConstRefXXd local, ConstRefXXXd trans, RefXi path)
 {
     const int M = local.rows();
     const int N = local.cols();
 
     // Initializing several desired matrix.
-    ArrayXXi PRED = ArrayXXi::Zero(M, N);
-    path.setZero(N);
-    ArrayXi p = ArrayXi::Zero(N);
-    ArrayXd PCOST = ArrayXd::Zero(M);
-    ArrayXd CCOST = ArrayXd::Zero(M);
+    ArrayXXi PRED;
+    ArrayXi p;
+    ArrayXd PCOST;
+    ArrayXd CCOST;
+
+    PRED.setZero(M, N);
+    path.setZero();
+    p.setZero(N);
+    PCOST.setZero(M);
+    CCOST.setZero(M);
 
     // Initializing the previous costs.
     for (int j = 0; j < M; ++j) {
@@ -48,18 +53,10 @@ void YAAPT::path1(const ArrayXXd & local, const Tensor<double, 3> & trans, Array
         }
 
         // Using new costs to update previous costs.
-        for (int j = 0; j < M; ++j) {
-            PCOST(j) = CCOST(j);
-        }
+        PCOST = CCOST;
 
         // Obtaining the points with lowest cost in every column.
-        p(i) = 0;
-        for (int j = 1; j < M; ++j) {
-            if (CCOST(j) <= CCOST(0)) {
-                CCOST(0) = CCOST(j);
-                p(i) = j;
-            }
-        }
+        CCOST.minCoeff(&p(i));
     }
 
     // Backtracking.

@@ -5,9 +5,6 @@
 #include <chrono>
 #include "Analyser.h"
 #include "../lib/Pitch/Pitch.h"
-#include "../lib/LPC/LPC.h"
-#include "../lib/LPC/Frame/LPC_Frame.h"
-#include "../lib/Signal/Resample.h"
 
 using namespace Eigen;
 
@@ -44,15 +41,21 @@ void Analyser::update()
         return;
     }
 
+    // Clean up past FFT data.
+    //all_fft_cleanup();
+
     // Read captured audio.
     audioCapture.readBlock(x);
     fs = audioCapture.getSampleRate();
 
+    // Normalise so that max amplitude == 1.
+    normalizeFrame();
+
     // Shift the audio frames.
-    for (int i = 0; i < analysisAudioFrames - 1; ++i) {
+    for (int i = 0; i < analysisPitchFrameCount - 1; ++i) {
         audioFrames[i] = std::move(audioFrames[i + 1]);
     }
-    audioFrames[analysisAudioFrames - 1] = x;
+    audioFrames[analysisPitchFrameCount - 1] = x;
 
     // Get a pitch estimate.
     analysePitch();
@@ -84,4 +87,11 @@ void Analyser::update()
 
     std::copy(tailFrames.frames.begin(), tailFrames.frames.end(), formantTrack.frames.end() - tailFormantLength);
     */
+
+    // Increment the frame counter.
+    frameCount++;
+
+    if (frameCount % (analysisPitchFrameCount - analysisPitchFrameOverlap) == 0) {
+        refinePitch();
+    }
 }

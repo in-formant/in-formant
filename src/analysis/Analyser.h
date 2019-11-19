@@ -13,7 +13,9 @@
 
 constexpr double analysisUpdatesPerSecond = 1000.0 / 15.0; // This is to get a new frame every ~15ms.
 constexpr int analysisFrameCount = 2000;
-constexpr int analysisAudioFrames = 10;
+constexpr int analysisPitchFrameCount = (int) analysisUpdatesPerSecond / 2; // This is to refine pitch roughly twice per second.
+constexpr int analysisPitchFrameOverlap = 5;
+constexpr int analysisCleanupFftTime = 10;
 
 class Analyser {
 public:
@@ -37,10 +39,12 @@ private:
     void mainLoop();
     void update();
 
+    void normalizeFrame();
     void analysePitch();
     void resampleAudio();
     void analyseLp();
     void analyseFormants();
+    void refinePitch();
 
     AudioCapture audioCapture;
 
@@ -50,7 +54,9 @@ private:
     int lpOrder;
 
     // Intermediate variables for analysis.
-    std::array<Eigen::ArrayXd, analysisAudioFrames> audioFrames;
+    std::array<Eigen::ArrayXd, analysisPitchFrameCount> audioFrames;
+    int frameCount, refineCount;
+
     Eigen::ArrayXd x;
     double fs;
     LPC::Frame lpcFrame;
