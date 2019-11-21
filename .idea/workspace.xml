@@ -16,24 +16,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="First trial of YAAPT algorithm to refine the pitch track.">
-      <change afterPath="$PROJECT_DIR$/.gitmodules" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch_PMPM.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/parts/refinePitch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/refinePitch.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/Pitch.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/Pitch_AMDF.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch_AMDF.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/cmp_rate.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/cmp_rate.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/crs_corr.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/crs_corr.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic5.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic5.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/getF0.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/getF0.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/path1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/path1.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/peaks.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/peaks.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/refine.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/refine.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/spec_trk.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/spec_trk.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/tm_trk.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/tm_trk.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -110,17 +94,17 @@
     </option>
   </component>
   <component name="RunManager" selected="CMake Application.speech_analysis">
-    <configuration name="ffts" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="speech_analysis" TARGET_NAME="ffts" CONFIG_NAME="Debug">
+    <configuration name="ffts" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="speech_analysis" TARGET_NAME="ffts" CONFIG_NAME="Release">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="mlpack" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="speech_analysis" TARGET_NAME="mlpack" CONFIG_NAME="Debug">
+    <configuration name="mlpack" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="speech_analysis" TARGET_NAME="mlpack" CONFIG_NAME="Release">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="pitch-detection" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="speech_analysis" TARGET_NAME="pitch-detection" CONFIG_NAME="Debug">
+    <configuration name="pitch-detection" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="speech_analysis" TARGET_NAME="pitch-detection" CONFIG_NAME="Release">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -222,6 +206,7 @@
       <workItem from="1574202480675" duration="521000" />
       <workItem from="1574245863349" duration="10714000" />
       <workItem from="1574265383270" duration="227000" />
+      <workItem from="1574352233132" duration="623000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>

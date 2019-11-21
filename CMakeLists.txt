@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/mlpack/CMake")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 set(CMAKE_CXX_FLAGS_DEBUG "-Og -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-Os -ftree-vectorize -s -g")
 
@@ -54,24 +54,25 @@ set(SOURCES
         src/lib/Math/Polynomial.h
         src/lib/Math/Viterbi.cpp
         src/lib/Math/Viterbi.h
-        src/lib/Pitch/YAAPT/util/fir1.cpp
-        src/lib/Pitch/YAAPT/util/fir2.cpp
-        src/lib/Pitch/YAAPT/util/interp1.cpp
-        src/lib/Pitch/YAAPT/util/medfilt1.cpp
-        src/lib/Pitch/YAAPT/util/specgram.cpp
-        src/lib/Pitch/YAAPT/cmp_rate.cpp
-        src/lib/Pitch/YAAPT/crs_corr.cpp
-        src/lib/Pitch/YAAPT/dynamic5.cpp
-        src/lib/Pitch/YAAPT/dynamic.cpp
-        src/lib/Pitch/YAAPT/nlfer.cpp
-        src/lib/Pitch/YAAPT/nonlinear.cpp
-        src/lib/Pitch/YAAPT/path1.cpp
-        src/lib/Pitch/YAAPT/peaks.cpp
-        src/lib/Pitch/YAAPT/refine.cpp
-        src/lib/Pitch/YAAPT/tm_trk.cpp
-        src/lib/Pitch/YAAPT/spec_trk.cpp
-        src/lib/Pitch/YAAPT/getF0.cpp
-        src/lib/Pitch/YAAPT/YAAPT.h
+        #src/lib/Pitch/YAAPT/util/fir1.cpp
+        #src/lib/Pitch/YAAPT/util/fir2.cpp
+        #src/lib/Pitch/YAAPT/util/interp1.cpp
+        #src/lib/Pitch/YAAPT/util/medfilt1.cpp
+        #src/lib/Pitch/YAAPT/util/specgram.cpp
+        #src/lib/Pitch/YAAPT/cmp_rate.cpp
+        #src/lib/Pitch/YAAPT/crs_corr.cpp
+        #src/lib/Pitch/YAAPT/dynamic5.cpp
+        #src/lib/Pitch/YAAPT/dynamic.cpp
+        #src/lib/Pitch/YAAPT/nlfer.cpp
+        #src/lib/Pitch/YAAPT/nonlinear.cpp
+        #src/lib/Pitch/YAAPT/path1.cpp
+        #src/lib/Pitch/YAAPT/peaks.cpp
+        #src/lib/Pitch/YAAPT/refine.cpp
+        #src/lib/Pitch/YAAPT/tm_trk.cpp
+        #src/lib/Pitch/YAAPT/spec_trk.cpp
+        #src/lib/Pitch/YAAPT/getF0.cpp
+        #src/lib/Pitch/YAAPT/YAAPT.h
+        #src/lib/Pitch/YAAPT/ptch_fix.cpp
         src/lib/Pitch/Pitch_AMDF.cpp
         src/lib/Pitch/Pitch.h
         src/lib/Signal/Filter.cpp
@@ -79,12 +80,59 @@ set(SOURCES
         src/lib/Signal/Resample.cpp
         src/lib/Signal/Resample.h
         src/lib/Signal/Window.cpp
-        src/lib/Signal/Window.h src/lib/FFT/FFT.cpp
+        src/lib/Signal/Window.h
+        src/lib/FFT/FFT.cpp
         src/lib/FFT/FFT.h
         src/analysis/parts/refinePitch.cpp
-        src/analysis/parts/normalize.cpp src/lib/Pitch/YAAPT/ptch_fix.cpp src/lib/Pitch/Pitch_PMPM.cpp)
+        src/analysis/parts/normalize.cpp
+        src/lib/Pitch/Pitch_MPM.cpp)
 
-add_executable(speech_analysis ${SOURCES})
+set(EXTERNAL ${PROJECT_SOURCE_DIR}/external-${CMAKE_SYSTEM_NAME})
+
+if("$ENV{CROSS}" STREQUAL "")
+    set(EXTERNAL_CMAKE ${CMAKE_COMMAND})
+else()
+    set(EXTERNAL_CMAKE $ENV{CROSS}-cmake)
+endif()
+
+ExternalProject_Add(
+        mlpack
+        PREFIX ${EXTERNAL}
+        INSTALL_DIR ${EXTERNAL}/usr
+        GIT_REPOSITORY https://github.com/mlpack/mlpack
+        GIT_TAG 214bb060290c3ba5f83a05784538346d212a4f9f
+        GIT_PROGRESS 1
+        UPDATE_COMMAND ""
+        CMAKE_COMMAND ${EXTERNAL_CMAKE}
+        CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DBUILD_CLI_EXECUTABLES=OFF -DBUILD_PYTHON_BINDINGS=OFF -DDOWNLOAD_STB_IMAGE=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL}/usr
+)
+
+ExternalProject_Add(
+        ffts
+        PREFIX ${EXTERNAL}
+        INSTALL_DIR ${EXTERNAL}/usr
+        GIT_REPOSITORY https://github.com/linkotec/ffts
+        GIT_TAG 2c8da4877588e288ff4cd550f14bec2dc7bf668c
+        GIT_PROGRESS 1
+        CMAKE_COMMAND ${EXTERNAL_CMAKE}
+        CMAKE_ARGS -DENABLE_STATIC=ON -DENABLE_SHARED=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL}/usr
+        PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/patch/CMakeLists-ffts.txt ${EXTERNAL}/src/ffts/CMakeLists.txt
+)
+
+if(NOT "$ENV{CROSS}" STREQUAL "")
+    file(RELATIVE_PATH CROSS_LIB_DIR ${PROJECT_SOURCE_DIR} $ENV{MXE}/usr/$ENV{CROSS}/)
+endif()
+
+ExternalProject_Add(
+        pitch-detection
+        DEPENDS mlpack ffts
+        PREFIX ${EXTERNAL}
+        INSTALL_DIR ${EXTERNAL}/usr
+        GIT_REPOSITORY https://github.com/ichi-rika/pitch-detection
+        GIT_PROGRESS 1
+        CMAKE_COMMAND ${EXTERNAL_CMAKE}
+        CMAKE_ARGS -DINCLUDE_DIRECTORIES=${EXTERNAL}/usr/include -DLINK_DIRECTORIES=${EXTERNAL}/usr/lib;${CROSS_LIB_DIR} -DCMAKE_INSTALL_PREFIX=${EXTERNAL}/usr
+)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(SDL2 REQUIRED)
@@ -93,41 +141,21 @@ find_package(SDL2_gfx REQUIRED)
 find_package(PortAudio REQUIRED)
 find_package(FFTW REQUIRED DOUBLE_LIB)
 
-set(EXTERNAL ${PROJECT_SOURCE_DIR}/external)
+if("$ENV{CROSS}" STREQUAL "")
+add_library(libpitch_detection SHARED IMPORTED)
+else()
+add_library(libpitch_detection MODULE IMPORTED)
+endif()
+set_target_properties(libpitch_detection PROPERTIES
+    IMPORTED_LOCATION ${EXTERNAL}/usr/lib/libpitch_detection${CMAKE_SHARED_LIBRARY_SUFFIX})
 
-ExternalProject_Add(
-        mlpack
-        PREFIX ${EXTERNAL}
-        INSTALL_DIR ${EXTERNAL}/usr
-        GIT_REPOSITORY https://github.com/mlpack/mlpack
-        GIT_TAG 214bb060290c3ba5f83a05784538346d212a4f9f
-        GIT_PROGRESS
-        UPDATE_COMMAND ""
-        CMAKE_ARGS -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=OFF -DBUILD_CLI_EXECUTABLES=OFF -DBUILD_PYTHON_BINDINGS=OFF -DDOWNLOAD_ENSMALLEN=OFF -DDOWNLOAD_STB_IMAGE=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL}/usr
-)
+add_library(libffts STATIC IMPORTED)
+set_target_properties(libffts PROPERTIES
+    IMPORTED_LOCATION ${EXTERNAL}/usr/lib/libffts${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-ExternalProject_Add(
-        ffts
-        PREFIX ${EXTERNAL}
-        INSTALL_DIR ${EXTERNAL}/usr
-        GIT_REPOSITORY https://github.com/anthonix/ffts
-        GIT_TAG fe86885ecafd0d16eb122f3212403d1d5a86e24e
-        GIT_PROGRESS
-        CMAKE_ARGS -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL}/usr
-)
-
-ExternalProject_Add(
-        pitch-detection
-        DEPENDS mlpack ffts
-        PREFIX ${EXTERNAL}
-        INSTALL_DIR ${EXTERNAL}/usr
-        GIT_REPOSITORY https://github.com/ichi-rika/pitch-detection
-        GIT_TAG f3d6de6
-        GIT_PROGRESS
-        CMAKE_ARGS -DINCLUDE_DIRECTORIES=${EXTERNAL}/usr/include -DLINK_DIRECTORIES=${EXTERNAL}/usr/lib -DCMAKE_INSTALL_PREFIX=${EXTERNAL}/usr
-)
-
-add_dependencies(speech_analysis ffts pitch-detection)
+add_library(libmlpack STATIC IMPORTED)
+set_target_properties(libmlpack PROPERTIES
+    IMPORTED_LOCATION ${EXTERNAL}/usr/lib/libmlpack${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 include_directories(
         ${SDL2_INCLUDE_DIR}
@@ -139,9 +167,8 @@ include_directories(
         ${EXTERNAL}/usr/include
 )
 
-find_library(PITCH_DETECTION_LIBRARY pitch_detection PATHS ${EXTERNAL}/usr/lib)
-find_library(FFTS_LIBRARY ffts PATHS ${EXTERNAL}/usr/lib)
-find_library(MLPACK_LIBRARY mlpack PATHS ${EXTERNAL}/usr/lib)
+add_executable(speech_analysis ${SOURCES})
+add_dependencies(speech_analysis ffts pitch-detection)
 
 target_link_libraries(speech_analysis
         ${SDL2_LIBRARY}
@@ -151,7 +178,8 @@ target_link_libraries(speech_analysis
         Eigen3::Eigen
         ${PORTAUDIO_LIBRARIES}
         ${FFTW_LIBRARIES}
-        ${PITCH_DETECTION_LIBRARY}
-        ${FFTS_LIBRARY}
-        ${MLPACK_LIBRARY}
+        libpitch_detection
+        libffts
+        libmlpack
+        armadillo
 )
