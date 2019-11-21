@@ -3,17 +3,18 @@
 //
 
 #include "../Analyser.h"
-#include "../../lib/Pitch/Pitch.h"
+#include <pitch_detection.h>
 
-using namespace Eigen;;
+using namespace Eigen;
 
 void Analyser::analysePitch()
 {
-    // Estimate pitch with AMDF. It will be refined periodically with YAAPT.
-    Pitch::Estimation est{};
+    std::vector<double> xvec;
+    xvec.resize(x.size());
+    Map<ArrayXd>(xvec.data(), x.size()) = x;
 
-    Pitch::estimate_AMDF(x, fs, est, 60, 700, 2.0, 0.1);
+    double pitch = pitch::swipe<double>(xvec, fs);
 
     pitchTrack.pop_front();
-    pitchTrack.push_back(est.isVoiced ? est.pitch : 0.0);
+    pitchTrack.push_back(pitch > 0 ? pitch : 0.0);
 }

@@ -7,7 +7,7 @@
 #include "../../lib/FFT/FFT.h"
 
 void Analyser::refinePitch() {
-    YAAPT::Result yaapt;
+/*    YAAPT::Result yaapt;
     YAAPT::Params params;
     params.F0min = 60;
     params.F0max = 700;
@@ -26,5 +26,5 @@ void Analyser::refinePitch() {
     if (refineCount % analysisCleanupFftTime == 0) {
         all_fft_cleanup();
         refineCount = 0;
-    }
+    }*/
 }
