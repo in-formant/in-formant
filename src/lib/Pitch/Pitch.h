@@ -15,6 +15,7 @@ namespace Pitch {
     };
 
     void estimate_AMDF(const Eigen::ArrayXd & x, double fs, Pitch::Estimation & result, double F0min, double F0max, double ratio, double sensitivity);
+    void estimate_PMPM(const Eigen::ArrayXd & x, double fs, Pitch::Estimation & result);
 
 }
 

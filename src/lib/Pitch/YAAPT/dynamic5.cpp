@@ -30,7 +30,7 @@ void YAAPT::dynamic5(
     for (int i = 1; i < numFrames; ++i) {
         for (int j = 0; j < numCands; ++j) {
             for (int k = 0; k < numCands; ++k) {
-                double val = abs(pitchArray(j, i) - pitchArray(j, i - 1)) / F0min;
+                double val = abs(pitchArray(j, i) - pitchArray(k, i - 1)) / F0min;
                 transitionCost(k, j, i) = 0.05 * val + val * val;
             }
         }

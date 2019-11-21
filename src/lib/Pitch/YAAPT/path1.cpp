@@ -56,7 +56,13 @@ void YAAPT::path1(ConstRefXXd local, ConstRefXXXd trans, RefXi path)
         PCOST = CCOST;
 
         // Obtaining the points with lowest cost in every column.
-        CCOST.minCoeff(&p(i));
+        p(i) = 0;
+        for (int j = 1; j < M; ++j) {
+            if (CCOST(j) <= CCOST(0)) {
+                CCOST(0) = CCOST(j);
+                p(i) = j;
+            }
+        }
     }
 
     // Backtracking.

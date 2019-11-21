@@ -31,8 +31,18 @@ void YAAPT::refine(
     for (int n = 0; n < numFrames; ++n) {
         std::sort(idx.begin(), idx.end(),
                   [n, &merit](Index i, Index j) { return merit(i, n) > merit(j, n); });
-        merit.col(n) = merit.col(n)(idx).eval();
-        pitch.col(n) = pitch.col(n)(idx).eval();
+
+        for (int i = 0; i < maxCands; ++i) {
+            auto current = i;
+            while (i != idx[current]) {
+                auto next = idx[current];
+                std::swap(pitch(current, n), pitch(next, n));
+                std::swap(merit(current, n), merit(next, n));
+                idx[current] = current;
+                current = next;
+            }
+            idx[current] = current;
+        }
     }
 
     // A best pitch track is generated from the best candidates

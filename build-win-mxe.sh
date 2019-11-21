@@ -14,6 +14,6 @@ mkdir -p cmake-build-release-win
 cd cmake-build-release-win
 
 $CROSS-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j 4 -k
+make -j 4
 
 $MXE/tools/copydlldeps.sh --infile ./speech-analysis.exe --destdir . --recursivesrcdir $MXE/usr/$CROSS/ --copy --objdump $MXE/usr/bin/$CROSS-objdump

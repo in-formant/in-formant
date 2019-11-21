@@ -32,10 +32,10 @@ void YAAPT::tm_trk(
 
     // Determine the search range according spectral pitch track.
     ArrayXd sMin = sPitch - 2.0 * pStd;
-    sMin = (sMin >= prm.F0min).select(sMin, prm.F0min);
+    sMin = (sMin > prm.F0min).select(sMin, prm.F0min);
 
     ArrayXd sMax = sPitch + 2.0 * pStd;
-    sMax = (sMax <= prm.F0max).select(sMax, prm.F0max);
+    sMax = (sMax < prm.F0max).select(sMax, prm.F0max);
 
     // Initialisation
     pitch.setZero(maxCands, realNumFrames);
@@ -49,6 +49,11 @@ void YAAPT::tm_trk(
         // and depend mainly on size of correlation peaks.
         int lagMin = std::floor(fs / sMax(n)) - 3;
         int lagMax = std::floor(fs / sMin(n)) + 3;
+
+        if (lagMin < 0)
+            lagMin = 0;
+        if (lagMax > frame.size() - 1)
+            lagMax = frame.size() - 1;
 
         // Compute correlation.
         ArrayXd phi(frame.size());
@@ -67,6 +72,6 @@ void YAAPT::tm_trk(
         ArrayXd diff = (pitch.row(i).transpose() - sPitch).abs();
         ArrayXb match1 = (diff < freqThresh);
         ArrayXd match = match1.select(1 - diff / freqThresh, 0);
-        merit.row(i) *= (1 + meritBoost) * match;
+        merit.row(i) = ((1 + meritBoost) * merit.row(i).transpose() * match).transpose();
     }
 }

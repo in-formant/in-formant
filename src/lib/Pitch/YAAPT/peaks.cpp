@@ -13,7 +13,7 @@ void YAAPT::peaks(
     double peak_thresh1 = prm.shcThresh1;
     double peak_thresh2 = prm.shcThresh2;
 
-    double epsilon = 1e-13;
+    double epsilon = 1e-12;
 
     // Window width in samples
     int width = std::floor(prm.shcPWidth / delta);
@@ -31,11 +31,23 @@ void YAAPT::peaks(
     if (minLag < 0) {
         minLag = 0;
     }
-    if (maxLag >= data.size() - width) {
+    if (maxLag > data.size() - 1 - width) {
         maxLag = data.size() - 1 - width;
     }
 
-    double avgData = data(seq(minLag, maxLag)).mean();
+    ArrayXd x = data;
+    double maxData = data(seq(minLag, maxLag)).maxCoeff();
+    if (maxData > epsilon) {
+        x /= maxData;
+    }
+
+    double avgData = x(seq(minLag, maxLag)).mean();
+
+    if (avgData > 1.0 / peak_thresh1) {
+        pitchOut.setZero();
+        meritOut.setOnes();
+        return;
+    }
 
     // Step 1.
     // Find all peaks for search range.
@@ -48,20 +60,20 @@ void YAAPT::peaks(
     int numPeaks = 0;
     for (int n = minLag; n <= maxLag; ++n) {
         int lag;
-        double y = data.segment(n, width).maxCoeff(&lag);
+        double y = x.segment(n, width).maxCoeff(&lag);
         // Find peaks which are larger than threshold
         if (lag == center && y > peak_thresh2 * avgData) {
             // Note pitch(0) = delta, pitch(1) = 2 * delta...
             // Convert FFT indices to Pitch in Hz
             pitch.push_back((n + center) * delta);
             merit.push_back(y);
+            numPeaks++;
         }
     }
 
     // Step 2.
     // Be sure there is a large peak.
-    numPeaks = pitch.size();
-    if (numPeaks < 1 || *(std::max_element(merit.begin(), merit.end())) / avgData < peak_thresh1) {
+    if (numPeaks < 1 || (*(std::max_element(merit.begin(), merit.end())) / avgData) < peak_thresh1) {
         pitchOut.setZero();
         meritOut.setOnes();
         return;

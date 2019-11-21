@@ -2,7 +2,10 @@
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
+      <config projectName="speech_analysis" targetName="pitch-detection" />
       <config projectName="speech_analysis" targetName="speech_analysis" />
+      <config projectName="speech_analysis" targetName="ffts" />
+      <config projectName="speech_analysis" targetName="mlpack" />
     </generated>
   </component>
   <component name="CMakeSettings">
@@ -12,44 +15,25 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Moved analysis code away from AnalyserWindow class and runs on its own thread.">
-      <change afterPath="$PROJECT_DIR$/src/analysis/parts/normalize.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/analysis/parts/refinePitch.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/FFT/FFT.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/ptch_fix.cpp" afterDir="false" />
+    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="First trial of YAAPT algorithm to refine the pitch track.">
+      <change afterPath="$PROJECT_DIR$/.gitmodules" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch_PMPM.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/parts/lpc.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/lpc.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/audio/AudioCapture.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/audio/AudioCapture.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/FFT/FFT.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/FFT/FFT.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/FFT/FFT_core.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/FFT/FFT_d.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/FFT/kissfft.hh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/YAAPT.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/YAAPT.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/parts/refinePitch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/refinePitch.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/Pitch.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/Pitch_AMDF.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch_AMDF.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/cmp_rate.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/cmp_rate.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/crs_corr.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/crs_corr.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic5.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic5.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/getF0.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/getF0.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nlfer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nlfer.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nonlinear.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nonlinear.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/path1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/path1.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/peaks.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/peaks.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/refine.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/refine.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/spec_trk.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/spec_trk.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/tm_trk.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/tm_trk.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir1.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir2.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir2.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/interp1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/interp1.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/medfilt1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/medfilt1.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/specgram.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/specgram.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Signal/Resample.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Signal/Resample.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -125,12 +109,33 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="CMake Application.speech_analysis">
+    <configuration name="ffts" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="speech_analysis" TARGET_NAME="ffts" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="mlpack" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="speech_analysis" TARGET_NAME="mlpack" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="pitch-detection" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="speech_analysis" TARGET_NAME="pitch-detection" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="speech_analysis" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="speech_analysis" TARGET_NAME="speech_analysis" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="speech_analysis" RUN_TARGET_NAME="speech_analysis">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="CMake Application.ffts" />
+      <item itemvalue="CMake Application.mlpack" />
+      <item itemvalue="CMake Application.pitch-detection" />
+      <item itemvalue="CMake Application.speech_analysis" />
+    </list>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -212,7 +217,11 @@
       <workItem from="1574102809455" duration="1112000" />
       <workItem from="1574124858018" duration="6059000" />
       <workItem from="1574170555256" duration="8652000" />
-      <workItem from="1574191053950" duration="213000" />
+      <workItem from="1574191053950" duration="319000" />
+      <workItem from="1574191429330" duration="555000" />
+      <workItem from="1574202480675" duration="521000" />
+      <workItem from="1574245863349" duration="10714000" />
+      <workItem from="1574265383270" duration="227000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -326,7 +335,14 @@
       <option name="project" value="LOCAL" />
       <updated>1573918377761</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="First trial of YAAPT algorithm to refine the pitch track.">
+      <created>1574191301309</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1574191301309</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -404,6 +420,7 @@
     <MESSAGE value="Added merged peak resolving and root polishing using Bairstow's method." />
     <MESSAGE value="Changed convergence criterion for Bairstow's method implementation.&#10;Added UI controls for LP order and maximum formant frequency." />
     <MESSAGE value="Moved analysis code away from AnalyserWindow class and runs on its own thread." />
-    <option name="LAST_COMMIT_MESSAGE" value="Moved analysis code away from AnalyserWindow class and runs on its own thread." />
+    <MESSAGE value="First trial of YAAPT algorithm to refine the pitch track." />
+    <option name="LAST_COMMIT_MESSAGE" value="First trial of YAAPT algorithm to refine the pitch track." />
   </component>
 </project>

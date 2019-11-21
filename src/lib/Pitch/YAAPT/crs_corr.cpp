@@ -12,7 +12,6 @@ void YAAPT::crs_corr(ConstRefXd data, int lagMin, int lagMax, RefXd phi)
     int len = data.size();
     int N = len - lagMax;
 
-    phi.resize(len);
     phi.setZero();
 
     // Remove DC level
@@ -21,7 +20,7 @@ void YAAPT::crs_corr(ConstRefXd data, int lagMin, int lagMax, RefXd phi)
     VectorXd x_j = data.head(N);
     double p = x_j.dot(x_j);
 
-    for (int k = std::max(lagMin, 0); k < std::min(lagMax, N); ++k) {
+    for (int k = lagMin; k <= lagMax; ++k) {
         // To calculate the dot product of the signal and the displaced version.
         VectorXd x_jr = data.segment(k, N);
         double num = x_j.dot(x_jr);
@@ -30,7 +29,7 @@ void YAAPT::crs_corr(ConstRefXd data, int lagMin, int lagMax, RefXd phi)
         double q = x_jr.dot(x_jr);
         double den = p * q + eps1;
 
-        phi(k) = num / std::sqrt(den);
+        phi(k) = num / sqrt(den);
     }
 
 }

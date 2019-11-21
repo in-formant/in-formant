@@ -40,8 +40,6 @@ void YAAPT::spec_trk(
 
     ArrayXXi winix(numHarmonics + 1, windowLength);
     ArrayXXi rowix(numHarmonics + 1, windowLength);
-    ArrayXXi ix(numHarmonics + 1, windowLength);
-    ArrayXXd mat(numHarmonics + 1, windowLength);
 
     for (int i = 0; i < numHarmonics + 1; ++i) {
         winix.row(i).setLinSpaced(windowLength, 0, windowLength - 1);
@@ -58,8 +56,9 @@ void YAAPT::spec_trk(
             Map<ArrayXd> in(rcfft_in(nfft), nfft);
             Map<ArrayXcd> out(rcfft_out(nfft), nfft / 2 + 1);
 
-            in.head(frameSize) = (data[frame] - data[frame].mean()) * window;
-            in.tail(nfft - frameSize).setZero();
+            in.head(nfft - frameSize).setZero();
+            in.tail(frameSize) = (data[frame] * window);
+            in.tail(frameSize) -= in.tail(frameSize).mean();
 
             rcfft(nfft);
 
@@ -67,11 +66,12 @@ void YAAPT::spec_trk(
             magnit.head(halfWindowLength).setZero();
             magnit.tail(nfft / 2 + 1) = out.abs();
 
-            Ref<ArrayXd> magnit1 = magnit.head(magnit1_len);
+            RefXd magnit1 = magnit.head(magnit1_len);
             magnit1 /= magnit1.maxCoeff();
 
             // Compute SHC
-            ix = winix + minSHC * rowix;
+            ArrayXXi ix = winix + minSHC * rowix;
+            ArrayXXd mat(numHarmonics + 1, windowLength);
             for (int k = minSHC; k <= maxSHC; ++k) {
                 for (int idx = 0; idx < numHarmonics + 1; ++idx) {
                     mat.row(idx) = magnit1(ix.row(idx));
@@ -84,6 +84,31 @@ void YAAPT::spec_trk(
             if (a > 1) {
                 shc /= a;
             }
+
+            /*ArrayXd magnit = out.abs();
+
+            for (int k = minSHC; k <= maxSHC; ++k) {
+                ArrayXd multHarms(windowLength);
+                multHarms.setOnes();
+
+                ArrayXd harm(windowLength);
+
+                // Set each harmonic, 1 = f0, 2 = 2f0, etc.
+                for (int n = 1; n <= numHarmonics + 1; ++n) {
+                    harm.setZero();
+
+                    int nstart = n * k - halfWindowLength;
+                    if (nstart < 0) {
+                        harm(seq(abs(nstart), last)) = magnit.head(nstart + windowLength);
+                    }
+                    else {
+                        harm = magnit.segment(nstart, windowLength);
+                    }
+                    multHarms *= harm;
+                }
+
+                shc(k - 1) = multHarms.sum();
+            }*/
 
             peaks(shc, delta, maxPeaks, prm, candsPitch.col(frame), candsMerit.col(frame));
         }
@@ -99,6 +124,11 @@ void YAAPT::spec_trk(
 
     ArrayXb idx_voiced = (sPitch > 0);
     int numVCands = idx_voiced.cast<int>().sum();
+    if (numVCands == 0) {
+        sPitch.setZero();
+        vUvSPitch.setZero();
+        return;
+    }
     ArrayXXd vCandsPitch(maxPeaks, numVCands);
     ArrayXXd vCandsMerit(maxPeaks, numVCands);
     for (int i = 0; i < maxPeaks; ++i) {
@@ -108,17 +138,16 @@ void YAAPT::spec_trk(
 
     // Average and STD of the first choice candidates
     double avgVoiced = vCandsPitch.row(0).mean();
-    double stdVoiced = sqrt((vCandsPitch.row(0) - avgVoiced).square().sum() / static_cast<double>(numFrames - 1));
+    double stdVoiced = std::sqrt((vCandsPitch.row(0) - avgVoiced).square().sum() / static_cast<double>(numFrames - 1));
 
     // Weight the deltas, so that higher merit candidates are considered
     // more favorably.
     ArrayXXd delta1 = (vCandsPitch - 0.8 * avgVoiced).abs() * (3 - vCandsMerit);
 
     // Interpolation of the weighted candidates
-    ArrayXd vR(numVCands);
     ArrayXi idx(numVCands);
     for (int n = 0; n < numVCands; ++n) {
-        vR(n) = delta1.col(n).minCoeff(&idx(n));
+        delta1.col(n).minCoeff(&idx(n));
     }
     ArrayXd vPeak_minmrt(numVCands);
     ArrayXd vMerit_minmrt(numVCands);
@@ -143,8 +172,9 @@ void YAAPT::spec_trk(
     // Dynamic weight for transition costs balance between local and transition.
     double weightTrans = prm.dp5_k1 * stdVoiced / avgVoiced;
 
-    ArrayXd vPitch(vCandsPitch.cols());
+    ArrayXd vPitch;
     if (numVCands > 2) {
+        vPitch.resize(numVCands);
         dynamic5(vCandsPitch, vCandsMerit, weightTrans, prm, vPitch);
 
         ArrayXd tmp(vPitch.size());
@@ -168,7 +198,7 @@ void YAAPT::spec_trk(
 
     // Computing stats from the voiced frames.
     pAvg = vPitch.mean();
-    pStd = std::sqrt((vPitch - pAvg).square().sum() / static_cast<double>(numVCands - 1));
+    pStd = sqrt((vPitch - pAvg).square().sum() / static_cast<double>(numVCands - 1));
 
     // Stretching out the smoothed pitch track.
     for (int i = 0, iv = 0; i < sPitch.size(); ++i) {
@@ -184,21 +214,21 @@ void YAAPT::spec_trk(
         sPitch(numFrames - 1) = pAvg;
 
     int spn = (sPitch > 0).cast<int>().sum();
-    ArrayXd sp_x(spn), sp_v(spn);
-    ArrayXd sp_xq(numFrames);
-
-    for (int ispx = 0, i = 0; i < numFrames; ++i) {
-        if (sPitch(i) > 0) {
-            sp_x(ispx) = i;
-            sp_v(ispx) = sPitch(i);
-            ispx++;
-        }
-    }
-
-    std::iota(sp_xq.begin(), sp_xq.end(), 0);
-
     if (spn > 0) {
-        ArrayXd tmp(sp_xq.size());
+        ArrayXd sp_x(spn), sp_v(spn);
+        ArrayXd sp_xq(numFrames);
+
+        for (int ispx = 0, i = 0; i < numFrames; ++i) {
+            if (sPitch(i) > 0) {
+                sp_x(ispx) = i;
+                sp_v(ispx) = sPitch(i);
+                ispx++;
+            }
+        }
+
+        std::iota(sp_xq.begin(), sp_xq.end(), 0);
+
+        ArrayXd tmp(numFrames);
         interp1(sp_x, sp_v, sp_xq, tmp);
         sPitch = tmp;
     }
@@ -216,10 +246,8 @@ void YAAPT::spec_trk(
     }
 
     // Above messes up first few values of SPitch. simple fix.
-    if (sPitch.size() >= 4) {
-        sPitch(0) = sPitch(2);
-        sPitch(1) = sPitch(3);
-    }
+    sPitch(0) = sPitch(2);
+    sPitch(1) = sPitch(3);
 
     // Create pitch track with voiced/unvoiced decision
     vUvSPitch = vUvEnergy.select(sPitch, 0);

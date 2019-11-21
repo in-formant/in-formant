@@ -41,7 +41,7 @@ void YAAPT::cmp_rate(
 
     std::vector<double> pitchvec;
     std::vector<double> meritvec;
-    for (int n = lagMin - center; n <= lagMax; ++n) {
+    for (int n = std::max(lagMin - center, 0); n <= lagMax; ++n) {
         int lag;
         double y = phi.segment(n, width).maxCoeff(&lag);
         if (lag == center && y > Merit_thresh1) {
@@ -62,16 +62,16 @@ void YAAPT::cmp_rate(
     std::sort(idx.begin(), idx.end(),
             [&meritvec](Index i, Index j) { return meritvec[i] > meritvec[j]; });
     if (numPeaks >= maxCands) {
-        merit = Map<ArrayXd>(meritvec.data(), numPeaks)(idx).eval().head(maxCands);
         pitch = Map<ArrayXd>(pitchvec.data(), numPeaks)(idx).eval().head(maxCands);
+        merit = Map<ArrayXd>(meritvec.data(), numPeaks)(idx).eval().head(maxCands);
     }
     else {
         // If the number of peaks in the frame are less than the maxCands, then we
         // assign null values to remainder of peak and merit values in arrays.
-        merit.head(numPeaks) = Map<ArrayXd>(meritvec.data(), numPeaks)(idx).eval();
         pitch.head(numPeaks) = Map<ArrayXd>(pitchvec.data(), numPeaks)(idx).eval();
-        merit.tail(maxCands - numPeaks) = 0.001;
+        merit.head(numPeaks) = Map<ArrayXd>(meritvec.data(), numPeaks)(idx).eval();
         pitch.tail(maxCands - numPeaks) = 0.0;
+        merit.tail(maxCands - numPeaks) = 0.001;
     }
 
     // Normalize merits.
