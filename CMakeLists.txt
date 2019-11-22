@@ -107,25 +107,13 @@ ExternalProject_Add(
         CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DBUILD_CLI_EXECUTABLES=OFF -DBUILD_PYTHON_BINDINGS=OFF -DDOWNLOAD_STB_IMAGE=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL}/usr
 )
 
-ExternalProject_Add(
-        ffts
-        PREFIX ${EXTERNAL}
-        INSTALL_DIR ${EXTERNAL}/usr
-        GIT_REPOSITORY https://github.com/linkotec/ffts
-        GIT_TAG 2c8da4877588e288ff4cd550f14bec2dc7bf668c
-        GIT_PROGRESS 1
-        CMAKE_COMMAND ${EXTERNAL_CMAKE}
-        CMAKE_ARGS -DENABLE_STATIC=ON -DENABLE_SHARED=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL}/usr
-        PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/patch/CMakeLists-ffts.txt ${EXTERNAL}/src/ffts/CMakeLists.txt
-)
-
 if(NOT "$ENV{CROSS}" STREQUAL "")
     file(RELATIVE_PATH CROSS_LIB_DIR ${PROJECT_SOURCE_DIR} $ENV{MXE}/usr/$ENV{CROSS}/)
 endif()
 
 ExternalProject_Add(
         pitch-detection
-        DEPENDS mlpack ffts
+        DEPENDS mlpack
         PREFIX ${EXTERNAL}
         INSTALL_DIR ${EXTERNAL}/usr
         GIT_REPOSITORY https://github.com/ichi-rika/pitch-detection
@@ -149,10 +137,6 @@ endif()
 set_target_properties(libpitch_detection PROPERTIES
     IMPORTED_LOCATION ${EXTERNAL}/usr/lib/libpitch_detection${CMAKE_SHARED_LIBRARY_SUFFIX})
 
-add_library(libffts STATIC IMPORTED)
-set_target_properties(libffts PROPERTIES
-    IMPORTED_LOCATION ${EXTERNAL}/usr/lib/libffts${CMAKE_STATIC_LIBRARY_SUFFIX})
-
 add_library(libmlpack STATIC IMPORTED)
 set_target_properties(libmlpack PROPERTIES
     IMPORTED_LOCATION ${EXTERNAL}/usr/lib/libmlpack${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -168,7 +152,7 @@ include_directories(
 )
 
 add_executable(speech_analysis ${SOURCES})
-add_dependencies(speech_analysis ffts pitch-detection)
+add_dependencies(speech_analysis pitch-detection)
 
 target_link_libraries(speech_analysis
         ${SDL2_LIBRARY}
@@ -179,7 +163,6 @@ target_link_libraries(speech_analysis
         ${PORTAUDIO_LIBRARIES}
         ${FFTW_LIBRARIES}
         libpitch_detection
-        libffts
         libmlpack
         armadillo
 )

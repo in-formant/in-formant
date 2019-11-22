@@ -8,6 +8,8 @@
 #include <Eigen/Core>
 #include <deque>
 #include <thread>
+#include <memory>
+#include <pitch_detection.h>
 #include "../audio/AudioCapture.h"
 #include "../lib/Formant/Formant.h"
 
@@ -56,6 +58,7 @@ private:
     // Intermediate variables for analysis.
     std::array<Eigen::ArrayXd, analysisPitchFrameCount> audioFrames;
     int frameCount, refineCount;
+    std::shared_ptr<pitch_alloc::Yin<float>> mpm;
 
     Eigen::ArrayXd x;
     double fs;

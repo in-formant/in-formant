@@ -17,14 +17,12 @@ void Analyser::analysePitch()
     double pitch = est.pitch;
 
     if (est.isVoiced) {
-        //pitch_alloc::Yin<double> yin(CAPTURE_SAMPLE_COUNT(fs));
-
-        /*const int numSamples = CAPTURE_SAMPLE_COUNT(fs);
+        const int numSamples = CAPTURE_SAMPLE_COUNT(fs);
 
         std::vector<float> xvec(numSamples);
         Map<ArrayXf>(xvec.data(), numSamples) = x.cast<float>();
 
-        pitch = pitch::pmpm(xvec, fs);*/
+        //pitch = mpm->pitch(xvec, fs);
     }
 
     pitchTrack.pop_front();

@@ -21,6 +21,7 @@ Analyser::Analyser()
       refineCount(0)
 {
     fs = audioCapture.getSampleRate();
+    mpm = std::make_shared<pitch_alloc::Yin<float>>(CAPTURE_SAMPLE_COUNT(fs));
 
     rawFormantTrack.resize(analysisFrameCount, defaultFrame);
     formantTrack.resize(analysisFrameCount, defaultFrame);
