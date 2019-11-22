@@ -83,8 +83,7 @@ set(SOURCES
         src/lib/FFT/FFT.cpp
         src/lib/FFT/FFT.h
         src/analysis/parts/refinePitch.cpp
-        src/analysis/parts/normalize.cpp
-        src/lib/Pitch/Pitch_MPM.cpp)
+        src/analysis/parts/normalize.cpp)
 
 set(EXTERNAL ${PROJECT_SOURCE_DIR}/external-${CMAKE_SYSTEM_NAME})
 
