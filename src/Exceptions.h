@@ -17,14 +17,15 @@
 class GenericException : public std::exception {
 public:
     GenericException(const char * prefix, const char * msg, std::function<const char * ()> error);
+    ~GenericException();
 
     [[nodiscard]]
     const char * what() const noexcept final {
-        return message.c_str();
+        return message;
     }
 
 private:
-    std::string message;
+    char * message;
 };
 
 // Define exceptions.

@@ -2,12 +2,16 @@
 // Created by clo on 12/09/2019.
 //
 
-#include <sstream>
+#include <cstdio>
 #include "Exceptions.h"
 
 GenericException::GenericException(const char * prefix, const char * msg, std::function<const char * ()> error) {
-    std::stringstream builder(std::ios_base::out);
-    builder << "[" << prefix << "] " << msg << ": " << error();
 
-    message = builder.str();
+    message = new char[64];
+
+    sprintf(message, "[%s] %s: %s", prefix, msg, error());
+}
+
+GenericException::~GenericException() {
+    delete message;
 }

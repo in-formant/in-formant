@@ -252,7 +252,7 @@ double AnalyserWindow::frequencyFromY(int y) {
         // Minimum frequency at 50 Hz.
         const double minimumFrequency = 50.0;
 
-        return (exp10((-2.0 * y) / static_cast<double>(targetHeight)) * (maximumFrequency + minimumFrequency)) - minimumFrequency;
+        return (pow(10.0, (-2.0 * y) / static_cast<double>(targetHeight)) * (maximumFrequency + minimumFrequency)) - minimumFrequency;
     }
     else {
         return maximumFrequency - (y * maximumFrequency) / targetHeight;
