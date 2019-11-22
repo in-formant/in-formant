@@ -12,7 +12,7 @@
 #include <vector>
 #include "RingBuffer.h"
 
-#define CAPTURE_DURATION 35.0
+#define CAPTURE_DURATION 60.0
 #define CAPTURE_SAMPLE_COUNT(sampleRate) ((CAPTURE_DURATION * sampleRate) / 1000)
 
 #define BUFFER_SAMPLE_COUNT(sampleRate) (CAPTURE_SAMPLE_COUNT(sampleRate))
