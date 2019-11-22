@@ -9,15 +9,11 @@
 #include <deque>
 #include <thread>
 #include <memory>
-#include <pitch_detection.h>
 #include "../audio/AudioCapture.h"
 #include "../lib/Formant/Formant.h"
 
 constexpr double analysisUpdatesPerSecond = 1000.0 / 15.0; // This is to get a new frame every ~15ms.
 constexpr int analysisFrameCount = 2000;
-constexpr int analysisPitchFrameCount = (int) analysisUpdatesPerSecond / 2; // This is to refine pitch roughly twice per second.
-constexpr int analysisPitchFrameOverlap = 5;
-constexpr int analysisCleanupFftTime = 10;
 
 class Analyser {
 public:
@@ -46,7 +42,6 @@ private:
     void resampleAudio();
     void analyseLp();
     void analyseFormants();
-    void refinePitch();
 
     AudioCapture audioCapture;
 
@@ -56,10 +51,6 @@ private:
     int lpOrder;
 
     // Intermediate variables for analysis.
-    std::array<Eigen::ArrayXd, analysisPitchFrameCount> audioFrames;
-    int frameCount, refineCount;
-    std::shared_ptr<pitch_alloc::Yin<float>> mpm;
-
     Eigen::ArrayXd x;
     double fs;
     LPC::Frame lpcFrame;

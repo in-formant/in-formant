@@ -16,12 +16,9 @@ Analyser::Analyser()
     : doAnalyse(true),
       lpOrder(10),
       maximumFrequency(5000.0),
-      running(false),
-      frameCount(0),
-      refineCount(0)
+      running(false)
 {
     fs = audioCapture.getSampleRate();
-    mpm = std::make_shared<pitch_alloc::Yin<float>>(CAPTURE_SAMPLE_COUNT(fs));
 
     rawFormantTrack.resize(analysisFrameCount, defaultFrame);
     formantTrack.resize(analysisFrameCount, defaultFrame);
@@ -29,9 +26,6 @@ Analyser::Analyser()
 
     // Initialize the audio frames to zero.
     x.setZero(CAPTURE_SAMPLE_COUNT(fs));
-    for (int i = 0; i < analysisPitchFrameCount; ++i) {
-        audioFrames[i].setZero(CAPTURE_SAMPLE_COUNT(fs));
-    }
 }
 
 void Analyser::startThread() {

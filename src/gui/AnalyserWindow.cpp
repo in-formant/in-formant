@@ -26,6 +26,7 @@ AnalyserWindow::AnalyserWindow(Analyser & analyser) noexcept(false)
       targetHeight(WINDOW_HEIGHT),
       selectedFrame(analysisFrameCount - 1),
       renderRaw(false),
+      renderLogScale(true),
       analyser(analyser)
 {
     int ret;
@@ -203,6 +204,9 @@ void AnalyserWindow::handleKeyUp(const Uint8 * state, SDL_Scancode scanCode) {
     if (scanCode == SDL_SCANCODE_P) {
         analyser.toggle();
     }
+    else if (scanCode == SDL_SCANCODE_S) {
+        renderLogScale = !renderLogScale;
+    }
 
     int parIncr = (scanCode == SDL_SCANCODE_UP ? 1
                     : (scanCode == SDL_SCANCODE_DOWN ? -1 : 0));
@@ -224,7 +228,35 @@ void AnalyserWindow::handleMouse(int x, int y) {
     const double maximumFrequency = analyser.getMaximumFrequency();
 
     selectedFrame = std::clamp<int>((x * nframe) / targetWidth, 0, nframe - 1);
-    selectedFrequency = std::clamp<double>(maximumFrequency - (y * maximumFrequency) / targetHeight, 0.0, maximumFrequency);
+    selectedFrequency = std::clamp<double>(frequencyFromY(y), 0.0, maximumFrequency);
+}
+
+int AnalyserWindow::yFromFrequency(double frequency) {
+    const double maximumFrequency = analyser.getMaximumFrequency();
+
+    if (renderLogScale) {
+        // Minimum frequency at 50 Hz.
+        const double minimumFrequency = 50.0;
+
+        return (targetHeight * (-.5 * log10((frequency + minimumFrequency) / (maximumFrequency + minimumFrequency))));
+    }
+    else {
+        return (targetHeight * (maximumFrequency - frequency)) / maximumFrequency;
+    }
+}
+
+double AnalyserWindow::frequencyFromY(int y) {
+    const double maximumFrequency = analyser.getMaximumFrequency();
+
+    if (renderLogScale) {
+        // Minimum frequency at 50 Hz.
+        const double minimumFrequency = 50.0;
+
+        return (exp10((-2.0 * y) / static_cast<double>(targetHeight)) * (maximumFrequency + minimumFrequency)) - minimumFrequency;
+    }
+    else {
+        return maximumFrequency - (y * maximumFrequency) / targetHeight;
+    }
 }
 
 void AnalyserWindow::renderGraph() {
@@ -247,7 +279,7 @@ void AnalyserWindow::renderGraph() {
 
         int formantNb = 0;
         for (const auto &formant : frame.formant) {
-            y = (targetHeight * (maximumFrequency - formant.frequency)) / maximumFrequency;
+            y = yFromFrequency(formant.frequency);
 
             if (pitch > 0) {
                 filledCircleRGBA(renderer, x, y, formantRadius, formantColors[formantNb][0],
@@ -261,8 +293,8 @@ void AnalyserWindow::renderGraph() {
         }
 
         if (pitch > 0) {
-            y = (targetHeight * (maximumFrequency - pitch)) / maximumFrequency;
-            boxRGBA(renderer, x, y - 2, x, y + 2, 0, 167, 255, 255);
+            y = yFromFrequency(pitch);
+            boxRGBA(renderer, x, y - 2, x, y + 1, 0, 167, 255, 255);
         }
 
         x += xstep;
@@ -271,7 +303,7 @@ void AnalyserWindow::renderGraph() {
     char str[32];
 
     for (double frequency = 0.0; frequency <= maximumFrequency; frequency += 100.0) {
-        y = (targetHeight * (maximumFrequency - frequency)) / maximumFrequency;
+        y = yFromFrequency(frequency);
 
         if (fmod(frequency, 500.0) >= 1e-10) {
             boxRGBA(renderer, targetWidth - ruleSmall, y - 1, targetWidth, y + 1, 187, 187, 187, 127);
@@ -294,7 +326,7 @@ void AnalyserWindow::renderGraph() {
     }
 
     x = (selectedFrame * targetWidth) / nframe;
-    y = (targetHeight * (maximumFrequency - selectedFrequency)) / maximumFrequency;
+    y = yFromFrequency(selectedFrequency);
 
     // Draw a vertical line where the selected frame is.
     vlineRGBA(renderer, x, 0, targetHeight, 127, 127, 127, 127);

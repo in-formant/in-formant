@@ -51,12 +51,6 @@ void Analyser::update()
     // Normalise so that max amplitude == 1.
     normalizeFrame();
 
-    // Shift the audio frames.
-    for (int i = 0; i < analysisPitchFrameCount - 1; ++i) {
-        audioFrames[i] = std::move(audioFrames[i + 1]);
-    }
-    audioFrames[analysisPitchFrameCount - 1] = x;
-
     // Get a pitch estimate.
     analysePitch();
 
@@ -87,11 +81,4 @@ void Analyser::update()
 
     std::copy(tailFrames.frames.begin(), tailFrames.frames.end(), formantTrack.frames.end() - tailFormantLength);
     */
-
-    // Increment the frame counter.
-    frameCount++;
-
-    if (frameCount % (analysisPitchFrameCount - analysisPitchFrameOverlap) == 0) {
-        refinePitch();
-    }
 }

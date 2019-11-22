@@ -36,6 +36,9 @@ private:
     void handleKeyUp(const Uint8 * state, SDL_Scancode scanCode);
     void handleMouse(int x, int y);
 
+    int yFromFrequency(double frequency);
+    double frequencyFromY(int y);
+
     // Graphics-related members
     SDL_Window * window;
     SDL_Renderer * renderer;
@@ -49,7 +52,7 @@ private:
     SDL_Texture * maxFreqStrTex;
 
     // Rendering parameters
-    bool renderRaw;
+    bool renderRaw, renderLogScale;
     int selectedFrame;
     double selectedFrequency;
 
