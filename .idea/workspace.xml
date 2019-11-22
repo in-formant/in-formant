@@ -12,41 +12,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="First trial of YAAPT algorithm to refine the pitch track.">
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/McLeod/MPM.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/McLeod/autocorrelation.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/McLeod/parabolic_interpolation.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/McLeod/peak_picking.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Pitch/Pitch_MPM.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/parts/refinePitch.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/YAAPT.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/cmp_rate.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/crs_corr.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/dynamic5.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/getF0.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nlfer.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/nonlinear.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/path1.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/peaks.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/ptch_fix.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/refine.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/spec_trk.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/tm_trk.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir1.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/fir2.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/interp1.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/medfilt1.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util/specgram.cpp" beforeDir="false" />
-    </list>
+    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -214,7 +180,7 @@
       <workItem from="1574245863349" duration="10714000" />
       <workItem from="1574265383270" duration="227000" />
       <workItem from="1574352233132" duration="623000" />
-      <workItem from="1574426641506" duration="4079000" />
+      <workItem from="1574426641506" duration="4252000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -335,7 +301,21 @@
       <option name="project" value="LOCAL" />
       <updated>1574191301309</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Reverted all previous changes on YAAPT and new pitch detection library&#10;Implemented McLeod's pitch method, using AMDF as a VAD.">
+      <created>1574430806032</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1574430806032</updated>
+    </task>
+    <task id="LOCAL-00019" summary="Longer analysis window.">
+      <created>1574430895429</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1574430895429</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -414,6 +394,8 @@
     <MESSAGE value="Changed convergence criterion for Bairstow's method implementation.&#10;Added UI controls for LP order and maximum formant frequency." />
     <MESSAGE value="Moved analysis code away from AnalyserWindow class and runs on its own thread." />
     <MESSAGE value="First trial of YAAPT algorithm to refine the pitch track." />
-    <option name="LAST_COMMIT_MESSAGE" value="First trial of YAAPT algorithm to refine the pitch track." />
+    <MESSAGE value="Reverted all previous changes on YAAPT and new pitch detection library&#10;Implemented McLeod's pitch method, using AMDF as a VAD." />
+    <MESSAGE value="Longer analysis window." />
+    <option name="LAST_COMMIT_MESSAGE" value="Longer analysis window." />
   </component>
 </project>

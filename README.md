@@ -30,6 +30,7 @@ Unvoiced frames will display formant tracks in dim red.
 Voiced frames will display pitch as a light blue marker, and mark formant tracks with color-coded circles.  
 
 Pressing `P` lets you pause the analysis.  
+Pressing `S` lets you toggle between linear scale and logarithmic scale.  
 ~~Holding `R` lets you view the raw formant data.~~ (Has no effect as of now)  
 Holding `L` and pressing `Up` or `Down` lets you adjust the order of the linear predictive coding analysis.  
 Holding `F` and pressing `Up` or `Down` lets you adjust the maximum frequency of any expected formant.  
@@ -42,4 +43,3 @@ SDL2_ttf
 PortAudio19  
 Eigen-unstable  
 FFTW3  
-boost  
