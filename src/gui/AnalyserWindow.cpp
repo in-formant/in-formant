@@ -235,10 +235,10 @@ int AnalyserWindow::yFromFrequency(double frequency) {
     const double maximumFrequency = analyser.getMaximumFrequency();
 
     if (renderLogScale) {
-        // Minimum frequency at 50 Hz.
-        const double minimumFrequency = 50.0;
+        const double maxMel = 2595 * std::log10(1 + maximumFrequency / 700.0);
+        const double mel = 2595 * std::log10(1 + frequency / 700.0);
 
-        return (targetHeight * (-.5 * log10((frequency + minimumFrequency) / (maximumFrequency + minimumFrequency))));
+        return (targetHeight * (maxMel - mel)) / maxMel;
     }
     else {
         return (targetHeight * (maximumFrequency - frequency)) / maximumFrequency;
@@ -249,10 +249,10 @@ double AnalyserWindow::frequencyFromY(int y) {
     const double maximumFrequency = analyser.getMaximumFrequency();
 
     if (renderLogScale) {
-        // Minimum frequency at 50 Hz.
-        const double minimumFrequency = 50.0;
+        const double maxMel = 2595 * std::log10(1 + maximumFrequency / 700.0);
+        const double mel = maxMel - (y * maxMel) / targetHeight;
 
-        return (pow(10.0, (-2.0 * y) / static_cast<double>(targetHeight)) * (maximumFrequency + minimumFrequency)) - minimumFrequency;
+        return 700.0 * (std::pow(10.0, mel / 2595.0) - 1);
     }
     else {
         return maximumFrequency - (y * maximumFrequency) / targetHeight;
