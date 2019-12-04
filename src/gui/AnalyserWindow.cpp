@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "AnalyserWindow.h"
+#include "../lib/MFCC/MFCC.h"
 #include "../Exceptions.h"
 #include "SDLUtils.h"
 
@@ -56,7 +57,7 @@ AnalyserWindow::AnalyserWindow(Analyser & analyser) noexcept(false)
     renderer = SDL_CreateRenderer(
             window,
             -1,
-            SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
+            SDL_RENDERER_SOFTWARE | SDL_RENDERER_TARGETTEXTURE);
     if (renderer == nullptr) {
         throw SDLException("Unable to create renderer");
     }
@@ -235,8 +236,8 @@ int AnalyserWindow::yFromFrequency(double frequency) {
     const double maximumFrequency = analyser.getMaximumFrequency();
 
     if (renderLogScale) {
-        const double maxMel = 2595 * std::log10(1 + maximumFrequency / 700.0);
-        const double mel = 2595 * std::log10(1 + frequency / 700.0);
+        const double maxMel = hz2mel(maximumFrequency);
+        const double mel = hz2mel(frequency);
 
         return (targetHeight * (maxMel - mel)) / maxMel;
     }
@@ -249,10 +250,10 @@ double AnalyserWindow::frequencyFromY(int y) {
     const double maximumFrequency = analyser.getMaximumFrequency();
 
     if (renderLogScale) {
-        const double maxMel = 2595 * std::log10(1 + maximumFrequency / 700.0);
+        const double maxMel = hz2mel(maximumFrequency);
         const double mel = maxMel - (y * maxMel) / targetHeight;
 
-        return 700.0 * (std::pow(10.0, mel / 2595.0) - 1);
+        return mel2hz(mel);
     }
     else {
         return maximumFrequency - (y * maximumFrequency) / targetHeight;

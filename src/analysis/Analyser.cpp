@@ -7,8 +7,8 @@
 using namespace Eigen;
 
 static const Formant::Frame defaultFrame = {
-        .nFormants = 5,
-        .formant = {{}, {}, {}, {}, {}},
+        .nFormants = 0,
+        .formant = {},
         .intensity = 1.0,
 };
 

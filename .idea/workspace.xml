@@ -2,17 +2,46 @@
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
+      <config projectName="speech_analysis" targetName="torch" />
       <config projectName="speech_analysis" targetName="speech_analysis" />
+      <config projectName="speech_analysis" targetName="main" />
     </generated>
   </component>
   <component name="CMakeSettings">
     <configurations>
-      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" BUILD_OPTIONS="-j 4" />
-      <configuration PROFILE_NAME="Release" CONFIG_NAME="Release" BUILD_OPTIONS="-j 8" />
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
+      <configuration PROFILE_NAME="Release" CONFIG_NAME="Release" />
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="" />
+    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Longer analysis window.">
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeepFormants/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/CMakeLists.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/analysis/parts/preemph.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Formant/DF/features.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/Formant/DF/features.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/MFCC/MFCC.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/MFCC/MFCC.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build-win-mxe.sh" beforeDir="false" afterPath="$PROJECT_DIR$/build-win-mxe.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.sh" beforeDir="false" afterPath="$PROJECT_DIR$/package.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/parts/formants.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/formants.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/parts/lpc.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/lpc.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/parts/normalize.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant_track.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/LPC/LPC.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/LPC/LPC.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,7 +65,7 @@
     <expand />
     <select />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Release" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="MIXED" />
@@ -47,9 +76,10 @@
     <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="ignore_missing_gitignore" value="true" />
-    <property name="last_opened_file_path" value="$USER_HOME$/Builds/YAAPT_v4.0/private/ptch_fix.m" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/cmake-build-debug/speech_analysis/src/main-build/speech_analysis" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -60,17 +90,18 @@
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
+    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/libs" />
+      <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$/src/lib/Formant/EM" />
       <recent name="$PROJECT_DIR$/src/lib/FFT" />
       <recent name="$PROJECT_DIR$/src/lib/FFT/fftwpp" />
-      <recent name="$PROJECT_DIR$/src/analysis/parts" />
-      <recent name="$PROJECT_DIR$/src/lib/Pitch/YAAPT/util" />
-      <recent name="$PROJECT_DIR$/src/lib/Math" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
       <recent name="$PROJECT_DIR$/src/lib/Pitch/YAAPT" />
       <recent name="$PROJECT_DIR$/src/signal" />
     </key>
@@ -88,7 +119,7 @@
     </option>
   </component>
   <component name="RunManager">
-    <configuration name="speech_analysis" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="speech_analysis" TARGET_NAME="speech_analysis" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="speech_analysis" RUN_TARGET_NAME="speech_analysis">
+    <configuration name="speech_analysis" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" RUN_PATH="$PROJECT_DIR$/cmake-build-debug/speech_analysis/src/main-build/speech_analysis" EXPLICIT_BUILD_TARGET_NAME="all">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -181,6 +212,29 @@
       <workItem from="1574265383270" duration="227000" />
       <workItem from="1574352233132" duration="623000" />
       <workItem from="1574426641506" duration="4252000" />
+      <workItem from="1574680371429" duration="7343000" />
+      <workItem from="1574693399959" duration="3779000" />
+      <workItem from="1574704770334" duration="2047000" />
+      <workItem from="1574709962309" duration="2570000" />
+      <workItem from="1574712779803" duration="1110000" />
+      <workItem from="1574719697553" duration="3090000" />
+      <workItem from="1574728833793" duration="1436000" />
+      <workItem from="1574730336038" duration="3630000" />
+      <workItem from="1574734083016" duration="4948000" />
+      <workItem from="1574806314735" duration="2189000" />
+      <workItem from="1574869658556" duration="792000" />
+      <workItem from="1574873930645" duration="644000" />
+      <workItem from="1574874689798" duration="4875000" />
+      <workItem from="1574913742374" duration="3340000" />
+      <workItem from="1574917182702" duration="386000" />
+      <workItem from="1575285830574" duration="7486000" />
+      <workItem from="1575311726955" duration="1436000" />
+      <workItem from="1575334527521" duration="10101000" />
+      <workItem from="1575344823737" duration="406000" />
+      <workItem from="1575387669282" duration="94000" />
+      <workItem from="1575408388622" duration="1354000" />
+      <workItem from="1575419119225" duration="68000" />
+      <workItem from="1575447658473" duration="18000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -315,7 +369,21 @@
       <option name="project" value="LOCAL" />
       <updated>1574430895429</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="Changed raw log scale to mel scale">
+      <created>1574686614734</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1574686614734</updated>
+    </task>
+    <task id="LOCAL-00021" summary="Deleted patches for externalproject">
+      <created>1574686663337</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1574686663337</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -378,6 +446,9 @@
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <ignored-roots>
       <path value="$PROJECT_DIR$/cmake" />
+      <path value="$PROJECT_DIR$/external/src/ffts" />
+      <path value="$PROJECT_DIR$/external/src/mlpack" />
+      <path value="$PROJECT_DIR$/external/src/pitch-detection" />
     </ignored-roots>
     <MESSAGE value="Added gitignore" />
     <MESSAGE value="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat." />
@@ -396,6 +467,8 @@
     <MESSAGE value="First trial of YAAPT algorithm to refine the pitch track." />
     <MESSAGE value="Reverted all previous changes on YAAPT and new pitch detection library&#10;Implemented McLeod's pitch method, using AMDF as a VAD." />
     <MESSAGE value="Longer analysis window." />
-    <option name="LAST_COMMIT_MESSAGE" value="Longer analysis window." />
+    <MESSAGE value="Changed raw log scale to mel scale" />
+    <MESSAGE value="Deleted patches for externalproject" />
+    <option name="LAST_COMMIT_MESSAGE" value="Deleted patches for externalproject" />
   </component>
 </project>

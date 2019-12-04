@@ -7,11 +7,17 @@
 
 using namespace Eigen;
 
-void Analyser::analyseFormants() {
+void Analyser::analyseFormantLp() {
     Formant::Frame fFrame{};
 
     LPC::toFormantFrame(lpcFrame, fFrame, fs);
 
     formantTrack.pop_front();
     formantTrack.push_back(fFrame);
+}
+
+void Analyser::analyseFormantDeep() {
+
+    bool isVoiced = pitchTrack.back() > 0;
+
 }

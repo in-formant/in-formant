@@ -37,11 +37,12 @@ private:
     void mainLoop();
     void update();
 
-    void normalizeFrame();
     void analysePitch();
     void resampleAudio();
+    void preEmphGauss();
     void analyseLp();
-    void analyseFormants();
+    void analyseFormantLp();
+    void analyseFormantDeep();
 
     AudioCapture audioCapture;
 
@@ -49,6 +50,7 @@ private:
     bool doAnalyse;
     double maximumFrequency;
     int lpOrder;
+    int numCepstra, numFilters;
 
     // Intermediate variables for analysis.
     Eigen::ArrayXd x;

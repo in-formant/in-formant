@@ -36,21 +36,12 @@ namespace LPC {
                         double samplingFrequency, double analysisWidth, double preEmphasisFrequency,
                         double k_stdev, int itermax, double tol, bool wantLocation);
 
-    Frames analyse(const Eigen::ArrayXd & sound, int predictionOrder,
-                   double analysisWidth, double samplingFrequency,
-                   double preEmphasisFrequency, int method);
+    Frames analyse(const Eigen::ArrayXd & _sound, int predictionOrder, double samplingFrequency,
+                   int method);
 
-    Frames analyseAuto(const Eigen::ArrayXd & sound, int predictionOrder,
-                       double analysisWidth, double samplingFrequency,
-                       double preEmphasisFrequency);
-
-    Frames analyseCovar(const Eigen::ArrayXd & sound, int predictionOrder,
-                       double analysisWidth, double samplingFrequency,
-                       double preEmphasisFrequency);
-
-    Frames analyseBurg(const Eigen::ArrayXd & sound, int predictionOrder,
-                        double analysisWidth, double samplingFrequency,
-                        double preEmphasisFrequency);
+    Frames analyseAuto(const Eigen::ArrayXd & sound, int predictionOrder, double samplingFrequency);
+    Frames analyseCovar(const Eigen::ArrayXd & sound, int predictionOrder, double samplingFrequency);
+    Frames analyseBurg(const Eigen::ArrayXd & sound, int predictionOrder, double samplingFrequency);
 
 };
 

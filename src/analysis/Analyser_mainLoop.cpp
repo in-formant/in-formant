@@ -5,6 +5,8 @@
 #include <chrono>
 #include "Analyser.h"
 #include "../lib/Pitch/Pitch.h"
+#include "../lib/Signal/Filter.h"
+#include "../lib/Signal/Window.h"
 
 using namespace Eigen;
 
@@ -41,15 +43,9 @@ void Analyser::update()
         return;
     }
 
-    // Clean up past FFT data.
-    //all_fft_cleanup();
-
     // Read captured audio.
     audioCapture.readBlock(x);
     fs = audioCapture.getSampleRate();
-
-    // Normalise so that max amplitude == 1.
-    normalizeFrame();
 
     // Get a pitch estimate.
     analysePitch();
@@ -57,28 +53,13 @@ void Analyser::update()
     // Resample audio for LP analysis.
     resampleAudio();
 
+    // Pre-emphasis.
+    preEmphGauss();
+
     // Perform LP analysis.
     analyseLp();
 
-    // Perform formant analysis with refinement method.
-    analyseFormants();
+    // Perform formant analysis from LP coefficients.
+    analyseFormantLp();
 
-    // Track formants. We'll only look at a small amount of trailing formant frames to save CPU load.
-    // The number will be truncated to the largest number of consecutive voiced frames.
-    /*
-    Formant::Frames tailRawFrames, tailFrames;
-    std::copy(rawFormantTrack.frames.end() - tailFormantLength, rawFormantTrack.frames.end(), std::back_inserter(tailRawFrames.frames));
-
-    int maxnFormants = 0;
-    for (const auto &frame : tailRawFrames.frames) {
-        maxnFormants = std::max(maxnFormants, frame.nFormants);
-    }
-
-    Formant::tracker(
-            tailRawFrames, tailFrames, maxnFormants, 3,
-            550, 1650, 2750, 3850, 4950,
-            1.0, 1.0, 1.0);
-
-    std::copy(tailFrames.frames.begin(), tailFrames.frames.end(), formantTrack.frames.end() - tailFormantLength);
-    */
 }

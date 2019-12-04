@@ -1,97 +1,47 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.8)
 project(speech_analysis)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
+include(ExternalProject)
 
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-fopenmp")
-set(CMAKE_CXX_FLAGS_DEBUG "-Og -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-Os -ftree-vectorize -s -g")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-set(SOURCES
-        src/main.cpp
-        src/Exceptions.cpp
-        src/Exceptions.h
-        src/analysis/Analyser_mainLoop.cpp
-        src/analysis/Analyser.cpp
-        src/analysis/Analyser.h
-        src/analysis/parts/formants.cpp
-        src/analysis/parts/lpc.cpp
-        src/analysis/parts/normalize.cpp
-        src/analysis/parts/pitch.cpp
-        src/analysis/parts/resample.cpp
-        src/audio/AudioCapture.cpp
-        src/audio/AudioCapture_callbacks.cpp
-        src/audio/AudioCapture.h
-        src/audio/RingBuffer.cpp
-        src/audio/RingBuffer.h
-        src/gui/AnalyserWindow.cpp
-        src/gui/AnalyserWindow.h
-        src/gui/SDLUtils.cpp
-        src/gui/SDLUtils.h
-        src/gui/Spectrogram.cpp
-        src/gui/Spectrogram.h
-        src/lib/Formant/Formant.cpp
-        src/lib/Formant/Formant.h
-        src/lib/Formant/Formant_track.cpp
-        src/lib/LPC/Frame/LPC_Frame.cpp
-        src/lib/LPC/Frame/LPC_Frame.h
-        src/lib/LPC/Frame/LPC_Frame_auto.cpp
-        src/lib/LPC/Frame/LPC_Frame_burg.cpp
-        src/lib/LPC/Frame/LPC_Frame_covar.cpp
-        src/lib/LPC/Frame/LPC_Frame_huber.cpp
-        src/lib/LPC/LPC.cpp
-        src/lib/LPC/LPC.h
-        src/lib/LPC/LPC_filter.cpp
-        src/lib/LPC/LPC_huber.cpp
-        src/lib/LPC/LPC_huber.h
-        src/lib/LPC/LPC_huber_stat.cpp
-        src/lib/Math/Bairstow.cpp
-        src/lib/Math/Bairstow.h
-        src/lib/Math/Polynomial.cpp
-        src/lib/Math/Polynomial.h
-        src/lib/Math/Viterbi.cpp
-        src/lib/Math/Viterbi.h
-        src/lib/Pitch/McLeod/autocorrelation.cpp
-        src/lib/Pitch/McLeod/parabolic_interpolation.cpp
-        src/lib/Pitch/McLeod/peak_picking.cpp
-        src/lib/Pitch/McLeod/MPM.h
-        src/lib/Pitch/Pitch_AMDF.cpp
-        src/lib/Pitch/Pitch_MPM.cpp
-        src/lib/Pitch/Pitch.h
-        src/lib/Signal/Filter.cpp
-        src/lib/Signal/Filter.h
-        src/lib/Signal/Resample.cpp
-        src/lib/Signal/Resample.h
-        src/lib/Signal/Window.cpp
-        src/lib/Signal/Window.h
-        src/lib/FFT/FFT.cpp
-        src/lib/FFT/FFT.h)
+if(APPLE)
+    set(TORCH_URL https://download.pytorch.org/libtorch/cpu/libtorch-macos-1.3.1.zip)
+elseif(UNIX)
+    set(TORCH_URL https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.3.1%2Bcpu.zip)
+elseif(WIN32)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(TORCH_URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-debug-1.3.1.zip)
+    else()
+        set(TORCH_URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-1.3.1.zip)
+    endif()
+endif()
 
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-find_package(SDL2 REQUIRED)
-find_package(SDL2_ttf REQUIRED)
-find_package(SDL2_gfx REQUIRED)
-find_package(PortAudio REQUIRED)
-find_package(FFTW REQUIRED DOUBLE_LIB)
+set(TORCH_INSTALL_DIR ${CMAKE_BINARY_DIR}/libtorch)
 
-include_directories(
-        ${SDL2_INCLUDE_DIR}
-        ${SDL2_TTF_INCLUDE_DIR}
-        ${SDL2_GFX_INCLUDE_DIRS}
-        ${EIGEN_INCLUDE_DIR}
-        ${PORTAUDIO_INCLUDE_DIRS}
-        ${FFTW_INCLUDE_DIRS}
+ExternalProject_Add(torch
+        PREFIX ${CMAKE_BINARY_DIR}/libtorch-log
+        SOURCE_DIR ${TORCH_INSTALL_DIR}
+        INSTALL_DIR ${TORCH_INSTALL_DIR}
+        URL ${TORCH_URL}
+        BUILD_IN_SOURCE 1
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        PATCH_COMMAND cmake -E copy ${CMAKE_SOURCE_DIR}/patch/TorchConfig.cmake ${TORCH_INSTALL_DIR}/share/cmake/Torch/TorchConfig.cmake
 )
 
-add_executable(speech_analysis ${SOURCES})
-
-target_link_libraries(speech_analysis
-        ${SDL2_LIBRARY}
-        ${SDL2_TTF_LIBRARIES}
-        ${SDL2_GFX_LIBRARIES}
-        ${SDL2_LIBRARY}
-        Eigen3::Eigen
-        ${PORTAUDIO_LIBRARIES}
-        ${FFTW_LIBRARIES}
+ExternalProject_Add(main
+        PREFIX ${CMAKE_BINARY_DIR}/speech_analysis
+        SOURCE_DIR ${CMAKE_SOURCE_DIR}/src
+        BUILD_ALWAYS 1
+        DOWNLOAD_COMMAND ""
+        INSTALL_COMMAND ""
+        CMAKE_COMMAND $ENV{CROSS}cmake
+        CMAKE_ARGS -DTORCH_INSTALL_DIR=${TORCH_INSTALL_DIR} -DCMAKE_MODULE_PATH=${CMAKE_SOURCE_DIR}/cmake
 )
+
+add_custom_target(speech_analysis)
+
+add_dependencies(main torch)
+add_dependencies(speech_analysis main)

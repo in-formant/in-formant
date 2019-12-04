@@ -20,37 +20,20 @@ void LPC::shortTermAnalysis(const ArrayXd & sound, double windowDuration, double
 }
 
 LPC::Frames LPC::analyse(const Eigen::ArrayXd & _sound, int predictionOrder,
-                         double analysisWidth, double samplingFrequency,
-                         double preEmphasisFrequency, int method)
+                         double samplingFrequency,
+                         int method)
 {
-    double t1, windowDuration = 2 * analysisWidth; // Gaussian window.
-    int numberOfFrames, frameErrorCount = 0, iter = 0;
-    int frameLength = std::round(windowDuration * samplingFrequency);
-
-    if (frameLength > _sound.size()) {
-        frameLength = _sound.size();
-        windowDuration = frameLength / samplingFrequency;
-    }
-
-    LPC::shortTermAnalysis(_sound, windowDuration, samplingFrequency, samplingFrequency, &numberOfFrames, &t1);
+    int frameErrorCount = 0, iter = 0;
+    int numberOfFrames = 1;
+    int frameLength = _sound.size();
+    double windowDuration = frameLength / samplingFrequency;
 
     ArrayXd sound(_sound);
     ArrayXd sframe(frameLength);
 
-    // Avoid rebuilding the window for every block.
-    static ArrayXd window(0);
-    if (window.size() != frameLength) {
-        //window = ArrayXd::Ones(frameLength);
-        window = Window::createGaussian(frameLength);
-    }
-
     LPC::Frames lpc;
     lpc.maxnCoefficients = predictionOrder;
     lpc.d_frames.resize(numberOfFrames);
-
-    if (preEmphasisFrequency < samplingFrequency / 2.0) {
-        Filter::preEmphasis(sound, samplingFrequency, preEmphasisFrequency);
-    }
 
     for (int i = 0; i < numberOfFrames; ++i) {
         LPC::Frame & lpcFrame = lpc.d_frames.at(i);
@@ -69,8 +52,8 @@ LPC::Frames LPC::analyse(const Eigen::ArrayXd & _sound, int predictionOrder,
             }
         }
 
-        // Remove DC and apply windowing.
-        sframe = (sframe - sframe.mean()) * window;
+        // Remove DC.
+        sframe = (sframe - sframe.mean());
 
         switch (method) {
         case Auto:
@@ -98,26 +81,23 @@ LPC::Frames LPC::analyse(const Eigen::ArrayXd & _sound, int predictionOrder,
 
 }
 
-LPC::Frames LPC::analyseAuto(const Eigen::ArrayXd & sound, int predictionOrder,
-                             double analysisWidth, double samplingFrequency, double preEmphasisFrequency)
+LPC::Frames LPC::analyseAuto(const Eigen::ArrayXd & sound, int predictionOrder, double samplingFrequency)
 {
     return LPC::analyse(sound, predictionOrder,
-                        analysisWidth, samplingFrequency,
-                        preEmphasisFrequency, LPC::Method::Auto);
+                        samplingFrequency,
+                        LPC::Method::Auto);
 }
 
-LPC::Frames LPC::analyseCovar(const Eigen::ArrayXd & sound, int predictionOrder,
-                              double analysisWidth, double samplingFrequency, double preEmphasisFrequency)
+LPC::Frames LPC::analyseCovar(const Eigen::ArrayXd & sound, int predictionOrder, double samplingFrequency)
 {
     return LPC::analyse(sound, predictionOrder,
-                        analysisWidth, samplingFrequency,
-                        preEmphasisFrequency, LPC::Method::Covar);
+                        samplingFrequency,
+                        LPC::Method::Covar);
 }
 
-LPC::Frames LPC::analyseBurg(const Eigen::ArrayXd & sound, int predictionOrder,
-                             double analysisWidth, double samplingFrequency, double preEmphasisFrequency)
+LPC::Frames LPC::analyseBurg(const Eigen::ArrayXd & sound, int predictionOrder, double samplingFrequency)
 {
     return LPC::analyse(sound, predictionOrder,
-                        analysisWidth, samplingFrequency,
-                        preEmphasisFrequency, LPC::Method::Burg);
+                        samplingFrequency,
+                        LPC::Method::Burg);
 }
