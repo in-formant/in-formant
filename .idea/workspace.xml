@@ -15,18 +15,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/resources.qrc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build-win-mxe.sh" beforeDir="false" afterPath="$PROJECT_DIR$/build-win-mxe.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.sh" beforeDir="false" afterPath="$PROJECT_DIR$/package.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analysis/parts/formants.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/formants.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/qt/MainWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/qt/MainWindow.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/qt/MainWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/qt/MainWindow.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -224,7 +222,9 @@
       <workItem from="1575505474050" duration="2309000" />
       <workItem from="1575507879781" duration="26000" />
       <workItem from="1575592897496" duration="12311000" />
-      <workItem from="1575622751050" duration="7647000" />
+      <workItem from="1575622751050" duration="7706000" />
+      <workItem from="1575640134223" duration="4262000" />
+      <workItem from="1575644513867" duration="4425000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -380,7 +380,14 @@
       <option name="project" value="LOCAL" />
       <updated>1575601212763</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="Added Qt layout and Qt input controls to change settings.">
+      <created>1575630420580</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1575630420580</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -467,6 +474,7 @@
     <MESSAGE value="Changed raw log scale to mel scale" />
     <MESSAGE value="Deleted patches for externalproject" />
     <MESSAGE value="Migrated from SDL2 to Qt5" />
-    <option name="LAST_COMMIT_MESSAGE" value="Migrated from SDL2 to Qt5" />
+    <MESSAGE value="Added Qt layout and Qt input controls to change settings." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added Qt layout and Qt input controls to change settings." />
   </component>
 </project>

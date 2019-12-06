@@ -78,7 +78,7 @@ set(QT_SOURCES
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(PortAudio REQUIRED)
 find_package(FFTW REQUIRED DOUBLE_LIB)
-find_package(Qt5 COMPONENTS Widgets QuickControls2 REQUIRED)
+find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 
 set(CMAKE_FIND_ROOT_PATH "${TORCH_INSTALL_DIR}")
 find_package(Torch REQUIRED)
@@ -95,7 +95,6 @@ include_directories(
 add_executable(speech_analysis ${SOURCES} ${QT_SOURCES})
 
 target_link_libraries(speech_analysis
-        ${SDL2_LIBRARY}
         Eigen3::Eigen
         ${PORTAUDIO_LIBRARIES}
         ${FFTW_LIBRARIES}

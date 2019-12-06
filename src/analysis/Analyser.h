@@ -5,6 +5,7 @@
 #ifndef SPEECH_ANALYSIS_ANALYSER_H
 #define SPEECH_ANALYSIS_ANALYSER_H
 
+#include <QColor>
 #include <Eigen/Core>
 #include <deque>
 #include <thread>
@@ -12,8 +13,17 @@
 #include "../audio/AudioCapture.h"
 #include "../lib/Formant/Formant.h"
 
-constexpr double analysisUpdatesPerSecond = 1000.0 / 10.0; // This is to get a new frame every ~15ms.
-constexpr int analysisFrameCount = 1500;
+constexpr QRgb formantColors[9] = {
+        0xFFA700,
+        0xFF57D9,
+        0x7FFF00,
+        0x57C8C8,
+        0xC8A7FF,
+        0x00A79C,
+        0xFFFFFF, // unused
+        0xFFFFFF,
+        0xFFFFFF,
+};
 
 class Analyser {
 public:
@@ -26,15 +36,23 @@ public:
 
     void setLinearPredictionOrder(int);
     void setMaximumFrequency(double);
+    void setFrameSpace(const std::chrono::duration<double, std::milli> & frameSpace);
+    void setWindowSpan(const std::chrono::duration<double> & windowSpan);
 
     [[nodiscard]] int getLinearPredictionOrder() const;
     [[nodiscard]] double getMaximumFrequency() const;
 
+    [[nodiscard]] const std::chrono::duration<double, std::milli> & getFrameSpace() const;
+    [[nodiscard]] const std::chrono::duration<double> & getWindowSpan() const;
+
+    [[nodiscard]] int getFrameCount();
     [[nodiscard]] const Formant::Frame & getFormantFrame(int iframe);
     [[nodiscard]] double getPitchFrame(int iframe);
     [[nodiscard]] bool isFrameVoiced(int iframe);
 
 private:
+    void _updateFrameCount();
+
     void mainLoop();
     void update();
 
@@ -48,6 +66,10 @@ private:
     AudioCapture audioCapture;
 
     // Parameters.
+    std::chrono::duration<double, std::milli> frameSpace;
+    std::chrono::duration<double> windowSpan;
+    int frameCount;
+
     bool doAnalyse;
     double maximumFrequency;
     int lpOrder;

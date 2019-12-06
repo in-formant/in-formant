@@ -15,23 +15,35 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
     MainWindow();
+    ~MainWindow();
 
 protected:
     void closeEvent(QCloseEvent * event);
 
 private:
+    void updateFields();
+
     Analyser analyser;
 
-    QSharedPointer<QWidget> central;
-    QSharedPointer<QVBoxLayout> vLayout1;
-    QSharedPointer<QHBoxLayout> hLayout2;
-    QSharedPointer<QHBoxLayout> hLayout3;
-    QSharedPointer<QFormLayout> vLayout4;
+    QTimer timer;
 
-    QSharedPointer<QSpinBox> inputLpOrder;
-    QSharedPointer<QSpinBox> inputMaxFreq;
+    QWidget * central;
+    QVBoxLayout * vLayout1;
+    QHBoxLayout * hLayout2;
+    QHBoxLayout * hLayout3;
+    QFormLayout * fLayout4;
+    QHBoxLayout * hLayout5;
 
-    QSharedPointer<AnalyserCanvas> canvas;
+    QSpinBox * inputLpOrder;
+    QSpinBox * inputMaxFreq;
+    QComboBox * inputFreqScale;
+    QSpinBox * inputFrameSpace;
+    QDoubleSpinBox * inputWindowSpan;
+
+    AnalyserCanvas * canvas;
+
+    QLineEdit * fieldPitch;
+    std::vector<QLineEdit *> fieldFormant;
 
 };
 

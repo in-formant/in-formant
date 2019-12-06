@@ -9,22 +9,9 @@
 
 using namespace Eigen;
 
-static constexpr QRgb formantColors[9] = {
-    0xFFA700,
-    0xFF57D9,
-    0x7FFF00,
-    0x57C8C8,
-    0xC8A7FF,
-    0x00A79C,
-    0xFFFFFF, // unused
-    0xFFFFFF,
-    0xFFFFFF,
-};
-
-AnalyserCanvas::AnalyserCanvas(Analyser & analyser, QWidget * parent) noexcept(false)
-    : QWidget(parent),
-      selectedFrame(analysisFrameCount - 1),
-      renderLogScale(true),
+AnalyserCanvas::AnalyserCanvas(Analyser & analyser) noexcept(false)
+    : selectedFrame(analyser.getFrameCount() - 1),
+      frequencyScaleType(2),
       analyser(analyser)
 {
     setFocusPolicy(Qt::StrongFocus);
@@ -32,107 +19,9 @@ AnalyserCanvas::AnalyserCanvas(Analyser & analyser, QWidget * parent) noexcept(f
 }
 
 void AnalyserCanvas::render() {
-#define ScaledPos(x, y) QPointF{targetWidth * (x), targetHeight * (y)}
-
-    QPointF pos;
-
-    //--- BACKGROUND
-    renderGraph();
-
-    //--- FOREGROUND
-
-    const auto & frame = analyser.getFormantFrame(selectedFrame);
-    double pitch = analyser.getPitchFrame(selectedFrame);
-
-    // Draw formant estimation strings.
-    for (int i = 0; i < frame.nFormants; ++i) {
-        const auto & Fi = frame.formant.at(i);
-
-        painter.setPen(formantColors[i]);
-
-        pos = ScaledPos(0.005, 0.025 + i * 0.04);
-        painter.drawText(pos, QString("F%1 = %2 Hz")
-                                    .arg(i + 1)
-                                    .arg(Fi.frequency, 0, 'f', 2));
-    }
-
-    if (pitch > 0) {
-        painter.setPen(Qt::white);
-        pos = ScaledPos(0.8, 0.02);
-        painter.drawText(pos, QString("Voiced: %1 Hz").arg(round(pitch)));
-    }
-}
-
-void AnalyserCanvas::keyPressEvent(QKeyEvent * event) {
-    const int key = event->key();
-
-    if (key == Qt::Key_Escape) {
-        window()->close();
-    }
-    else if (key == Qt::Key_P) {
-        analyser.toggle();
-    }
-    else if (key == Qt::Key_S) {
-        renderLogScale = !renderLogScale;
-    }
-
-    int parIncr = (key == Qt::Key_Up ? 1
-                    : (key == Qt::Key_Down ? -1 : 0));
-    if (parIncr != 0) {
-        // LPC Order
-        /*if (key == Qt::Key::L) {
-            int val = analyser.getLinearPredictionOrder();
-            analyser.setLinearPredictionOrder(val + parIncr);
-        }
-        else if (key == Qt::Key::P) {*/
-            double val = analyser.getMaximumFrequency();
-            analyser.setMaximumFrequency(val + 100.0 * parIncr);
-        //}
-    }
-}
-
-void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
-    const auto p = event->pos();
-
-    constexpr int nframe = analysisFrameCount;
-    const double maximumFrequency = analyser.getMaximumFrequency();
-
-    selectedFrame = std::clamp<int>((p.x() * nframe) / targetWidth, 0, nframe - 1);
-    selectedFrequency = std::clamp<double>(frequencyFromY(p.y()), 0.0, maximumFrequency);
-}
-
-double AnalyserCanvas::yFromFrequency(double frequency) {
-    const double maximumFrequency = analyser.getMaximumFrequency();
-
-    if (renderLogScale) {
-        const double maxMel = hz2mel(maximumFrequency);
-        const double mel = hz2mel(frequency);
-
-        return (targetHeight * (maxMel - mel)) / maxMel;
-    }
-    else {
-        return (targetHeight * (maximumFrequency - frequency)) / maximumFrequency;
-    }
-}
-
-double AnalyserCanvas::frequencyFromY(int y) {
-    const double maximumFrequency = analyser.getMaximumFrequency();
-
-    if (renderLogScale) {
-        const double maxMel = hz2mel(maximumFrequency);
-        const double mel = maxMel - (y * maxMel) / targetHeight;
-
-        return mel2hz(mel);
-    }
-    else {
-        return maximumFrequency - (y * maximumFrequency) / targetHeight;
-    }
-}
-
-void AnalyserCanvas::renderGraph() {
     const auto & metrics = painter.fontMetrics();
 
-    constexpr int nframe = analysisFrameCount;
+    const int nframe = analyser.getFrameCount();
     const int xstep = std::max(nframe / targetWidth, 1);
 
     const double maximumFrequency = analyser.getMaximumFrequency();
@@ -209,9 +98,9 @@ void AnalyserCanvas::renderGraph() {
     // Draw freq string right next to it.
     QString cursorFreqStr = QString("%1 Hz").arg(round(selectedFrequency));
     painter.drawText(targetWidth - ruleBig
-                             - metrics.horizontalAdvance(QString::number(round(maximumFrequency)))
-                             - 10
-                             - metrics.horizontalAdvance(cursorFreqStr),
+                     - metrics.horizontalAdvance(QString::number(round(maximumFrequency)))
+                     - 10
+                     - metrics.horizontalAdvance(cursorFreqStr),
                      y - 10,
                      cursorFreqStr);
 
@@ -219,10 +108,71 @@ void AnalyserCanvas::renderGraph() {
     painter.setFont(font);
 }
 
-void AnalyserCanvas::startTimer()
-{
-    timer.callOnTimeout(this, [&]() { repaint(); });
-    timer.start(1000.0 / 60.0);
+void AnalyserCanvas::keyPressEvent(QKeyEvent * event) {
+    const int key = event->key();
+
+    if (key == Qt::Key_Escape) {
+        window()->close();
+    }
+    else if (key == Qt::Key_P) {
+        analyser.toggle();
+    }
+}
+
+void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
+    const auto p = event->pos();
+
+    const int nframe = analyser.getFrameCount();
+    const double maximumFrequency = analyser.getMaximumFrequency();
+
+    selectedFrame = std::clamp<int>((p.x() * nframe) / targetWidth, 0, nframe - 1);
+    selectedFrequency = std::clamp<double>(frequencyFromY(p.y()), 0.0, maximumFrequency);
+}
+
+double AnalyserCanvas::yFromFrequency(double frequency) {
+    const double maximumFrequency = analyser.getMaximumFrequency();
+
+    if (frequencyScaleType == 0) {
+        return (targetHeight * (maximumFrequency - frequency)) / maximumFrequency;
+    }
+    else if (frequencyScaleType == 1) {
+        const double maxLf = 1200.0 * std::log10(1.0 + maximumFrequency / 40.0);
+        const double lf = 1200.0 * std::log10(1.0 + frequency / 40.0);
+
+        return (targetHeight * (maxLf - lf)) / maxLf;
+    }
+    else if (frequencyScaleType == 2) {
+        const double maxMel = hz2mel(maximumFrequency);
+        const double mel = hz2mel(frequency);
+
+        return (targetHeight * (maxMel - mel)) / maxMel;
+    }
+    else {
+        return 0;
+    }
+}
+
+double AnalyserCanvas::frequencyFromY(int y) {
+    const double maximumFrequency = analyser.getMaximumFrequency();
+
+    if (frequencyScaleType == 0) {
+        return maximumFrequency - (y * maximumFrequency) / targetHeight;
+    }
+    else if (frequencyScaleType == 1) {
+        const double maxLf = 1200.0 * std::log10(1.0 + maximumFrequency / 40.0);
+        const double lf = maxLf - (y * maxLf) / targetHeight;
+
+        return 40.0 * pow(10.0, lf / 1200.0) - 1.0;
+    }
+    else if (frequencyScaleType == 2) {
+        const double maxMel = hz2mel(maximumFrequency);
+        const double mel = maxMel - (y * maxMel) / targetHeight;
+
+        return mel2hz(mel);
+    }
+    else {
+        return 0;
+    }
 }
 
 void AnalyserCanvas::paintEvent(QPaintEvent * event)
@@ -238,4 +188,18 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
     painter.setBrush(Qt::NoBrush);
     painter.drawRect(0, 0, targetWidth, targetHeight);
     painter.end();
+}
+
+void AnalyserCanvas::setSelectedFrame(int frame)
+{
+    selectedFrame = frame;
+}
+
+int AnalyserCanvas::getSelectedFrame() const
+{
+    return selectedFrame;
+}
+
+void AnalyserCanvas::setFrequencyScale(int type) {
+    frequencyScaleType = type;
 }

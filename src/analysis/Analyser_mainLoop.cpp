@@ -14,19 +14,16 @@ void Analyser::mainLoop()
 {
     using namespace std::chrono;
 
-    static constexpr auto updateDelay = microseconds(static_cast<int>(1'000'000.0 / analysisUpdatesPerSecond));
-
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
     while (running) {
-
         update();
 
         high_resolution_clock::time_point t2 = high_resolution_clock::now();
 
         auto dt = t2 - t1;
-        if (dt < updateDelay) {
-            std::this_thread::sleep_for(updateDelay - dt);
+        if (dt < frameSpace) {
+            std::this_thread::sleep_for(frameSpace - dt);
         }
         else {
             t1 = t2;

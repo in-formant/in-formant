@@ -17,9 +17,12 @@
 class AnalyserCanvas : public QWidget {
     Q_OBJECT
 public:
-    AnalyserCanvas(Analyser & analyser, QWidget * parent) noexcept(false);
+    AnalyserCanvas(Analyser & analyser) noexcept(false);
 
-    void startTimer();
+    void setSelectedFrame(int frame);
+    [[nodiscard]] int getSelectedFrame() const;
+
+    void setFrequencyScale(int type);
 
 protected:
     void keyPressEvent(QKeyEvent * event) override;
@@ -28,7 +31,6 @@ protected:
 
 private:
     void render();
-    void renderGraph();
 
     double yFromFrequency(double frequency);
     double frequencyFromY(int y);
@@ -36,12 +38,11 @@ private:
     // Graphics-related members
     QPainter painter;
     QTimer timer;
-    std::thread renderThread;
 
     int targetWidth, targetHeight;
 
     // Rendering parameters
-    bool renderLogScale;
+    int frequencyScaleType;
     int selectedFrame;
     double selectedFrequency;
 
