@@ -23,13 +23,11 @@ static constexpr QRgb formantColors[9] = {
 
 AnalyserCanvas::AnalyserCanvas(Analyser & analyser, QWidget * parent) noexcept(false)
     : QWidget(parent),
-      targetWidth(WINDOW_WIDTH),
-      targetHeight(WINDOW_HEIGHT),
       selectedFrame(analysisFrameCount - 1),
-      renderRaw(false),
       renderLogScale(true),
       analyser(analyser)
 {
+    setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
 }
 
@@ -43,7 +41,7 @@ void AnalyserCanvas::render() {
 
     //--- FOREGROUND
 
-    const auto & frame = analyser.getFormantFrame(selectedFrame, renderRaw);
+    const auto & frame = analyser.getFormantFrame(selectedFrame);
     double pitch = analyser.getPitchFrame(selectedFrame);
 
     // Draw formant estimation strings.
@@ -52,7 +50,7 @@ void AnalyserCanvas::render() {
 
         painter.setPen(formantColors[i]);
 
-        pos = ScaledPos(0.01, 0.02 + i * 0.04);
+        pos = ScaledPos(0.005, 0.025 + i * 0.04);
         painter.drawText(pos, QString("F%1 = %2 Hz")
                                     .arg(i + 1)
                                     .arg(Fi.frequency, 0, 'f', 2));
@@ -63,23 +61,18 @@ void AnalyserCanvas::render() {
         pos = ScaledPos(0.8, 0.02);
         painter.drawText(pos, QString("Voiced: %1 Hz").arg(round(pitch)));
     }
-
-    painter.setPen(QRgb(0xBEBEBE));
-
-    pos = ScaledPos(0.15, 0.02);
-    painter.drawText(pos, QString("LP order: %1").arg(analyser.getLinearPredictionOrder()));
-
-    pos = ScaledPos(0.15, 0.06);
-    painter.drawText(pos, QString("Max freq.: %1").arg(round(analyser.getMaximumFrequency())));
 }
 
 void AnalyserCanvas::keyPressEvent(QKeyEvent * event) {
     const int key = event->key();
 
-    if (key == Qt::Key_P) {
+    if (key == Qt::Key_Escape) {
+        window()->close();
+    }
+    else if (key == Qt::Key_P) {
         analyser.toggle();
     }
-    if (key == Qt::Key_S) {
+    else if (key == Qt::Key_S) {
         renderLogScale = !renderLogScale;
     }
 
@@ -137,7 +130,7 @@ double AnalyserCanvas::frequencyFromY(int y) {
 }
 
 void AnalyserCanvas::renderGraph() {
-    const QFontMetrics metrics(painter.font());
+    const auto & metrics = painter.fontMetrics();
 
     constexpr int nframe = analysisFrameCount;
     const int xstep = std::max(nframe / targetWidth, 1);
@@ -151,7 +144,7 @@ void AnalyserCanvas::renderGraph() {
     int x, y;
 
     for (int iframe = 0; iframe < nframe; ++iframe) {
-        const auto & frame = analyser.getFormantFrame(iframe, renderRaw);
+        const auto & frame = analyser.getFormantFrame(iframe);
         double pitch = analyser.getPitchFrame(iframe);
 
         x = (iframe * targetWidth) / nframe;
@@ -165,7 +158,7 @@ void AnalyserCanvas::renderGraph() {
                 painter.setBrush(QColor(formantColors[formantNb]));
                 painter.drawEllipse(QPoint{x, y}, formantRadius, formantRadius);
             } else {
-                painter.fillRect(QRect{x - 1, y - 1, 3, 3}, Qt::red);
+                painter.fillRect(x - 1, y - 1, 3, 3, Qt::red);
             }
 
             formantNb++;
@@ -173,33 +166,36 @@ void AnalyserCanvas::renderGraph() {
 
         if (pitch > 0) {
             y = yFromFrequency(pitch);
-            painter.fillRect(QRect{x - 1, y - 1, 3, 3}, Qt::cyan);
+            painter.fillRect(x - 1, y - 1, 3, 3, Qt::cyan);
         }
 
         x += xstep;
     }
 
+    QFont font = painter.font();
+    int oldSize = font.pixelSize();
+    font.setPixelSize(13);
+    painter.setFont(font);
+
     for (double frequency = 0.0; frequency <= maximumFrequency; frequency += 100.0) {
         y = yFromFrequency(frequency);
 
         if (fmod(frequency, 500.0) >= 1e-10) {
-            painter.fillRect(QRect{targetWidth - ruleSmall, y - 1, ruleSmall, 3}, 0xBBBBBB7F);
+            painter.fillRect(targetWidth - ruleSmall, y - 1, ruleSmall, 3, 0xBBBBBB7F);
         }
         else {
-            painter.fillRect(QRect{targetWidth - ruleBig, y - 1, ruleBig, 3}, 0xBBBBBB);
+            painter.fillRect(targetWidth - ruleBig, y - 1, ruleBig, 3, 0xBBBBBB);
 
             QSize sz = metrics.size(Qt::TextSingleLine, QString::number(frequency));
             if (y >= targetHeight) {
-                y -= sz.height() / 4;
+                y -= 2 + sz.height() / 4;
             }
             else if (y - sz.height() / 4 <= 0) {
-                y += sz.height() / 4;
+                y += 2 + sz.height() / 4;
             }
 
             painter.setPen(0xBBBBBB);
-            painter.setLayoutDirection(Qt::RightToLeft);
-            painter.drawText(QPoint{x - ruleBig - 4 - sz.width(), y + sz.height() / 4}, QString::number(frequency));
-            painter.setLayoutDirection(Qt::LayoutDirectionAuto);
+            painter.drawText(x - ruleBig - sz.width(), y + sz.height() / 4, QString::number(frequency));
         }
     }
 
@@ -208,16 +204,19 @@ void AnalyserCanvas::renderGraph() {
 
     // Draw a vertical line where the selected frame is.
     painter.setPen(0x7F7F7F7F);
-    painter.drawLine(QLine{x, 0, x, targetHeight});
-    painter.drawLine(QLine{0, y, targetWidth, y});
+    painter.drawLine(x, 0, x, targetHeight);
+    painter.drawLine(0, y, targetWidth, y);
     // Draw freq string right next to it.
     QString cursorFreqStr = QString("%1 Hz").arg(round(selectedFrequency));
-    painter.drawText(QPoint{targetWidth - ruleBig
-                             - metrics.horizontalAdvance(QString::number(maximumFrequency))
+    painter.drawText(targetWidth - ruleBig
+                             - metrics.horizontalAdvance(QString::number(round(maximumFrequency)))
                              - 10
                              - metrics.horizontalAdvance(cursorFreqStr),
-                            y - 10},
+                     y - 10,
                      cursorFreqStr);
+
+    font.setPixelSize(oldSize);
+    painter.setFont(font);
 }
 
 void AnalyserCanvas::startTimer()
@@ -233,7 +232,10 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
 
     painter.begin(this);
     painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
-    painter.fillRect(0, 0, width(), height(), Qt::black);
+    painter.fillRect(0, 0, targetWidth, targetHeight, Qt::black);
     render();
+    painter.setPen(Qt::white);
+    painter.setBrush(Qt::NoBrush);
+    painter.drawRect(0, 0, targetWidth, targetHeight);
     painter.end();
 }

@@ -50,14 +50,14 @@ int Analyser::getLinearPredictionOrder() const {
 }
 
 void Analyser::setMaximumFrequency(double _maximumFrequency) {
-    maximumFrequency = std::clamp(_maximumFrequency, 3000.0, 6000.0);
+    maximumFrequency = std::clamp(_maximumFrequency, 2500.0, 7000.0);
 }
 
 double Analyser::getMaximumFrequency() const {
     return maximumFrequency;
 }
 
-const Formant::Frame & Analyser::getFormantFrame(int iframe, bool raw) {
+const Formant::Frame & Analyser::getFormantFrame(int iframe) {
     std::lock_guard<std::mutex> lock(mutex);
 
     iframe = std::clamp(iframe, 0, analysisFrameCount - 1);

@@ -5,22 +5,14 @@
 #ifndef SPEECH_ANALYSIS_ANALYSERCANVAS_H
 #define SPEECH_ANALYSIS_ANALYSERCANVAS_H
 
-#include <QSharedPointer>
-#include <QWidget>
-#include <QPainter>
-#include <QKeyEvent>
-#include <QMouseEvent>
+#include <QtWidgets>
 #include <QTimer>
-#include <vector>
 #include "../../Exceptions.h"
 #include "../../analysis/Analyser.h"
 
 #define WINDOW_TITLE  "Speech analysis"
 #define WINDOW_WIDTH  1280
 #define WINDOW_HEIGHT 720
-
-#define WINDOW_FONT     "fonts/open-sans/OpenSans-Regular.ttf"
-#define WINDOW_FONTSIZE 24
 
 class AnalyserCanvas : public QWidget {
     Q_OBJECT
@@ -35,8 +27,6 @@ protected:
     void paintEvent(QPaintEvent * event) override;
 
 private:
-    void mainLoop();
-
     void render();
     void renderGraph();
 
@@ -51,7 +41,7 @@ private:
     int targetWidth, targetHeight;
 
     // Rendering parameters
-    bool renderRaw, renderLogScale;
+    bool renderLogScale;
     int selectedFrame;
     double selectedFrequency;
 

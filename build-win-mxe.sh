@@ -1,8 +1,5 @@
 #!/bin/bash
 
-BUILD_WINDOWS=$BUILD_WINDOWS
-EXE_WINDOWS=$EXE_WINDOWS
-
 unset `env | \
     grep -vi '^EDITOR=\|^HOME=\|^LANG=\|MXE\|^PATH=\|^BUILD_WINDOWS=\|^EXE_WINDOWS=' | \
     grep -vi 'PKG_CONFIG\|PROXY\|^PS1=\|^TERM=' | \
@@ -24,4 +21,4 @@ $MXE/tools/copydlldeps.sh \
     --destdir $BUILD_WINDOWS \
     --recursivesrcdir cmake-build-release-win/libtorch \
     --recursivesrcdir $MXE/usr/${CROSS::-1}/ \
-    --loglevel 0 --copy --objdump $MXE/usr/bin/${CROSS}objdump >/dev/null 2>&1
+    --loglevel 0 --copy --objdump $MXE/usr/bin/${CROSS}objdump >copydlls.log 2>&1

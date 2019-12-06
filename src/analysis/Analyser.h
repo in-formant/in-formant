@@ -30,7 +30,7 @@ public:
     [[nodiscard]] int getLinearPredictionOrder() const;
     [[nodiscard]] double getMaximumFrequency() const;
 
-    [[nodiscard]] const Formant::Frame & getFormantFrame(int iframe, bool raw);
+    [[nodiscard]] const Formant::Frame & getFormantFrame(int iframe);
     [[nodiscard]] double getPitchFrame(int iframe);
     [[nodiscard]] bool isFrameVoiced(int iframe);
 

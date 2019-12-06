@@ -73,12 +73,12 @@ set(SOURCES
         lib/MFCC/MFCC.h)
 
 set(QT_SOURCES
-        )
+        ../resources.qrc)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(PortAudio REQUIRED)
 find_package(FFTW REQUIRED DOUBLE_LIB)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Widgets QuickControls2 REQUIRED)
 
 set(CMAKE_FIND_ROOT_PATH "${TORCH_INSTALL_DIR}")
 find_package(Torch REQUIRED)
@@ -100,5 +100,5 @@ target_link_libraries(speech_analysis
         ${PORTAUDIO_LIBRARIES}
         ${FFTW_LIBRARIES}
         ${TORCH_LIBRARY}
-        ${Qt5Widgets_LIBRARIES}
+        Qt5::Widgets
 )

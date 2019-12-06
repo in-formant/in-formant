@@ -27,7 +27,6 @@ echo -e "\e[92m * Packaging for Linux...\n\e[39m"
 rm -rf speech-analysis
 mkdir -p speech-analysis
 cp $EXE_LINUX speech-analysis/
-cp -r ../fonts speech-analysis/
 zip speech-analysis-linux.zip -r speech-analysis
 
 echo -e "\n\e[92m * Packaging for Windows...\n\e[39m"
@@ -36,7 +35,6 @@ rm -rf speech-analysis
 mkdir -p speech-analysis
 cp $EXE_WINDOWS speech-analysis/
 cp -r $BUILD_WINDOWS/*.dll speech-analysis/
-cp -r ../fonts speech-analysis/
 zip speech-analysis-windows.zip -r speech-analysis
 
 rm -rf speech-analysis

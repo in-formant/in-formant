@@ -14,28 +14,18 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Longer analysis window.">
-      <change afterPath="$PROJECT_DIR$/src/gui/qt/MainWindow.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/gui/qt/MainWindow.h" afterDir="false" />
+    <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/resources.qrc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake/FindSDL2.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake/FindSDL2_gfx.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake/FindSDL2_ttf.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fonts/open-sans/Apache License.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-Regular.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build-win-mxe.sh" beforeDir="false" afterPath="$PROJECT_DIR$/build-win-mxe.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.sh" beforeDir="false" afterPath="$PROJECT_DIR$/package.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/parts/formants.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/formants.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/SDLUtils.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/SDLUtils.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/Spectrogram.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/Spectrogram.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/qt/MainWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/qt/MainWindow.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/qt/MainWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/qt/MainWindow.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -89,17 +79,17 @@
     <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/stylesheets" />
+      <recent name="$PROJECT_DIR$/src/gui/canvas" />
+      <recent name="$PROJECT_DIR$/libs" />
+      <recent name="$PROJECT_DIR$/src" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src" />
       <recent name="$PROJECT_DIR$/src/lib/Pitch/YAAPT" />
       <recent name="$PROJECT_DIR$/src/signal" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/src/gui/canvas" />
-      <recent name="$PROJECT_DIR$/libs" />
-      <recent name="$PROJECT_DIR$/src" />
-      <recent name="$PROJECT_DIR$/src/lib/Formant/EM" />
-      <recent name="$PROJECT_DIR$/src/lib/FFT" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -233,7 +223,8 @@
       <workItem from="1575447658473" duration="18000" />
       <workItem from="1575505474050" duration="2309000" />
       <workItem from="1575507879781" duration="26000" />
-      <workItem from="1575592897496" duration="11871000" />
+      <workItem from="1575592897496" duration="12311000" />
+      <workItem from="1575622751050" duration="7647000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -382,7 +373,14 @@
       <option name="project" value="LOCAL" />
       <updated>1574686663337</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="Migrated from SDL2 to Qt5">
+      <created>1575601212763</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1575601212763</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -468,6 +466,7 @@
     <MESSAGE value="Longer analysis window." />
     <MESSAGE value="Changed raw log scale to mel scale" />
     <MESSAGE value="Deleted patches for externalproject" />
-    <option name="LAST_COMMIT_MESSAGE" value="Deleted patches for externalproject" />
+    <MESSAGE value="Migrated from SDL2 to Qt5" />
+    <option name="LAST_COMMIT_MESSAGE" value="Migrated from SDL2 to Qt5" />
   </component>
 </project>
