@@ -92,11 +92,15 @@ include_directories(
         ${Qt5Widgets_INCLUDE_DIRS}
 )
 
-add_executable(speech_analysis ${SOURCES} ${QT_SOURCES})
+add_executable(speech_analysis WIN32 ${SOURCES} ${QT_SOURCES})
 
 target_link_libraries(speech_analysis
         Eigen3::Eigen
         ${PORTAUDIO_LIBRARIES}
         ${FFTW_LIBRARIES}
         ${TORCH_LIBRARY}
-        ${Qt5Widgets_LIBRARIES})
+        Qt5::Widgets)
+
+if (WIN32)
+add_custom_command (TARGET speech_analysis POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::QWindowsIntegrationPlugin> $<TARGET_FILE_DIR:speech_analysis>)
+endif()

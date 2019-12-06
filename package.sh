@@ -35,6 +35,8 @@ rm -rf speech-analysis
 mkdir -p speech-analysis
 cp $EXE_WINDOWS speech-analysis/
 cp -r $BUILD_WINDOWS/*.dll speech-analysis/
+mkdir speech-analysis/platforms
+mv speech-analysis/qwindows.dll speech-analysis/platforms/
 zip speech-analysis-windows.zip -r speech-analysis
 
 rm -rf speech-analysis

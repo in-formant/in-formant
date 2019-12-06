@@ -28,7 +28,7 @@ int main(int argc, char * argv[])
 
 #ifdef _WIN32
 
-static inline char *wideToMulti(int codePage, const wchar_t *aw)
+static inline char *wideToMulti(unsigned int codePage, const wchar_t *aw)
 {
     const int required = WideCharToMultiByte(codePage, 0, aw, -1, NULL, 0, NULL, NULL);
     char *result = new char[required];
@@ -36,9 +36,9 @@ static inline char *wideToMulti(int codePage, const wchar_t *aw)
     return result;
 }
 
-int WinMain(HINSTANCE, HINSTANCE, LPSTR /*cmdParamarg*/, int /* cmdShow */)
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR /*cmdParamarg*/, int /* cmdShow */)
 {
-    int argc;
+    int argc = 0;
     wchar_t **argvW = CommandLineToArgvW(GetCommandLineW(), &argc);
     if (!argvW)
         return -1;
@@ -48,7 +48,7 @@ int WinMain(HINSTANCE, HINSTANCE, LPSTR /*cmdParamarg*/, int /* cmdShow */)
     argv[argc] = nullptr;
     LocalFree(argvW);
     const int exitCode = main(argc, argv);
-    for (int i = 0; i < argc && argv[i]; ++i)
+    for (int i = 0; (i != argc) && (argv[i] != nullptr); ++i)
         delete [] argv[i];
     delete [] argv;
     return exitCode;
