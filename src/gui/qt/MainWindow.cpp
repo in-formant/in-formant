@@ -124,7 +124,6 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow() {
     delete central;
-    delete canvas;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {

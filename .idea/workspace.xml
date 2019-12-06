@@ -17,14 +17,8 @@
     <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/parts/formants.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/formants.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/qt/MainWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/qt/MainWindow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/qt/MainWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/qt/MainWindow.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -224,7 +218,7 @@
       <workItem from="1575592897496" duration="12311000" />
       <workItem from="1575622751050" duration="7706000" />
       <workItem from="1575640134223" duration="4262000" />
-      <workItem from="1575644513867" duration="4425000" />
+      <workItem from="1575644513867" duration="5398000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>
@@ -387,7 +381,14 @@
       <option name="project" value="LOCAL" />
       <updated>1575630420580</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="Added more input fields for parameters. Display pitch and formants on GUI.">
+      <created>1575648962052</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1575648962053</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -475,6 +476,7 @@
     <MESSAGE value="Deleted patches for externalproject" />
     <MESSAGE value="Migrated from SDL2 to Qt5" />
     <MESSAGE value="Added Qt layout and Qt input controls to change settings." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added Qt layout and Qt input controls to change settings." />
+    <MESSAGE value="Added more input fields for parameters. Display pitch and formants on GUI." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added more input fields for parameters. Display pitch and formants on GUI." />
   </component>
 </project>
