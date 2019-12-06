@@ -11,12 +11,11 @@ void Analyser::analysePitch()
 {
     Pitch::Estimation est{};
 
-    Pitch::estimate_AMDF(x, fs, est, 60, 700, 1.0, 0.1);
+    Pitch::estimate_AMDF(x, fs, est, 60, 500, 2.0, 0.1);
 
     if (est.isVoiced) {
         Pitch::estimate_MPM(x, fs, est);
     }
 
-    pitchTrack.pop_front();
-    pitchTrack.push_back(est.pitch);
+    lastPitchFrame = est.isVoiced ? est.pitch : 0.0;
 }

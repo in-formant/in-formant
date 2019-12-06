@@ -1,13 +1,13 @@
+#include <QApplication>
 #include <iostream>
-#include "gui/AnalyserWindow.h"
+#include "gui/qt/MainWindow.h"
 
 int main(int argc, char **argv)
 {
+    QApplication app(argc, argv);
+
     Analyser analyser;
-    AnalyserWindow window(analyser);
+    MainWindow mainWindow;
 
-    analyser.startThread();
-    window.mainLoop();
-
-    return EXIT_SUCCESS;
+    return app.exec();
 }

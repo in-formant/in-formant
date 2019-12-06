@@ -8,12 +8,7 @@
 using namespace Eigen;
 
 void Analyser::analyseFormantLp() {
-    Formant::Frame fFrame{};
-
-    LPC::toFormantFrame(lpcFrame, fFrame, fs);
-
-    formantTrack.pop_front();
-    formantTrack.push_back(fFrame);
+    LPC::toFormantFrame(lpcFrame, lastFormantFrame, fs);
 }
 
 void Analyser::analyseFormantDeep() {

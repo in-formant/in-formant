@@ -15,31 +15,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6611e84b-c806-4b66-958e-fcbcaffcd0a7" name="Default Changelist" comment="Longer analysis window.">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DeepFormants/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/analysis/parts/preemph.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Formant/DF/features.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/Formant/DF/features.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/MFCC/MFCC.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/MFCC/MFCC.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/gui/qt/MainWindow.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/gui/qt/MainWindow.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build-win-mxe.sh" beforeDir="false" afterPath="$PROJECT_DIR$/build-win-mxe.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.sh" beforeDir="false" afterPath="$PROJECT_DIR$/package.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake/FindSDL2.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake/FindSDL2_gfx.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake/FindSDL2_ttf.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fonts/open-sans/Apache License.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fonts/open-sans/OpenSans-Regular.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/Analyser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/Analyser_mainLoop.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/parts/formants.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/formants.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/parts/lpc.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/lpc.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analysis/parts/normalize.cpp" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/analysis/parts/pitch.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/AnalyserWindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/canvas/AnalyserCanvas.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/SDLUtils.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/SDLUtils.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/Spectrogram.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/Spectrogram.h" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/Formant/Formant.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/Formant/Formant_track.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/LPC/LPC.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/LPC/LPC.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/LPC/LPC.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -65,7 +61,7 @@
     <expand />
     <select />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Release" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="MIXED" />
@@ -93,17 +89,17 @@
     <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/libs" />
-      <recent name="$PROJECT_DIR$/src" />
-      <recent name="$PROJECT_DIR$/src/lib/Formant/EM" />
-      <recent name="$PROJECT_DIR$/src/lib/FFT" />
-      <recent name="$PROJECT_DIR$/src/lib/FFT/fftwpp" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src" />
       <recent name="$PROJECT_DIR$/src/lib/Pitch/YAAPT" />
       <recent name="$PROJECT_DIR$/src/signal" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/gui/canvas" />
+      <recent name="$PROJECT_DIR$/libs" />
+      <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$/src/lib/Formant/EM" />
+      <recent name="$PROJECT_DIR$/src/lib/FFT" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -235,6 +231,9 @@
       <workItem from="1575408388622" duration="1354000" />
       <workItem from="1575419119225" duration="68000" />
       <workItem from="1575447658473" duration="18000" />
+      <workItem from="1575505474050" duration="2309000" />
+      <workItem from="1575507879781" duration="26000" />
+      <workItem from="1575592897496" duration="11871000" />
     </task>
     <task id="LOCAL-00001" summary="Better suited ringbuffer behaviour.&#10;Added FFT, LPC, etc. from Praat.">
       <created>1570904474031</created>

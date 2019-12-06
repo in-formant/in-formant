@@ -20,7 +20,6 @@ Analyser::Analyser()
 {
     fs = audioCapture.getSampleRate();
 
-    rawFormantTrack.resize(analysisFrameCount, defaultFrame);
     formantTrack.resize(analysisFrameCount, defaultFrame);
     pitchTrack.resize(analysisFrameCount, 0.0);
 
@@ -62,7 +61,7 @@ const Formant::Frame & Analyser::getFormantFrame(int iframe, bool raw) {
     std::lock_guard<std::mutex> lock(mutex);
 
     iframe = std::clamp(iframe, 0, analysisFrameCount - 1);
-    return raw ? rawFormantTrack[iframe] : formantTrack[iframe];
+    return formantTrack[iframe];
 }
 
 double Analyser::getPitchFrame(int iframe) {
@@ -75,3 +74,4 @@ double Analyser::getPitchFrame(int iframe) {
 bool Analyser::isFrameVoiced(int iframe) {
     return getPitchFrame(iframe) > 0.0;
 }
+

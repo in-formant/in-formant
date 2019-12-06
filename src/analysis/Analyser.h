@@ -12,8 +12,8 @@
 #include "../audio/AudioCapture.h"
 #include "../lib/Formant/Formant.h"
 
-constexpr double analysisUpdatesPerSecond = 1000.0 / 15.0; // This is to get a new frame every ~15ms.
-constexpr int analysisFrameCount = 2000;
+constexpr double analysisUpdatesPerSecond = 1000.0 / 10.0; // This is to get a new frame every ~15ms.
+constexpr int analysisFrameCount = 1500;
 
 class Analyser {
 public:
@@ -29,6 +29,7 @@ public:
 
     [[nodiscard]] int getLinearPredictionOrder() const;
     [[nodiscard]] double getMaximumFrequency() const;
+
     [[nodiscard]] const Formant::Frame & getFormantFrame(int iframe, bool raw);
     [[nodiscard]] double getPitchFrame(int iframe);
     [[nodiscard]] bool isFrameVoiced(int iframe);
@@ -50,16 +51,17 @@ private:
     bool doAnalyse;
     double maximumFrequency;
     int lpOrder;
-    int numCepstra, numFilters;
 
     // Intermediate variables for analysis.
     Eigen::ArrayXd x;
     double fs;
     LPC::Frame lpcFrame;
 
-    Formant::Frames rawFormantTrack;
     Formant::Frames formantTrack;
     std::deque<double> pitchTrack;
+
+    Formant::Frame lastFormantFrame;
+    double lastPitchFrame;
 
     // Thread-related members
     std::thread thread;

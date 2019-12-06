@@ -37,8 +37,6 @@ void Analyser::mainLoop()
 
 void Analyser::update()
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     if (!doAnalyse) {
         return;
     }
@@ -62,4 +60,10 @@ void Analyser::update()
     // Perform formant analysis from LP coefficients.
     analyseFormantLp();
 
+    mutex.lock();
+    pitchTrack.pop_front();
+    formantTrack.pop_front();
+    pitchTrack.push_back(lastPitchFrame);
+    formantTrack.push_back(lastFormantFrame);
+    mutex.unlock();
 }
