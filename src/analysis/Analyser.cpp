@@ -12,8 +12,15 @@ static const Formant::Frame defaultFrame = {
         .intensity = 1.0,
 };
 
+static const SpecFrame defaultSpec = {
+        .fs = 0,
+        .nfft = 512,
+        .spec = ArrayXd::Zero(512),
+};
+
 Analyser::Analyser()
     : doAnalyse(true),
+      nfft(512),
       lpOrder(10),
       maximumFrequency(5000.0),
       frameSpace(10.0),
@@ -41,6 +48,18 @@ void Analyser::stopThread() {
 
 void Analyser::toggle() {
     doAnalyse = !doAnalyse;
+}
+
+bool Analyser::isAnalysing() const {
+    return doAnalyse;
+}
+
+void Analyser::setFftSize(int _nfft) {
+    nfft = _nfft;
+}
+
+int Analyser::getFftSize() const {
+    return nfft;
 }
 
 void Analyser::setLinearPredictionOrder(int _lpOrder) {
@@ -83,38 +102,61 @@ int Analyser::getFrameCount() {
     return frameCount;
 }
 
-const Formant::Frame & Analyser::getFormantFrame(int iframe) {
+const SpecFrame & Analyser::getSpectrumFrame(int _iframe) {
     std::lock_guard<std::mutex> lock(mutex);
 
-    iframe = std::clamp(iframe, 0, frameCount - 1);
-    return formantTrack[iframe];
+    int iframe = std::clamp(_iframe, 0, frameCount - 1);
+    return spectra.at(iframe);
 }
 
-double Analyser::getPitchFrame(int iframe) {
+const SpecFrame & Analyser::getLastSpectrumFrame() {
     std::lock_guard<std::mutex> lock(mutex);
 
-    iframe = std::clamp(iframe, 0, frameCount - 1);
-    return pitchTrack[iframe];
+    return spectra.back();
 }
 
-bool Analyser::isFrameVoiced(int iframe) {
-    return getPitchFrame(iframe) > 0.0;
+const Formant::Frame & Analyser::getFormantFrame(int _iframe) {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    int iframe = std::clamp(_iframe, 0, frameCount - 1);
+    return formantTrack.at(iframe);
+}
+
+const Formant::Frame & Analyser::getLastFormantFrame() {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    return formantTrack.back();
+}
+
+double Analyser::getPitchFrame(int _iframe) {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    int iframe = std::clamp(_iframe, 0, frameCount - 1);
+    return pitchTrack.at(iframe);
+}
+
+double Analyser::getLastPitchFrame() {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    return pitchTrack.back();
 }
 
 void Analyser::_updateFrameCount() {
     std::lock_guard<std::mutex> lock(mutex);
 
-    int newFrameCount = (1000 * windowSpan.count()) / frameSpace.count();
+    const int newFrameCount = (1000 * windowSpan.count()) / frameSpace.count();
 
-    if (newFrameCount < frameCount) {
-        int diff = frameCount - newFrameCount;
-        pitchTrack.erase(pitchTrack.begin(), pitchTrack.begin() + diff);
-        formantTrack.erase(formantTrack.begin(), formantTrack.begin() + diff);
-    }
-    else if (newFrameCount > frameCount) {
+    if (frameCount < newFrameCount) {
         int diff = newFrameCount - frameCount;
+        spectra.insert(spectra.begin(), diff, defaultSpec);
         pitchTrack.insert(pitchTrack.begin(), diff, 0.0);
         formantTrack.insert(formantTrack.begin(), diff, defaultFrame);
+    }
+    else if (frameCount > newFrameCount) {
+        int diff = frameCount - newFrameCount;
+        spectra.erase(spectra.begin(), spectra.begin() + diff);
+        pitchTrack.erase(pitchTrack.begin(), pitchTrack.begin() + diff);
+        formantTrack.erase(formantTrack.begin(), formantTrack.begin() + diff);
     }
 
     frameCount = newFrameCount;

@@ -41,7 +41,10 @@ void Analyser::update()
     // Read captured audio.
     audioCapture.readBlock(x);
     fs = audioCapture.getSampleRate();
-
+   
+    // Analyse spectrum if enabled.
+    analyseSpectrum();
+            
     // Get a pitch estimate.
     analysePitch();
 
@@ -58,9 +61,11 @@ void Analyser::update()
     analyseFormantLp();
 
     mutex.lock();
+    spectra.pop_front();
+    spectra.push_back(lastSpectrumFrame);
     pitchTrack.pop_front();
-    formantTrack.pop_front();
     pitchTrack.push_back(lastPitchFrame);
+    formantTrack.pop_front();
     formantTrack.push_back(lastFormantFrame);
     mutex.unlock();
 }

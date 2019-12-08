@@ -12,6 +12,8 @@ MainWindow::MainWindow()
     central = new QWidget;
     setCentralWidget(central);
 
+    canvas = new AnalyserCanvas(analyser);
+
     vLayout1 = new QVBoxLayout(central);
     central->setLayout(vLayout1);
     {
@@ -23,8 +25,6 @@ MainWindow::MainWindow()
             {
                 for (int i = 0; i < 4; ++i) {
                     auto field = new QLineEdit;
-                    palette.setColor(QPalette::Text, QColor(formantColors[i]));
-                    field->setPalette(palette);
 
                     field->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
                     field->setReadOnly(true);
@@ -52,6 +52,19 @@ MainWindow::MainWindow()
             hLayout3->addLayout(fLayout4);
             fLayout4->setLabelAlignment(Qt::AlignLeft);
             {
+                inputToggleSpectrum = new QCheckBox;
+                inputToggleSpectrum->setChecked(canvas->getDrawSpectrum());
+
+                connect(inputToggleSpectrum, &QCheckBox::toggled,
+                        [&](const bool checked) { canvas->setDrawSpectrum(checked); });
+
+                inputFftSize = new QComboBox;
+                inputFftSize->addItems({"256", "512", "1024", "2048", "4096", "8192"});
+                inputFftSize->setCurrentIndex(1);
+
+                connect(inputFftSize, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
+                        [&](const QString value) { analyser.setFftSize(value.toInt()); });
+
                 inputLpOrder = new QSpinBox;
                 inputLpOrder->setRange(5, 22);
                 inputLpOrder->setValue(analyser.getLinearPredictionOrder());
@@ -93,6 +106,8 @@ MainWindow::MainWindow()
                 connect(inputWindowSpan, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
                         [&](const double value) { analyser.setWindowSpan(std::chrono::milliseconds(int(1000 * value))); });
 
+                fLayout4->addRow(tr("Overlay spectrogram:"), inputToggleSpectrum);
+                fLayout4->addRow(tr("FFT size:"), inputFftSize);
                 fLayout4->addRow(tr("Linear prediction order:"), inputLpOrder);
                 fLayout4->addRow(tr("Maximum frequency:"), inputMaxFreq);
                 fLayout4->addRow(tr("Frequency scale:"), inputFreqScale);
@@ -100,7 +115,6 @@ MainWindow::MainWindow()
                 fLayout4->addRow(tr("Analysis duration:"), inputWindowSpan);
             }
 
-            canvas = new AnalyserCanvas(analyser);
             hLayout3->addWidget(canvas);
             canvas->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 

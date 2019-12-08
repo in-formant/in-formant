@@ -14,7 +14,7 @@
 #define WINDOW_WIDTH  1280
 #define WINDOW_HEIGHT 720
 
-class AnalyserCanvas : public QWidget {
+class AnalyserCanvas : public QOpenGLWidget {
     Q_OBJECT
 public:
     AnalyserCanvas(Analyser & analyser) noexcept(false);
@@ -23,6 +23,9 @@ public:
     [[nodiscard]] int getSelectedFrame() const;
 
     void setFrequencyScale(int type);
+    void setDrawSpectrum(bool draw);
+
+    bool getDrawSpectrum() const;
 
 protected:
     void keyPressEvent(QKeyEvent * event) override;
@@ -31,6 +34,10 @@ protected:
 
 private:
     void render();
+    void renderPitchTrack();
+    void renderFormantTrack();
+    void renderSpectrogram();
+    void renderScaleAndCursor();
 
     double yFromFrequency(double frequency);
     double frequencyFromY(int y);
@@ -39,9 +46,16 @@ private:
     QPainter painter;
     QTimer timer;
 
-    int targetWidth, targetHeight;
+    std::array<QColor, 4> formantColors;
+
+    QPixmap spectrogram;
+    QPixmap tracks;
+
+    int actualWidth, targetWidth, targetHeight;
+    double maxFreq, maxFreqLog, maxFreqMel;
 
     // Rendering parameters
+    bool drawSpectrum;
     int frequencyScaleType;
     int selectedFrame;
     double selectedFrequency;

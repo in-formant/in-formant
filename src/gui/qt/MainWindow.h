@@ -34,6 +34,8 @@ private:
     QFormLayout * fLayout4;
     QHBoxLayout * hLayout5;
 
+    QCheckBox * inputToggleSpectrum;
+    QComboBox * inputFftSize;
     QSpinBox * inputLpOrder;
     QSpinBox * inputMaxFreq;
     QComboBox * inputFreqScale;

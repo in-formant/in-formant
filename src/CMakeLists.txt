@@ -23,6 +23,7 @@ set(SOURCES
         analysis/parts/pitch.cpp
         analysis/parts/preemph.cpp
         analysis/parts/resample.cpp
+        analysis/parts/spectrum.cpp
         audio/AudioCapture.cpp
         audio/AudioCapture_callbacks.cpp
         audio/AudioCapture.h
@@ -80,6 +81,9 @@ find_package(PortAudio REQUIRED)
 find_package(FFTW REQUIRED DOUBLE_LIB)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
+set(OpenGL_GL_PREFERENCE GLVND)
+find_package(OpenGL REQUIRED)
+
 set(CMAKE_FIND_ROOT_PATH "${TORCH_INSTALL_DIR}")
 find_package(Torch REQUIRED)
 
@@ -90,6 +94,7 @@ include_directories(
         ${FFTW_INCLUDE_DIRS}
         ${TORCH_INCLUDE_DIRS}
         ${Qt5Widgets_INCLUDE_DIRS}
+        ${OPENGL_INCLUDE_DIRS}
 )
 
 add_executable(speech_analysis WIN32 ${SOURCES} ${QT_SOURCES})
@@ -99,7 +104,8 @@ target_link_libraries(speech_analysis
         ${PORTAUDIO_LIBRARIES}
         ${FFTW_LIBRARIES}
         ${TORCH_LIBRARY}
-        Qt5::Widgets)
+        Qt5::Widgets
+        OpenGL::GL)
 
 if (WIN32)
 add_custom_command (TARGET speech_analysis POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::QWindowsIntegrationPlugin> $<TARGET_FILE_DIR:speech_analysis>)

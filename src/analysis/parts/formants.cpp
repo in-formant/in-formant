@@ -13,6 +13,6 @@ void Analyser::analyseFormantLp() {
 
 void Analyser::analyseFormantDeep() {
 
-    bool isVoiced = pitchTrack.back() > 0;
+    bool isVoiced = lastPitchFrame > 0;
 
 }

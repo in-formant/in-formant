@@ -13,16 +13,10 @@
 #include "../audio/AudioCapture.h"
 #include "../lib/Formant/Formant.h"
 
-constexpr QRgb formantColors[9] = {
-        0xFFA700,
-        0xFF57D9,
-        0x7FFF00,
-        0x57C8C8,
-        0xC8A7FF,
-        0x00A79C,
-        0xFFFFFF, // unused
-        0xFFFFFF,
-        0xFFFFFF,
+struct SpecFrame {
+    double fs;
+    int nfft;
+    Eigen::ArrayXd spec;
 };
 
 class Analyser {
@@ -34,11 +28,15 @@ public:
 
     void toggle();
 
+    void setSpectrum(bool);
+    void setFftSize(int);
     void setLinearPredictionOrder(int);
     void setMaximumFrequency(double);
     void setFrameSpace(const std::chrono::duration<double, std::milli> & frameSpace);
     void setWindowSpan(const std::chrono::duration<double> & windowSpan);
 
+    [[nodiscard]] bool isAnalysing() const;
+    [[nodiscard]] int getFftSize() const;
     [[nodiscard]] int getLinearPredictionOrder() const;
     [[nodiscard]] double getMaximumFrequency() const;
 
@@ -46,16 +44,21 @@ public:
     [[nodiscard]] const std::chrono::duration<double> & getWindowSpan() const;
 
     [[nodiscard]] int getFrameCount();
+
+    [[nodiscard]] const SpecFrame & getSpectrumFrame(int iframe);
     [[nodiscard]] const Formant::Frame & getFormantFrame(int iframe);
     [[nodiscard]] double getPitchFrame(int iframe);
-    [[nodiscard]] bool isFrameVoiced(int iframe);
+
+    [[nodiscard]] const SpecFrame & getLastSpectrumFrame();
+    [[nodiscard]] const Formant::Frame & getLastFormantFrame();
+    [[nodiscard]] double getLastPitchFrame();
 
 private:
     void _updateFrameCount();
 
     void mainLoop();
     void update();
-
+    void analyseSpectrum();
     void analysePitch();
     void resampleAudio();
     void preEmphGauss();
@@ -71,6 +74,7 @@ private:
     int frameCount;
 
     bool doAnalyse;
+    int nfft;
     double maximumFrequency;
     int lpOrder;
 
@@ -79,9 +83,11 @@ private:
     double fs;
     LPC::Frame lpcFrame;
 
+    std::deque<SpecFrame> spectra;
     Formant::Frames formantTrack;
     std::deque<double> pitchTrack;
 
+    SpecFrame lastSpectrumFrame;
     Formant::Frame lastFormantFrame;
     double lastPitchFrame;
 
