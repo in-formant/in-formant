@@ -41,6 +41,7 @@ private:
     QComboBox * inputFreqScale;
     QSpinBox * inputFrameSpace;
     QDoubleSpinBox * inputWindowSpan;
+    std::array<QPushButton *, 4> inputFormantColor;
 
     AnalyserCanvas * canvas;
 

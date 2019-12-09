@@ -50,7 +50,6 @@ MainWindow::MainWindow()
         {
             fLayout4 = new QFormLayout;
             hLayout3->addLayout(fLayout4);
-            fLayout4->setLabelAlignment(Qt::AlignLeft);
             {
                 inputToggleSpectrum = new QCheckBox;
                 inputToggleSpectrum->setChecked(canvas->getDrawSpectrum());
@@ -106,6 +105,24 @@ MainWindow::MainWindow()
                 connect(inputWindowSpan, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
                         [&](const double value) { analyser.setWindowSpan(std::chrono::milliseconds(int(1000 * value))); });
 
+                for (int nb = 0; nb < 4; ++nb) {
+                    auto input = new QPushButton;
+                    input->setAutoFillBackground(true);
+                    
+                    connect(input, &QPushButton::clicked,
+                            [=] () {
+                                QColor c = QColorDialog::getColor(
+                                    canvas->getFormantColor(nb),
+                                    this,
+                                    QString("Select F%1 color").arg(nb + 1),
+                                    QColorDialog::DontUseNativeDialog
+                                );
+                                canvas->setFormantColor(nb, c);
+                            });
+
+                    inputFormantColor[nb] = input;
+                }
+
                 fLayout4->addRow(tr("Overlay spectrogram:"), inputToggleSpectrum);
                 fLayout4->addRow(tr("FFT size:"), inputFftSize);
                 fLayout4->addRow(tr("Linear prediction order:"), inputLpOrder);
@@ -113,6 +130,11 @@ MainWindow::MainWindow()
                 fLayout4->addRow(tr("Frequency scale:"), inputFreqScale);
                 fLayout4->addRow(tr("Frame space:"), inputFrameSpace);
                 fLayout4->addRow(tr("Analysis duration:"), inputWindowSpan);
+
+                for (int nb = 0; nb < 4; ++nb) {
+                    const QString labelStr = QString("F%1 color:").arg(nb + 1);
+                    fLayout4->addRow(tr(qPrintable(labelStr)), inputFormantColor[nb]);
+                }
             }
 
             hLayout3->addWidget(canvas);
@@ -171,6 +193,10 @@ void MainWindow::updateFields() {
         else {
             fieldFormant[i]->setText("");
         }
+
+        const QColor c = canvas->getFormantColor(i);
+        inputFormantColor[i]->setStyleSheet(QString("background-color: %1").arg(c.name()));
     }
 
 }
+

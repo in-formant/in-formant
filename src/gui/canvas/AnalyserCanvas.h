@@ -24,8 +24,10 @@ public:
 
     void setFrequencyScale(int type);
     void setDrawSpectrum(bool draw);
+    void setFormantColor(int formantNb, const QColor & color);
 
     bool getDrawSpectrum() const;
+    const QColor & getFormantColor(int formantNb) const;
 
 protected:
     void keyPressEvent(QKeyEvent * event) override;

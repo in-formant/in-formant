@@ -384,3 +384,11 @@ void AnalyserCanvas::setDrawSpectrum(bool toggle) {
 bool AnalyserCanvas::getDrawSpectrum() const {
     return drawSpectrum;
 }
+
+void AnalyserCanvas::setFormantColor(int formantNb, const QColor & color) {
+    formantColors[formantNb] = color;
+}
+
+const QColor & AnalyserCanvas::getFormantColor(int formantNb) const {
+    return formantColors.at(formantNb);
+}
