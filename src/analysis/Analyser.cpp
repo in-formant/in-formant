@@ -24,8 +24,9 @@ Analyser::Analyser()
       lpOrder(10),
       maximumFrequency(5000.0),
       frameSpace(10.0),
-      windowSpan(15.0),
-      running(false)
+      windowSpan(5.0),
+      running(false),
+      newFrameCallback([](){})
 {
     fs = audioCapture.getSampleRate();
 
@@ -34,6 +35,8 @@ Analyser::Analyser()
 
     // Initialize the audio frames to zero.
     x.setZero(CAPTURE_SAMPLE_COUNT(fs));
+    
+    setInputDevice(Pa_GetDefaultInputDevice());
 }
 
 void Analyser::startThread() {
@@ -52,6 +55,20 @@ void Analyser::toggle() {
 
 bool Analyser::isAnalysing() const {
     return doAnalyse;
+}
+
+void Analyser::setInputDevice(int id) {
+    std::lock_guard<std::mutex> guard(audioLock);
+    audioCapture.closeStream();
+    audioCapture.openInputDevice(id);
+    audioCapture.startStream();
+}
+
+void Analyser::setOutputDevice(int id) {
+    std::lock_guard<std::mutex> guard(audioLock);
+    audioCapture.closeStream();
+    audioCapture.openOutputDevice(id);
+    audioCapture.startStream();
 }
 
 void Analyser::setFftSize(int _nfft) {
@@ -139,6 +156,10 @@ double Analyser::getLastPitchFrame() {
     std::lock_guard<std::mutex> lock(mutex);
 
     return pitchTrack.back();
+}
+
+void Analyser::setFrameCallback(std::function<void()> callback) {
+    newFrameCallback = callback;
 }
 
 void Analyser::_updateFrameCount() {

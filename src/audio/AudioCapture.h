@@ -7,9 +7,6 @@
 
 #include <portaudio.h>
 #include <Eigen/Core>
-#include <string>
-#include <memory>
-#include <vector>
 #include "RingBuffer.h"
 
 #define CAPTURE_DURATION 35.0
@@ -27,8 +24,10 @@ public:
     AudioCapture();
     ~AudioCapture();
 
-    void openInputStream();
-    void startInputStream();
+    void openInputDevice(int id);
+    void openOutputDevice(int id);
+    void startStream();
+    void closeStream();
 
     static int readCallback(const void * input, void * output,
                      unsigned long frameCount,
@@ -45,7 +44,7 @@ private:
     PaError err;
     PaStream * stream;
 
-    PaStreamParameters inputParameters;
+    PaStreamParameters parameters;
     double sampleRate;
 
     // Ring buffer

@@ -7,6 +7,7 @@
 
 #include <QtWidgets>
 #include <QSharedPointer>
+#include "../../audio/AudioDevices.h"
 #include "../canvas/AnalyserCanvas.h"
 
 extern QFont appFont;
@@ -21,8 +22,10 @@ protected:
     void closeEvent(QCloseEvent * event);
 
 private:
+    void updateDevices();
     void updateFields();
 
+    AudioDevices devs;
     Analyser analyser;
 
     QTimer timer;
@@ -33,14 +36,22 @@ private:
     QHBoxLayout * hLayout3;
     QFormLayout * fLayout4;
     QHBoxLayout * hLayout5;
+    QVBoxLayout * vLayout6;
+
+    QComboBox * inputDevIn;
+    QComboBox * inputDevOut;
+    QPushButton * inputDevRefresh;
 
     QCheckBox * inputToggleSpectrum;
     QComboBox * inputFftSize;
+
     QSpinBox * inputLpOrder;
     QSpinBox * inputMaxFreq;
+
     QComboBox * inputFreqScale;
     QSpinBox * inputFrameSpace;
     QDoubleSpinBox * inputWindowSpan;
+
     std::array<QPushButton *, 4> inputFormantColor;
 
     AnalyserCanvas * canvas;

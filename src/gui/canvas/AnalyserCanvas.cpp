@@ -40,31 +40,14 @@ AnalyserCanvas::AnalyserCanvas(Analyser & analyser) noexcept(false)
         0x7FFF00,
         0x57C8C8,
     };
+
+    analyser.setFrameCallback([&]() { renderFrame(); });
 }
 
 void AnalyserCanvas::render() { 
 
-    if (analyser.isAnalysing()) {
-        const int nframe = analyser.getFrameCount();
-        const int xstep = std::max(targetWidth / nframe, 1);
-       
-        QPixmap tracksSnapshot = tracks.copy(0, 0, actualWidth, targetHeight);
-        tracks.fill(Qt::transparent);
-        QPainter scrollPainter(&tracks); 
-        scrollPainter.drawPixmap(QPoint(-xstep, 0), tracksSnapshot);
-        scrollPainter.end();
-
-        renderPitchTrack();
-        renderFormantTrack();
-
-        QPixmap spectrogramSnapshot = spectrogram.copy(0, 0, actualWidth, targetHeight);
-        spectrogram.fill(Qt::transparent);
-        scrollPainter.begin(&spectrogram);
-        scrollPainter.drawPixmap(QPoint(-xstep, 0), spectrogramSnapshot);
-        scrollPainter.end();
-        renderSpectrogram();
-    }
-
+    std::lock_guard<std::mutex> guard(frameLock);
+    
     const double scaleFactor = static_cast<double>(targetWidth) / static_cast<double>(actualWidth);
 
     painter.scale(scaleFactor, 1);
@@ -80,12 +63,37 @@ void AnalyserCanvas::render() {
 
 }
 
+void AnalyserCanvas::renderFrame() {
+    std::lock_guard<std::mutex> guard(frameLock);
+
+    const int nframe = analyser.getFrameCount();
+    const int xstep = actualWidth / nframe;
+  
+    QPainter scrollPainter;
+
+    QPixmap tracksSnapshot = tracks.copy(0, 0, actualWidth, targetHeight);
+    tracks.fill(Qt::transparent);
+    scrollPainter.begin(&tracks); 
+    scrollPainter.drawPixmap(QPoint(-xstep, 0), tracksSnapshot);
+    scrollPainter.end();
+
+    renderPitchTrack();
+    renderFormantTrack();
+
+    QPixmap spectrogramSnapshot = spectrogram.copy(0, 0, actualWidth, targetHeight);
+    spectrogram.fill(Qt::transparent);
+    scrollPainter.begin(&spectrogram);
+    scrollPainter.drawPixmap(QPoint(-xstep, 0), spectrogramSnapshot);
+    scrollPainter.end();
+
+    renderSpectrogram();
+
+}
+
 void AnalyserCanvas::renderFormantTrack() {
-    constexpr int formantRadius = 2;
-   
     const int nframe = analyser.getFrameCount();
     const int iframe = nframe - 1;
-    const int xstep = std::max(targetWidth / nframe, 1);
+    const int xstep = actualWidth / nframe;
     const int x = iframe * xstep;
 
     const auto & frame = analyser.getLastFormantFrame();
@@ -121,7 +129,7 @@ void AnalyserCanvas::renderPitchTrack() {
     const int nframe = analyser.getFrameCount();
     const int iframe = nframe - 1;
     
-    const int xstep = std::max(targetWidth / nframe, 1);
+    const int xstep = actualWidth / nframe;
     const int x = iframe * xstep;
 
     const double pitch = analyser.getLastPitchFrame();
@@ -158,8 +166,8 @@ void AnalyserCanvas::renderScaleAndCursor() {
             painter.drawRect(targetWidth - ruleSmall, y - 1, ruleSmall, 3);
         }
         else {
-            painter.setPen(QColor(0xBBBBBB));
-            painter.setBrush(QColor(0XBBBBBB));
+            painter.setPen(QColor(0xFFFFFF));
+            painter.setBrush(QColor(0XFFFFFF));
             painter.drawRect(targetWidth - ruleBig, y - 1, ruleBig, 3);
 
             QSize sz = metrics.size(Qt::TextSingleLine, QString::number(frequency));
@@ -170,14 +178,14 @@ void AnalyserCanvas::renderScaleAndCursor() {
                 y += 2 + sz.height() / 4;
             }
 
-            painter.setPen(0xBBBBBB);
+            painter.setPen(0xFFFFFF);
             painter.drawText(targetWidth - 1 - ruleBig - sz.width(), y + sz.height() / 4, QString::number(frequency));
         }
     }
 
     const int nframe = analyser.getFrameCount();
     const int xstep = std::max(targetWidth / nframe, 1);
-    const int x = selectedFrame * xstep;
+    const int x = (selectedFrame * xstep * targetWidth) / actualWidth;
     const int y = yFromFrequency(selectedFrequency);
 
     // Draw a vertical line where the selected frame is.
@@ -185,6 +193,7 @@ void AnalyserCanvas::renderScaleAndCursor() {
     painter.drawLine(x, 0, x, targetHeight);
     painter.drawLine(0, y, targetWidth, y);
     // Draw freq string right next to it.
+    painter.setPen(0xFFFFFF);
     QString cursorFreqStr = QString("%1 Hz").arg(round(selectedFrequency));
     painter.drawText(targetWidth - ruleBig
                      - metrics.horizontalAdvance(QString::number(round(maximumFrequency)))
@@ -271,12 +280,15 @@ void AnalyserCanvas::keyPressEvent(QKeyEvent * event) {
 }
 
 void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
-    const auto p = event->pos();
+    const auto p = event->localPos();
 
     const int nframe = analyser.getFrameCount();
     const double maximumFrequency = analyser.getMaximumFrequency();
 
-    selectedFrame = std::clamp<int>(p.x() / std::max(targetWidth / nframe, 1), 0, nframe - 1);
+    const int xstep = actualWidth / nframe;
+    const double scaleFactor = static_cast<double>(actualWidth) / static_cast<double>(targetWidth);
+    selectedFrame = (p.x() * scaleFactor) / xstep;
+    //selectedFrame = std::clamp<int>(int(p.x() * scaleFactor) / xstep, 0, nframe - 1);
     selectedFrequency = std::clamp<double>(frequencyFromY(p.y()), 0.0, maximumFrequency);
 }
 
@@ -338,24 +350,26 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
 {
     targetWidth = width();
     targetHeight = height();
- 
+
     const int nframe = analyser.getFrameCount();
     const int xstep = std::max(targetWidth / nframe, 1);
     actualWidth = nframe * xstep;
 
     if (spectrogram.width() != actualWidth || spectrogram.height() != targetHeight) {
+        frameLock.lock();
+        
         spectrogram = QPixmap(actualWidth, targetHeight);
         spectrogram.fill(Qt::black);
-    }
-
-    if (tracks.width() != actualWidth || tracks.height() != targetHeight) {
+        
         tracks = QPixmap(actualWidth, targetHeight);
         tracks.fill(Qt::transparent);
+        
+        frameLock.unlock();
     }
     
     painter.begin(this);
     
-    painter.setRenderHints(QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
+    painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
     painter.fillRect(0, 0, targetWidth, targetHeight, Qt::black);
    
     render();

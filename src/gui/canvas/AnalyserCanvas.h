@@ -7,6 +7,7 @@
 
 #include <QtWidgets>
 #include <QTimer>
+#include <mutex>
 #include "../../Exceptions.h"
 #include "../../analysis/Analyser.h"
 
@@ -36,6 +37,7 @@ protected:
 
 private:
     void render();
+    void renderFrame();
     void renderPitchTrack();
     void renderFormantTrack();
     void renderSpectrogram();
@@ -47,6 +49,7 @@ private:
     // Graphics-related members
     QPainter painter;
     QTimer timer;
+    std::mutex frameLock;
 
     std::array<QColor, 4> formantColors;
 

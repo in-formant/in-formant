@@ -20,7 +20,27 @@ MainWindow::MainWindow()
         hLayout2 = new QHBoxLayout;
         vLayout1->addLayout(hLayout2);
         {
+            vLayout6 = new QVBoxLayout;
+            vLayout6->setSizeConstraint(QLayout::SetMaximumSize);
+            vLayout6->setAlignment(Qt::AlignLeft);
+            hLayout2->addLayout(vLayout6);
+            {
+                inputDevIn = new QComboBox;
+                inputDevIn->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+
+                inputDevRefresh = new QPushButton("Refresh list");
+                inputDevRefresh->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+
+                connect(inputDevRefresh, &QPushButton::clicked,
+                        [&]() { updateDevices(); });
+
+                vLayout6->addWidget(inputDevIn, 0, Qt::AlignLeft);
+                vLayout6->addWidget(inputDevRefresh, 0, Qt::AlignLeft);
+            }
+
             hLayout5 = new QHBoxLayout;
+            vLayout6->setSizeConstraint(QLayout::SetMaximumSize);
+            vLayout6->setAlignment(Qt::AlignCenter);
             hLayout2->addLayout(hLayout5);
             {
                 for (int i = 0; i < 4; ++i) {
@@ -31,19 +51,19 @@ MainWindow::MainWindow()
 
                     fieldFormant.push_back(field);
 
-                    hLayout5->addWidget(field);
+                    hLayout5->addWidget(field, 0, Qt::AlignCenter);
                 }
             }
 
             fieldPitch = new QLineEdit;
-            palette.setColor(QPalette::Text, Qt::cyan);
-            fieldPitch->setPalette(palette);
 
             fieldPitch->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
             fieldPitch->setReadOnly(true);
 
-            hLayout2->addWidget(fieldPitch);
+            hLayout2->addWidget(fieldPitch, 0, Qt::AlignCenter);
         }
+
+        vLayout1->addSpacing(16);
 
         hLayout3 = new QHBoxLayout;
         vLayout1->addLayout(hLayout3);
@@ -107,7 +127,6 @@ MainWindow::MainWindow()
 
                 for (int nb = 0; nb < 4; ++nb) {
                     auto input = new QPushButton;
-                    input->setAutoFillBackground(true);
                     
                     connect(input, &QPushButton::clicked,
                             [=] () {
@@ -117,7 +136,9 @@ MainWindow::MainWindow()
                                     QString("Select F%1 color").arg(nb + 1),
                                     QColorDialog::DontUseNativeDialog
                                 );
-                                canvas->setFormantColor(nb, c);
+                                if (c.isValid()) {
+                                    canvas->setFormantColor(nb, c);
+                                }
                             });
 
                     inputFormantColor[nb] = input;
@@ -146,6 +167,7 @@ MainWindow::MainWindow()
     setWindowTitle(WINDOW_TITLE);
     resize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
+    updateDevices();
     analyser.startThread();
 
     timer.callOnTimeout(this, [&]() {
@@ -170,20 +192,20 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::updateFields() {
 
-    QPalette palette = this->palette();
-
     int frame = canvas->getSelectedFrame();
 
     const auto & formants = analyser.getFormantFrame(frame);
     double pitch = analyser.getPitchFrame(frame);
 
+    QPalette palette = this->palette();
+
     if (pitch > 0) {
-        palette.setColor(QPalette::Text, Qt::cyan);
         fieldPitch->setText(QString("Fo = %1 Hz").arg(pitch, 0, 'f', 1));
+        fieldPitch->setStyleSheet("color: cyan");
     } else {
         fieldPitch->setText("Unvoiced");
+        fieldPitch->setStyleSheet(QString("color: %1").arg(palette.color(QPalette::Text).name()));
     }
-    fieldPitch->setPalette(palette);
     fieldPitch->adjustSize();
 
     for (int i = 0; i < 4; ++i) {
@@ -195,8 +217,44 @@ void MainWindow::updateFields() {
         }
 
         const QColor c = canvas->getFormantColor(i);
-        inputFormantColor[i]->setStyleSheet(QString("background-color: %1").arg(c.name()));
+        inputFormantColor[i]->setStyleSheet(QString(" \
+            QPushButton \
+            { \
+                background-color: %1; \
+                border: 1px solid #32414B; \
+                border-radius: 4px; \
+                padding: 5px; \
+                outline: none; \
+                min-width: 80px; \
+            } \
+            QPushButton:hover \
+            { \
+                border: 1px solid #148CD2; \
+            } \
+        ").arg(c.name()));
     }
 
 }
 
+void MainWindow::updateDevices()
+{
+    const auto & inputs = devs.getInputs();
+    const auto & outputs = devs.getOutputs();
+
+    inputDevIn->disconnect();
+    inputDevIn->clear();
+
+    for (const auto & dev : inputs) {
+        const QString name = QString::fromLocal8Bit(dev.name.c_str());
+        inputDevIn->addItem(name, dev.id);
+    }
+
+    inputDevIn->setCurrentIndex(inputDevIn->findData(Pa_GetDefaultInputDevice()));
+    
+    connect(inputDevIn, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            [&](const int index) {
+                if (index >= 0) {
+                    analyser.setInputDevice(inputDevIn->itemData(index).toInt());
+                }
+            });
+}

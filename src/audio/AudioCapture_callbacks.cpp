@@ -7,8 +7,8 @@
 
 using namespace Eigen;
 
-template<typename T>
-static void convertToFloat(ArrayXd & dst, T * src, unsigned long len, T offset, T max);
+template<typename T, T min, T max>
+static void convertToFloat(ArrayXd & dst, T * src, unsigned long len);
 
 int AudioCapture::readCallback(const void * input, void * output,
                                unsigned long frameCount,
@@ -26,19 +26,19 @@ int AudioCapture::readCallback(const void * input, void * output,
     }
     else if (ctx->format == paInt32) {
         auto inPtr = static_cast<const int32_t *>(input);
-        convertToFloat<const int32_t>(block, inPtr, frameCount, 0, INT32_MAX);
+        convertToFloat<const int32_t, 0, INT32_MAX>(block, inPtr, frameCount);
     }
     else if (ctx->format == paInt16) {
         auto inPtr = static_cast<const int16_t *>(input);
-        convertToFloat<const int16_t>(block, inPtr, frameCount, 0, INT16_MAX);
+        convertToFloat<const int16_t, 0, INT16_MAX>(block, inPtr, frameCount);
     }
     else if (ctx->format == paInt8) {
         auto inPtr = static_cast<const int8_t *>(input);
-        convertToFloat<const int8_t>(block, inPtr, frameCount, 0, INT8_MAX);
+        convertToFloat<const int8_t, 0, INT8_MAX>(block, inPtr, frameCount);
     }
     else if (ctx->format == paUInt8) {
         auto inPtr = static_cast<const uint8_t *>(input);
-        convertToFloat<const uint8_t>(block, inPtr, frameCount, 128, INT8_MAX);
+        convertToFloat<const uint8_t, 128, INT8_MAX>(block, inPtr, frameCount);
     }
 
     ctx->buffer.writeInto(block);
@@ -47,8 +47,8 @@ int AudioCapture::readCallback(const void * input, void * output,
 
 }
 
-template<typename T>
-void convertToFloat(ArrayXd & dst, T * src, unsigned long len, T offset, T max)
+template<typename T, T offset, T max>
+void convertToFloat(ArrayXd & dst, T * src, unsigned long len)
 {
     for (int i = 0; i < len; ++i) {
         dst(i) = static_cast<double>(offset + src[i]) / static_cast<double>(max);

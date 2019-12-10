@@ -26,7 +26,8 @@ set(SOURCES
         analysis/parts/spectrum.cpp
         audio/AudioCapture.cpp
         audio/AudioCapture_callbacks.cpp
-        audio/AudioCapture.h
+        audio/AudioDevices.cpp
+        audio/AudioDevices.h
         audio/RingBuffer.cpp
         audio/RingBuffer.h
         gui/canvas/AnalyserCanvas.cpp
@@ -74,7 +75,8 @@ set(SOURCES
         lib/MFCC/MFCC.h)
 
 set(QT_SOURCES
-        ../resources.qrc)
+        ../resources.qrc
+        ../stylesheets/qdarkstyle/style.qrc)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(PortAudio REQUIRED)

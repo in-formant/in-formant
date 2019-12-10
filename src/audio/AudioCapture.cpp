@@ -26,28 +26,20 @@ static constexpr std::array<double, 5> preferredSampleRates = {
     48000,
 };
 
-template<typename T>
-static void convertEndian(T array[], int length);
-
 AudioCapture::AudioCapture() {
+
+    stream = nullptr;
 
     err = Pa_Initialize();
     if (err != paNoError) {
         throw PaException("Unable to initialise", err);
     }
 
-    // Open and start input stream.
-    openInputStream();
-    startInputStream();
-
 }
 
 AudioCapture::~AudioCapture() {
 
-    err = Pa_CloseStream(stream);
-    if (err != paNoError) {
-        std::cerr << "Unable to close stream: " << Pa_GetErrorText(err) << std::endl;
-    }
+    closeStream();
 
     err = Pa_Terminate();
     if (err != paNoError) {
@@ -56,24 +48,22 @@ AudioCapture::~AudioCapture() {
 
 }
 
-void AudioCapture::openInputStream() {
+void AudioCapture::openInputDevice(int id) {
 
-    inputParameters.device = Pa_GetDefaultInputDevice();
-    if (inputParameters.device == paNoDevice) {
-        throw PaException("Unable to open stream", "no default input device");
-    }
-    inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
-    inputParameters.hostApiSpecificStreamInfo = nullptr;
+    memset(&parameters, 0, sizeof(parameters));
+    parameters.device = id;
+    parameters.suggestedLatency = Pa_GetDeviceInfo(id)->defaultLowInputLatency;
+    parameters.hostApiSpecificStreamInfo = nullptr;
 
     for (int channelCount : preferredLayouts) {
-        inputParameters.channelCount = channelCount;
+        parameters.channelCount = channelCount;
 
         for (PaSampleFormat format : preferredFormats) {
-            inputParameters.sampleFormat = format;
+            parameters.sampleFormat = format;
 
             for (double preferredSampleRate : preferredSampleRates) {
 
-                err = Pa_IsFormatSupported(&inputParameters, nullptr, preferredSampleRate);
+                err = Pa_IsFormatSupported(&parameters, nullptr, preferredSampleRate);
                 if (err == paFormatIsSupported) {
                     sampleRate = preferredSampleRate;
                     goto found;
@@ -84,12 +74,12 @@ void AudioCapture::openInputStream() {
 
 found:
 
-    audioContext.format = inputParameters.sampleFormat;
+    audioContext.format = parameters.sampleFormat;
     audioContext.buffer.setCapacity(BUFFER_SAMPLE_COUNT(sampleRate));
 
     err = Pa_OpenStream(
             &stream,
-            &inputParameters,
+            &parameters,
             nullptr,
             sampleRate,
             paFramesPerBufferUnspecified,
@@ -98,11 +88,55 @@ found:
             &audioContext);
 
     if (err != paNoError) {
-        throw PaException("Unable to open stream", err);
+        throw PaException("Unable to open input stream", err);
     }
 }
 
-void AudioCapture::startInputStream() {
+void AudioCapture::openOutputDevice(int id) {
+
+    memset(&parameters, 0, sizeof(parameters));
+    parameters.device = id;
+    parameters.suggestedLatency = Pa_GetDeviceInfo(id)->defaultLowOutputLatency;
+    parameters.hostApiSpecificStreamInfo = nullptr;
+
+    for (int channelCount : preferredLayouts) {
+        parameters.channelCount = channelCount;
+
+        for (PaSampleFormat format : preferredFormats) {
+            parameters.sampleFormat = format;
+
+            for (double preferredSampleRate : preferredSampleRates) {
+
+                err = Pa_IsFormatSupported(nullptr, &parameters, preferredSampleRate);
+                if (err == paFormatIsSupported) {
+                    sampleRate = preferredSampleRate;
+                    goto found;
+                }
+            }
+        }
+    }
+
+found:
+
+    audioContext.format = parameters.sampleFormat;
+    audioContext.buffer.setCapacity(BUFFER_SAMPLE_COUNT(sampleRate));
+
+    err = Pa_OpenStream(
+            &stream,
+            nullptr,
+            &parameters,
+            sampleRate,
+            paFramesPerBufferUnspecified,
+            paClipOff,
+            &readCallback,
+            &audioContext);
+
+    if (err != paNoError) {
+        throw PaException("Unable to open output stream", err);
+    }
+}
+
+void AudioCapture::startStream() {
 
     err = Pa_StartStream(stream);
     if (err != paNoError) {
@@ -110,6 +144,17 @@ void AudioCapture::startInputStream() {
     }
 
 }
+
+void AudioCapture::closeStream() {
+
+    if (stream != nullptr) {
+        err = Pa_CloseStream(stream);
+        if (err != paNoError) {
+            std::cerr << "Unable to close stream: " << Pa_GetErrorText(err) << std::endl;
+        }
+    }
+}
+
 
 int AudioCapture::getSampleRate() const noexcept {
     return sampleRate;
@@ -120,24 +165,3 @@ void AudioCapture::readBlock(Eigen::ArrayXd & capture) noexcept {
     audioContext.buffer.readFrom(capture);
 }
 
-template<typename T>
-void convertEndian(T array[], int length) {
-
-    static_assert(CHAR_BIT == 8, "CHAR_BIT != 8");
-
-    union {
-        T u;
-        unsigned char u8[sizeof(T)];
-    } source, dest;
-
-    for (int k = 0; k < length; ++k) {
-        source.u = array[k];
-
-        for (size_t ib = 0; ib < sizeof(T); ++ib) {
-            dest.u8[ib] = source.u8[sizeof(T) - ib - 1];
-        }
-
-        array[k] = dest.u;
-    }
-
-}

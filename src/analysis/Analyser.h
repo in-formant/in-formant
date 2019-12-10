@@ -27,6 +27,9 @@ public:
     void stopThread();
 
     void toggle();
+    
+    void setInputDevice(int id);
+    void setOutputDevice(int id);
 
     void setSpectrum(bool);
     void setFftSize(int);
@@ -53,6 +56,8 @@ public:
     [[nodiscard]] const Formant::Frame & getLastFormantFrame();
     [[nodiscard]] double getLastPitchFrame();
 
+    void setFrameCallback(std::function<void()> callback);
+
 private:
     void _updateFrameCount();
 
@@ -66,7 +71,10 @@ private:
     void analyseFormantLp();
     void analyseFormantDeep();
 
+    std::mutex audioLock;
     AudioCapture audioCapture;
+
+    std::function<void()> newFrameCallback;
 
     // Parameters.
     std::chrono::duration<double, std::milli> frameSpace;

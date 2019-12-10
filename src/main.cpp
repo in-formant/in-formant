@@ -20,6 +20,12 @@ int main(int argc, char * argv[])
     appFont.setPixelSize(16);
     app.setFont(appFont);
 
+    QFile themeFile(":/stylesheets/qdarkstyle/style.qss");
+    themeFile.open(QFile::ReadOnly | QFile::Text);
+    QTextStream stream(&themeFile);
+    app.setStyleSheet(stream.readAll());
+    themeFile.close();
+
     Analyser analyser;
     MainWindow mainWindow;
 
