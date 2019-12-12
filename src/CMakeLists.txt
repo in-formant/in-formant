@@ -75,8 +75,7 @@ set(SOURCES
         lib/MFCC/MFCC.h)
 
 set(QT_SOURCES
-        ../resources.qrc
-        ../stylesheets/breeze.qrc)
+       ../resources.qrc)
 
 if (APPLE)
     set(CMAKE_PREFIX_PATH $ENV{OSXCROSS}/target)
@@ -94,7 +93,6 @@ set(CMAKE_FIND_ROOT_PATH "${TORCH_INSTALL_DIR}")
 find_package(Torch REQUIRED)
 
 include_directories(
-        ${PROJECT_SOURCE_DIR}/libs
         ${EIGEN_INCLUDE_DIR}
         ${PORTAUDIO_INCLUDE_DIRS}
         ${FFTW_INCLUDE_DIRS}
