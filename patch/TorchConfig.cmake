@@ -40,8 +40,8 @@ if (ON)
   find_package(Caffe2 REQUIRED PATHS ${CMAKE_CURRENT_LIST_DIR}/../Caffe2)
 endif()
 
+set(LIB_SUFF_BAK ${CMAKE_FIND_LIBRARY_SUFFIXES})
 if (WIN32)
-  set(LIB_SUFF_BAK ${CMAKE_FIND_LIBRARY_SUFFIXES})
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
 endif()
 
@@ -107,6 +107,4 @@ endif()
 
 find_package_handle_standard_args(torch DEFAULT_MSG TORCH_LIBRARY TORCH_INCLUDE_DIRS)
 
-if (WIN32)
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ${LIB_SUFF_BAK})
-endif()
+set(CMAKE_FIND_LIBRARY_SUFFIXES ${LIB_SUFF_BAK})

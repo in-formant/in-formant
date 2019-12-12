@@ -7,8 +7,7 @@
 
 using namespace Eigen;
 
-void Analyser::resampleAudio() {
-    const double newFs = 2 * maximumFrequency;
+void Analyser::resampleAudio(double newFs) {
     x = std::move(Resample::resample(x, fs, newFs, 50));
     fs = newFs;
 }

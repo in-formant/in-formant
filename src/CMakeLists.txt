@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.0)
 project(main)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -76,7 +76,11 @@ set(SOURCES
 
 set(QT_SOURCES
         ../resources.qrc
-        ../stylesheets/qdarkstyle/style.qrc)
+        ../stylesheets/breeze.qrc)
+
+if (APPLE)
+    set(CMAKE_PREFIX_PATH $ENV{OSXCROSS}/target)
+endif()
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(PortAudio REQUIRED)

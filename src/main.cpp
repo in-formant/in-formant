@@ -16,11 +16,11 @@ int main(int argc, char * argv[])
 {
     QApplication app(argc, argv);
 
-    appFont = QFont(loadFont(":/fonts/Roboto/Roboto-Regular.ttf"));
+    appFont = QFont(loadFont(":fonts/Roboto/Roboto-Regular.ttf"));
     appFont.setPixelSize(16);
     app.setFont(appFont);
 
-    QFile themeFile(":/stylesheets/qdarkstyle/style.qss");
+    QFile themeFile(":dark.qss");
     themeFile.open(QFile::ReadOnly | QFile::Text);
     QTextStream stream(&themeFile);
     app.setStyleSheet(stream.readAll());

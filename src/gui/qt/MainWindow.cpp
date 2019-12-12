@@ -3,6 +3,7 @@
 //
 
 #include "MainWindow.h"
+#include "../../lib/FFT/FFT.h"
 
 MainWindow::MainWindow()
     : analyser() {
@@ -187,6 +188,7 @@ MainWindow::~MainWindow() {
 void MainWindow::closeEvent(QCloseEvent *event) {
 
     analyser.stopThread();
+    all_fft_cleanup();
 
 }
 

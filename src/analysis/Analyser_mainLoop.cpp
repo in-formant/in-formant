@@ -46,12 +46,15 @@ void Analyser::update()
    
     // Analyse spectrum if enabled.
     analyseSpectrum();
+
+    // Resample audio for pitch analysis.
+    resampleAudio(16000);
             
     // Get a pitch estimate.
     analysePitch();
 
     // Resample audio for LP analysis.
-    resampleAudio();
+    resampleAudio(2 * maximumFrequency);
 
     // Pre-emphasis.
     preEmphGauss();

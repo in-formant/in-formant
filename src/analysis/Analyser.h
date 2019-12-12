@@ -65,7 +65,7 @@ private:
     void update();
     void analyseSpectrum();
     void analysePitch();
-    void resampleAudio();
+    void resampleAudio(double newFs);
     void preEmphGauss();
     void analyseLp();
     void analyseFormantLp();
