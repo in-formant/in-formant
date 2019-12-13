@@ -28,13 +28,11 @@ Analyser::Analyser()
       running(false),
       newFrameCallback([](){})
 {
-    fs = audioCapture.getSampleRate();
-
     frameCount = 0;
     _updateFrameCount();
 
     // Initialize the audio frames to zero.
-    x.setZero(CAPTURE_SAMPLE_COUNT(fs));
+    x.setZero(512);
     
     setInputDevice(Pa_GetDefaultInputDevice());
 }
@@ -61,6 +59,8 @@ void Analyser::setInputDevice(int id) {
     std::lock_guard<std::mutex> guard(audioLock);
     audioCapture.closeStream();
     audioCapture.openInputDevice(id);
+    fs = audioCapture.getSampleRate();
+    x.setZero(CAPTURE_SAMPLE_COUNT(fs));
     audioCapture.startStream();
 }
 
@@ -68,6 +68,8 @@ void Analyser::setOutputDevice(int id) {
     std::lock_guard<std::mutex> guard(audioLock);
     audioCapture.closeStream();
     audioCapture.openOutputDevice(id);
+    fs = audioCapture.getSampleRate();
+    x.setZero(CAPTURE_SAMPLE_COUNT(fs));
     audioCapture.startStream();
 }
 

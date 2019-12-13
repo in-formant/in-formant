@@ -15,7 +15,7 @@
 #define WINDOW_WIDTH  1280
 #define WINDOW_HEIGHT 720
 
-class AnalyserCanvas : public QOpenGLWidget {
+class AnalyserCanvas : public QWidget {
     Q_OBJECT
 public:
     AnalyserCanvas(Analyser & analyser) noexcept(false);
@@ -26,9 +26,13 @@ public:
     void setFrequencyScale(int type);
     void setDrawSpectrum(bool draw);
     void setFormantColor(int formantNb, const QColor & color);
+    void setMinGainSpectrum(int gain);
+    void setMaxGainSpectrum(int gain);
 
     bool getDrawSpectrum() const;
     const QColor & getFormantColor(int formantNb) const;
+    int getMinGainSpectrum() const;
+    int getMaxGainSpectrum() const;
 
 protected:
     void keyPressEvent(QKeyEvent * event) override;
@@ -52,6 +56,7 @@ private:
     std::mutex frameLock;
 
     std::array<QColor, 4> formantColors;
+    int minGain, maxGain;
 
     QPixmap spectrogram;
     QPixmap tracks;

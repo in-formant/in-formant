@@ -9,8 +9,6 @@
 
 using namespace Eigen;
 
-static constexpr double mindB = -60;
-static constexpr double maxdB = 30;
 static constexpr int cmrCount = 9;
 static const std::array<QColor, cmrCount> cmrMap = {
     QColor(0, 0, 0),
@@ -29,6 +27,8 @@ AnalyserCanvas::AnalyserCanvas(Analyser & analyser) noexcept(false)
       maxFreq(0),
       drawSpectrum(true),
       frequencyScaleType(2),
+      minGain(-60),
+      maxGain(0),
       analyser(analyser)
 {
     setFocusPolicy(Qt::StrongFocus);
@@ -77,8 +77,8 @@ void AnalyserCanvas::renderFrame() {
     scrollPainter.drawPixmap(QPoint(-xstep, 0), tracksSnapshot);
     scrollPainter.end();
 
-    renderPitchTrack();
     renderFormantTrack();
+    renderPitchTrack();
 
     QPixmap spectrogramSnapshot = spectrogram.copy(0, 0, actualWidth, targetHeight);
     spectrogram.fill(Qt::transparent);
@@ -229,9 +229,9 @@ void AnalyserCanvas::renderSpectrogram()
             continue;
 
         double amplitude = abs(sframe.spec(i));
-        double dB = std::clamp(20.0 * log10(amplitude), mindB, maxdB);
+        double dB = std::clamp<double>(20.0 * log10(amplitude), minGain, maxGain);
        
-        double cmrInd = (cmrCount - 1) - (cmrCount - 1) * static_cast<double>(maxdB - dB) / static_cast<double>(maxdB - mindB);
+        double cmrInd = (cmrCount - 1) - (cmrCount - 1) * static_cast<double>(maxGain - dB) / static_cast<double>(maxGain - minGain);
         
         int ileft = floor(cmrInd);
         int r, g, b;
@@ -405,4 +405,20 @@ void AnalyserCanvas::setFormantColor(int formantNb, const QColor & color) {
 
 const QColor & AnalyserCanvas::getFormantColor(int formantNb) const {
     return formantColors.at(formantNb);
+}
+
+void AnalyserCanvas::setMinGainSpectrum(int gain) {
+    minGain = gain;
+}
+
+void AnalyserCanvas::setMaxGainSpectrum(int gain) {
+    maxGain = gain;
+}
+
+int AnalyserCanvas::getMinGainSpectrum() const {
+    return minGain;
+}
+
+int AnalyserCanvas::getMaxGainSpectrum() const {
+    return maxGain;
 }

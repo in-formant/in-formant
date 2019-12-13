@@ -53,6 +53,8 @@ private:
     QDoubleSpinBox * inputWindowSpan;
 
     std::array<QPushButton *, 4> inputFormantColor;
+    QSpinBox * inputMinGain;
+    QSpinBox * inputMaxGain;
 
     AnalyserCanvas * canvas;
 

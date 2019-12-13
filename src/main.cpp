@@ -19,8 +19,8 @@ int main(int argc, char * argv[])
 
     app.setStyle(QStyleFactory::create("Fusion"));
 
-    appFont = QFont(loadFont(":/fonts/Roboto/Roboto-Regular.ttf"));
-    appFont.setPixelSize(18);
+    appFont = QFont(loadFont(":/fonts/Montserrat-Medium.ttf"));
+    appFont.setPixelSize(15);
     app.setFont(appFont);
 
     QPalette darkPalette;

@@ -2,7 +2,7 @@
 // Created by rika on 22/11/2019.
 //
 
-#include <numeric>
+#include <cfloat>
 #include "Pitch.h"
 #include "McLeod/MPM.h"
 
@@ -20,7 +20,7 @@ void Pitch::estimate_MPM(const ArrayXd & x, double fs, Pitch::Estimation & resul
     std::vector<int> maxPositions = MPM::peakPicking(nsdf);
     std::vector<std::pair<double, double>> estimates;
 
-    double highestAmplitude = std::numeric_limits<double>::min();
+    double highestAmplitude = -DBL_MAX;
 
     for (int i : maxPositions) {
         highestAmplitude = std::max(highestAmplitude, nsdf(i));
@@ -38,22 +38,21 @@ void Pitch::estimate_MPM(const ArrayXd & x, double fs, Pitch::Estimation & resul
     }
 
     double actualCutoff = cutoff * highestAmplitude;
-    double period = 0;
+    double pitch = 0;
 
-    for (auto i : estimates) {
-        if (std::get<1>(i) >= actualCutoff) {
-            period = std::get<0>(i);
-            break;
+    for (auto it = estimates.crbegin(); it != estimates.crend(); ++it) {
+        if (std::get<1>(*it) >= actualCutoff) {
+            pitch = fs / std::get<0>(*it);
+
+            if (pitch < lowerPitchCutoff)
+                continue;
+            else
+                break;
         }
     }
 
-    double pitchEstimate = (fs / period);
-
-    result.pitch = pitchEstimate;
-    result.isVoiced = true;
-
-    if (pitchEstimate >= lowerPitchCutoff) {
-        result.pitch = pitchEstimate;
+    if (pitch >= lowerPitchCutoff) {
+        result.pitch = pitch;
         result.isVoiced = true;
     }
     else {

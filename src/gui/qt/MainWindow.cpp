@@ -85,6 +85,27 @@ MainWindow::MainWindow()
                 connect(inputFftSize, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
                         [&](const QString value) { analyser.setFftSize(value.toInt()); });
 
+                inputMinGain = new QSpinBox;
+                inputMinGain->setRange(-200, 60);
+                inputMinGain->setSingleStep(10);
+                inputMinGain->setSuffix(" dB");
+
+                inputMaxGain = new QSpinBox;
+                inputMaxGain->setRange(-200, 60);
+                inputMaxGain->setSingleStep(10);
+                inputMaxGain->setSuffix(" dB");
+                
+                connect(inputMinGain, QOverload<int>::of(&QSpinBox::valueChanged),
+                        [&](const int value) { canvas->setMinGainSpectrum(value);
+                                               inputMaxGain->setMinimum(value + 10); });
+
+                connect(inputMaxGain, QOverload<int>::of(&QSpinBox::valueChanged),
+                        [&](const int value) { canvas->setMaxGainSpectrum(value);
+                                               inputMinGain->setMaximum(value - 10); });
+
+                inputMinGain->setValue(canvas->getMinGainSpectrum());
+                inputMaxGain->setValue(canvas->getMaxGainSpectrum());
+
                 inputLpOrder = new QSpinBox;
                 inputLpOrder->setRange(5, 22);
                 inputLpOrder->setValue(analyser.getLinearPredictionOrder());
@@ -147,6 +168,8 @@ MainWindow::MainWindow()
 
                 fLayout4->addRow(tr("Overlay spectrogram:"), inputToggleSpectrum);
                 fLayout4->addRow(tr("FFT size:"), inputFftSize);
+                fLayout4->addRow(tr("Minimum gain:"), inputMinGain);
+                fLayout4->addRow(tr("Maximum gain:"), inputMaxGain);
                 fLayout4->addRow(tr("Linear prediction order:"), inputLpOrder);
                 fLayout4->addRow(tr("Maximum frequency:"), inputMaxFreq);
                 fLayout4->addRow(tr("Frequency scale:"), inputFreqScale);

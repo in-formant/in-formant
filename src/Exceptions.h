@@ -9,8 +9,6 @@
 #include <exception>
 #include <functional>
 #include <string>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
 #include <portaudio.h>
 
 
@@ -29,16 +27,6 @@ private:
 };
 
 // Define exceptions.
-
-class SDLException : public GenericException {
-public:
-    SDLException(const char * msg) : GenericException("SDL", msg, SDL_GetError) {}
-};
-
-class TTFException : public GenericException {
-public:
-    TTFException(const char * msg) : GenericException("TTF", msg, TTF_GetError) {}
-};
 
 class PaException : public GenericException {
 public:

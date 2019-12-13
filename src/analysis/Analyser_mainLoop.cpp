@@ -43,21 +43,21 @@ void Analyser::update()
     audioCapture.readBlock(x);
     fs = audioCapture.getSampleRate();
     audioLock.unlock();
-   
-    // Analyse spectrum if enabled.
-    analyseSpectrum();
 
-    // Resample audio for pitch analysis.
-    resampleAudio(16000);
-            
-    // Get a pitch estimate.
-    analysePitch();
-
-    // Resample audio for LP analysis.
-    resampleAudio(2 * maximumFrequency);
+    // Remove DC by subtraction of the mean.
+    x -= x.mean();
 
     // Pre-emphasis.
     preEmphGauss();
+    
+    // Analyse spectrum if enabled.
+    analyseSpectrum();
+
+    // Resample audio.
+    resampleAudio(2 * maximumFrequency);
+
+    // Get a pitch estimate.
+    analysePitch();
 
     // Perform LP analysis.
     analyseLp();

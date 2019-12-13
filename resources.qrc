@@ -1,6 +1,5 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource>
-        <file>fonts/Roboto/Roboto-Regular.ttf</file>
-        <file>fonts/Roboto/Roboto-Light.ttf</file>
+        <file>fonts/Montserrat-Medium.ttf</file>
     </qresource>
 </RCC>

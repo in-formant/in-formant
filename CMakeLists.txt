@@ -9,11 +9,13 @@ if(APPLE)
     set(TORCH_URL https://download.pytorch.org/libtorch/cpu/libtorch-macos-1.3.1.zip)
 elseif(UNIX)
     set(TORCH_URL https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.3.1%2Bcpu.zip)
+    set(TORCH_SHA256 3f36d7a20e2d8e65b4ba5f6b5a8ccab0bbf65f1e1ccc9c95eb6853b2278fdf45)
 elseif(WIN32)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(TORCH_URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-debug-1.3.1.zip)
     else()
         set(TORCH_URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-1.3.1.zip)
+        set(TORCH_SHA256 75c8d03d05379531d2ba85d8c085beaf3b6b7ff73584255280d569e819d305de)
     endif()
 endif()
 
@@ -24,6 +26,7 @@ ExternalProject_Add(torch
         SOURCE_DIR ${TORCH_INSTALL_DIR}
         INSTALL_DIR ${TORCH_INSTALL_DIR}
         URL ${TORCH_URL}
+        URL_HASH SHA256=${TORCH_SHA256}
         BUILD_IN_SOURCE 1
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
@@ -38,7 +41,7 @@ ExternalProject_Add(main
         DOWNLOAD_COMMAND ""
         INSTALL_COMMAND ""
         CMAKE_COMMAND $ENV{CROSS}cmake
-        CMAKE_ARGS -DTORCH_INSTALL_DIR=${TORCH_INSTALL_DIR} -DCMAKE_MODULE_PATH=${CMAKE_SOURCE_DIR}/cmake
+        CMAKE_ARGS ${CMAKE_ARGS} -DTORCH_INSTALL_DIR=${TORCH_INSTALL_DIR} -DCMAKE_MODULE_PATH=${CMAKE_SOURCE_DIR}/cmake
 )
 
 add_custom_target(speech_analysis)
