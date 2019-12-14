@@ -13,5 +13,5 @@ void Analyser::analysePitch()
 
     Pitch::estimate_MPM(x, fs, est);
 
-    lastPitchFrame = est.isVoiced ? est.pitch : 0.0;
+    lastPitchFrame = est.isVoiced ? est.pitch : 0;
 }

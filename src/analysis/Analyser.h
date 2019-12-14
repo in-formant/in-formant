@@ -71,6 +71,7 @@ private:
     void analyseLp();
     void analyseFormantLp();
     void analyseFormantDeep();
+    void applyMedianFilters();
 
     std::mutex audioLock;
     AudioCapture audioCapture;

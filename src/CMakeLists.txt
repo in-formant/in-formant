@@ -20,6 +20,7 @@ set(SOURCES
         analysis/Analyser.h
         analysis/parts/formants.cpp
         analysis/parts/lpc.cpp
+        analysis/parts/median.cpp
         analysis/parts/pitch.cpp
         analysis/parts/preprocess.cpp
         analysis/parts/resample.cpp

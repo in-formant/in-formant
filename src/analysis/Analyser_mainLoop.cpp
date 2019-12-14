@@ -68,14 +68,23 @@ void Analyser::update()
     // Perform formant analysis from LP coefficients.
     analyseFormantLp();
 
+    // Lock the tracks to prevent data race conditions.
     mutex.lock();
+
+    // Update the tracks.
     spectra.pop_front();
     spectra.push_back(lastSpectrumFrame);
     pitchTrack.pop_front();
     pitchTrack.push_back(lastPitchFrame);
     formantTrack.pop_front();
     formantTrack.push_back(lastFormantFrame);
+    
+    // Smooth out the tracks.
+    applyMedianFilters();
+    
+    // Unock the tracks.
     mutex.unlock();
 
+    // Invoke the new-frame callback function.
     newFrameCallback();
 }
