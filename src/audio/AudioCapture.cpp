@@ -19,11 +19,11 @@ static constexpr std::array<PaSampleFormat, 5> preferredFormats = {
 };
 
 static constexpr std::array<double, 5> preferredSampleRates = {
+    48000,
+    44100,
+    32000,
     22050,
     16000,
-    32000,
-    44100,
-    48000,
 };
 
 AudioCapture::AudioCapture() {

@@ -8,18 +8,21 @@
 
 using namespace Eigen;
 
-void Analyser::preEmphGauss()
+void Analyser::applyWindow()
+{
+    // Apply Hanning window.
+    static ArrayXd win(0);
+    if (win.size() != x.size()) {
+        win = Window::createHanning(x.size());
+    }
+    x *= win;
+}
+
+void Analyser::applyPreEmphasis()
 {
     constexpr double preEmphasisFrequency = 50.0;
 
     if (preEmphasisFrequency < fs / 2.0) {
         Filter::preEmphasis(x, fs, preEmphasisFrequency);
     }
-
-    // Apply Hamming window.
-    static ArrayXd gaussian(0);
-    if (gaussian.size() != x.size()) {
-        gaussian = Window::createHamming(x.size());
-    }
-    x *= gaussian;
 }

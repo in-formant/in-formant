@@ -46,10 +46,10 @@ void Analyser::update()
 
     // Remove DC by subtraction of the mean.
     x -= x.mean();
-
-    // Pre-emphasis.
-    preEmphGauss();
     
+    // Apply windowing.
+    applyWindow();
+
     // Analyse spectrum if enabled.
     analyseSpectrum();
 
@@ -58,6 +58,9 @@ void Analyser::update()
 
     // Get a pitch estimate.
     analysePitch();
+
+    // Apply pre-emphasis.
+    applyPreEmphasis();
 
     // Perform LP analysis.
     analyseLp();

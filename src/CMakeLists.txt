@@ -21,7 +21,7 @@ set(SOURCES
         analysis/parts/formants.cpp
         analysis/parts/lpc.cpp
         analysis/parts/pitch.cpp
-        analysis/parts/preemph.cpp
+        analysis/parts/preprocess.cpp
         analysis/parts/resample.cpp
         analysis/parts/spectrum.cpp
         audio/AudioCapture.cpp
@@ -62,6 +62,7 @@ set(SOURCES
         lib/Pitch/McLeod/MPM.h
         lib/Pitch/Pitch_AMDF.cpp
         lib/Pitch/Pitch_MPM.cpp
+        lib/Pitch/Pitch_DynWav.cpp
         lib/Pitch/Pitch.h
         lib/Signal/Filter.cpp
         lib/Signal/Filter.h

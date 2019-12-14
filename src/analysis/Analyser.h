@@ -63,10 +63,11 @@ private:
 
     void mainLoop();
     void update();
+    void applyWindow();
     void analyseSpectrum();
     void analysePitch();
     void resampleAudio(double newFs);
-    void preEmphGauss();
+    void applyPreEmphasis();
     void analyseLp();
     void analyseFormantLp();
     void analyseFormantDeep();

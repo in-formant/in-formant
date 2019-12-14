@@ -8,7 +8,7 @@
 
 using namespace Eigen;
 
-constexpr double cutoff = 0.97;
+constexpr double cutoff = 0.93;
 constexpr double smallCutoff = 0.5;
 constexpr double lowerPitchCutoff = 60.0;
 
