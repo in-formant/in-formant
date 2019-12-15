@@ -44,7 +44,6 @@ void applyMedianFilter(U & list, int wlen, double& (*accessor)(T&))
     try {
         accessor(list.at(N - 1)) = (den > 0 ? sum / den : 0);
     } catch (std::exception & e) {
-        return;
     }
 }
 

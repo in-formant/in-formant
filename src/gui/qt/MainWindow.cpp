@@ -79,7 +79,7 @@ MainWindow::MainWindow()
                         [&](const bool checked) { canvas->setDrawSpectrum(checked); });
 
                 inputFftSize = new QComboBox;
-                inputFftSize->addItems({"256", "512", "1024", "2048", "4096", "8192"});
+                inputFftSize->addItems({"256", "512", "1024", "2048", "4096", "8192", "16384"});
                 inputFftSize->setCurrentIndex(1);
 
                 connect(inputFftSize, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
