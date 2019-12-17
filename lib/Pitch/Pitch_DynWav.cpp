@@ -4,6 +4,7 @@
 
 #include <cfloat>
 #include <iostream>
+#include <vector>
 #include "Pitch.h"
 
 using namespace Eigen;

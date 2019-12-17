@@ -3,15 +3,13 @@ project(libspeech)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "-static -fopenmp -fext-numeric-literals")
+set(CMAKE_CXX_FLAGS "-static")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-Os -ftree-vectorize -s -g")
 
 set(SOURCES
          Formant/Formant.cpp
          Formant/Formant.h
-         Formant/DF/features.cpp
-         Formant/DF/features.h
          LPC/Frame/LPC_Frame.cpp
          LPC/Frame/LPC_Frame.h
          LPC/Frame/LPC_Frame_auto.cpp
@@ -50,11 +48,11 @@ set(SOURCES
          MFCC/MFCC.h)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-find_package(FFTW REQUIRED DOUBLE_LIB)
+find_package(FFTW3 REQUIRED DOUBLE_LIB)
 
 include_directories(
         ${EIGEN_INCLUDE_DIR}
-        ${FFTW_INCLUDE_DIRS}
+        ${FFTW3_INCLUDE_DIRS}
 )
 
 add_library(speech ${SOURCES})

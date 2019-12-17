@@ -6,6 +6,7 @@
 #define SPEECH_ANALYSIS_BAIRSTOW_H
 
 #include <Eigen/Core>
+#include <vector>
 
 namespace Bairstow {
 
