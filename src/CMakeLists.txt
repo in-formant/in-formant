@@ -34,54 +34,10 @@ set(SOURCES
         gui/canvas/AnalyserCanvas.cpp
         gui/canvas/AnalyserCanvas.h
         gui/qt/MainWindow.cpp
-        gui/qt/MainWindow.h
-        lib/Formant/Formant.cpp
-        lib/Formant/Formant.h
-        lib/Formant/DF/features.cpp
-        lib/Formant/DF/features.h
-        lib/LPC/Frame/LPC_Frame.cpp
-        lib/LPC/Frame/LPC_Frame.h
-        lib/LPC/Frame/LPC_Frame_auto.cpp
-        lib/LPC/Frame/LPC_Frame_burg.cpp
-        lib/LPC/Frame/LPC_Frame_covar.cpp
-        lib/LPC/Frame/LPC_Frame_huber.cpp
-        lib/LPC/LPC.cpp
-        lib/LPC/LPC.h
-        lib/LPC/LPC_filter.cpp
-        lib/LPC/LPC_huber.cpp
-        lib/LPC/LPC_huber.h
-        lib/LPC/LPC_huber_stat.cpp
-        lib/Math/Bairstow.cpp
-        lib/Math/Bairstow.h
-        lib/Math/Polynomial.cpp
-        lib/Math/Polynomial.h
-        lib/Math/Viterbi.cpp
-        lib/Math/Viterbi.h
-        lib/Pitch/McLeod/autocorrelation.cpp
-        lib/Pitch/McLeod/parabolic_interpolation.cpp
-        lib/Pitch/McLeod/peak_picking.cpp
-        lib/Pitch/McLeod/MPM.h
-        lib/Pitch/Pitch_AMDF.cpp
-        lib/Pitch/Pitch_MPM.cpp
-        lib/Pitch/Pitch_DynWav.cpp
-        lib/Pitch/Pitch.h
-        lib/Signal/Filter.cpp
-        lib/Signal/Filter.h
-        lib/Signal/Resample.cpp
-        lib/Signal/Resample.h
-        lib/Signal/Window.cpp
-        lib/Signal/Window.h
-        lib/FFT/FFT.cpp
-        lib/FFT/FFT.h
-        lib/MFCC/MFCC.cpp
-        lib/MFCC/MFCC.h)
+        gui/qt/MainWindow.h)
 
 set(QT_SOURCES
        ../resources.qrc)
-
-if (APPLE)
-    set(CMAKE_PREFIX_PATH $ENV{OSXCROSS}/target)
-endif()
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(PortAudio REQUIRED)
@@ -91,25 +47,21 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
-set(CMAKE_FIND_ROOT_PATH "${TORCH_INSTALL_DIR}")
-find_package(Torch REQUIRED)
-
 include_directories(
         ${EIGEN_INCLUDE_DIR}
         ${PORTAUDIO_INCLUDE_DIRS}
-        ${FFTW_INCLUDE_DIRS}
-        ${TORCH_INCLUDE_DIRS}
         ${Qt5Widgets_INCLUDE_DIRS}
         ${OPENGL_INCLUDE_DIRS}
+        ${libspeech_INCLUDE_DIR}
 )
 
 add_executable(speech_analysis WIN32 ${SOURCES} ${QT_SOURCES})
 
 target_link_libraries(speech_analysis
+        ${libspeech_LIBRARY}
         Eigen3::Eigen
         ${PORTAUDIO_LIBRARIES}
         ${FFTW_LIBRARIES}
-        ${TORCH_LIBRARY}
         Qt5::Widgets
         OpenGL::GL)
 

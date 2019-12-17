@@ -3,7 +3,7 @@
 //
 
 #include "MainWindow.h"
-#include "../../lib/FFT/FFT.h"
+#include "FFT/FFT.h"
 
 MainWindow::MainWindow()
     : analyser() {

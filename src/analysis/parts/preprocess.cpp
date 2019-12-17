@@ -3,8 +3,8 @@
 //
 
 #include "../Analyser.h"
-#include "../../lib/Signal/Filter.h"
-#include "../../lib/Signal/Window.h"
+#include "Signal/Filter.h"
+#include "Signal/Window.h"
 
 using namespace Eigen;
 

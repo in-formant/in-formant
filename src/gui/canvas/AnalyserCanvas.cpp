@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include "AnalyserCanvas.h"
-#include "../../lib/MFCC/MFCC.h"
+#include "MFCC/MFCC.h"
 #include "../../Exceptions.h"
 
 using namespace Eigen;

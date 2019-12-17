@@ -3,7 +3,7 @@
 //
 
 #include "../Analyser.h"
-#include "../../lib/Signal/Resample.h"
+#include "Signal/Resample.h"
 
 using namespace Eigen;
 

@@ -3,7 +3,7 @@
 //
 
 #include "../Analyser.h"
-#include "../../lib/Pitch/Pitch.h"
+#include "Pitch/Pitch.h"
 
 using namespace Eigen;
 

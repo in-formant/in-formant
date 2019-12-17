@@ -6,4 +6,4 @@ mkdir -p cmake-build-release
 cd cmake-build-release
 
 cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j 4
+make -j 4 -k

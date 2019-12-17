@@ -3,9 +3,9 @@
 //
 
 #include "../Analyser.h"
-#include "../../lib/FFT/FFT.h"
-#include "../../lib/Signal/Filter.h"
-#include "../../lib/Signal/Window.h"
+#include "FFT/FFT.h"
+#include "Signal/Filter.h"
+#include "Signal/Window.h"
 
 using namespace Eigen;
 

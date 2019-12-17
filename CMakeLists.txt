@@ -5,34 +5,18 @@ include(ExternalProject)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-if(APPLE)
-    set(TORCH_URL https://download.pytorch.org/libtorch/cpu/libtorch-macos-1.3.1.zip)
-elseif(UNIX)
-    set(TORCH_URL https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.3.1%2Bcpu.zip)
-    set(TORCH_SHA256 3f36d7a20e2d8e65b4ba5f6b5a8ccab0bbf65f1e1ccc9c95eb6853b2278fdf45)
-elseif(WIN32)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(TORCH_URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-debug-1.3.1.zip)
-    else()
-        set(TORCH_URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-1.3.1.zip)
-        set(TORCH_SHA256 75c8d03d05379531d2ba85d8c085beaf3b6b7ff73584255280d569e819d305de)
-    endif()
-endif()
-
-set(TORCH_INSTALL_DIR ${CMAKE_BINARY_DIR}/libtorch)
-
-ExternalProject_Add(torch
-        PREFIX ${CMAKE_BINARY_DIR}/libtorch-log
-        SOURCE_DIR ${TORCH_INSTALL_DIR}
-        INSTALL_DIR ${TORCH_INSTALL_DIR}
-        URL ${TORCH_URL}
-        URL_HASH SHA256=${TORCH_SHA256}
-        BUILD_IN_SOURCE 1
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
+ExternalProject_Add(libspeech
+        PREFIX ${CMAKE_BINARY_DIR}/libspeech
+        SOURCE_DIR ${CMAKE_SOURCE_DIR}/lib
+        BUILD_ALWAYS 1
+        DOWNLOAD_COMMAND ""
         INSTALL_COMMAND ""
-        PATCH_COMMAND cmake -E copy ${CMAKE_SOURCE_DIR}/patch/TorchConfig.cmake ${TORCH_INSTALL_DIR}/share/cmake/Torch/TorchConfig.cmake
+        CMAKE_COMMAND $ENV{CROSS}cmake
+        CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_MODULE_PATH=${CMAKE_SOURCE_DIR}/cmake
 )
+
+set(libspeech_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/lib)
+set(libspeech_LIBRARY ${CMAKE_BINARY_DIR}/libspeech/src/libspeech-build/${CMAKE_STATIC_LIBRARY_PREFIX}speech${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 ExternalProject_Add(main
         PREFIX ${CMAKE_BINARY_DIR}/speech_analysis
@@ -41,10 +25,10 @@ ExternalProject_Add(main
         DOWNLOAD_COMMAND ""
         INSTALL_COMMAND ""
         CMAKE_COMMAND $ENV{CROSS}cmake
-        CMAKE_ARGS ${CMAKE_ARGS} -DTORCH_INSTALL_DIR=${TORCH_INSTALL_DIR} -DCMAKE_MODULE_PATH=${CMAKE_SOURCE_DIR}/cmake
+        CMAKE_ARGS ${CMAKE_ARGS} -DCMAKE_MODULE_PATH=${CMAKE_SOURCE_DIR}/cmake -Dlibspeech_INCLUDE_DIR=${libspeech_INCLUDE_DIR} -Dlibspeech_LIBRARY=${libspeech_LIBRARY}
 )
 
 add_custom_target(speech_analysis)
 
-add_dependencies(main torch)
+add_dependencies(main libspeech)
 add_dependencies(speech_analysis main)
