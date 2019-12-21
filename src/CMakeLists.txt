@@ -39,9 +39,8 @@ set(SOURCES
 set(QT_SOURCES
        ../resources.qrc)
 
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(PortAudio REQUIRED)
-find_package(FFTW REQUIRED DOUBLE_LIB)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 set(OpenGL_GL_PREFERENCE GLVND)
@@ -51,6 +50,7 @@ include_directories(
         ${EIGEN_INCLUDE_DIR}
         ${PORTAUDIO_INCLUDE_DIRS}
         ${Qt5Widgets_INCLUDE_DIRS}
+        ${FFTW3_INCLUDE_DIR}
         ${OPENGL_INCLUDE_DIRS}
         ${libspeech_INCLUDE_DIR}
 )
@@ -61,7 +61,7 @@ target_link_libraries(speech_analysis
         ${libspeech_LIBRARY}
         Eigen3::Eigen
         ${PORTAUDIO_LIBRARIES}
-        ${FFTW_LIBRARIES}
+        ${FFTW3_LIBRARY}
         Qt5::Widgets
         OpenGL::GL)
 

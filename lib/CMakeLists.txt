@@ -48,16 +48,15 @@ set(SOURCES
          MFCC/MFCC.h)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-find_package(FFTW3 REQUIRED DOUBLE_LIB)
 
 include_directories(
         ${EIGEN_INCLUDE_DIR}
-        ${FFTW3_INCLUDE_DIRS}
+        ${FFTW3_INCLUDE_DIR}
 )
 
 add_library(speech ${SOURCES})
 
 target_link_libraries(speech
         Eigen3::Eigen
-        ${FFTW_LIBRARIES})
+        ${FFTW3_LIBRARY})
 
