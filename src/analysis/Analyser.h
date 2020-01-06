@@ -11,6 +11,7 @@
 #include <thread>
 #include <memory>
 #include "../audio/AudioCapture.h"
+#include "../audio/AudioDevices.h"
 #include "../lib/Formant/Formant.h"
 
 struct SpecFrame {
@@ -21,7 +22,7 @@ struct SpecFrame {
 
 class Analyser {
 public:
-    Analyser();
+    Analyser(AudioDevices & devs);
 
     void startThread();
     void stopThread();
@@ -72,6 +73,8 @@ private:
     void analyseFormantLp();
     void analyseFormantDeep();
     void applyMedianFilters();
+
+    AudioDevices & audioDevices;
 
     std::mutex audioLock;
     AudioCapture audioCapture;

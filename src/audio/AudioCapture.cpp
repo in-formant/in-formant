@@ -26,33 +26,23 @@ static constexpr std::array<double, 5> preferredSampleRates = {
     16000,
 };
 
-AudioCapture::AudioCapture() {
-
-    stream = nullptr;
-
-    err = Pa_Initialize();
-    if (err != paNoError) {
-        throw PaException("Unable to initialise", err);
-    }
-
+AudioCapture::AudioCapture()
+    : stream(nullptr)
+{
 }
 
-AudioCapture::~AudioCapture() {
-
+AudioCapture::~AudioCapture()
+{
     closeStream();
-
-    err = Pa_Terminate();
-    if (err != paNoError) {
-        std::cerr << "Unable to terminate: " << Pa_GetErrorText(err) << std::endl;
-    }
-
 }
 
-void AudioCapture::openInputDevice(int id) {
-
+void AudioCapture::openInputDevice(int id)
+{
+    auto deviceInfo = Pa_GetDeviceInfo(id);
+    
     memset(&parameters, 0, sizeof(parameters));
     parameters.device = id;
-    parameters.suggestedLatency = Pa_GetDeviceInfo(id)->defaultLowInputLatency;
+    parameters.suggestedLatency = (deviceInfo != nullptr) ? deviceInfo->defaultLowInputLatency : (10.0 / 1000.0);
     parameters.hostApiSpecificStreamInfo = nullptr;
 
     for (int channelCount : preferredLayouts) {
@@ -92,11 +82,13 @@ found:
     }
 }
 
-void AudioCapture::openOutputDevice(int id) {
-
+void AudioCapture::openOutputDevice(int id)
+{
+    auto deviceInfo = Pa_GetDeviceInfo(id);
+    
     memset(&parameters, 0, sizeof(parameters));
     parameters.device = id;
-    parameters.suggestedLatency = Pa_GetDeviceInfo(id)->defaultLowOutputLatency;
+    parameters.suggestedLatency = (deviceInfo != nullptr) ? deviceInfo->defaultLowOutputLatency : (10.0 / 1000.0);
     parameters.hostApiSpecificStreamInfo = nullptr;
 
     for (int channelCount : preferredLayouts) {
@@ -145,8 +137,8 @@ void AudioCapture::startStream() {
 
 }
 
-void AudioCapture::closeStream() {
-
+void AudioCapture::closeStream()
+{
     if (stream != nullptr) {
         err = Pa_CloseStream(stream);
         if (err != paNoError) {

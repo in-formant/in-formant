@@ -6,7 +6,7 @@
 #include "FFT/FFT.h"
 
 MainWindow::MainWindow()
-    : analyser() {
+    : devs(), analyser(devs) {
 
     QPalette palette = this->palette();
 
@@ -273,9 +273,9 @@ void MainWindow::updateDevices()
         const QString name = QString::fromLocal8Bit(dev.name.c_str());
         inputDevIn->addItem(name, dev.id);
     }
-
-    inputDevIn->setCurrentIndex(inputDevIn->findData(Pa_GetDefaultInputDevice()));
     
+    inputDevIn->setCurrentIndex(inputDevIn->findData(devs.getDefaultInputDevice()));
+
     connect(inputDevIn, QOverload<int>::of(&QComboBox::currentIndexChanged),
             [&](const int index) {
                 if (index >= 0) {

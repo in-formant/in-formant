@@ -3,9 +3,9 @@ project(libspeech)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "-static")
+set(CMAKE_CXX_FLAGS "-static -ftree-vectorize")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-Os -ftree-vectorize -s -g")
+set(CMAKE_CXX_FLAGS_RELEASE "-Os -g")
 
 set(SOURCES
          Formant/Formant.cpp
@@ -47,16 +47,17 @@ set(SOURCES
          MFCC/MFCC.cpp
          MFCC/MFCC.h)
 
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(FFTW3 REQUIRED)
 
 include_directories(
-        ${EIGEN_INCLUDE_DIR}
-        ${FFTW3_INCLUDE_DIR}
+	${INCLUDE_DIRS}
 )
 
 add_library(speech ${SOURCES})
 
 target_link_libraries(speech
         Eigen3::Eigen
-        ${FFTW3_LIBRARY})
+	FFTW3::fftw3
+)
 

@@ -24,6 +24,8 @@ public:
     const std::vector<AudioDevice> & getInputs() const;
     const std::vector<AudioDevice> & getOutputs() const;
 
+    PaDeviceIndex getDefaultInputDevice() const;
+
 private:
     std::vector<AudioDevice> inputs;
     std::vector<AudioDevice> outputs;

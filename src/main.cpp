@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <QStyleFactory>
+#include <QSharedPointer>
 #include <iostream>
 #include "gui/qt/MainWindow.h"
 
@@ -11,7 +12,7 @@ QString loadFont(const QString & url)
     return family;
 }
 
-QFont appFont;
+QFont * appFont;
 
 int main(int argc, char * argv[])
 {
@@ -19,9 +20,11 @@ int main(int argc, char * argv[])
 
     app.setStyle(QStyleFactory::create("Fusion"));
 
-    appFont = QFont(loadFont(":/fonts/Montserrat-Medium.ttf"));
-    appFont.setPixelSize(15);
-    app.setFont(appFont);
+    QFont font(loadFont(":/fonts/Montserrat-Medium.ttf"));
+    font.setPixelSize(15);
+    app.setFont(font);
+
+    appFont = &font;
 
     QPalette darkPalette;
     darkPalette.setColor(QPalette::Window, QColor(53,53,53));
@@ -47,10 +50,23 @@ int main(int argc, char * argv[])
  
     app.setPalette(darkPalette);
 
-    Analyser analyser;
+    PaError err;
+   
+    err = Pa_Initialize();
+    if (err != paNoError) {
+        throw PaException("Unable to initialise", err);
+    }
+    
     MainWindow mainWindow;
 
-    return app.exec();
+    int ret = app.exec();
+
+    err = Pa_Terminate();
+    if (err != paNoError) {
+        throw PaException("Unable to terminate", err);
+    }
+
+    return ret;
 }
 
 #ifdef _WIN32

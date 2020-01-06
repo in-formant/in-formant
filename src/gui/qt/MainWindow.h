@@ -10,7 +10,7 @@
 #include "../../audio/AudioDevices.h"
 #include "../canvas/AnalyserCanvas.h"
 
-extern QFont appFont;
+extern QFont * appFont;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT

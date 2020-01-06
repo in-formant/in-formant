@@ -18,8 +18,9 @@ static const SpecFrame defaultSpec = {
         .spec = ArrayXd::Zero(512),
 };
 
-Analyser::Analyser()
-    : doAnalyse(true),
+Analyser::Analyser(AudioDevices & devs)
+    : audioDevices(devs),
+      doAnalyse(true),
       nfft(512),
       lpOrder(10),
       maximumFrequency(5000.0),
@@ -33,8 +34,8 @@ Analyser::Analyser()
 
     // Initialize the audio frames to zero.
     x.setZero(512);
-    
-    setInputDevice(Pa_GetDefaultInputDevice());
+
+    setInputDevice(audioDevices.getDefaultInputDevice());
 }
 
 void Analyser::startThread() {

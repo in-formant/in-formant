@@ -14,7 +14,7 @@ mkdir -p cmake-build-release-win
 cd cmake-build-release-win
 
 ${CROSS}cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j 4
+make 
 
 $MXE/tools/copydlldeps.sh \
     --infile $EXE_WINDOWS \

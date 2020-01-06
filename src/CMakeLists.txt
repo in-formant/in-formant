@@ -3,9 +3,9 @@ project(main)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "-fopenmp -fext-numeric-literals")
+set(CMAKE_CXX_FLAGS "-fext-numeric-literals -ftree-vectorize")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-Os -ftree-vectorize -s -g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O0 -g3")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -39,20 +39,14 @@ set(SOURCES
 set(QT_SOURCES
        ../resources.qrc)
 
-find_package(Eigen3 REQUIRED NO_MODULE)
-find_package(PortAudio REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
-
-set(OpenGL_GL_PREFERENCE GLVND)
-find_package(OpenGL REQUIRED)
+find_package(portaudio REQUIRED)
+find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(FFTW3 REQUIRED)
 
 include_directories(
-        ${EIGEN_INCLUDE_DIR}
-        ${PORTAUDIO_INCLUDE_DIRS}
-        ${Qt5Widgets_INCLUDE_DIRS}
-        ${FFTW3_INCLUDE_DIR}
-        ${OPENGL_INCLUDE_DIRS}
-        ${libspeech_INCLUDE_DIR}
+	${libspeech_INCLUDE_DIR}
+	${INCLUDE_DIRS}
 )
 
 add_executable(speech_analysis WIN32 ${SOURCES} ${QT_SOURCES})
@@ -60,10 +54,10 @@ add_executable(speech_analysis WIN32 ${SOURCES} ${QT_SOURCES})
 target_link_libraries(speech_analysis
         ${libspeech_LIBRARY}
         Eigen3::Eigen
-        ${PORTAUDIO_LIBRARIES}
-        ${FFTW3_LIBRARY}
-        Qt5::Widgets
-        OpenGL::GL)
+	portaudio_static
+	FFTW3::fftw3
+	Qt5::Widgets
+)
 
 if (WIN32)
 add_custom_command (TARGET speech_analysis POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::QWindowsIntegrationPlugin> $<TARGET_FILE_DIR:speech_analysis>)
