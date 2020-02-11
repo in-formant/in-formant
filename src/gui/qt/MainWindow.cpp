@@ -115,7 +115,7 @@ MainWindow::MainWindow()
 
                 inputMaxFreq = new QSpinBox;
                 inputMaxFreq->setRange(2500, 7000);
-                inputMaxFreq->setStepType(QSpinBox::AdaptiveDecimalStepType);
+                //inputMaxFreq->setStepType(QSpinBox::AdaptiveDecimalStepType);
                 inputMaxFreq->setSuffix(" Hz");
                 inputMaxFreq->setValue(analyser.getMaximumFrequency());
 
@@ -194,7 +194,7 @@ MainWindow::MainWindow()
     updateDevices();
     analyser.startThread();
 
-    timer.callOnTimeout(this, [&]() {
+    connect(&timer, &QTimer::timeout, [&]() {
         updateFields();
         canvas->repaint();
     });

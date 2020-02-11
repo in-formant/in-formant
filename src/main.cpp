@@ -57,9 +57,12 @@ int main(int argc, char * argv[])
         throw PaException("Unable to initialise", err);
     }
     
-    MainWindow mainWindow;
-
-    int ret = app.exec();
+    int ret;
+    if (true)
+    { 
+        MainWindow mainWindow;
+        ret = app.exec();
+    }
 
     err = Pa_Terminate();
     if (err != paNoError) {

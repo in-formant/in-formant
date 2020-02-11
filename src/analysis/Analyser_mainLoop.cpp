@@ -50,11 +50,11 @@ void Analyser::update()
     // Apply windowing.
     applyWindow();
 
-    // Analyse spectrum if enabled.
-    analyseSpectrum();
-
     // Resample audio.
     resampleAudio(2 * maximumFrequency);
+    
+    // Analyse spectrum if enabled.
+    analyseSpectrum();
 
     // Get a pitch estimate.
     analysePitch();
