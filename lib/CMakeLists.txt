@@ -3,9 +3,9 @@ project(libspeech)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "-static -ftree-vectorize")
+set(CMAKE_CXX_FLAGS "-static -fPIC -ftree-vectorize")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-Os -g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g")
 
 set(SOURCES
     Formant/Formant.cpp
@@ -51,7 +51,8 @@ find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(FFTW3 REQUIRED)
 
 include_directories(
-	${INCLUDE_DIRS}
+    ${EIGEN_INCLUDE_DIRS}
+    ${FFTW3_INCLUDE_DIRS}
 )
 
 add_library(speech ${SOURCES})
