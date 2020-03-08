@@ -9,12 +9,11 @@
 #include <exception>
 #include <functional>
 #include <string>
-#include <portaudio.h>
 
 
 class GenericException : public std::exception {
 public:
-    GenericException(const char * prefix, const char * msg, std::function<const char * ()> error);
+    GenericException(const char * prefix, const char * msg);
     ~GenericException();
 
     [[nodiscard]]
@@ -28,10 +27,9 @@ private:
 
 // Define exceptions.
 
-class PaException : public GenericException {
+class AudioException : public GenericException { 
 public:
-    PaException(const char * msg, int error) : GenericException("PortAudio", msg, [error]() { return Pa_GetErrorText(error); }) {}
-    PaException(const char * msg, const char * error) : GenericException("PortAudio", msg, [error]() { return error; }) {}
+    AudioException(const char * msg) : GenericException("Audio", msg) {}
 };
 
 #endif //SPEECH_ANALYSIS_EXCEPTIONS_H

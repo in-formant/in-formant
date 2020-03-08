@@ -49,18 +49,18 @@ void Analyser::update()
     
     // Apply windowing.
     applyWindow();
-
+    
+    // Apply pre-emphasis.
+    applyPreEmphasis();
+ 
+    // Get a pitch estimate.
+    analysePitch();
+   
     // Resample audio.
     resampleAudio(2 * maximumFrequency);
     
-    // Analyse spectrum if enabled.
+    // Analyse spectrum.
     analyseSpectrum();
-
-    // Get a pitch estimate.
-    analysePitch();
-
-    // Apply pre-emphasis.
-    applyPreEmphasis();
 
     // Perform LP analysis.
     analyseLp();

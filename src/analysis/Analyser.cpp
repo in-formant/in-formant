@@ -20,6 +20,7 @@ static const SpecFrame defaultSpec = {
 
 Analyser::Analyser(AudioDevices & devs)
     : audioDevices(devs),
+      audioCapture(devs.getContext()),
       doAnalyse(true),
       nfft(512),
       lpOrder(10),
@@ -35,7 +36,7 @@ Analyser::Analyser(AudioDevices & devs)
     // Initialize the audio frames to zero.
     x.setZero(512);
 
-    setInputDevice(audioDevices.getDefaultInputDevice());
+    setInputDevice(nullptr);
 }
 
 void Analyser::startThread() {
@@ -56,7 +57,7 @@ bool Analyser::isAnalysing() const {
     return doAnalyse;
 }
 
-void Analyser::setInputDevice(int id) {
+void Analyser::setInputDevice(const ma_device_id * id) {
     std::lock_guard<std::mutex> guard(audioLock);
     audioCapture.closeStream();
     audioCapture.openInputDevice(id);
@@ -65,7 +66,7 @@ void Analyser::setInputDevice(int id) {
     audioCapture.startStream();
 }
 
-void Analyser::setOutputDevice(int id) {
+void Analyser::setOutputDevice(const ma_device_id * id) {
     std::lock_guard<std::mutex> guard(audioLock);
     audioCapture.closeStream();
     audioCapture.openOutputDevice(id);
@@ -139,7 +140,7 @@ const Formant::Frame & Analyser::getFormantFrame(int _iframe) {
     std::lock_guard<std::mutex> lock(mutex);
 
     int iframe = std::clamp(_iframe, 0, frameCount - 1);
-    return formantTrack.at(iframe);
+    return smoothedFormants.at(iframe);
 }
 
 const Formant::Frame & Analyser::getLastFormantFrame() {
@@ -152,7 +153,7 @@ double Analyser::getPitchFrame(int _iframe) {
     std::lock_guard<std::mutex> lock(mutex);
 
     int iframe = std::clamp(_iframe, 0, frameCount - 1);
-    return pitchTrack.at(iframe);
+    return smoothedPitch.at(iframe);
 }
 
 double Analyser::getLastPitchFrame() {
@@ -175,12 +176,18 @@ void Analyser::_updateFrameCount() {
         spectra.insert(spectra.begin(), diff, defaultSpec);
         pitchTrack.insert(pitchTrack.begin(), diff, 0.0);
         formantTrack.insert(formantTrack.begin(), diff, defaultFrame);
+
+        smoothedPitch.insert(smoothedPitch.begin(), diff, 0.0);
+        smoothedFormants.insert(smoothedFormants.begin(), diff, defaultFrame);
     }
     else if (frameCount > newFrameCount) {
         int diff = frameCount - newFrameCount;
         spectra.erase(spectra.begin(), spectra.begin() + diff);
         pitchTrack.erase(pitchTrack.begin(), pitchTrack.begin() + diff);
         formantTrack.erase(formantTrack.begin(), formantTrack.begin() + diff);
+        
+        smoothedPitch.erase(smoothedPitch.begin(), smoothedPitch.begin() + diff);
+        smoothedFormants.erase(smoothedFormants.begin(), smoothedFormants.begin() + diff);
     }
 
     frameCount = newFrameCount;

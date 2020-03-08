@@ -2,7 +2,7 @@
 #include <QStyleFactory>
 #include <QSharedPointer>
 #include <iostream>
-#include "gui/qt/MainWindow.h"
+#include "gui/MainWindow.h"
 
 QString loadFont(const QString & url)
 {
@@ -50,26 +50,9 @@ int main(int argc, char * argv[])
  
     app.setPalette(darkPalette);
 
-    PaError err;
-   
-    err = Pa_Initialize();
-    if (err != paNoError) {
-        throw PaException("Unable to initialise", err);
-    }
-    
-    int ret;
-    if (true)
-    { 
-        MainWindow mainWindow;
-        ret = app.exec();
-    }
+    MainWindow mainWindow;
 
-    err = Pa_Terminate();
-    if (err != paNoError) {
-        throw PaException("Unable to terminate", err);
-    }
-
-    return ret;
+    return app.exec();
 }
 
 #ifdef _WIN32

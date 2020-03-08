@@ -5,10 +5,13 @@
 #ifndef SPEECH_ANALYSIS_MAINWINDOW_H
 #define SPEECH_ANALYSIS_MAINWINDOW_H
 
+#include "../audio/miniaudio.h"
 #include <QtWidgets>
 #include <QSharedPointer>
-#include "../../audio/AudioDevices.h"
-#include "../canvas/AnalyserCanvas.h"
+#include "../audio/AudioDevices.h"
+#include "AnalyserCanvas.h"
+
+Q_DECLARE_METATYPE(const ma_device_id *);
 
 extern QFont * appFont;
 

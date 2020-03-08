@@ -3,6 +3,8 @@ out.*
 pkg/
 external-*/
 
+testcase.*
+
 # Created by .ignore support plugin (hsz.mobi)
 ### C++ template
 # Prerequisites

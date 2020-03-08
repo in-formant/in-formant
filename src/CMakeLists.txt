@@ -31,24 +31,40 @@ set(SOURCES
     audio/AudioDevices.h
     audio/RingBuffer.cpp
     audio/RingBuffer.h
-    gui/canvas/AnalyserCanvas.cpp
-    gui/canvas/AnalyserCanvas.h
-    gui/qt/MainWindow.cpp
-    gui/qt/MainWindow.h)
+    audio/miniaudio.h
+    audio/implementation.cpp
+    gui/AnalyserCanvas.cpp
+    gui/AnalyserCanvas.h
+    gui/MainWindow.cpp
+    gui/MainWindow.h)
 
 set(QT_SOURCES
     qt_plugin.cpp
     ../resources.qrc)
 
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
-find_package(portaudio REQUIRED)
+if(NOT APPLE)
+    find_package(Qt5 COMPONENTS Widgets REQUIRED)
+else()
+    set(QT_PREFIX /usr/osxcross/target/macports/pkgs/opt/local/libexec/qt5)
+    set(Qt5Widgets_INCLUDE_DIRS
+        ${QT_PREFIX}/include
+        ${QT_PREFIX}/include/QtCore
+        ${QT_PREFIX}/include/QtGui
+        ${QT_PREFIX}/include/QtWidgets
+    )
+    set(Qt5Widgets_LIBRARIES
+        Qt5Core
+        Qt5Gui
+        Qt5Widgets
+    )
+endif()
+
 find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(FFTW3 REQUIRED)
 
 include_directories(
 	${libspeech_INCLUDE_DIR}
     ${Qt5Widgets_INCLUDE_DIRS}
-    ${PORTAUDIO_INCLUDE_DIRS}
     ${EIGEN_INCLUDE_DIRS}
     ${FFTW3_INCLUDE_DIRS}
 )
@@ -58,12 +74,16 @@ add_executable(speech_analysis WIN32 ${SOURCES} ${QT_SOURCES})
 target_link_libraries(speech_analysis
     ${libspeech_LIBRARY}
     Eigen3::Eigen
-	portaudio_static
 	FFTW3::fftw3
 )
 
 if(APPLE)
-
+    target_link_libraries(speech_analysis
+        -framework Qt5Core
+        ${Qt5Core_LIBRARIES}
+        ${Qt5Gui_LIBRARIES}
+        ${Qt5Widgets_LIBRARIES}
+    )
 elseif(UNIX)
     target_link_libraries(speech_analysis
         /usr/plugins/platforms/libqminimal.a

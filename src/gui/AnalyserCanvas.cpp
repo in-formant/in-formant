@@ -5,7 +5,7 @@
 #include <iostream>
 #include "AnalyserCanvas.h"
 #include "MFCC/MFCC.h"
-#include "../../Exceptions.h"
+#include "../Exceptions.h"
 
 using namespace Eigen;
 
@@ -71,12 +71,7 @@ void AnalyserCanvas::renderFrame() {
   
     QPainter scrollPainter;
 
-    QPixmap tracksSnapshot = tracks.copy(0, 0, actualWidth, targetHeight);
     tracks.fill(Qt::transparent);
-    scrollPainter.begin(&tracks); 
-    scrollPainter.drawPixmap(QPoint(-xstep, 0), tracksSnapshot);
-    scrollPainter.end();
-
     renderFormantTrack();
     renderPitchTrack();
 
@@ -92,55 +87,61 @@ void AnalyserCanvas::renderFrame() {
 
 void AnalyserCanvas::renderFormantTrack() {
     const int nframe = analyser.getFrameCount();
-    const int iframe = nframe - 1;
     const int xstep = actualWidth / nframe;
-    const int x = iframe * xstep;
-
-    const auto & frame = analyser.getLastFormantFrame();
-    const double pitch = analyser.getLastPitchFrame();
 
     QPainter tPainter(&tracks);
 
-    int formantNb = 0;
-    for (const auto & formant : frame.formant) {
-        const int y = yFromFrequency(formant.frequency);
+    for (int iframe = 0; iframe < nframe; ++iframe) {
+    
+        const int x = iframe * xstep;
 
-        QColor c;
-        if (pitch > 0) {
-            if (formantNb < 4) {
-                c = formantColors[formantNb];
-            } else {
-                c = Qt::black;
+        const auto & frame = analyser.getFormantFrame(iframe);
+        const double pitch = analyser.getPitchFrame(iframe);
+
+        int formantNb = 0;
+        for (const auto & formant : frame.formant) {
+            const int y = yFromFrequency(formant.frequency);
+
+            QColor c;
+            if (pitch > 0) {
+                if (formantNb < 4) {
+                    c = formantColors[formantNb];
+                } else {
+                    c = Qt::black;
+                }
             }
-        }
-        else {
-            c = QColor(Qt::darkGray).darker(150);
+            else {
+                c = QColor(Qt::darkGray).darker(150);
+            }
+
+            tPainter.setPen(c);
+            tPainter.setBrush(c);
+            tPainter.drawRect(x, y - 1, xstep, 2); 
+            
+            formantNb++;
         }
 
-        tPainter.setPen(c);
-        tPainter.setBrush(c);
-        tPainter.drawRect(x - 2, y - 1, xstep + 4, 3); 
-        
-        formantNb++;
     }
 }
 
 void AnalyserCanvas::renderPitchTrack() {
     const int nframe = analyser.getFrameCount();
-    const int iframe = nframe - 1;
-    
     const int xstep = actualWidth / nframe;
-    const int x = iframe * xstep;
-
-    const double pitch = analyser.getLastPitchFrame();
 
     QPainter tPainter(&tracks);
 
-    if (pitch > 0) {
-        const double y = yFromFrequency(pitch);
-        tPainter.setPen(Qt::cyan);
-        tPainter.setBrush(Qt::cyan);
-        tPainter.drawRect(x, y - 2, xstep + 1, 4);
+    for (int iframe = 0; iframe < nframe; ++iframe) {
+
+        const int x = iframe * xstep;
+
+        const double pitch = analyser.getPitchFrame(iframe);
+
+        if (pitch > 0) {
+            const double y = yFromFrequency(pitch);
+            tPainter.setPen(Qt::cyan);
+            tPainter.setBrush(Qt::cyan);
+            tPainter.drawRect(x, y - 1, xstep, 3);
+        }
     }
 }
 

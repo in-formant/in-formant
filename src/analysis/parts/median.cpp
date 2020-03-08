@@ -1,50 +1,69 @@
 #include <functional>
+#include <iostream>
+#include "MedianFilter.hpp"
 #include "../Analyser.h"
 
-template<typename U, typename T>
-static void applyMedianFilter(U & list, int wlen, double& (*accessor)(T&));
-
-inline double & getPitch(double & frm) { return std::ref(frm); }
-
-template<int i>
-inline double & getFormant(Formant::Frame & frm) { return std::ref(frm.formant.at(i).frequency); }
+static void smoothenPitch(const std::deque<double>& in, std::deque<double>& out);
+static void smoothenFormants(const Formant::Frames& in, Formant::Frames& out);
 
 void Analyser::applyMedianFilters()
 {
-    applyMedianFilter(pitchTrack, 2, &getPitch);
-    applyMedianFilter(formantTrack, 2, &getFormant<0>);
-    applyMedianFilter(formantTrack, 2, &getFormant<1>);
-    applyMedianFilter(formantTrack, 2, &getFormant<2>);
-    applyMedianFilter(formantTrack, 2, &getFormant<3>);
+    smoothenPitch(pitchTrack, smoothedPitch);
+    smoothenFormants(formantTrack, smoothedFormants);
 }
 
-template<typename U, typename T>
-void applyMedianFilter(U & list, int wlen, double& (*accessor)(T&))
+void smoothenPitch(const std::deque<double>& in, std::deque<double>& out)
 {
-    const int N = list.size();
+    constexpr int order = 5;
     
-    std::vector<double> window;
-    window.reserve(wlen);
+    static MedianFilter<double, order> filt;
 
-    double sum = 0.0;
-    double den = 0;
+    out.pop_front();
 
-    for (int k = 0; k < wlen; ++k) {
-        try {
-            double value = accessor(list.at(N - 1 - k));
-            if (value == 0) break;
+    if (in.back() != 0) {
+        out.push_back(filt.Insert(in.back()));
+    }
+    else {
+        out.push_back(0);
+    }
+}
 
-            sum += accessor(list.at(N - 1 - k));
-            den++; 
-        } catch (std::exception & e) {
+void smoothenFormants(const Formant::Frames& in, Formant::Frames& out)
+{
+    constexpr int order = 11;
+    
+    static MedianFilter<double, order> filt1;
+    static MedianFilter<double, order> filt2;
+    static MedianFilter<double, order> filt3;
+    
+    out.pop_front();
+
+    const Formant::Frame& inFrame = in.back();
+
+    const int nFormants = inFrame.nFormants;
+
+    Formant::Frame outFrame;
+    outFrame.nFormants = nFormants;
+    outFrame.formant.resize(nFormants);
+
+    for (int i = 0; i < nFormants; ++i) {
+        switch (i) {
+        case 0:
+            outFrame.formant[i].frequency = filt1.Insert(inFrame.formant[i].frequency);
+            break;
+        case 1:
+            outFrame.formant[i].frequency = filt2.Insert(inFrame.formant[i].frequency);
+            break;
+        case 2:
+            outFrame.formant[i].frequency = filt3.Insert(inFrame.formant[i].frequency);
+            break;
+        default:
+            outFrame.formant[i].frequency = inFrame.formant[i].frequency;
             break;
         }
     }
 
-    try {
-        accessor(list.at(N - 1)) = (den > 0 ? sum / den : 0);
-    } catch (std::exception & e) {
-    }
+    out.push_back(std::move(outFrame));
 }
 
 

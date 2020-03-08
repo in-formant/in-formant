@@ -5,6 +5,7 @@
 #ifndef SPEECH_ANALYSIS_ANALYSER_H
 #define SPEECH_ANALYSIS_ANALYSER_H
 
+#include "../audio/miniaudio.h"
 #include <QColor>
 #include <Eigen/Core>
 #include <deque>
@@ -29,8 +30,8 @@ public:
 
     void toggle();
     
-    void setInputDevice(int id);
-    void setOutputDevice(int id);
+    void setInputDevice(const ma_device_id * id);
+    void setOutputDevice(const ma_device_id * id);
 
     void setSpectrum(bool);
     void setFftSize(int);
@@ -99,6 +100,9 @@ private:
     std::deque<SpecFrame> spectra;
     Formant::Frames formantTrack;
     std::deque<double> pitchTrack;
+
+    Formant::Frames smoothedFormants;
+    std::deque<double> smoothedPitch;
 
     SpecFrame lastSpectrumFrame;
     Formant::Frame lastFormantFrame;

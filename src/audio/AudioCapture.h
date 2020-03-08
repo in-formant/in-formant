@@ -5,7 +5,7 @@
 #ifndef SPEECH_ANALYSIS_AUDIOCAPTURE_H
 #define SPEECH_ANALYSIS_AUDIOCAPTURE_H
 
-#include <portaudio.h>
+#include "miniaudio.h"
 #include <Eigen/Core>
 #include "RingBuffer.h"
 
@@ -16,24 +16,20 @@
 
 struct RecordContext {
     RingBuffer buffer;
-    PaSampleFormat format;
+    double sampleRate;
 };
 
 class AudioCapture {
 public:
-    AudioCapture();
+    AudioCapture(ma_context * maCtx);
     ~AudioCapture();
 
-    void openInputDevice(int id);
-    void openOutputDevice(int id);
+    void openInputDevice(const ma_device_id * id);
+    void openOutputDevice(const ma_device_id * id);
     void startStream();
     void closeStream();
 
-    static int readCallback(const void * input, void * output,
-                     unsigned long frameCount,
-                     const PaStreamCallbackTimeInfo * timeInfo,
-                     PaStreamCallbackFlags statusFlags,
-                     void * userData);
+    static void readCallback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount);
 
     [[nodiscard]]
     int getSampleRate() const noexcept;
@@ -41,10 +37,9 @@ public:
     void readBlock(Eigen::ArrayXd & capture) noexcept;
 
 private:
-    PaError err;
-    PaStream * stream;
+    ma_context * maCtx;
+    ma_device device;
 
-    PaStreamParameters parameters;
     double sampleRate;
 
     // Ring buffer

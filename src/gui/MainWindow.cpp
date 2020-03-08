@@ -269,17 +269,19 @@ void MainWindow::updateDevices()
     inputDevIn->disconnect();
     inputDevIn->clear();
 
+    inputDevIn->addItem("", QVariant::fromValue(nullptr));
+
     for (const auto & dev : inputs) {
         const QString name = QString::fromLocal8Bit(dev.name.c_str());
-        inputDevIn->addItem(name, dev.id);
+        inputDevIn->addItem(name, QVariant::fromValue(&dev.id));
     }
     
-    inputDevIn->setCurrentIndex(inputDevIn->findData(devs.getDefaultInputDevice()));
+    inputDevIn->setCurrentIndex(0);
 
     connect(inputDevIn, QOverload<int>::of(&QComboBox::currentIndexChanged),
             [&](const int index) {
                 if (index >= 0) {
-                    analyser.setInputDevice(inputDevIn->itemData(index).toInt());
+                    analyser.setInputDevice(inputDevIn->itemData(index).value<const ma_device_id *>());
                 }
             });
 }

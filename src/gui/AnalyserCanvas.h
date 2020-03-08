@@ -8,8 +8,8 @@
 #include <QtWidgets>
 #include <QTimer>
 #include <mutex>
-#include "../../Exceptions.h"
-#include "../../analysis/Analyser.h"
+#include "../Exceptions.h"
+#include "../analysis/Analyser.h"
 
 #define WINDOW_TITLE  "Speech analysis"
 #define WINDOW_WIDTH  1280
