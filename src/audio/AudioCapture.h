@@ -38,6 +38,7 @@ public:
 
 private:
     ma_context * maCtx;
+    bool deviceInit;
     ma_device device;
 
     double sampleRate;

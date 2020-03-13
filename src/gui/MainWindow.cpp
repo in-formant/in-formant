@@ -5,8 +5,40 @@
 #include "MainWindow.h"
 #include "FFT/FFT.h"
 
-MainWindow::MainWindow()
-    : devs(), analyser(devs) {
+MainWindow::MainWindow() {
+
+    std::vector<ma_backend> backends{
+        ma_backend_dsound,
+        ma_backend_winmm,
+        ma_backend_wasapi,
+
+        ma_backend_coreaudio,
+        ma_backend_sndio,
+        ma_backend_audio4,
+
+        ma_backend_alsa,
+        ma_backend_jack,
+        ma_backend_pulseaudio,
+        ma_backend_oss,
+
+        ma_backend_aaudio,
+        ma_backend_opensl,
+        ma_backend_webaudio,
+        ma_backend_null
+    };
+
+    ma_context_config ctxCfg = ma_context_config_init();
+    ctxCfg.threadPriority = ma_thread_priority_realtime;
+    ctxCfg.alsa.useVerboseDeviceEnumeration = false;
+    ctxCfg.pulse.tryAutoSpawn = true;
+    ctxCfg.jack.tryStartServer = true;
+
+    if (ma_context_init(backends.data(), backends.size(), &ctxCfg, &maCtx) != MA_SUCCESS) {
+        throw AudioException("Failed to initialise miniaudio context");
+    }
+    
+    devs = new AudioDevices(&maCtx);
+    analyser = new Analyser(&maCtx);
 
     QPalette palette = this->palette();
 
@@ -83,7 +115,7 @@ MainWindow::MainWindow()
                 inputFftSize->setCurrentIndex(1);
 
                 connect(inputFftSize, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
-                        [&](const QString value) { analyser.setFftSize(value.toInt()); });
+                        [&](const QString value) { analyser->setFftSize(value.toInt()); });
 
                 inputMinGain = new QSpinBox;
                 inputMinGain->setRange(-200, 60);
@@ -108,19 +140,19 @@ MainWindow::MainWindow()
 
                 inputLpOrder = new QSpinBox;
                 inputLpOrder->setRange(5, 22);
-                inputLpOrder->setValue(analyser.getLinearPredictionOrder());
+                inputLpOrder->setValue(analyser->getLinearPredictionOrder());
 
                 connect(inputLpOrder, QOverload<int>::of(&QSpinBox::valueChanged),
-                        [&](const int value) { analyser.setLinearPredictionOrder(value); });
+                        [&](const int value) { analyser->setLinearPredictionOrder(value); });
 
                 inputMaxFreq = new QSpinBox;
                 inputMaxFreq->setRange(2500, 7000);
-                //inputMaxFreq->setStepType(QSpinBox::AdaptiveDecimalStepType);
+                inputMaxFreq->setStepType(QSpinBox::AdaptiveDecimalStepType);
                 inputMaxFreq->setSuffix(" Hz");
-                inputMaxFreq->setValue(analyser.getMaximumFrequency());
+                inputMaxFreq->setValue(analyser->getMaximumFrequency());
 
                 connect(inputMaxFreq, QOverload<int>::of(&QSpinBox::valueChanged),
-                        [&](const int value) { analyser.setMaximumFrequency(value); });
+                        [&](const int value) { analyser->setMaximumFrequency(value); });
 
                 inputFreqScale = new QComboBox;
                 inputFreqScale->addItems({"Linear", "Logarithmic", "Mel"});
@@ -133,19 +165,19 @@ MainWindow::MainWindow()
                 inputFrameSpace->setRange(5, 30);
                 inputFrameSpace->setSingleStep(1);
                 inputFrameSpace->setSuffix(" ms");
-                inputFrameSpace->setValue(analyser.getFrameSpace().count());
+                inputFrameSpace->setValue(analyser->getFrameSpace().count());
 
                 connect(inputFrameSpace, QOverload<int>::of(&QSpinBox::valueChanged),
-                        [&](const int value) { analyser.setFrameSpace(std::chrono::milliseconds(value)); });
+                        [&](const int value) { analyser->setFrameSpace(std::chrono::milliseconds(value)); });
 
                 inputWindowSpan = new QDoubleSpinBox;
                 inputWindowSpan->setRange(2, 30);
                 inputWindowSpan->setSingleStep(0.5);
                 inputWindowSpan->setSuffix(" s");
-                inputWindowSpan->setValue(analyser.getWindowSpan().count());
+                inputWindowSpan->setValue(analyser->getWindowSpan().count());
 
                 connect(inputWindowSpan, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-                        [&](const double value) { analyser.setWindowSpan(std::chrono::milliseconds(int(1000 * value))); });
+                        [&](const double value) { analyser->setWindowSpan(std::chrono::milliseconds(int(1000 * value))); });
 
                 for (int nb = 0; nb < 4; ++nb) {
                     auto input = new QPushButton;
@@ -192,7 +224,7 @@ MainWindow::MainWindow()
     resize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
     updateDevices();
-    analyser.startThread();
+    analyser->startThread();
 
     connect(&timer, &QTimer::timeout, [&]() {
         updateFields();
@@ -206,11 +238,15 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow() {
     delete central;
+    
+    delete devs;
+    delete analyser;
+    ma_context_uninit(&maCtx);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
 
-    analyser.stopThread();
+    analyser->stopThread();
     all_fft_cleanup();
 
 }
@@ -219,8 +255,8 @@ void MainWindow::updateFields() {
 
     int frame = canvas->getSelectedFrame();
 
-    const auto & formants = analyser.getFormantFrame(frame);
-    double pitch = analyser.getPitchFrame(frame);
+    const auto & formants = analyser->getFormantFrame(frame);
+    double pitch = analyser->getPitchFrame(frame);
 
     QPalette palette = this->palette();
 
@@ -263,8 +299,8 @@ void MainWindow::updateFields() {
 
 void MainWindow::updateDevices()
 {
-    const auto & inputs = devs.getInputs();
-    const auto & outputs = devs.getOutputs();
+    const auto & inputs = devs->getInputs();
+    const auto & outputs = devs->getOutputs();
 
     inputDevIn->disconnect();
     inputDevIn->clear();
@@ -281,7 +317,7 @@ void MainWindow::updateDevices()
     connect(inputDevIn, QOverload<int>::of(&QComboBox::currentIndexChanged),
             [&](const int index) {
                 if (index >= 0) {
-                    analyser.setInputDevice(inputDevIn->itemData(index).value<const ma_device_id *>());
+                    analyser->setInputDevice(inputDevIn->itemData(index).value<const ma_device_id *>());
                 }
             });
 }

@@ -28,8 +28,9 @@ private:
     void updateDevices();
     void updateFields();
 
-    AudioDevices devs;
-    Analyser analyser;
+    ma_context maCtx;
+    AudioDevices * devs;
+    Analyser * analyser;
 
     QTimer timer;
 

@@ -21,18 +21,16 @@ void Analyser::analyseSpectrum()
 
     if (nfft < N) {
         // Grab the center segment of the signal (to respect windowing).
-        xin = x.segment(N / 2 - nfft / 2, nfft);
+        xin = x.segment(N / 2 - nfft / 2, nfft) * Window::createHanning(nfft);
     }
     else if (nfft > N) {
         // Zero-pad the signal.
         xin.setZero();
-        xin.segment(nfft / 2 - N / 2, N) = x;
+        xin.segment(nfft / 2 - N / 2, N) = x * Window::createHanning(N);
     }
     else {
-        xin = x;
+        xin = x * Window::createHanning(N);
     }
-
-    xin *= Window::createBlackmanHarris(nfft);
 
     rfft(nfft);
 

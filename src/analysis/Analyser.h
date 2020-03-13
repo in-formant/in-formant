@@ -23,7 +23,7 @@ struct SpecFrame {
 
 class Analyser {
 public:
-    Analyser(AudioDevices & devs);
+    Analyser(ma_context * ctx);
 
     void startThread();
     void stopThread();
@@ -74,8 +74,6 @@ private:
     void analyseFormantLp();
     void analyseFormantDeep();
     void applySmoothingFilters();
-
-    AudioDevices & audioDevices;
 
     std::mutex audioLock;
     AudioCapture audioCapture;

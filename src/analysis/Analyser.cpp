@@ -18,9 +18,8 @@ static const SpecFrame defaultSpec = {
         .spec = ArrayXd::Zero(512),
 };
 
-Analyser::Analyser(AudioDevices & devs)
-    : audioDevices(devs),
-      audioCapture(devs.getContext()),
+Analyser::Analyser(ma_context * ctx)
+    : audioCapture(ctx),
       doAnalyse(true),
       nfft(512),
       lpOrder(10),

@@ -17,9 +17,7 @@ struct AudioDevice {
 
 class AudioDevices {
 public:
-    AudioDevices();
-    
-    ma_context * getContext();
+    AudioDevices(ma_context * ctx);
 
     bool refreshList();
 
@@ -27,7 +25,7 @@ public:
     const std::vector<AudioDevice> & getOutputs() const;
 
 private:
-    ma_context maCtx;
+    ma_context * maCtx;
 
     std::vector<AudioDevice> inputs;
     std::vector<AudioDevice> outputs;

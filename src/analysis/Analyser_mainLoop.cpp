@@ -52,15 +52,15 @@ void Analyser::update()
 
     // Resample audio.
     resampleAudio(2 * maximumFrequency);
- 
-    // Apply windowing.
-    applyWindow();
-    
+  
     // Apply pre-emphasis.
     applyPreEmphasis();
     
     // Analyse spectrum.
     analyseSpectrum();
+ 
+    // Apply windowing.
+    applyWindow();
 
     // Perform LP analysis.
     analyseLp();

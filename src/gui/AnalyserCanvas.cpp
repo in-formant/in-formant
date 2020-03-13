@@ -22,8 +22,8 @@ static const std::array<QColor, cmrCount> cmrMap = {
     QColor(255, 255, 255)
 };
 
-AnalyserCanvas::AnalyserCanvas(Analyser & analyser) noexcept(false)
-    : selectedFrame(analyser.getFrameCount() - 1),
+AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
+    : selectedFrame(analyser->getFrameCount() - 1),
       maxFreq(0),
       drawSpectrum(true),
       frequencyScaleType(2),
@@ -41,7 +41,7 @@ AnalyserCanvas::AnalyserCanvas(Analyser & analyser) noexcept(false)
         0x57C8C8,
     };
 
-    analyser.setFrameCallback([&]() { renderFrame(); });
+    analyser->setFrameCallback([&]() { renderFrame(); });
 }
 
 void AnalyserCanvas::render() { 
@@ -66,7 +66,7 @@ void AnalyserCanvas::render() {
 void AnalyserCanvas::renderFrame() {
     std::lock_guard<std::mutex> guard(frameLock);
 
-    const int nframe = analyser.getFrameCount();
+    const int nframe = analyser->getFrameCount();
     const int xstep = actualWidth / nframe;
   
     QPainter scrollPainter;
@@ -86,7 +86,7 @@ void AnalyserCanvas::renderFrame() {
 }
 
 void AnalyserCanvas::renderFormantTrack() {
-    const int nframe = analyser.getFrameCount();
+    const int nframe = analyser->getFrameCount();
     const int xstep = actualWidth / nframe;
 
     QPainter tPainter(&tracks);
@@ -102,8 +102,8 @@ void AnalyserCanvas::renderFormantTrack() {
     
         const int x = iframe * xstep;
 
-        const auto & frame = analyser.getFormantFrame(iframe);
-        const double pitch = analyser.getPitchFrame(iframe);
+        const auto & frame = analyser->getFormantFrame(iframe);
+        const double pitch = analyser->getPitchFrame(iframe);
 
         int formantNb = 0;
         for (const auto & formant : frame.formant) {
@@ -152,7 +152,7 @@ void AnalyserCanvas::renderFormantTrack() {
 }
 
 void AnalyserCanvas::renderPitchTrack() {
-    const int nframe = analyser.getFrameCount();
+    const int nframe = analyser->getFrameCount();
     const int xstep = actualWidth / nframe;
 
     QPainter tPainter(&tracks);
@@ -164,7 +164,7 @@ void AnalyserCanvas::renderPitchTrack() {
 
         const int x = iframe * xstep;
 
-        const double pitch = analyser.getPitchFrame(iframe);
+        const double pitch = analyser->getPitchFrame(iframe);
 
         if (pitch > 0) {
             const double y = yFromFrequency(pitch);
@@ -190,7 +190,7 @@ void AnalyserCanvas::renderScaleAndCursor() {
     constexpr int ruleSmall = 4;
     constexpr int ruleBig = 8;
     
-    const double maximumFrequency = analyser.getMaximumFrequency();
+    const double maximumFrequency = analyser->getMaximumFrequency();
 
     QFont font = painter.font();
     int oldSize = font.pixelSize();
@@ -225,7 +225,7 @@ void AnalyserCanvas::renderScaleAndCursor() {
         }
     }
 
-    const int nframe = analyser.getFrameCount();
+    const int nframe = analyser->getFrameCount();
     const int xstep = std::max(targetWidth / nframe, 1);
     const int x = (selectedFrame * xstep * targetWidth) / actualWidth;
     const int y = yFromFrequency(selectedFrequency);
@@ -251,13 +251,13 @@ void AnalyserCanvas::renderScaleAndCursor() {
 void AnalyserCanvas::renderSpectrogram()
 {
     struct Rectangle { int r, g, b; QRect rect; };
-    const int nframe = analyser.getFrameCount();
+    const int nframe = analyser->getFrameCount();
     const int iframe = nframe - 1;
     
     const int xstep = std::max(targetWidth / nframe, 1);
     const int x = iframe * xstep;
 
-    const SpecFrame & sframe = analyser.getLastSpectrumFrame();
+    const SpecFrame & sframe = analyser->getLastSpectrumFrame();
     const double delta = sframe.fs / (2 * sframe.nfft);
 
     QVector<Rectangle> rects;
@@ -317,15 +317,15 @@ void AnalyserCanvas::keyPressEvent(QKeyEvent * event) {
         window()->close();
     }
     else if (key == Qt::Key_P) {
-        analyser.toggle();
+        analyser->toggle();
     }
 }
 
 void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
     const auto p = event->localPos();
 
-    const int nframe = analyser.getFrameCount();
-    const double maximumFrequency = analyser.getMaximumFrequency();
+    const int nframe = analyser->getFrameCount();
+    const double maximumFrequency = analyser->getMaximumFrequency();
 
     const int xstep = actualWidth / nframe;
     const double scaleFactor = static_cast<double>(actualWidth) / static_cast<double>(targetWidth);
@@ -335,7 +335,7 @@ void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
 }
 
 double AnalyserCanvas::yFromFrequency(double frequency) {
-    const double maximumFrequency = analyser.getMaximumFrequency();
+    const double maximumFrequency = analyser->getMaximumFrequency();
 
     if (maximumFrequency != maxFreq) {
         maxFreq = maximumFrequency;
@@ -362,7 +362,7 @@ double AnalyserCanvas::yFromFrequency(double frequency) {
 }
 
 double AnalyserCanvas::frequencyFromY(int y) {
-    const double maximumFrequency = analyser.getMaximumFrequency();
+    const double maximumFrequency = analyser->getMaximumFrequency();
 
     if (maximumFrequency != maxFreq) {
         maxFreq = maximumFrequency;
@@ -393,7 +393,7 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
     targetWidth = width();
     targetHeight = height();
 
-    const int nframe = analyser.getFrameCount();
+    const int nframe = analyser->getFrameCount();
     const int xstep = std::max(targetWidth / nframe, 1);
     actualWidth = nframe * xstep;
 

@@ -18,7 +18,7 @@
 class AnalyserCanvas : public QWidget {
     Q_OBJECT
 public:
-    AnalyserCanvas(Analyser & analyser) noexcept(false);
+    AnalyserCanvas(Analyser * analyser) noexcept(false);
 
     void setSelectedFrame(int frame);
     [[nodiscard]] int getSelectedFrame() const;
@@ -70,7 +70,7 @@ private:
     int selectedFrame;
     double selectedFrequency;
 
-    Analyser & analyser;
+    Analyser * analyser;
 
     friend class Analyser;
 
