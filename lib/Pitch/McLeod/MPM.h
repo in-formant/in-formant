@@ -13,7 +13,7 @@ using Eigen::ArrayXd, Eigen::Ref;
 
 namespace MPM {
 
-    ArrayXd autocorrelation(Ref<const ArrayXd> x, int w = -1);
+    ArrayXd autocorrelation(Ref<const ArrayXd> x);
 
     std::vector<int> peakPicking(Ref<const ArrayXd> x);
 

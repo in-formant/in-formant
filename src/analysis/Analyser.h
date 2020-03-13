@@ -1,7 +1,7 @@
 //
 // Created by rika on 16/11/2019.
 //
-
+//
 #ifndef SPEECH_ANALYSIS_ANALYSER_H
 #define SPEECH_ANALYSIS_ANALYSER_H
 
@@ -73,7 +73,7 @@ private:
     void analyseLp();
     void analyseFormantLp();
     void analyseFormantDeep();
-    void applyMedianFilters();
+    void applySmoothingFilters();
 
     AudioDevices & audioDevices;
 

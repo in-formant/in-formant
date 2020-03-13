@@ -8,7 +8,33 @@
 
 AudioDevices::AudioDevices()
 {
-    if (ma_context_init(nullptr, 0, nullptr, &maCtx) != MA_SUCCESS) {
+    std::vector<ma_backend> backends{
+        ma_backend_dsound,
+        ma_backend_winmm,
+        ma_backend_wasapi,
+
+        ma_backend_coreaudio,
+        ma_backend_sndio,
+        ma_backend_audio4,
+
+        ma_backend_alsa,
+        ma_backend_jack,
+        ma_backend_pulseaudio,
+        ma_backend_oss,
+
+        ma_backend_aaudio,
+        ma_backend_opensl,
+        ma_backend_webaudio,
+        ma_backend_null
+    };
+
+    ma_context_config ctxCfg = ma_context_config_init();
+    ctxCfg.threadPriority = ma_thread_priority_realtime;
+    ctxCfg.alsa.useVerboseDeviceEnumeration = true;
+    ctxCfg.pulse.tryAutoSpawn = true;
+    ctxCfg.jack.tryStartServer = true;
+
+    if (ma_context_init(backends.data(), backends.size(), &ctxCfg, &maCtx) != MA_SUCCESS) {
         throw AudioException("Failed to initialise miniaudio context");
     }
 

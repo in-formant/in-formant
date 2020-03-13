@@ -1,12 +1,11 @@
 #include <functional>
 #include <iostream>
-#include "MedianFilter.hpp"
 #include "../Analyser.h"
 
 static void smoothenPitch(const std::deque<double>& in, std::deque<double>& out);
 static void smoothenFormants(const Formant::Frames& in, Formant::Frames& out);
 
-void Analyser::applyMedianFilters()
+void Analyser::applySmoothingFilters()
 {
     smoothenPitch(pitchTrack, smoothedPitch);
     smoothenFormants(formantTrack, smoothedFormants);
@@ -14,14 +13,15 @@ void Analyser::applyMedianFilters()
 
 void smoothenPitch(const std::deque<double>& in, std::deque<double>& out)
 {
-    constexpr int order = 5;
-    
-    static MedianFilter<double, order> filt;
+    constexpr double alpha = 0.8;
+
+    static double prevOut = 130;
 
     out.pop_front();
 
     if (in.back() != 0) {
-        out.push_back(filt.Insert(in.back()));
+        prevOut += alpha * (in.back() - prevOut);
+        out.push_back(prevOut);
     }
     else {
         out.push_back(0);
@@ -30,12 +30,11 @@ void smoothenPitch(const std::deque<double>& in, std::deque<double>& out)
 
 void smoothenFormants(const Formant::Frames& in, Formant::Frames& out)
 {
-    constexpr int order = 11;
-    
-    static MedianFilter<double, order> filt1;
-    static MedianFilter<double, order> filt2;
-    static MedianFilter<double, order> filt3;
-    
+    constexpr int numForms = 4;
+    constexpr double alpha = 0.5;
+   
+    static std::array<double, numForms> prevOut;
+
     out.pop_front();
 
     const Formant::Frame& inFrame = in.back();
@@ -47,20 +46,19 @@ void smoothenFormants(const Formant::Frames& in, Formant::Frames& out)
     outFrame.formant.resize(nFormants);
 
     for (int i = 0; i < nFormants; ++i) {
-        switch (i) {
-        case 0:
-            outFrame.formant[i].frequency = filt1.Insert(inFrame.formant[i].frequency);
-            break;
-        case 1:
-            outFrame.formant[i].frequency = filt2.Insert(inFrame.formant[i].frequency);
-            break;
-        case 2:
-            outFrame.formant[i].frequency = filt3.Insert(inFrame.formant[i].frequency);
-            break;
-        default:
-            outFrame.formant[i].frequency = inFrame.formant[i].frequency;
-            break;
+        const double value = inFrame.formant[i].frequency;
+
+        double outValue;
+
+        if (i < numForms) {
+            prevOut[i] += alpha * (value - prevOut[i]);
+            outValue = prevOut[i];
         }
+        else {
+            outValue = value;
+        }
+        
+        outFrame.formant[i].frequency = outValue;
     }
 
     out.push_back(std::move(outFrame));

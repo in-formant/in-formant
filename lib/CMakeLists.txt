@@ -5,7 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS "-static -fPIC -ftree-vectorize")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Ofast -march=native")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 
 set(SOURCES
     Formant/Formant.cpp
@@ -32,9 +33,15 @@ set(SOURCES
     Pitch/McLeod/parabolic_interpolation.cpp
     Pitch/McLeod/peak_picking.cpp
     Pitch/McLeod/MPM.h
+    Pitch/Yin/autocorrelation.cpp
+    Pitch/Yin/parabolic_interpolation.cpp
+    Pitch/Yin/difference.cpp
+    Pitch/Yin/cmnd.cpp
+    Pitch/Yin/threshold.cpp
     Pitch/Pitch_AMDF.cpp
     Pitch/Pitch_MPM.cpp
     Pitch/Pitch_DynWav.cpp
+    Pitch/Pitch_YIN.cpp
     Pitch/Pitch.h
     Signal/Filter.cpp
     Signal/Filter.h

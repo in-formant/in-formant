@@ -2,12 +2,12 @@
 // Created by rika on 22/11/2019.
 //
 
-#include "MPM.h"
+#include "YIN.h"
 #include "../../FFT/FFT.h"
 
-using Eigen::Map, Eigen::ArrayXcd;
+using namespace Eigen;
 
-ArrayXd MPM::autocorrelation(Ref<const ArrayXd> x) {
+ArrayXd YIN::autocorrelation(Ref<const ArrayXd> x) {
 
     const int N = x.size();
 

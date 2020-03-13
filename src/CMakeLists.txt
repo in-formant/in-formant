@@ -5,7 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Ofast -march=native")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -20,7 +21,7 @@ set(SOURCES
     analysis/Analyser.h
     analysis/parts/formants.cpp
     analysis/parts/lpc.cpp
-    analysis/parts/median.cpp
+    analysis/parts/smooth.cpp
     analysis/parts/pitch.cpp
     analysis/parts/preprocess.cpp
     analysis/parts/resample.cpp
@@ -118,6 +119,8 @@ elseif(UNIX)
         m
         qtpcre2
         dl
+        gthread-2.0
+        glib-2.0
         GL
         pthread
     )

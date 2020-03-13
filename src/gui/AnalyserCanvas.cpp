@@ -91,6 +91,13 @@ void AnalyserCanvas::renderFormantTrack() {
 
     QPainter tPainter(&tracks);
 
+    std::array<QPainterPath, 4> paths;
+    std::array<bool, 4> startPath;
+
+    for (bool& f : startPath) {
+        f = true;
+    }
+
     for (int iframe = 0; iframe < nframe; ++iframe) {
     
         const int x = iframe * xstep;
@@ -103,24 +110,44 @@ void AnalyserCanvas::renderFormantTrack() {
             const int y = yFromFrequency(formant.frequency);
 
             QColor c;
-            if (pitch > 0) {
+            if (formantNb < 4) {
+                c = formantColors[formantNb];
+            } else {
+                c = Qt::black;
+            }
+
+            if (pitch == 0 || formantNb >= 4) {
+                tPainter.setPen(c);
+                tPainter.setBrush(c);
+                tPainter.drawRect(x, y, xstep - 1, 1);
                 if (formantNb < 4) {
-                    c = formantColors[formantNb];
-                } else {
-                    c = Qt::black;
+                    startPath[formantNb] = true;
                 }
             }
             else {
-                c = QColor(Qt::darkGray).darker(150);
+                if (startPath[formantNb]) {
+                    paths[formantNb].moveTo(x, y);
+                    startPath[formantNb] = false;
+                }
+                else {
+                    paths[formantNb].lineTo(x, y);
+                }
             }
-
-            tPainter.setPen(c);
-            tPainter.setBrush(c);
-            tPainter.drawRect(x, y - 1, xstep, 2); 
             
             formantNb++;
         }
 
+        for (; formantNb < 4; ++formantNb) {
+            startPath[formantNb] = true;
+        }
+
+    }
+
+    tPainter.setBrush(Qt::transparent);
+
+    for (int nb = 0; nb < paths.size(); ++nb) {
+        tPainter.setPen(QPen(formantColors[nb], 1.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        tPainter.drawPath(paths[nb]);
     }
 }
 
@@ -130,6 +157,9 @@ void AnalyserCanvas::renderPitchTrack() {
 
     QPainter tPainter(&tracks);
 
+    QPainterPath path;
+    bool beginTrack = true;
+
     for (int iframe = 0; iframe < nframe; ++iframe) {
 
         const int x = iframe * xstep;
@@ -138,11 +168,22 @@ void AnalyserCanvas::renderPitchTrack() {
 
         if (pitch > 0) {
             const double y = yFromFrequency(pitch);
-            tPainter.setPen(Qt::cyan);
-            tPainter.setBrush(Qt::cyan);
-            tPainter.drawRect(x, y - 1, xstep, 3);
+            if (beginTrack) {
+                path.moveTo(x, y);
+                beginTrack = false;
+            }
+            else {
+                path.lineTo(x, y);
+            }
+        }
+        else {
+            beginTrack = true;
         }
     }
+   
+    tPainter.setBrush(Qt::transparent);
+    tPainter.setPen(QPen(Qt::cyan, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    tPainter.drawPath(path);
 }
 
 void AnalyserCanvas::renderScaleAndCursor() {
@@ -153,7 +194,7 @@ void AnalyserCanvas::renderScaleAndCursor() {
 
     QFont font = painter.font();
     int oldSize = font.pixelSize();
-    font.setPixelSize(13);
+    font.setPixelSize(14);
     painter.setFont(font);
 
     QFontMetrics metrics(font);
