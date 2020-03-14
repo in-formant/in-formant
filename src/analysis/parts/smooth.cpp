@@ -5,37 +5,28 @@
 
 // Lowpass filter (Bessel, 0.1 cutoff, order 10)
 
-constexpr double filt_gain = 3.827578934e+03;
+constexpr double filt_gain = 2.072820954e+02;
 
-constexpr int filt_ma_ord = 10;
+constexpr int filt_ma_ord = 4;
 constexpr std::array<double, filt_ma_ord> filt_ar = {
-    -2.0781475859,
-    2.7565526141,
-    -2.4655110199,
-    1.6257197445,
-    -0.7980752984,
-    0.2918280153,
-    -0.0775106550,
-    0.0142006224,
-    -0.0016096927,
-    0.0000852955,
+    -2.3695130072,
+    2.3139884144,
+    -1.0546654059,
+    0.1873794924,
 };
 
-constexpr int filt_ar_ord = 10;
+constexpr int filt_ar_ord = 4;
 constexpr std::array<double, filt_ar_ord> filt_ma = {
-    10,
-    45,
-    120,
-    210,
-    252,
-    210,
-    120,
-    45,
-    10,
+    4,
+    6,
+    4,
     1,
 };
 
-static double filterNext(std::deque<double> &prevIn, std::deque<double> &prevOut, double x);
+using IdxElt = std::pair<int, double>;
+
+static void lfilt(std::vector<IdxElt> & data);
+static void filtfilt(std::vector<IdxElt> & data);
 
 static void smoothenPitch(const std::deque<double>& in, std::deque<double>& out);
 static void smoothenFormants(const Formant::Frames& in, Formant::Frames& out);
@@ -48,84 +39,121 @@ void Analyser::applySmoothingFilters()
 
 void smoothenPitch(const std::deque<double>& in, std::deque<double>& out)
 {
-    static std::deque<double> prevIn(filt_ma_ord);
-    static std::deque<double> prevOut(filt_ar_ord);
+    static std::vector<IdxElt> input;
 
-    out.pop_front();
+    input.clear();
 
-    const double x = in.back();
-
-    if (x != 0) {
-        out.push_back(filterNext(prevIn, prevOut, x));
+    for (int i = 0; i < in.size(); ++i) {
+        if (in[i] != 0) {
+            input.push_back({i, in[i]});
+        }
     }
-    else {
-        out.push_back(0);
+
+    filtfilt(input);
+    
+    for (int i = 0; i < in.size(); ++i) {
+        out[i] = 0.0;
+    }
+
+    for (const auto & [i, x] : input) {
+        out[i] = x;
     }
 }
 
 void smoothenFormants(const Formant::Frames& in, Formant::Frames& out)
 {
-    constexpr int numForms = 4;
+    constexpr int numForms = 3;
    
-    static std::array<std::deque<double>, numForms> prevIn;
-    static std::array<std::deque<double>, numForms> prevOut;
-    static bool init = false;
+    static std::array<std::vector<IdxElt>, numForms> inputs;
 
-    if (!init) {
-        for (int i = 0; i < numForms; ++i) {
-            prevIn[i].resize(filt_ma_ord);
-            prevOut[i].resize(filt_ar_ord);
-        }
-        init = true;
+    for (int k = 0; k < numForms; ++k) {
+        inputs[k].clear();
     }
 
-    out.pop_front();
+    out.resize(in.size());
 
-    const Formant::Frame& inFrame = in.back();
+    for (int i = 0; i < in.size(); ++i) {
+        const int in_nFormants = in[i].nFormants;
 
-    const int nFormants = inFrame.nFormants;
+        if (in_nFormants > numForms) {
+            out[i].nFormants = in_nFormants;
+            out[i].formant.resize(in_nFormants, {0});
 
-    Formant::Frame outFrame;
-    outFrame.nFormants = nFormants;
-    outFrame.formant.resize(nFormants);
-
-    for (int i = 0; i < nFormants; ++i) {
-        const double value = inFrame.formant[i].frequency;
-
-        double outValue;
-
-        if (i < numForms) {
-            outValue = filterNext(prevIn[i], prevOut[i], value);
+            for (int k = numForms; k < in_nFormants; ++k) {
+                out[i].formant[k].frequency = in[i].formant[k].frequency;
+            }
         }
         else {
-            outValue = value;
+            out[i].nFormants = numForms;
+            out[i].formant.resize(numForms, {0});
         }
         
-        outFrame.formant[i].frequency = outValue;
+        for (int k = 0; k < std::min(numForms, in_nFormants); ++k) {
+            inputs[k].push_back({i, in[i].formant[k].frequency});
+        }
     }
 
-    out.push_back(std::move(outFrame));
+    for (int k = 0; k < numForms; ++k) {
+        filtfilt(inputs[k]);
+        
+        for (const auto & [i, x] : inputs[k]) {
+            out[i].formant[k].frequency = x;
+        }
+    }
 }
 
-static double filterNext(std::deque<double> &prevIn, std::deque<double> &prevOut, double x)
+static void filtfilt(std::vector<IdxElt> & data)
 {
-    x /= filt_gain;
+    if (data.size() == 0) return;
 
-    double y = x;
+    lfilt(data);
+    std::reverse(data.begin(), data.end());
+    lfilt(data);
+    std::reverse(data.begin(), data.end());
+}
+
+static void lfilt(std::vector<IdxElt> & data)
+{
+    constexpr int edge = 4 * std::max(filt_ma_ord, filt_ar_ord);
+    std::vector<IdxElt> edgeData(edge);
+
+    for (int i = 0; i < edge; ++i) {
+        edgeData[i] = data.front();
+    }
+    data.insert(data.begin(), edgeData.begin(), edgeData.end());
+
+    static std::deque<double> prevIn(filt_ma_ord);
+    static std::deque<double> prevOut(filt_ar_ord);
 
     for (int i = 0; i < filt_ma_ord; ++i) {
-        y += filt_ma[i] * prevIn[i];
+        prevIn[i] = 0.0;
     }
-
     for (int i = 0; i < filt_ar_ord; ++i) {
-        y -= filt_ar[i] * prevOut[i];
+        prevOut[i] = 0.0;
     }
 
-    prevIn.pop_back();
-    prevIn.push_front(x);
+    std::vector<IdxElt> out;
 
-    prevOut.pop_back();
-    prevOut.push_front(y);
+    for (const auto & [i, x] : data) {
+        double y = x / filt_gain;
 
-    return y;
+        for (int i = 0; i < filt_ma_ord; ++i) {
+            y += filt_ma[i] * prevIn[i];
+        }
+
+        for (int i = 0; i < filt_ar_ord; ++i) {
+            y -= filt_ar[i] * prevOut[i];
+        }
+
+        prevIn.pop_back();
+        prevIn.push_front(x / filt_gain);
+
+        prevOut.pop_back();
+        prevOut.push_front(y);
+
+        out.push_back({i, y});
+    }
+
+    data = std::move(out);
+    data.erase(data.begin(), data.begin() + edge);
 }
