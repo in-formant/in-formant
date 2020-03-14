@@ -33,7 +33,9 @@ static void smoothenFormants(const Formant::Frames& in, Formant::Frames& out);
 
 void Analyser::applySmoothingFilters()
 {
-    smoothenPitch(pitchTrack, smoothedPitch);
+    //smoothenPitch(pitchTrack, smoothedPitch);
+    smoothedPitch = pitchTrack;
+    
     smoothenFormants(formantTrack, smoothedFormants);
 }
 
