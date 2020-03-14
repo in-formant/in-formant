@@ -11,6 +11,7 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 set(SOURCES
     Formant/Formant.cpp
     Formant/Formant.h
+    Formant/track.cpp
     LPC/Frame/LPC_Frame.cpp
     LPC/Frame/LPC_Frame.h
     LPC/Frame/LPC_Frame_auto.cpp

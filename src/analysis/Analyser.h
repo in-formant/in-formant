@@ -106,6 +106,8 @@ private:
     Formant::Frame lastFormantFrame;
     double lastPitchFrame;
 
+    bool lpFailed;
+
     // Thread-related members
     std::thread thread;
     std::atomic<bool> running;

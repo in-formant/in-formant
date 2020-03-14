@@ -46,7 +46,7 @@ void Analyser::update()
 
     // Remove DC by subtraction of the mean.
     x -= x.mean();
-    
+
     // Get a pitch estimate.
     analysePitch();
 
@@ -58,7 +58,7 @@ void Analyser::update()
     
     // Analyse spectrum.
     analyseSpectrum();
- 
+
     // Apply windowing.
     applyWindow();
 
@@ -71,18 +71,33 @@ void Analyser::update()
     // Lock the tracks to prevent data race conditions.
     mutex.lock();
 
-    // Update the tracks.
-    spectra.pop_front();
-    spectra.push_back(lastSpectrumFrame);
+    // Update the raw tracks.
     pitchTrack.pop_front();
     pitchTrack.push_back(lastPitchFrame);
     formantTrack.pop_front();
     formantTrack.push_back(lastFormantFrame);
-    
-    // Smooth out the tracks.
+
+    // Apply postprocessing formant track correction.
+    formantTrack = Formant::track(
+        formantTrack,
+        3,
+        550,
+        1650,
+        2750,
+        3850,
+        4950,
+        1.0,
+        1.0,
+        1.0
+    );
+
+    spectra.pop_front();
+    spectra.push_back(lastSpectrumFrame);
+
+    // Smooth out the pitch and formant tracks.
     applySmoothingFilters();
     
-    // Unock the tracks.
+    // Unlock the tracks.
     mutex.unlock();
 
     // Invoke the new-frame callback function.

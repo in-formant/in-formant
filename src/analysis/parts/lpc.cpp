@@ -3,10 +3,11 @@
 //
 
 #include "../Analyser.h"
+#include "LPC/Frame/LPC_Frame.h"
 
 using namespace Eigen;
 
 void Analyser::analyseLp() {
-    LPC::Frames lpc = LPC::analyseBurg(x, lpOrder, fs);
-    lpcFrame = lpc.d_frames.at(0);
+    lpcFrame.nCoefficients = lpOrder;
+    lpFailed = !LPC::frame_burg(x, lpcFrame);
 }

@@ -107,6 +107,12 @@ void AnalyserCanvas::renderFormantTrack() {
 
         int formantNb = 0;
         for (const auto & formant : frame.formant) {
+            if (formant.frequency <= 0) {
+                startPath[formantNb] = true;
+                formantNb++;
+                continue;
+            }
+
             const int y = yFromFrequency(formant.frequency);
 
             QColor c;
@@ -146,7 +152,7 @@ void AnalyserCanvas::renderFormantTrack() {
     tPainter.setBrush(Qt::transparent);
 
     for (int nb = 0; nb < paths.size(); ++nb) {
-        tPainter.setPen(QPen(formantColors[nb], 1.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        tPainter.setPen(QPen(formantColors[nb], 2, Qt::SolidLine));
         tPainter.drawPath(paths[nb]);
     }
 }
@@ -182,7 +188,7 @@ void AnalyserCanvas::renderPitchTrack() {
     }
    
     tPainter.setBrush(Qt::transparent);
-    tPainter.setPen(QPen(Qt::cyan, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    tPainter.setPen(QPen(Qt::cyan, 2, Qt::SolidLine));
     tPainter.drawPath(path);
 }
 

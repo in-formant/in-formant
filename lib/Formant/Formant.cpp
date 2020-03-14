@@ -12,11 +12,6 @@
 
 using namespace Eigen;
 
-struct root {
-    double r, phi;
-    double f, b;
-};
-
 static int cauchyIntegral(const ArrayXd & p, double r1, double r2, double phi, int maxDepth);
 
 void Formant::sort(Frame & frm)
@@ -47,33 +42,41 @@ void Formant::frameFromRoots(
         double r = std::abs(v);
         double phi = std::arg(v);
 
-        // Magnitude condition for forming a formant
-        if (0.7 <= r && r < 1.0) {
-            double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
-            double b = -std::log(r) * samplingFrequency / M_PI;
-            roots.push_back({r, phi, f, b});
-        }
+        double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
+        double b = -std::log(r) * samplingFrequency / (2.0 * M_PI);
+        roots.push_back({r, phi, f, b});
     }
 
-    std::sort(roots.begin(), roots.end(),
-            [](const auto & a, const auto & b) { return std::abs(a.phi) < std::abs(b.phi); });
+    /*std::sort(roots.begin(), roots.end(),
+            [](const auto & a, const auto & b) { return std::abs(a.phi) < std::abs(b.phi); });*/
+
+    for (const auto &v : roots) {
+        frm.formant.push_back({
+            .frequency = v.f,
+            .bandwidth = v.b
+        });
+    }
+    ::Formant::sort(frm);
+    frm.nFormants = frm.formant.size();
+   
+    return;
 
     int ncand = roots.size();
-    for (int i = 0; i < ncand - 1; ++i) {
+    for (int i = 0; i < ncand; ++i) {
         double f1 = roots[i].f;
-        double f2 = roots[i + 1].f;
+        if (i < ncand - 1) {
+            double f2 = roots[i + 1].f;
 
-        // Phase condition for peak merger
-        if (std::abs(f2 - f1) > 700.0) {
-            peakMergers.push_back(roots[i]);
+            // Phase condition for peak merger
+            if (std::abs(f2 - f1) > 700.0) {
+                peakMergers.push_back(roots[i]);
+            }
+            else if (i == 0 && f2 > 1800.0) {
+                peakMergers.push_back(roots[i]);
+            }
         }
-        else if (i == 0 && f2 > 1800.0) {
-            peakMergers.push_back(roots[i]);
-        }
-        else {
-            // It's a single formant.
-            frm.formant.push_back({f1, roots[i].b});
-        }
+        
+        frm.formant.push_back({f1, roots[i].b});
     }
 
     // Calculate how many poles are exactly in peak merger candidate.
@@ -95,13 +98,10 @@ void Formant::frameFromRoots(
         int n = abs(n4 - n3);
 
         // If there *are* two poles in the section, polish them as a pair and add them.
-        if (n == 2) {
+        if (n >= 2) {
             std::vector<dcomplex> polished;
             Bairstow::solve(p, 0.9, phiPeak, polished);
             finalRoots.insert(finalRoots.end(), polished.begin(), polished.end());
-        }
-        else {
-            frm.formant.push_back({v.f, v.b});
         }
     }
 
@@ -109,14 +109,12 @@ void Formant::frameFromRoots(
         double r = std::abs(v);
 
         // Magnitude test
-        if (0.7 <= r && r < 1.0) {
-            double phi = std::arg(v);
+        double phi = std::arg(v);
 
-            double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
-            double b = -std::log(r) * samplingFrequency / M_PI;
+        double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
+        double b = -std::log(r) * samplingFrequency / (2.0 * M_PI);
 
-            frm.formant.push_back({f, b});
-        }
+        frm.formant.push_back({f, b});
     }
 
     frm.nFormants = frm.formant.size();

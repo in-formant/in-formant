@@ -7,15 +7,15 @@
 using namespace Eigen;
 
 static const Formant::Frame defaultFrame = {
-        .nFormants = 0,
-        .formant = {},
-        .intensity = 1.0,
+    .nFormants = 5,
+    .formant = {{550, 60}, {1650, 60}, {2750, 60}, {3850, 60}, {4950, 60}},
+    .intensity = 1.0,
 };
 
 static const SpecFrame defaultSpec = {
-        .fs = 0,
-        .nfft = 512,
-        .spec = ArrayXd::Zero(512),
+    .fs = 0,
+    .nfft = 512,
+    .spec = ArrayXd::Zero(512),
 };
 
 Analyser::Analyser(ma_context * ctx)

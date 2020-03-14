@@ -22,7 +22,7 @@ namespace LPC {
     void filter(const Frame & lpc, Eigen::ArrayXd & x);
     void filterInverse(const Frame & lpc, Eigen::ArrayXd & x);
 
-    bool frame_auto(const Eigen::ArrayXd & sound, Frame & lpc);
+    int frame_auto(const Eigen::ArrayXd & sound, Frame & lpc);
     bool frame_covar(const Eigen::ArrayXd & sound, Frame & lpc);
     bool frame_burg(const Eigen::ArrayXd & sound, Frame & lpc);
 

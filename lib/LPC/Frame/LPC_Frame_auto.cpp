@@ -8,7 +8,7 @@
 
 using namespace Eigen;
 
-bool LPC::frame_auto(const ArrayXd & x, LPC::Frame & lpc) {
+int LPC::frame_auto(const ArrayXd & x, LPC::Frame & lpc) {
 
     const int n = x.size();
     const int m = lpc.nCoefficients;
@@ -66,6 +66,5 @@ bool LPC::frame_auto(const ArrayXd & x, LPC::Frame & lpc) {
     std::cout << "LPC autocorrelation: (" << i << " / " << m << ")" << std::endl;
 #endif
 
-    return (i == m);
-
+    return i;
 }
