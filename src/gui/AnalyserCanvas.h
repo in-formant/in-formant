@@ -41,10 +41,10 @@ protected:
 
 private:
     void render();
-    void renderFrame();
-    void renderPitchTrack();
-    void renderFormantTrack();
-    void renderSpectrogram();
+    void renderTracks(int nframe, const std::deque<double> &pitches, const Formant::Frames &formants);
+    void renderPitchTrack(int nframe, const std::deque<double> &pitches);
+    void renderFormantTrack(int nframe, const std::deque<double> &pitches, const Formant::Frames &formants);
+    void renderSpectrogram(int nframe, int nNew, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end);
     void renderScaleAndCursor();
 
     double yFromFrequency(double frequency);

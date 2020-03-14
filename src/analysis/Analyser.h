@@ -45,6 +45,8 @@ public:
     [[nodiscard]] int getLinearPredictionOrder() const;
     [[nodiscard]] double getMaximumFrequency() const;
 
+    void setFrameCallback(std::function<void()> callback);
+
     [[nodiscard]] const std::chrono::duration<double, std::milli> & getFrameSpace() const;
     [[nodiscard]] const std::chrono::duration<double> & getWindowSpan() const;
 
@@ -57,8 +59,6 @@ public:
     [[nodiscard]] const SpecFrame & getLastSpectrumFrame();
     [[nodiscard]] const Formant::Frame & getLastFormantFrame();
     [[nodiscard]] double getLastPitchFrame();
-
-    void setFrameCallback(std::function<void()> callback);
 
 private:
     void _updateFrameCount();
@@ -77,8 +77,6 @@ private:
 
     std::mutex audioLock;
     AudioCapture audioCapture;
-
-    std::function<void()> newFrameCallback;
 
     // Parameters.
     std::chrono::duration<double, std::milli> frameSpace;
@@ -107,11 +105,27 @@ private:
     double lastPitchFrame;
 
     bool lpFailed;
+    int nbNewFrames;
 
     // Thread-related members
     std::thread thread;
     std::atomic<bool> running;
     std::mutex mutex;
+
+public:
+
+    template<typename Func1, typename Func2>
+    void callIfNewFrames(Func1 fn1, Func2 fn2)
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        
+        if (nbNewFrames > 0) {
+            fn1(frameCount, smoothedPitch, smoothedFormants);
+            fn2(frameCount, nbNewFrames, spectra.cend() - 1 - nbNewFrames, spectra.cend());
+            nbNewFrames = 0;
+        }
+    }
+
 };
 
 

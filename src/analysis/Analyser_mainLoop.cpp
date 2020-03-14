@@ -96,10 +96,10 @@ void Analyser::update()
 
     // Smooth out the pitch and formant tracks.
     applySmoothingFilters();
-    
+
+    // Set the has-new-frames flag.
+    nbNewFrames++;
+
     // Unlock the tracks.
     mutex.unlock();
-
-    // Invoke the new-frame callback function.
-    newFrameCallback();
 }

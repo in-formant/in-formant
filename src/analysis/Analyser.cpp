@@ -27,7 +27,8 @@ Analyser::Analyser(ma_context * ctx)
       frameSpace(10.0),
       windowSpan(5.0),
       running(false),
-      newFrameCallback([](){})
+      lpFailed(true),
+      nbNewFrames(0)
 {
     frameCount = 0;
     _updateFrameCount();
@@ -161,10 +162,6 @@ double Analyser::getLastPitchFrame() {
     return pitchTrack.back();
 }
 
-void Analyser::setFrameCallback(std::function<void()> callback) {
-    newFrameCallback = callback;
-}
-
 void Analyser::_updateFrameCount() {
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -191,3 +188,4 @@ void Analyser::_updateFrameCount() {
 
     frameCount = newFrameCount;
 }
+

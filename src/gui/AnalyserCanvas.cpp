@@ -41,12 +41,18 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
         0x57C8C8,
     };
 
-    analyser->setFrameCallback([&]() { renderFrame(); });
+    timer.setInterval(1000 / 60);
+    timer.callOnTimeout([this, analyser]() {
+        analyser->callIfNewFrames(
+                [this](auto&&... ts) { renderTracks(std::forward<decltype(ts)>(ts)...); },
+                [this](auto&&... ts) { renderSpectrogram(std::forward<decltype(ts)>(ts)...); }
+        );
+        repaint();
+    });
+    timer.start();
 }
 
 void AnalyserCanvas::render() { 
-
-    std::lock_guard<std::mutex> guard(frameLock);
     
     const double scaleFactor = static_cast<double>(targetWidth) / static_cast<double>(actualWidth);
 
@@ -63,30 +69,13 @@ void AnalyserCanvas::render() {
 
 }
 
-void AnalyserCanvas::renderFrame() {
-    std::lock_guard<std::mutex> guard(frameLock);
-
-    const int nframe = analyser->getFrameCount();
-    const int xstep = actualWidth / nframe;
-  
-    QPainter scrollPainter;
-
+void AnalyserCanvas::renderTracks(const int nframe, const std::deque<double> &pitches, const Formant::Frames &formants) {
     tracks.fill(Qt::transparent);
-    renderFormantTrack();
-    renderPitchTrack();
-
-    QPixmap spectrogramSnapshot = spectrogram.copy(0, 0, actualWidth, targetHeight);
-    spectrogram.fill(Qt::transparent);
-    scrollPainter.begin(&spectrogram);
-    scrollPainter.drawPixmap(QPoint(-xstep, 0), spectrogramSnapshot);
-    scrollPainter.end();
-
-    renderSpectrogram();
-
+    renderFormantTrack(nframe, pitches, formants);
+    renderPitchTrack(nframe, pitches);
 }
 
-void AnalyserCanvas::renderFormantTrack() {
-    const int nframe = analyser->getFrameCount();
+void AnalyserCanvas::renderFormantTrack(const int nframe, const std::deque<double> &pitches, const Formant::Frames &formants) {
     const int xstep = actualWidth / nframe;
 
     QPainter tPainter(&tracks);
@@ -102,8 +91,8 @@ void AnalyserCanvas::renderFormantTrack() {
     
         const int x = iframe * xstep;
 
-        const auto & frame = analyser->getFormantFrame(iframe);
-        const double pitch = analyser->getPitchFrame(iframe);
+        const auto & frame = formants.at(iframe);
+        const double pitch = pitches.at(iframe);
 
         int formantNb = 0;
         for (const auto & formant : frame.formant) {
@@ -157,8 +146,7 @@ void AnalyserCanvas::renderFormantTrack() {
     }
 }
 
-void AnalyserCanvas::renderPitchTrack() {
-    const int nframe = analyser->getFrameCount();
+void AnalyserCanvas::renderPitchTrack(const int nframe, const std::deque<double> &pitches) {
     const int xstep = actualWidth / nframe;
 
     QPainter tPainter(&tracks);
@@ -170,7 +158,7 @@ void AnalyserCanvas::renderPitchTrack() {
 
         const int x = iframe * xstep;
 
-        const double pitch = analyser->getPitchFrame(iframe);
+        const double pitch = pitches.at(iframe);
 
         if (pitch > 0) {
             const double y = yFromFrequency(pitch);
@@ -254,56 +242,64 @@ void AnalyserCanvas::renderScaleAndCursor() {
     painter.setFont(font);
 }
 
-void AnalyserCanvas::renderSpectrogram()
+void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end)
 {
     struct Rectangle { int r, g, b; QRect rect; };
-    const int nframe = analyser->getFrameCount();
-    const int iframe = nframe - 1;
     
     const int xstep = std::max(targetWidth / nframe, 1);
-    const int x = iframe * xstep;
 
-    const SpecFrame & sframe = analyser->getLastSpectrumFrame();
-    const double delta = sframe.fs / (2 * sframe.nfft);
+    QPixmap spectrogramSnapshot = spectrogram.copy(0, 0, actualWidth, targetHeight);
+    spectrogram.fill(Qt::transparent);
+    QPainter scrollPainter(&spectrogram);
+    scrollPainter.drawPixmap(QPoint(-nNew * xstep, 0), spectrogramSnapshot);
+    scrollPainter.end();
+
+    auto it = begin;
 
     QVector<Rectangle> rects;
-    rects.reserve(sframe.nfft * nframe);
-    
-    for (int i = 0; i < sframe.nfft; ++i) {
-        const double y = yFromFrequency((i - 0.5) * delta);
-        const double y2 = yFromFrequency((i + 0.5) * delta);
 
-        if (y < 0 || y2 >= targetHeight)
-            continue;
+    for (int iframe = nframe - 1 - nNew; iframe < nframe; ++iframe) {
+        const int x = iframe * xstep;
+        const auto &sframe = *(it++);
 
-        double amplitude = abs(sframe.spec(i));
-        double dB = std::clamp<double>(20.0 * log10(amplitude), minGain, maxGain);
-       
-        double cmrInd = (cmrCount - 1) - (cmrCount - 1) * static_cast<double>(maxGain - dB) / static_cast<double>(maxGain - minGain);
+        const double delta = sframe.fs / (2 * sframe.nfft);
         
-        int ileft = floor(cmrInd);
-        int r, g, b;
-        if (ileft < 0 || ileft >= cmrCount - 1) {
-            cmrMap[ileft].getRgb(&r, &g, &b);
+        for (int i = 0; i < sframe.nfft; ++i) {
+            const double y = yFromFrequency((i - 0.5) * delta);
+            const double y2 = yFromFrequency((i + 0.5) * delta);
+
+            if (y < 0 || y2 >= targetHeight)
+                continue;
+
+            double amplitude = abs(sframe.spec(i));
+            double dB = std::clamp<double>(20.0 * log10(amplitude), minGain, maxGain);
+           
+            double cmrInd = (cmrCount - 1) - (cmrCount - 1) * static_cast<double>(maxGain - dB) / static_cast<double>(maxGain - minGain);
+            
+            int ileft = floor(cmrInd);
+            int r, g, b;
+            if (ileft < 0 || ileft >= cmrCount - 1) {
+                cmrMap[ileft].getRgb(&r, &g, &b);
+            }
+            else {
+                double a = cmrInd - ileft;
+                int r1, r2, g1, g2, b1, b2;
+
+                cmrMap[ileft].getRgb(&r1, &g1, &b1);
+                cmrMap[ileft + 1].getRgb(&r2, &g2, &b2);
+
+                r = (1 - a) * r1 + a * r2;
+                g = (1 - a) * g1 + a * g2;
+                b = (1 - a) * b1 + a * b2;
+            }
+
+            Rectangle rect = {
+                r, g, b,
+                QRect(x, y, xstep, y2 - y)
+            };
+
+            rects.push_back(std::move(rect));
         }
-        else {
-            double a = cmrInd - ileft;
-            int r1, r2, g1, g2, b1, b2;
-
-            cmrMap[ileft].getRgb(&r1, &g1, &b1);
-            cmrMap[ileft + 1].getRgb(&r2, &g2, &b2);
-
-            r = (1 - a) * r1 + a * r2;
-            g = (1 - a) * g1 + a * g2;
-            b = (1 - a) * b1 + a * b2;
-        }
-
-        Rectangle rect = {
-            r, g, b,
-            QRect(x, y, xstep, y2 - y)
-        };
-
-        rects.push_back(std::move(rect));
     }
 
     QPainter sPainter(&spectrogram);
