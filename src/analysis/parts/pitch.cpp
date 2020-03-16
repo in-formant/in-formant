@@ -11,13 +11,22 @@ void Analyser::analysePitch()
 {
     Pitch::Estimation est{};
 
-    //Pitch::estimate_AMDF(x, fs, est, 90, 1000, 5.0, 0.1);
-
-    //Pitch::estimate_MPM(x, fs, est);
-
-    //Pitch::estimate_YIN(x, fs, est, 0.15);
-
-    Pitch::estimate_DynWav(x, fs, est, 9, 3000, 12, 0.4, lastPitchFrame);
+    switch (pitchAlg) {
+        case Wavelet:
+            Pitch::estimate_DynWav(x, fs, est, 9, 1500, 16, 0.5, lastPitchFrame);
+            break;
+        case McLeod:
+            Pitch::estimate_MPM(x, fs, est);
+            break;
+        case YIN:
+            Pitch::estimate_YIN(x, fs, est, 0.10);
+            break;
+        case AMDF:
+            Pitch::estimate_AMDF(x, fs, est, 90, 1000, 4.0, 0.1);
+            break;
+        default:
+            est.isVoiced = false;
+    }
 
     lastPitchFrame = est.isVoiced ? est.pitch : 0;
 }

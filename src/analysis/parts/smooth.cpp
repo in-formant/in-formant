@@ -1,25 +1,30 @@
 #include <functional>
 #include <iostream>
 #include <deque>
+#include "MedianFilter.hpp"
 #include "../Analyser.h"
 
-// Lowpass filter (Bessel, 0.1 cutoff, order 10)
+// Lowpass filter (Bessel, 0.08 cutoff, order 6)
 
-constexpr double filt_gain = 2.072820954e+02;
+constexpr double filt_gain = 8.441780385e+02;
 
-constexpr int filt_ma_ord = 4;
+constexpr int filt_ma_ord = 6;
 constexpr std::array<double, filt_ma_ord> filt_ar = {
-    -2.3695130072,
-    2.3139884144,
-    -1.0546654059,
-    0.1873794924,
+    -2.5821171196,
+    3.1008466477,
+    -2.1439107533,
+    0.8850057404,
+    -0.2045193570,
+    0.0205082331
 };
 
-constexpr int filt_ar_ord = 4;
+constexpr int filt_ar_ord = 6;
 constexpr std::array<double, filt_ar_ord> filt_ma = {
-    4,
     6,
-    4,
+    15,
+    20,
+    15,
+    6,
     1,
 };
 

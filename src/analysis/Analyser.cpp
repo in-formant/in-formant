@@ -8,7 +8,7 @@ using namespace Eigen;
 
 static const Formant::Frame defaultFrame = {
     .nFormants = 5,
-    .formant = {{550, 60}, {1650, 60}, {2750, 60}, {3850, 60}, {4950, 60}},
+    .formant = {{500, 60}, {1850, 60}, {2750, 60}, {3850, 60}, {4950, 60}},
     .intensity = 1.0,
 };
 
@@ -28,7 +28,8 @@ Analyser::Analyser(ma_context * ctx)
       windowSpan(5.0),
       running(false),
       lpFailed(true),
-      nbNewFrames(0)
+      nbNewFrames(0),
+      pitchAlg(Wavelet)
 {
     frameCount = 0;
     _updateFrameCount();
@@ -115,6 +116,11 @@ void Analyser::setWindowSpan(const std::chrono::duration<double> & _windowSpan) 
 
 const std::chrono::duration<double> & Analyser::getWindowSpan() const {
     return windowSpan;
+}
+
+void Analyser::setPitchAlgorithm(enum PitchAlg _pitchAlg)
+{
+    pitchAlg = _pitchAlg;
 }
 
 int Analyser::getFrameCount() {

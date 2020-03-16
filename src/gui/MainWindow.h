@@ -60,6 +60,8 @@ private:
     QSpinBox * inputMinGain;
     QSpinBox * inputMaxGain;
 
+    QComboBox * inputPitchAlg;
+
     AnalyserCanvas * canvas;
 
     QLineEdit * fieldPitch;

@@ -21,6 +21,13 @@ struct SpecFrame {
     Eigen::ArrayXd spec;
 };
 
+enum PitchAlg {
+    Wavelet = 0,
+    McLeod,
+    YIN,
+    AMDF,
+};
+
 class Analyser {
 public:
     Analyser(ma_context * ctx);
@@ -39,6 +46,7 @@ public:
     void setMaximumFrequency(double);
     void setFrameSpace(const std::chrono::duration<double, std::milli> & frameSpace);
     void setWindowSpan(const std::chrono::duration<double> & windowSpan);
+    void setPitchAlgorithm(enum PitchAlg);
 
     [[nodiscard]] bool isAnalysing() const;
     [[nodiscard]] int getFftSize() const;
@@ -87,6 +95,8 @@ private:
     int nfft;
     double maximumFrequency;
     int lpOrder;
+
+    PitchAlg pitchAlg;
 
     // Intermediate variables for analysis.
     Eigen::ArrayXd x;

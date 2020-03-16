@@ -8,9 +8,9 @@
 MainWindow::MainWindow() {
 
     std::vector<ma_backend> backends{
-        ma_backend_dsound,
-        ma_backend_winmm,
         ma_backend_wasapi,
+        ma_backend_winmm,
+        ma_backend_dsound,
 
         ma_backend_coreaudio,
         ma_backend_sndio,
@@ -197,6 +197,17 @@ MainWindow::MainWindow() {
 
                     inputFormantColor[nb] = input;
                 }
+                 
+                inputPitchAlg = new QComboBox;
+                inputPitchAlg->addItems({
+                    "Wavelet",
+                    "McLeod",
+                    "YIN",
+                    "AMDF",
+                });
+
+                connect(inputPitchAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                        [&](const int value) { analyser->setPitchAlgorithm(static_cast<PitchAlg>(value)); });
 
                 fLayout4->addRow(tr("Overlay spectrogram:"), inputToggleSpectrum);
                 fLayout4->addRow(tr("FFT size:"), inputFftSize);
@@ -212,6 +223,8 @@ MainWindow::MainWindow() {
                     const QString labelStr = QString("F%1 color:").arg(nb + 1);
                     fLayout4->addRow(tr(qPrintable(labelStr)), inputFormantColor[nb]);
                 }
+
+                fLayout4->addRow(tr("Pitch algorithm:"), inputPitchAlg);
             }
 
             hLayout3->addWidget(canvas);

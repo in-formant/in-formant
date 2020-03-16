@@ -82,13 +82,13 @@ void Analyser::update()
         formantTrack,
         3,
         550,
-        1650,
+        1850,
         2750,
         3850,
         4950,
-        1.0,
-        1.0,
-        1.0
+        2.0,
+        0.2,
+        0.8
     );
 
     spectra.pop_front();

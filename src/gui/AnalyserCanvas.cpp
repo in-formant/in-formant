@@ -41,7 +41,7 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
         0x57C8C8,
     };
 
-    timer.setInterval(1000 / 60);
+    timer.setInterval(1000 / 120);
     timer.callOnTimeout([this, analyser]() {
         analyser->callIfNewFrames(
                 [this](auto&&... ts) { renderTracks(std::forward<decltype(ts)>(ts)...); },
@@ -52,7 +52,9 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
     timer.start();
 }
 
-void AnalyserCanvas::render() { 
+void AnalyserCanvas::render() {
+
+    std::lock_guard<std::mutex> guard(frameLock);
     
     const double scaleFactor = static_cast<double>(targetWidth) / static_cast<double>(actualWidth);
 
@@ -70,12 +72,15 @@ void AnalyserCanvas::render() {
 }
 
 void AnalyserCanvas::renderTracks(const int nframe, const std::deque<double> &pitches, const Formant::Frames &formants) {
+    std::lock_guard<std::mutex> guard(frameLock);
+
     tracks.fill(Qt::transparent);
     renderFormantTrack(nframe, pitches, formants);
     renderPitchTrack(nframe, pitches);
 }
 
 void AnalyserCanvas::renderFormantTrack(const int nframe, const std::deque<double> &pitches, const Formant::Frames &formants) {
+
     const int xstep = actualWidth / nframe;
 
     QPainter tPainter(&tracks);
@@ -244,6 +249,8 @@ void AnalyserCanvas::renderScaleAndCursor() {
 
 void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end)
 {
+    std::lock_guard<std::mutex> guard(frameLock);
+    
     struct Rectangle { int r, g, b; QRect rect; };
     
     const int xstep = std::max(targetWidth / nframe, 1);
