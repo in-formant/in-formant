@@ -14,7 +14,7 @@ double Viterbi::combinations(int n, int k)
     return (double) result;
 }
 
-void Viterbi::viterbi(
+bool Viterbi::viterbi(
         int numberOfFrames, int maxnCandidates,
         NumberOfCandidatesFn getNumberOfCandidates,
         LocalCostFn getLocalCost,
@@ -48,7 +48,7 @@ void Viterbi::viterbi(
             if (place == 0) {
                 // cannot compute a track because of weird values.
                 std::cerr << "Formant: viterbi weird values" << std::endl;
-                place = 1;
+                return false;
             }
             delta(iframe, icand2) = maximum;
             psi(iframe, icand2) = place;
@@ -69,6 +69,8 @@ void Viterbi::viterbi(
         putResult(iframe, place, closure);
         place = psi(iframe, place);
     }
+
+    return true;
 }
 
 struct parm2 {
@@ -120,7 +122,7 @@ static void putResult_n(int iframe, int jplace, void *closure)
     }
 }
 
-void Viterbi::viterbiMulti(
+bool Viterbi::viterbiMulti(
         int nframe, int ncand, int ntrack,
         MultiLocalCostFn getLocalCost,
         MultiTransitionCostFn getTransitionCost,
@@ -129,13 +131,13 @@ void Viterbi::viterbiMulti(
 {
     if (ntrack > ncand) {
         std::cerr << "Formant: viterbi number of tracks should not excess number of candidates" << std::endl;
-        return;
+        return false;;
     }
 
     int ncomb = std::round(combinations(ncand, ntrack));
     if (ncomb > 10'000'000) {
         std::cerr << "Formant: viterbi unrealistically high number of combinations" << std::endl;
-        return;
+        return false;
     }
 
     /*
@@ -189,10 +191,11 @@ void Viterbi::viterbiMulti(
         .closure = closure
     };
 
-    Viterbi::viterbi(nframe, ncomb,
-                     getNumberOfCandidates_n,
-                     getLocalCost_n,
-                     getTransitionCost_n,
-                     putResult_n,
-                     &parm);
+    return Viterbi::viterbi(
+            nframe, ncomb,
+            getNumberOfCandidates_n,
+            getLocalCost_n,
+            getTransitionCost_n,
+            putResult_n,
+            &parm);
 }

@@ -13,7 +13,7 @@ void Analyser::analysePitch()
 
     switch (pitchAlg) {
         case Wavelet:
-            Pitch::estimate_DynWav(x, fs, est, 9, 1500, 16, 0.5, lastPitchFrame);
+            Pitch::estimate_DynWav(x, fs, est, 6, 3000, 7, 0.7, lastPitchFrame);
             break;
         case McLeod:
             Pitch::estimate_MPM(x, fs, est);

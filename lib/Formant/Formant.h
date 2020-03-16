@@ -39,10 +39,10 @@ namespace Formant
 
     double calculateVTL(const Frames & frames);
 
-    std::deque<Frame> track(const std::deque<Frame> & frms,
-                            int ntrack,
-                            double refF1, double refF2, double refF3, double refF4, double refF5,
-                            double dfCost, double bfCost, double octaveJumpCost);
+    bool track(std::deque<Frame> & frms,
+               int ntrack,
+               double refF1, double refF2, double refF3, double refF4, double refF5,
+               double dfCost, double bfCost, double octaveJumpCost);
 
 }
 

@@ -16,9 +16,9 @@ MainWindow::MainWindow() {
         ma_backend_sndio,
         ma_backend_audio4,
 
-        ma_backend_alsa,
-        ma_backend_jack,
         ma_backend_pulseaudio,
+        ma_backend_jack,
+        ma_backend_alsa,
         ma_backend_oss,
 
         ma_backend_aaudio,
@@ -243,7 +243,7 @@ MainWindow::MainWindow() {
         updateFields();
         canvas->repaint();
     });
-    timer.start(1000.0 / 60.0);
+    timer.start(1000.0 / 30.0);
 
     show();
 

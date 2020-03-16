@@ -24,9 +24,7 @@ void AudioCapture::openInputDevice(const ma_device_id * id)
     deviceConfig.capture.pDeviceID = const_cast<ma_device_id *>(id);
     deviceConfig.capture.format = ma_format_f32;
     deviceConfig.capture.channels = 1;
-    deviceConfig.capture.shareMode = ma_share_mode_shared;
     deviceConfig.sampleRate = sampleRate;
-    deviceConfig.performanceProfile = ma_performance_profile_low_latency;
     deviceConfig.noClip = true;
     deviceConfig.dataCallback = readCallback;
     deviceConfig.pUserData = &audioContext;
@@ -34,6 +32,8 @@ void AudioCapture::openInputDevice(const ma_device_id * id)
     if (ma_device_init(maCtx, &deviceConfig, &device) != MA_SUCCESS) {
         throw AudioException("Failed to initialise miniaudio device");
     }
+    
+    deviceInit = true;
 }
 
 void AudioCapture::openOutputDevice(const ma_device_id * id)
@@ -46,15 +46,10 @@ void AudioCapture::openOutputDevice(const ma_device_id * id)
     deviceConfig.playback.pDeviceID = const_cast<ma_device_id *>(id);
     deviceConfig.playback.format = ma_format_f32;
     deviceConfig.playback.channels = 1;
-    deviceConfig.playback.shareMode = ma_share_mode_shared;
     deviceConfig.sampleRate = sampleRate;
-    deviceConfig.performanceProfile = ma_performance_profile_low_latency;
     deviceConfig.noClip = true;
     deviceConfig.dataCallback = readCallback;
     deviceConfig.pUserData = &audioContext;
-   
-    audioContext.sampleRate = sampleRate;
-    audioContext.buffer.setCapacity(BUFFER_SAMPLE_COUNT(sampleRate));
 
     if (ma_device_init(maCtx, &deviceConfig, &device) != MA_SUCCESS) {
         throw AudioException("Failed to initialise miniaudio device");

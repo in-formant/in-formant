@@ -41,15 +41,14 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
         0x57C8C8,
     };
 
-    timer.setInterval(1000 / 120);
-    timer.callOnTimeout([this, analyser]() {
+    connect(&timer, &QTimer::timeout, [this, analyser]() {
         analyser->callIfNewFrames(
                 [this](auto&&... ts) { renderTracks(std::forward<decltype(ts)>(ts)...); },
                 [this](auto&&... ts) { renderSpectrogram(std::forward<decltype(ts)>(ts)...); }
         );
         repaint();
     });
-    timer.start();
+    timer.start(1000.0 / 120.0);
 }
 
 void AnalyserCanvas::render() {

@@ -81,6 +81,7 @@ private:
     void analyseLp();
     void analyseFormantLp();
     void analyseFormantDeep();
+    void trackFormants();
     void applySmoothingFilters();
 
     std::mutex audioLock;

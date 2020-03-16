@@ -26,6 +26,7 @@ set(SOURCES
     analysis/parts/preprocess.cpp
     analysis/parts/resample.cpp
     analysis/parts/spectrum.cpp
+    analysis/parts/track.cpp
     audio/AudioCapture.cpp
     audio/AudioCapture_callbacks.cpp
     audio/AudioDevices.cpp

@@ -78,19 +78,8 @@ void Analyser::update()
     formantTrack.push_back(lastFormantFrame);
 
     // Apply postprocessing formant track correction.
-    formantTrack = Formant::track(
-        formantTrack,
-        3,
-        550,
-        1850,
-        2750,
-        3850,
-        4950,
-        2.0,
-        0.2,
-        0.8
-    );
-
+    trackFormants();
+    
     spectra.pop_front();
     spectra.push_back(lastSpectrumFrame);
 

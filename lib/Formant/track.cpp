@@ -52,8 +52,8 @@ static void putResult(int iframe, int place, int itrack, void *closure)
     prm->thee->at(iframe-1).formant.at(itrack-1) = prm->me->at(iframe-1).formant.at(place-1);
 }
 
-std::deque<Frame> Formant::track(
-        const std::deque<Frame> &frms,
+bool Formant::track(
+        std::deque<Frame> &frms,
         int ntrack,
         double refF1, double refF2, double refF3, double refF4, double refF5,
         double dfCost, double bfCost, double octaveJumpCost)
@@ -69,6 +69,11 @@ std::deque<Frame> Formant::track(
         }
     }
 
+    if (nFrmMin < ntrack) {
+        std::cerr << "Formant: number of tracks (" << ntrack << ") is greater than the minimum number of formants (" << nFrmMin << ")" << std::endl;
+        return false;
+    }
+
     int nframe = frms.size();
     std::deque<Frame> outFrms;
     for (int i = 0; i < nframe; ++i) {
@@ -77,11 +82,6 @@ std::deque<Frame> Formant::track(
         frame.nFormants = ntrack;
         frame.intensity = frms.at(i).intensity;
         outFrms.push_back(std::move(frame));
-    }
-
-    if (nFrmMin < ntrack) {
-        std::cerr << "Formant: number of tracks (" << ntrack << ") is greater than the minimum number of formants (" << nFrmMin << ")" << std::endl;
-        return std::move(outFrms);
     }
 
     struct fparm parm;
@@ -96,9 +96,13 @@ std::deque<Frame> Formant::track(
     parm.refF[3] = refF4;
     parm.refF[4] = refF5;
 
-    Viterbi::viterbiMulti(nframe, nFrmMax, ntrack,
-                          &getLocalCost, &getTransitionCost, &putResult,
-                          &parm);
+    if (Viterbi::viterbiMulti(
+                nframe, nFrmMax, ntrack,
+                &getLocalCost, &getTransitionCost, &putResult,
+                &parm)) {
+        frms = std::move(outFrms);
+        return true;
+    }
 
-    return std::move(outFrms);
+    return false;
 }
