@@ -14,6 +14,7 @@
 #include "../audio/AudioCapture.h"
 #include "../audio/AudioDevices.h"
 #include "../lib/Formant/Formant.h"
+#include "../lib/Formant/EKF/EKF.h"
 
 struct SpecFrame {
     double fs;
@@ -26,6 +27,11 @@ enum PitchAlg {
     McLeod,
     YIN,
     AMDF,
+};
+
+enum FormantMethod {
+    LP = 0,
+    KARMA,
 };
 
 class Analyser {
@@ -44,19 +50,20 @@ public:
     void setFftSize(int);
     void setLinearPredictionOrder(int);
     void setMaximumFrequency(double);
+    void setCepstralOrder(int);
     void setFrameSpace(const std::chrono::duration<double, std::milli> & frameSpace);
     void setWindowSpan(const std::chrono::duration<double> & windowSpan);
     void setPitchAlgorithm(enum PitchAlg);
+    void setFormantMethod(enum FormantMethod);
 
-    [[nodiscard]] bool isAnalysing() const;
-    [[nodiscard]] int getFftSize() const;
-    [[nodiscard]] int getLinearPredictionOrder() const;
-    [[nodiscard]] double getMaximumFrequency() const;
+    [[nodiscard]] bool isAnalysing();
+    [[nodiscard]] int getFftSize();
+    [[nodiscard]] int getLinearPredictionOrder();
+    [[nodiscard]] double getMaximumFrequency();
+    [[nodiscard]] int getCepstralOrder();
 
-    void setFrameCallback(std::function<void()> callback);
-
-    [[nodiscard]] const std::chrono::duration<double, std::milli> & getFrameSpace() const;
-    [[nodiscard]] const std::chrono::duration<double> & getWindowSpan() const;
+    [[nodiscard]] const std::chrono::duration<double, std::milli> & getFrameSpace();
+    [[nodiscard]] const std::chrono::duration<double> & getWindowSpan();
 
     [[nodiscard]] int getFrameCount();
 
@@ -70,6 +77,7 @@ public:
 
 private:
     void _updateFrameCount();
+    void _initEkfState();
 
     void mainLoop();
     void update();
@@ -79,8 +87,8 @@ private:
     void resampleAudio(double newFs);
     void applyPreEmphasis();
     void analyseLp();
-    void analyseFormantLp();
-    void analyseFormantDeep();
+    void analyseFormant();
+    void analyseFormantEkf();
     void trackFormants();
     void applySmoothingFilters();
 
@@ -96,18 +104,21 @@ private:
     int nfft;
     double maximumFrequency;
     int lpOrder;
+    int cepOrder;
 
+    FormantMethod formantMethod;
     PitchAlg pitchAlg;
 
     // Intermediate variables for analysis.
     Eigen::ArrayXd x;
     double fs;
     LPC::Frame lpcFrame;
+    EKF::State ekfState;
 
-    std::deque<SpecFrame> spectra;
     Formant::Frames formantTrack;
     std::deque<double> pitchTrack;
 
+    std::deque<SpecFrame> spectra;
     Formant::Frames smoothedFormants;
     std::deque<double> smoothedPitch;
 
@@ -131,8 +142,8 @@ public:
         std::lock_guard<std::mutex> lock(mutex);
         
         if (nbNewFrames > 0) {
-            fn1(frameCount, smoothedPitch, smoothedFormants);
-            fn2(frameCount, nbNewFrames, spectra.cend() - 1 - nbNewFrames, spectra.cend());
+            fn1(frameCount, maximumFrequency, smoothedPitch, smoothedFormants);
+            fn2(frameCount, nbNewFrames, maximumFrequency, spectra.cend() - 1 - nbNewFrames, spectra.cend());
             nbNewFrames = 0;
         }
     }

@@ -61,6 +61,7 @@ private:
     QSpinBox * inputMaxGain;
 
     QComboBox * inputPitchAlg;
+    QComboBox * inputFormantAlg;
 
     AnalyserCanvas * canvas;
 

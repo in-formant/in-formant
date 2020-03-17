@@ -12,6 +12,12 @@ set(SOURCES
     Formant/Formant.cpp
     Formant/Formant.h
     Formant/track.cpp
+    Formant/EKF/EKF.h
+    Formant/EKF/fb2cp.cpp
+    Formant/EKF/getH_FBW.cpp
+    Formant/EKF/genLPCC.cpp
+    Formant/EKF/init.cpp
+    Formant/EKF/step.cpp
     LPC/Frame/LPC_Frame.cpp
     LPC/Frame/LPC_Frame.h
     LPC/Frame/LPC_Frame_auto.cpp

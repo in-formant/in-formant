@@ -41,7 +41,8 @@ void Analyser::applySmoothingFilters()
     //smoothenPitch(pitchTrack, smoothedPitch);
     smoothedPitch = pitchTrack;
     
-    smoothenFormants(formantTrack, smoothedFormants);
+    //smoothenFormants(formantTrack, smoothedFormants);
+    smoothedFormants = formantTrack;
 }
 
 void smoothenPitch(const std::deque<double>& in, std::deque<double>& out)

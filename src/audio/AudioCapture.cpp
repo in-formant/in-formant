@@ -7,7 +7,7 @@
 #include "../Exceptions.h"
 
 AudioCapture::AudioCapture(ma_context * maCtx)
-    : sampleRate(48000), maCtx(maCtx), deviceInit(false)
+    : sampleRate(32000), maCtx(maCtx), deviceInit(false)
 {
     audioContext.sampleRate = sampleRate;
     audioContext.buffer.setCapacity(BUFFER_SAMPLE_COUNT(sampleRate));

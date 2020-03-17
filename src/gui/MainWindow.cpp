@@ -16,9 +16,9 @@ MainWindow::MainWindow() {
         ma_backend_sndio,
         ma_backend_audio4,
 
-        ma_backend_pulseaudio,
-        ma_backend_jack,
         ma_backend_alsa,
+        ma_backend_jack,
+        ma_backend_pulseaudio,
         ma_backend_oss,
 
         ma_backend_aaudio,
@@ -209,6 +209,16 @@ MainWindow::MainWindow() {
                 connect(inputPitchAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
                         [&](const int value) { analyser->setPitchAlgorithm(static_cast<PitchAlg>(value)); });
 
+                inputFormantAlg = new QComboBox;
+                inputFormantAlg->addItems({
+                    "Linear prediction",
+                    "Kalman filter (experimental)",
+                });
+                inputFormantAlg->setCurrentIndex(1);
+
+                connect(inputFormantAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                        [&](const int value) { analyser->setFormantMethod(static_cast<FormantMethod>(value)); });
+
                 fLayout4->addRow(tr("Overlay spectrogram:"), inputToggleSpectrum);
                 fLayout4->addRow(tr("FFT size:"), inputFftSize);
                 fLayout4->addRow(tr("Minimum gain:"), inputMinGain);
@@ -225,6 +235,7 @@ MainWindow::MainWindow() {
                 }
 
                 fLayout4->addRow(tr("Pitch algorithm:"), inputPitchAlg);
+                fLayout4->addRow(tr("Formant algorithm:"), inputFormantAlg);
             }
 
             hLayout3->addWidget(canvas);
