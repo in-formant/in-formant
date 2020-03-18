@@ -5,6 +5,7 @@
 #include <iostream>
 #include "../Exceptions.h"
 #include "AudioDevices.h"
+#include "../log/simpleQtLogger.h"
 
 AudioDevices::AudioDevices(ma_context * ctx)
     : maCtx(ctx)
@@ -14,6 +15,8 @@ AudioDevices::AudioDevices(ma_context * ctx)
 
 bool AudioDevices::refreshList()
 {
+    L_INFO("Refreshing audio device list...");
+
     inputs.clear();
     outputs.clear();
 
@@ -41,11 +44,11 @@ bool AudioDevices::refreshList()
     }
 
     if (inputs.empty()) {
-        std::cout << "No input devices found." << std::endl;
+        L_WARN("No input devices found.");
     }
 
     if (outputs.empty()) {
-        std::cout << "No output devices found." << std::endl;
+        L_WARN("No output devices found.");
     }
 
     return true;

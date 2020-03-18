@@ -12,8 +12,8 @@ void EKF::init(EKF::State & state, const VectorXd & x0)
     state.F.setIdentity(2 * numF, 2 * numF);
 
     state.Q.setZero(2 * numF, 2 * numF);
-    state.Q.diagonal().head(numF).setConstant(320.0 * 320.0);
-    state.Q.diagonal().tail(numF).setConstant(100.0 * 100.0);
+    state.Q.diagonal().head(numF).setConstant(320 * 320);
+    state.Q.diagonal().tail(numF).setConstant(100 * 100);
 
     state.R.setZero(cepOrder, cepOrder);
     for (int i = 0; i < cepOrder; ++i) {

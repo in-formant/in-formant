@@ -16,6 +16,8 @@ set(SOURCES
     main.cpp
     Exceptions.cpp
     Exceptions.h
+    log/simpleQtLogger.cpp
+    log/simpleQtLogger.h
     analysis/Analyser_mainLoop.cpp
     analysis/Analyser.cpp
     analysis/Analyser.h

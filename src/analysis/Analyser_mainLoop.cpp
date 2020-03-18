@@ -40,8 +40,8 @@ void Analyser::update()
 
     // Read captured audio.
     audioLock.lock();
-    audioCapture.readBlock(x);
-    fs = audioCapture.getSampleRate();
+    audioCapture->readBlock(x);
+    fs = audioCapture->getSampleRate();
     audioLock.unlock();
 
     // Remove DC by subtraction of the mean.

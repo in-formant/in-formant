@@ -1,7 +1,15 @@
 #include <Eigen/LU>
+#include <numeric>
 #include "EKF.h"
 
 using namespace Eigen;
+
+static double clamp(double f, double fs) {
+    if (f > fs / 2) {
+        f = fs / 2 - (f - fs / 2);
+    }
+    return std::clamp(abs(f), 60.0, fs / 2 - 60.0);
+}
 
 void EKF::step(EKF::State & state)
 {
@@ -24,9 +32,6 @@ void EKF::step(EKF::State & state)
     for (int i = 0; i < 2 * numF; ++i) {
         if (m_pred(i) > fs / 2) {
             m_pred(i) = fs / 2 - (m_pred(i) - fs / 2);
-        }
-        if (m_pred(i) < 0) {
-            m_pred(i) = -m_pred(i);
         }
     }
 
@@ -57,4 +62,28 @@ void EKF::step(EKF::State & state)
 
     state.m_up = m_pred + K * (y_obs - y_pred);
     state.P_up = P_pred - K * H * P_pred;
+
+    // Sort the formants by absolute frequency.
+    
+    std::vector<int> inds(numF);
+    std::iota(inds.begin(), inds.end(), 0);
+    std::sort(inds.begin(), inds.end(),
+            [&](int i, int j) {
+                return clamp(state.m_up(i), fs) < clamp(state.m_up(j), fs);
+            });
+
+    VectorXd m_ = state.m_up;
+    MatrixXd P_ = state.P_up;
+
+    for (int k = 0; k < numF; ++k) {
+        m_(k) = clamp(state.m_up(inds[k]), fs);
+        m_(numF + k) = clamp(state.m_up(numF + inds[k]), fs);
+
+        P_.row(k) = state.P_up.col(inds[k]);
+        P_.row(numF + k) = state.P_up.col(numF + inds[k]);
+    }
+
+    state.m_up = std::move(m_);
+    state.P_up = std::move(P_);
+
 }

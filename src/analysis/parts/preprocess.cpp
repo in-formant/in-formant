@@ -13,14 +13,14 @@ void Analyser::applyWindow()
     // Apply Hanning window.
     static ArrayXd win(0);
     if (win.size() != x.size()) {
-        win = Window::createHamming(x.size());
+        win = Window::createGaussian(x.size());
     }
     x *= win;
 }
 
 void Analyser::applyPreEmphasis()
 {
-    constexpr double preEmphasisFrequency = 500.0;
+    constexpr double preEmphasisFrequency = 200.0;
 
     if (preEmphasisFrequency < fs / 2.0) {
         Filter::preEmphasis(x, fs, preEmphasisFrequency);

@@ -3,6 +3,7 @@
 #include <QSharedPointer>
 #include <iostream>
 #include "gui/MainWindow.h"
+#include "log/simpleQtLogger.h"
 
 QString loadFont(const QString & url)
 {
@@ -16,15 +17,31 @@ QFont * appFont;
 
 int main(int argc, char * argv[])
 {
-    QApplication app(argc, argv);
+    QApplication::setStyle(QStyleFactory::create("Fusion"));
 
-    app.setStyle(QStyleFactory::create("Fusion"));
+    QApplication app(argc, argv);
+    
+    simpleqtlogger::ENABLE_LOG_SINK_FILE = true;
+    simpleqtlogger::ENABLE_LOG_SINK_CONSOLE = true;
+    
+    simpleqtlogger::ENABLE_FUNCTION_STACK_TRACE = true;
+    simpleqtlogger::ENABLE_CONSOLE_COLOR = true;
+    simpleqtlogger::ENABLE_CONSOLE_TRIMMED = true;
+    simpleqtlogger::ENABLE_CONSOLE_LOG_FILE_STATE = true;
+
+    simpleqtlogger::SimpleQtLogger::createInstance(qApp);
+    auto logger = simpleqtlogger::SimpleQtLogger::getInstance();
+    logger->setLogFormat_file("<TS> [<LL>] <TEXT> (<FUNC>@<FILE>:<LINE>)", "<TS> [<LL>] <TEXT>");
+    logger->setLogLevels_file(simpleqtlogger::ENABLE_LOG_LEVELS);
+    logger->setLogFileName("speechanalysis.log", 10*1000*1000, 20);
+    logger->setLogLevels_console(simpleqtlogger::ENABLE_LOG_LEVELS);
 
     QFont font(loadFont(":/fonts/Montserrat-Medium.ttf"));
     font.setPixelSize(15);
-    app.setFont(font);
-
+    QApplication::setFont(font);
     appFont = &font;
+
+    L_INFO("Application font set.");
 
     QPalette darkPalette;
     darkPalette.setColor(QPalette::Window, QColor(53,53,53));
@@ -49,6 +66,8 @@ int main(int argc, char * argv[])
     darkPalette.setColor(QPalette::Disabled, QPalette::HighlightedText, QColor(127,127,127));
  
     app.setPalette(darkPalette);
+    
+    L_INFO("Application theme and palette set.");
 
     MainWindow mainWindow;
 

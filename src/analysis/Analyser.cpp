@@ -19,7 +19,7 @@ static const SpecFrame defaultSpec = {
 };
 
 Analyser::Analyser(ma_context * ctx)
-    : audioCapture(ctx),
+    : audioCapture(new AudioCapture(ctx)),
       doAnalyse(true),
       nfft(512),
       lpOrder(10),
@@ -41,6 +41,10 @@ Analyser::Analyser(ma_context * ctx)
     x.setZero(512);
 
     setInputDevice(nullptr);
+}
+
+Analyser::~Analyser() {
+    delete audioCapture;
 }
 
 void Analyser::startThread() {
@@ -65,20 +69,20 @@ bool Analyser::isAnalysing() {
 
 void Analyser::setInputDevice(const ma_device_id * id) {
     std::lock_guard<std::mutex> guard(audioLock);
-    audioCapture.closeStream();
-    audioCapture.openInputDevice(id);
-    fs = audioCapture.getSampleRate();
+    audioCapture->closeStream();
+    audioCapture->openInputDevice(id);
+    fs = audioCapture->getSampleRate();
     x.setZero(CAPTURE_SAMPLE_COUNT(fs));
-    audioCapture.startStream();
+    audioCapture->startStream();
 }
 
 void Analyser::setOutputDevice(const ma_device_id * id) {
     std::lock_guard<std::mutex> guard(audioLock);
-    audioCapture.closeStream();
-    audioCapture.openOutputDevice(id);
-    fs = audioCapture.getSampleRate();
+    audioCapture->closeStream();
+    audioCapture->openOutputDevice(id);
+    fs = audioCapture->getSampleRate();
     x.setZero(CAPTURE_SAMPLE_COUNT(fs));
-    audioCapture.startStream();
+    audioCapture->startStream();
 }
 
 void Analyser::setFftSize(int _nfft) {

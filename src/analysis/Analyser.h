@@ -37,6 +37,7 @@ enum FormantMethod {
 class Analyser {
 public:
     Analyser(ma_context * ctx);
+    ~Analyser();
 
     void startThread();
     void stopThread();
@@ -93,7 +94,7 @@ private:
     void applySmoothingFilters();
 
     std::mutex audioLock;
-    AudioCapture audioCapture;
+    AudioCapture * audioCapture;
 
     // Parameters.
     std::chrono::duration<double, std::milli> frameSpace;

@@ -4,8 +4,11 @@
 
 #include "MainWindow.h"
 #include "FFT/FFT.h"
+#include "../log/simpleQtLogger.h"
 
 MainWindow::MainWindow() {
+
+    L_INFO("Initialising miniaudio context...");
 
     std::vector<ma_backend> backends{
         ma_backend_wasapi,
@@ -13,17 +16,20 @@ MainWindow::MainWindow() {
         ma_backend_dsound,
 
         ma_backend_coreaudio,
+
+        ma_backend_pulseaudio,
+        ma_backend_jack,
+        ma_backend_alsa,
+    
         ma_backend_sndio,
         ma_backend_audio4,
-
-        ma_backend_alsa,
-        ma_backend_jack,
-        ma_backend_pulseaudio,
         ma_backend_oss,
 
         ma_backend_aaudio,
         ma_backend_opensl,
+
         ma_backend_webaudio,
+
         ma_backend_null
     };
 
@@ -34,6 +40,8 @@ MainWindow::MainWindow() {
     ctxCfg.jack.tryStartServer = true;
 
     if (ma_context_init(backends.data(), backends.size(), &ctxCfg, &maCtx) != MA_SUCCESS) {
+        L_FATAL("Failed to initialise miniaudio context");
+
         throw AudioException("Failed to initialise miniaudio context");
     }
     
@@ -254,7 +262,8 @@ MainWindow::MainWindow() {
         updateFields();
         canvas->repaint();
     });
-    timer.start(1000.0 / 30.0);
+    timer.setTimerType(Qt::PreciseTimer);
+    timer.start(1000.0 / 60.0);
 
     show();
 
@@ -333,15 +342,29 @@ void MainWindow::updateDevices()
 
     for (const auto & dev : inputs) {
         const QString name = QString::fromLocal8Bit(dev.name.c_str());
-        inputDevIn->addItem(name, QVariant::fromValue(&dev.id));
+        inputDevIn->addItem(name, QVariant::fromValue(std::make_pair(true, &dev.id)));
     }
-    
+   
+    if (ma_context_is_loopback_supported(&maCtx)) {
+        for (const auto & dev : outputs) { 
+            const QString name = QString::fromLocal8Bit(dev.name.c_str());
+            inputDevIn->addItem("(Loopback) " + name, QVariant::fromValue(std::make_pair(false, &dev.id)));
+        }
+    }
+
     inputDevIn->setCurrentIndex(0);
 
     connect(inputDevIn, QOverload<int>::of(&QComboBox::currentIndexChanged),
             [&](const int index) {
                 if (index >= 0) {
-                    analyser->setInputDevice(inputDevIn->itemData(index).value<const ma_device_id *>());
+                    const auto [ isInput, id ] = inputDevIn->itemData(index).value<DevicePair>();
+
+                    if (isInput) {
+                        analyser->setInputDevice(id);
+                    }
+                    else {
+                        analyser->setOutputDevice(id);
+                    }
                 }
             });
 }

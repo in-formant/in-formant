@@ -8,10 +8,13 @@
 #include "../audio/miniaudio.h"
 #include <QtWidgets>
 #include <QSharedPointer>
+#include <utility>
 #include "../audio/AudioDevices.h"
 #include "AnalyserCanvas.h"
 
-Q_DECLARE_METATYPE(const ma_device_id *);
+using DevicePair = std::pair<bool, const ma_device_id *>;
+
+Q_DECLARE_METATYPE(DevicePair);
 
 extern QFont * appFont;
 

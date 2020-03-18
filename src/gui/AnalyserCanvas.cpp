@@ -48,7 +48,8 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
         );
         repaint();
     });
-    timer.start(1000.0 / 120.0);
+    timer.setTimerType(Qt::PreciseTimer);
+    timer.start(1000.0 / 90.0);
 }
 
 void AnalyserCanvas::render() {
