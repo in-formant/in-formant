@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Ofast -march=native")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Ofast")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 
 set(CMAKE_AUTOMOC ON)
@@ -78,7 +78,7 @@ add_executable(speech_analysis WIN32 ${SOURCES} ${QT_SOURCES})
 target_link_libraries(speech_analysis
     ${libspeech_LIBRARY}
     Eigen3::Eigen
-	FFTW3::fftw3
+    FFTW3::fftw3
 )
 
 if(APPLE)

@@ -47,7 +47,7 @@ bool Viterbi::viterbi(
             }
             if (place == 0) {
                 // cannot compute a track because of weird values.
-                std::cerr << "Formant: viterbi weird values" << std::endl;
+                //std::cerr << "Formant: viterbi weird values" << std::endl;
                 return false;
             }
             delta(iframe, icand2) = maximum;

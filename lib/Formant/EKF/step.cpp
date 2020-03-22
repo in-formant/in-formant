@@ -42,7 +42,7 @@ void EKF::step(EKF::State & state)
     H = EKF::getH_FBW(curFVals, curBVals, numF, cepOrder, fs);
     auto Ht = H.transpose();
 
-    if (voiced) {
+    if (/*voiced*/true) {
         S = H * P_pred * Ht + R;
         K = (P_pred * Ht) * S.inverse();
     }

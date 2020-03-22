@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS "-static -fPIC -ftree-vectorize")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Ofast -march=native")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Ofast")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 
 set(SOURCES
@@ -73,6 +73,6 @@ add_library(speech ${SOURCES})
 
 target_link_libraries(speech
     Eigen3::Eigen
-	FFTW3::fftw3
+    FFTW3::fftw3
 )
 

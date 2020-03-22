@@ -3,6 +3,7 @@
 //
 
 #include "Analyser.h"
+#include "../log/simpleQtLogger.h"
 
 using namespace Eigen;
 
@@ -88,6 +89,7 @@ void Analyser::setOutputDevice(const ma_device_id * id) {
 void Analyser::setFftSize(int _nfft) {
     std::lock_guard<std::mutex> lock(mutex);
     nfft = _nfft;
+    LS_INFO("Set FFT size to " << nfft);
 }
 
 int Analyser::getFftSize() {
@@ -98,6 +100,7 @@ int Analyser::getFftSize() {
 void Analyser::setLinearPredictionOrder(int _lpOrder) {
     std::lock_guard<std::mutex> lock(mutex);
     lpOrder = std::clamp(_lpOrder, 5, 22);
+    LS_INFO("Set LP order to " << lpOrder);
 }
 
 int Analyser::getLinearPredictionOrder() {
@@ -110,6 +113,8 @@ void Analyser::setCepstralOrder(int _cepOrder) {
     
     cepOrder = std::clamp(_cepOrder, 7, 25);
     _initEkfState();
+    
+    LS_INFO("Set LPCC order to " << cepOrder);
 }
 
 int Analyser::getCepstralOrder() {
@@ -120,6 +125,8 @@ int Analyser::getCepstralOrder() {
 void Analyser::setMaximumFrequency(double _maximumFrequency) {
     std::lock_guard<std::mutex> lock(mutex);
     maximumFrequency = std::clamp(_maximumFrequency, 2500.0, 7000.0);
+    
+    LS_INFO("Set maximum frequency to " << maximumFrequency);
 }
 
 double Analyser::getMaximumFrequency() {
@@ -130,6 +137,8 @@ double Analyser::getMaximumFrequency() {
 void Analyser::setFrameSpace(const std::chrono::duration<double, std::milli> & _frameSpace) {
     std::lock_guard<std::mutex> lock(mutex);
     frameSpace = _frameSpace;
+    LS_INFO("Set frame space to " << frameSpace.count() << " ms");
+    
     _updateFrameCount();
 }
 
@@ -141,6 +150,8 @@ const std::chrono::duration<double, std::milli> & Analyser::getFrameSpace() {
 void Analyser::setWindowSpan(const std::chrono::duration<double> & _windowSpan) {
     std::lock_guard<std::mutex> lock(mutex);
     windowSpan = _windowSpan;
+    LS_INFO("Set window span to " << windowSpan.count() << " ms");
+    
     _updateFrameCount();
 }
 
@@ -152,11 +163,35 @@ const std::chrono::duration<double> & Analyser::getWindowSpan() {
 void Analyser::setPitchAlgorithm(enum PitchAlg _pitchAlg) {
     std::lock_guard<std::mutex> lock(mutex);
     pitchAlg = _pitchAlg;
+
+    switch (pitchAlg) {
+        case Wavelet:
+            L_INFO("Set pitch algorithm to DynamicWavelet");
+            break;
+        case McLeod:
+            L_INFO("Set pitch algorithm to McLeod");
+            break;
+        case YIN:
+            L_INFO("Set pitch algorithm to Yin");
+            break;
+        case AMDF:
+            L_INFO("Set pitch algorithm to AMDF");
+            break;
+    }
 }
 
 void Analyser::setFormantMethod(enum FormantMethod _method) {
     std::lock_guard<std::mutex> lock(mutex);
     formantMethod = _method;
+
+    switch (formantMethod) {
+        case LP:
+            L_INFO("Set formant algorithm to Linear Prediction");
+            break;
+        case KARMA:
+            L_INFO("Set formant algorithm to KARMA");
+            break;
+    }
 }
 
 int Analyser::getFrameCount() {
@@ -227,6 +262,8 @@ void Analyser::_updateFrameCount() {
         smoothedPitch.erase(smoothedPitch.begin(), smoothedPitch.begin() + diff);
         smoothedFormants.erase(smoothedFormants.begin(), smoothedFormants.begin() + diff);
     }
+
+    LS_INFO("Resized tracks from " << frameCount << " to " << newFrameCount);
 
     frameCount = newFrameCount;
 }
