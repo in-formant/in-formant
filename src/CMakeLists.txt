@@ -3,9 +3,9 @@ project(main)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize")
+set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -march=x86-64 -mtune=generic")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Ofast")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g0")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 
 set(CMAKE_AUTOMOC ON)
@@ -64,13 +64,13 @@ else()
 endif()
 
 find_package(Eigen3 REQUIRED NO_MODULE)
-find_package(FFTW3 REQUIRED)
+find_package(FFTW REQUIRED COMPONENTS DOUBLE_LIB)
 
 include_directories(
 	${libspeech_INCLUDE_DIR}
     ${Qt5Widgets_INCLUDE_DIRS}
     ${EIGEN_INCLUDE_DIRS}
-    ${FFTW3_INCLUDE_DIRS}
+    ${FFTW_INCLUDE_DIRS}
 )
 
 add_executable(speech_analysis WIN32 ${SOURCES} ${QT_SOURCES})
@@ -78,7 +78,7 @@ add_executable(speech_analysis WIN32 ${SOURCES} ${QT_SOURCES})
 target_link_libraries(speech_analysis
     ${libspeech_LIBRARY}
     Eigen3::Eigen
-    FFTW3::fftw3
+    ${FFTW_LIBRARIES}
 )
 
 if(APPLE)

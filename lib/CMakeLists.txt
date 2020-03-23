@@ -3,9 +3,9 @@ project(libspeech)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "-static -fPIC -ftree-vectorize")
+set(CMAKE_CXX_FLAGS "-static -fPIC -march=x86-64 -mtune=generic")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Ofast")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g0")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 
 set(SOURCES
@@ -62,17 +62,17 @@ set(SOURCES
     MFCC/MFCC.h)
 
 find_package(Eigen3 REQUIRED NO_MODULE)
-find_package(FFTW3 REQUIRED)
+find_package(FFTW REQUIRED COMPONENTS DOUBLE_LIB)
 
 include_directories(
     ${EIGEN_INCLUDE_DIRS}
-    ${FFTW3_INCLUDE_DIRS}
+    ${FFTW_INCLUDE_DIRS}
 )
 
 add_library(speech ${SOURCES})
 
 target_link_libraries(speech
     Eigen3::Eigen
-    FFTW3::fftw3
+    ${FFTW_LIBRARIES}
 )
 
