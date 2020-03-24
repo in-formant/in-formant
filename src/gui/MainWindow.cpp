@@ -113,14 +113,12 @@ MainWindow::MainWindow() {
             hLayout3->addLayout(fLayout4);
             {
                 inputToggleSpectrum = new QCheckBox;
-                inputToggleSpectrum->setChecked(canvas->getDrawSpectrum());
 
                 connect(inputToggleSpectrum, &QCheckBox::toggled,
                         [&](const bool checked) { canvas->setDrawSpectrum(checked); });
 
                 inputFftSize = new QComboBox;
-                inputFftSize->addItems({"256", "512", "1024", "2048", "4096", "8192", "16384"});
-                inputFftSize->setCurrentIndex(1);
+                inputFftSize->addItems({"64", "128", "256", "512", "1024", "2048", "4096"});
 
                 connect(inputFftSize, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
                         [&](const QString value) { analyser->setFftSize(value.toInt()); });
@@ -143,12 +141,8 @@ MainWindow::MainWindow() {
                         [&](const int value) { canvas->setMaxGainSpectrum(value);
                                                inputMinGain->setMaximum(value - 10); });
 
-                inputMinGain->setValue(canvas->getMinGainSpectrum());
-                inputMaxGain->setValue(canvas->getMaxGainSpectrum());
-
                 inputLpOrder = new QSpinBox;
                 inputLpOrder->setRange(5, 22);
-                inputLpOrder->setValue(analyser->getLinearPredictionOrder());
 
                 connect(inputLpOrder, QOverload<int>::of(&QSpinBox::valueChanged),
                         [&](const int value) { analyser->setLinearPredictionOrder(value); });
@@ -157,14 +151,12 @@ MainWindow::MainWindow() {
                 inputMaxFreq->setRange(2500, 7000);
                 inputMaxFreq->setStepType(QSpinBox::AdaptiveDecimalStepType);
                 inputMaxFreq->setSuffix(" Hz");
-                inputMaxFreq->setValue(analyser->getMaximumFrequency());
 
                 connect(inputMaxFreq, QOverload<int>::of(&QSpinBox::valueChanged),
                         [&](const int value) { analyser->setMaximumFrequency(value); });
 
                 inputFreqScale = new QComboBox;
                 inputFreqScale->addItems({"Linear", "Logarithmic", "Mel"});
-                inputFreqScale->setCurrentIndex(2);
 
                 connect(inputFreqScale, QOverload<int>::of(&QComboBox::currentIndexChanged),
                         [&](const int value) { canvas->setFrequencyScale(value); });
@@ -173,7 +165,6 @@ MainWindow::MainWindow() {
                 inputFrameSpace->setRange(5, 30);
                 inputFrameSpace->setSingleStep(1);
                 inputFrameSpace->setSuffix(" ms");
-                inputFrameSpace->setValue(analyser->getFrameSpace().count());
 
                 connect(inputFrameSpace, QOverload<int>::of(&QSpinBox::valueChanged),
                         [&](const int value) { analyser->setFrameSpace(std::chrono::milliseconds(value)); });
@@ -182,7 +173,6 @@ MainWindow::MainWindow() {
                 inputWindowSpan->setRange(2, 30);
                 inputWindowSpan->setSingleStep(0.5);
                 inputWindowSpan->setSuffix(" s");
-                inputWindowSpan->setValue(analyser->getWindowSpan().count());
 
                 connect(inputWindowSpan, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
                         [&](const double value) { analyser->setWindowSpan(std::chrono::milliseconds(int(1000 * value))); });
@@ -222,7 +212,6 @@ MainWindow::MainWindow() {
                     "Linear prediction",
                     "Kalman filter (experimental)",
                 });
-                inputFormantAlg->setCurrentIndex(1);
 
                 connect(inputFormantAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
                         [&](const int value) { analyser->setFormantMethod(static_cast<FormantMethod>(value)); });
@@ -255,6 +244,8 @@ MainWindow::MainWindow() {
     setWindowTitle(WINDOW_TITLE);
     resize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
+    loadSettings();
+
     updateDevices();
     analyser->startThread();
 
@@ -263,7 +254,7 @@ MainWindow::MainWindow() {
         canvas->repaint();
     });
     timer.setTimerType(Qt::PreciseTimer);
-    timer.start(1000.0 / 60.0);
+    timer.start(1000.0 / 30.0);
 
     show();
 
@@ -367,4 +358,48 @@ void MainWindow::updateDevices()
                     }
                 }
             });
+}
+
+void MainWindow::loadSettings()
+{
+    // Assume that analysis settings have already loaded and corrected if necessary.
+   
+    int nfft = analyser->getFftSize();
+    int lpOrder = analyser->getLinearPredictionOrder();
+    double maxFreq = analyser->getMaximumFrequency();
+    int cepOrder = analyser->getCepstralOrder();
+    double frameSpace = analyser->getFrameSpace().count();
+    double windowSpan = analyser->getWindowSpan().count();
+    PitchAlg pitchAlg = analyser->getPitchAlgorithm();
+    FormantMethod formantAlg = analyser->getFormantMethod();
+
+    // Assume that canvas settings have already loaded and corrected if necessary.
+   
+    int freqScale = canvas->getFrequencyScale();
+    bool drawSpectrum = canvas->getDrawSpectrum();
+    int minGain = canvas->getMinGainSpectrum();
+    int maxGain = canvas->getMaxGainSpectrum();
+
+    // Find the combobox index for nfft.
+    int fftInd = inputFftSize->findText(QString::number(nfft));
+    if (fftInd < 0) {
+        fftInd = inputFftSize->findText("512");
+    }
+
+    QSettings settings;
+
+#define callWithBlocker(obj, call) do { QSignalBlocker blocker(obj); (obj) -> call; } while (false)
+ 
+    callWithBlocker(inputToggleSpectrum, setChecked(drawSpectrum));
+    callWithBlocker(inputFftSize, setCurrentIndex(fftInd));
+    callWithBlocker(inputLpOrder, setValue(lpOrder));
+    callWithBlocker(inputMaxFreq, setValue(maxFreq));
+    callWithBlocker(inputFreqScale, setCurrentIndex(freqScale));
+    callWithBlocker(inputFrameSpace, setValue(frameSpace));
+    callWithBlocker(inputWindowSpan, setValue(windowSpan));
+    callWithBlocker(inputMinGain, setValue(minGain));
+    callWithBlocker(inputMaxGain, setValue(maxGain));
+    callWithBlocker(inputPitchAlg, setCurrentIndex(static_cast<int>(pitchAlg)));
+    callWithBlocker(inputFormantAlg, setCurrentIndex(static_cast<int>(formantAlg)));
+
 }

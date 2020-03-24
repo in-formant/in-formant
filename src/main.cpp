@@ -17,6 +17,10 @@ QFont * appFont;
 
 int main(int argc, char * argv[])
 {
+    QCoreApplication::setOrganizationName("Clo Yun-Hee");
+    QCoreApplication::setOrganizationDomain("cloyunhee.fr");
+    QCoreApplication::setApplicationName("Speech analysis");
+    
     QApplication::setStyle(QStyleFactory::create("Fusion"));
 
     QApplication app(argc, argv);

@@ -6,6 +6,7 @@
 #include "AnalyserCanvas.h"
 #include "MFCC/MFCC.h"
 #include "../Exceptions.h"
+#include "../log/simpleQtLogger.h"
 
 using namespace Eigen;
 
@@ -41,6 +42,8 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
         0x57C8C8,
     };
 
+    loadSettings();
+
     connect(&timer, &QTimer::timeout, [this, analyser]() {
         analyser->callIfNewFrames(
                 [this](auto&&... ts) { renderTracks(std::forward<decltype(ts)>(ts)...); },
@@ -50,6 +53,10 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
     });
     timer.setTimerType(Qt::PreciseTimer);
     timer.start(1000.0 / 90.0);
+}
+
+AnalyserCanvas::~AnalyserCanvas() {
+    saveSettings();
 }
 
 void AnalyserCanvas::render() {
@@ -439,6 +446,10 @@ void AnalyserCanvas::setFrequencyScale(int type) {
     frequencyScaleType = type;
 }
 
+int AnalyserCanvas::getFrequencyScale() const {
+    return frequencyScaleType;
+}
+
 void AnalyserCanvas::setDrawSpectrum(bool toggle) {
     drawSpectrum = toggle;
 }
@@ -469,4 +480,44 @@ int AnalyserCanvas::getMinGainSpectrum() const {
 
 int AnalyserCanvas::getMaxGainSpectrum() const {
     return maxGain;
+}
+
+void AnalyserCanvas::loadSettings() {
+    QSettings settings;
+
+    L_INFO("Loading canvas settings...");
+
+    settings.beginGroup("canvas");
+
+    setFrequencyScale(settings.value("freqScale", 2).value<int>());
+    setDrawSpectrum(settings.value("drawSpectrum", true).value<bool>());
+    
+    for (int i = 0; i < 4; ++i) {
+        setFormantColor(i, settings.value(QString("canvas/formantColor/%1").arg(i), formantColors[i]).value<QColor>());
+    }
+
+    setMinGainSpectrum(settings.value("minGain", -40).value<int>());
+    setMaxGainSpectrum(settings.value("maxGain", 20).value<int>());
+
+    settings.endGroup();
+}
+
+void AnalyserCanvas::saveSettings() {
+    QSettings settings;
+
+    L_INFO("Saving canvas settings...");
+    
+    settings.beginGroup("canvas");
+
+    settings.setValue("freqScale", frequencyScaleType);
+    settings.setValue("drawSpectrum", drawSpectrum);
+
+    for (int i = 0; i < 4; ++i) {
+        settings.setValue(QString("canvas/formantColor/%1").arg(i), formantColors[i]);
+    }
+
+    settings.setValue("minGain", minGain);
+    settings.setValue("maxGain", maxGain);
+
+    settings.endGroup();
 }

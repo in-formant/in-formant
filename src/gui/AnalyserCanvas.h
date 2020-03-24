@@ -19,6 +19,7 @@ class AnalyserCanvas : public QWidget {
     Q_OBJECT
 public:
     AnalyserCanvas(Analyser * analyser) noexcept(false);
+    ~AnalyserCanvas();
 
     void setSelectedFrame(int frame);
     [[nodiscard]] int getSelectedFrame() const;
@@ -29,6 +30,7 @@ public:
     void setMinGainSpectrum(int gain);
     void setMaxGainSpectrum(int gain);
 
+    int getFrequencyScale() const;
     bool getDrawSpectrum() const;
     const QColor & getFormantColor(int formantNb) const;
     int getMinGainSpectrum() const;
@@ -40,6 +42,9 @@ protected:
     void paintEvent(QPaintEvent * event) override;
 
 private:
+    void loadSettings();
+    void saveSettings();
+
     void render();
     void renderTracks(int nframe, double maxFreq, const std::deque<double> &pitches, const Formant::Frames &formants);
     void renderPitchTrack(int nframe, double maxFreq, const std::deque<double> &pitches);

@@ -28,6 +28,8 @@ protected:
     void closeEvent(QCloseEvent * event);
 
 private:
+    void loadSettings();
+
     void updateDevices();
     void updateFields();
 

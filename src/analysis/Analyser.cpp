@@ -2,6 +2,7 @@
 // Created by rika on 16/11/2019.
 //
 
+#include <QSettings>
 #include "Analyser.h"
 #include "../log/simpleQtLogger.h"
 
@@ -22,30 +23,22 @@ static const SpecFrame defaultSpec = {
 Analyser::Analyser(ma_context * ctx)
     : audioCapture(new AudioCapture(ctx)),
       doAnalyse(true),
-      nfft(512),
-      lpOrder(10),
-      cepOrder(15),
-      maximumFrequency(5000.0),
-      frameSpace(15.0),
-      windowSpan(5.0),
       running(false),
       lpFailed(true),
       nbNewFrames(0),
-      formantMethod(KARMA),
-      pitchAlg(Wavelet)
+      frameCount(0)
 {
-    frameCount = 0;
-    _updateFrameCount();
-    _initEkfState();
+    loadSettings();
 
     // Initialize the audio frames to zero.
-    x.setZero(512);
+    x.setZero(nfft);
 
     setInputDevice(nullptr);
 }
 
 Analyser::~Analyser() {
     delete audioCapture;
+    saveSettings();
 }
 
 void Analyser::startThread() {
@@ -180,6 +173,11 @@ void Analyser::setPitchAlgorithm(enum PitchAlg _pitchAlg) {
     }
 }
 
+PitchAlg Analyser::getPitchAlgorithm() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return pitchAlg;
+}
+
 void Analyser::setFormantMethod(enum FormantMethod _method) {
     std::lock_guard<std::mutex> lock(mutex);
     formantMethod = _method;
@@ -192,6 +190,11 @@ void Analyser::setFormantMethod(enum FormantMethod _method) {
             L_INFO("Set formant algorithm to KARMA");
             break;
     }
+}
+
+FormantMethod Analyser::getFormantMethod() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return formantMethod;
 }
 
 int Analyser::getFrameCount() {
@@ -295,4 +298,45 @@ void Analyser::_initEkfState()
     ekfState.cepOrder = this->cepOrder;
 
     EKF::init(ekfState, x0);
+}
+
+void Analyser::loadSettings()
+{
+    QSettings settings;
+
+    L_INFO("Loading analysis settings...");
+
+    settings.beginGroup("analysis");
+
+    setFftSize(settings.value("fftSize", 512).value<int>());
+    setLinearPredictionOrder(settings.value("lpOrder", 12).value<int>());
+    setMaximumFrequency(settings.value("maxFreq", 4700.0).value<double>());
+    setFrameSpace(std::chrono::milliseconds(settings.value("frameSpace", 15).value<int>()));
+    setWindowSpan(std::chrono::milliseconds(int(1000 * settings.value("windowSpan", 5.0).value<double>())));
+    setPitchAlgorithm((PitchAlg) settings.value("pitchAlg", static_cast<int>(Wavelet)).value<int>());
+    setFormantMethod((FormantMethod) settings.value("formantMethod", static_cast<int>(KARMA)).value<int>());
+    setCepstralOrder(settings.value("cepOrder", 15).value<int>());
+
+    settings.endGroup();
+}
+
+void Analyser::saveSettings()
+{
+    QSettings settings;
+
+    L_INFO("Saving analysis settings...");
+
+    settings.beginGroup("analysis");
+
+    settings.setValue("fftSize", nfft);
+    settings.setValue("lpOrder", lpOrder);
+    settings.setValue("maxFreq", maximumFrequency);
+    settings.setValue("cepOrder", cepOrder);
+    settings.setValue("frameSpace", frameSpace.count());
+    settings.setValue("windowSpan", windowSpan.count());
+    settings.setValue("pitchAlg", static_cast<int>(pitchAlg));
+    settings.setValue("formantMethod", static_cast<int>(formantMethod));
+
+    settings.endGroup();
+
 }

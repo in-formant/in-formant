@@ -47,7 +47,6 @@ public:
     void setInputDevice(const ma_device_id * id);
     void setOutputDevice(const ma_device_id * id);
 
-    void setSpectrum(bool);
     void setFftSize(int);
     void setLinearPredictionOrder(int);
     void setMaximumFrequency(double);
@@ -62,9 +61,10 @@ public:
     [[nodiscard]] int getLinearPredictionOrder();
     [[nodiscard]] double getMaximumFrequency();
     [[nodiscard]] int getCepstralOrder();
-
     [[nodiscard]] const std::chrono::duration<double, std::milli> & getFrameSpace();
     [[nodiscard]] const std::chrono::duration<double> & getWindowSpan();
+    [[nodiscard]] PitchAlg getPitchAlgorithm();
+    [[nodiscard]] FormantMethod getFormantMethod();
 
     [[nodiscard]] int getFrameCount();
 
@@ -77,6 +77,9 @@ public:
     [[nodiscard]] double getLastPitchFrame();
 
 private:
+    void loadSettings();
+    void saveSettings();
+
     void _updateFrameCount();
     void _initEkfState();
 
