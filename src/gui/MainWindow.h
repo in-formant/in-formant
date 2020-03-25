@@ -25,13 +25,16 @@ public:
     ~MainWindow();
 
 protected:
-    void closeEvent(QCloseEvent * event);
+    void closeEvent(QCloseEvent * event) override;
+    void keyPressEvent(QKeyEvent * event) override;
 
 private:
     void loadSettings();
 
     void updateDevices();
     void updateFields();
+
+    void toggleAnalyser();
 
     ma_context maCtx;
     AudioDevices * devs;
@@ -47,9 +50,14 @@ private:
     QHBoxLayout * hLayout5;
     QVBoxLayout * vLayout6;
 
+    QDockWidget * fieldsDock;
+    QDockWidget * settingsDock;
+
     QComboBox * inputDevIn;
     QComboBox * inputDevOut;
     QPushButton * inputDevRefresh;
+
+    QPushButton * inputPause;
 
     QCheckBox * inputToggleSpectrum;
     QComboBox * inputFftSize;

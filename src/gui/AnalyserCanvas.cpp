@@ -327,17 +327,6 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
     }
 }
 
-void AnalyserCanvas::keyPressEvent(QKeyEvent * event) {
-    const int key = event->key();
-
-    if (key == Qt::Key_Escape) {
-        window()->close();
-    }
-    else if (key == Qt::Key_P) {
-        analyser->toggle();
-    }
-}
-
 void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
     const auto p = event->localPos();
 

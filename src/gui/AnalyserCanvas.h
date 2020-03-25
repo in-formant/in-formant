@@ -37,7 +37,6 @@ public:
     int getMaxGainSpectrum() const;
 
 protected:
-    void keyPressEvent(QKeyEvent * event) override;
     void mouseMoveEvent(QMouseEvent * event) override;
     void paintEvent(QPaintEvent * event) override;
 

@@ -6,6 +6,8 @@
 #include "FFT/FFT.h"
 #include "../log/simpleQtLogger.h"
 
+constexpr int maxWidthComboBox = 200;
+
 MainWindow::MainWindow() {
 
     L_INFO("Initialising miniaudio context...");
@@ -61,27 +63,9 @@ MainWindow::MainWindow() {
         hLayout2 = new QHBoxLayout;
         vLayout1->addLayout(hLayout2);
         {
-            vLayout6 = new QVBoxLayout;
-            vLayout6->setSizeConstraint(QLayout::SetMaximumSize);
-            vLayout6->setAlignment(Qt::AlignLeft);
-            hLayout2->addLayout(vLayout6);
-            {
-                inputDevIn = new QComboBox;
-                inputDevIn->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-
-                inputDevRefresh = new QPushButton("Refresh list");
-                inputDevRefresh->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-
-                connect(inputDevRefresh, &QPushButton::clicked,
-                        [&]() { updateDevices(); });
-
-                vLayout6->addWidget(inputDevIn, 0, Qt::AlignLeft);
-                vLayout6->addWidget(inputDevRefresh, 0, Qt::AlignLeft);
-            }
-
             hLayout5 = new QHBoxLayout;
-            vLayout6->setSizeConstraint(QLayout::SetMaximumSize);
-            vLayout6->setAlignment(Qt::AlignCenter);
+            hLayout5->setSizeConstraint(QLayout::SetMaximumSize);
+            hLayout5->setAlignment(Qt::AlignCenter);
             hLayout2->addLayout(hLayout5);
             {
                 for (int i = 0; i < 4; ++i) {
@@ -102,6 +86,13 @@ MainWindow::MainWindow() {
             fieldPitch->setReadOnly(true);
 
             hLayout2->addWidget(fieldPitch, 0, Qt::AlignCenter);
+
+            inputPause = new QPushButton;
+            inputPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+           
+            connect(inputPause, &QPushButton::clicked, [&]() { toggleAnalyser(); });
+
+            hLayout2->addWidget(inputPause, 0, Qt::AlignCenter);
         }
 
         vLayout1->addSpacing(16);
@@ -109,9 +100,36 @@ MainWindow::MainWindow() {
         hLayout3 = new QHBoxLayout;
         vLayout1->addLayout(hLayout3);
         {
+            settingsDock = new QDockWidget(tr("Settings"), this);
+            settingsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+
+            auto settingsDockWidget = new QWidget(settingsDock);
+            settingsDock->setWidget(settingsDockWidget);
+
             fLayout4 = new QFormLayout;
-            hLayout3->addLayout(fLayout4);
+            settingsDockWidget->setLayout(fLayout4);
+            fLayout4->setSizeConstraint(QLayout::SetNoConstraint);
             {
+                auto devWidget = new QWidget;
+                auto devLayout = new QHBoxLayout(devWidget);
+                devLayout->setSizeConstraint(QLayout::SetMaximumSize);
+                devLayout->setContentsMargins(0, 0, 0, 0);
+                {
+                    inputDevIn = new QComboBox;
+                    inputDevIn->setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
+                    inputDevIn->setMaximumWidth(150);
+
+                    inputDevRefresh = new QPushButton;
+                    inputDevRefresh->setIcon(style()->standardIcon(QStyle::SP_BrowserReload));
+                    inputDevRefresh->setSizePolicy(QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred));
+
+                    connect(inputDevRefresh, &QPushButton::clicked,
+                            [&]() { updateDevices(); });
+
+                    devLayout->addWidget(inputDevIn, 0, Qt::AlignLeft);
+                    devLayout->addWidget(inputDevRefresh, 0, Qt::AlignRight);
+                }
+
                 inputToggleSpectrum = new QCheckBox;
 
                 connect(inputToggleSpectrum, &QCheckBox::toggled,
@@ -210,12 +228,13 @@ MainWindow::MainWindow() {
                 inputFormantAlg = new QComboBox;
                 inputFormantAlg->addItems({
                     "Linear prediction",
-                    "Kalman filter (experimental)",
+                    "Kalman filter",
                 });
 
                 connect(inputFormantAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
                         [&](const int value) { analyser->setFormantMethod(static_cast<FormantMethod>(value)); });
 
+                fLayout4->addRow(tr("Audio device:"), devWidget);
                 fLayout4->addRow(tr("Overlay spectrogram:"), inputToggleSpectrum);
                 fLayout4->addRow(tr("FFT size:"), inputFftSize);
                 fLayout4->addRow(tr("Minimum gain:"), inputMinGain);
@@ -235,6 +254,8 @@ MainWindow::MainWindow() {
                 fLayout4->addRow(tr("Formant algorithm:"), inputFormantAlg);
             }
 
+            addDockWidget(Qt::LeftDockWidgetArea, settingsDock);
+            
             hLayout3->addWidget(canvas);
             canvas->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
@@ -285,7 +306,7 @@ void MainWindow::updateFields() {
     QPalette palette = this->palette();
 
     if (pitch > 0) {
-        fieldPitch->setText(QString("Fo = %1 Hz").arg(pitch, 0, 'f', 1));
+        fieldPitch->setText(QString("%1 Hz").arg(pitch, 0, 'f', 1));
         fieldPitch->setStyleSheet("color: cyan");
     } else {
         fieldPitch->setText("Unvoiced");
@@ -358,6 +379,30 @@ void MainWindow::updateDevices()
                     }
                 }
             });
+}
+
+void MainWindow::keyPressEvent(QKeyEvent * event) {
+    const int key = event->key();
+
+    if (key == Qt::Key_Escape) {
+        close();
+    }
+    else if (key == Qt::Key_P) {
+        toggleAnalyser();
+    }
+}
+
+void MainWindow::toggleAnalyser() {
+    analyser->toggle();
+
+    bool running = analyser->isAnalysing();
+
+    if (running) {
+        inputPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+    }
+    else {
+        inputPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    }
 }
 
 void MainWindow::loadSettings()
