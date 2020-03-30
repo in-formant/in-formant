@@ -57,210 +57,234 @@ MainWindow::MainWindow() {
 
     canvas = new AnalyserCanvas(analyser);
 
-    vLayout1 = new QVBoxLayout(central);
-    central->setLayout(vLayout1);
+    fieldsDock = new QDockWidget(tr("Estimates"), this);
     {
-        hLayout2 = new QHBoxLayout;
-        vLayout1->addLayout(hLayout2);
+        fieldsDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+        fieldsDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+
+        auto dockWidget = new QWidget(fieldsDock);
+        fieldsDock->setWidget(dockWidget);
+
+        auto ly1 = new QBoxLayout(QBoxLayout::LeftToRight, dockWidget);
+
+        connect(fieldsDock, &QDockWidget::dockLocationChanged,
+                [&, ly1](Qt::DockWidgetArea area) {
+                    if (area == Qt::LeftDockWidgetArea || area == Qt::RightDockWidgetArea) {
+                        ly1->setDirection(QBoxLayout::TopToBottom);
+                    }
+                    else if (area == Qt::TopDockWidgetArea || area == Qt::BottomDockWidgetArea) {
+                        ly1->setDirection(QBoxLayout::LeftToRight);
+                    }
+                });
+        
+        connect(fieldsDock, &QDockWidget::topLevelChanged,
+                [&, ly1](bool topLevel) {
+                    if (topLevel) {
+                        ly1->setDirection(QBoxLayout::LeftToRight);
+                    }
+                });
+
+        for (int i = 0; i < 4; ++i) {
+            auto field = new QLineEdit;
+
+            field->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+            field->setReadOnly(true);
+
+            fieldFormant.push_back(field);
+
+            ly1->addWidget(field, 0, Qt::AlignCenter);
+        }
+
+        fieldPitch = new QLineEdit;
+
+        fieldPitch->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+        fieldPitch->setReadOnly(true);
+
+        ly1->addWidget(fieldPitch, 0, Qt::AlignCenter);
+    }
+
+
+    settingsDock = new QDockWidget(tr("Settings"), this);
+    {
+        settingsDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+        settingsDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+
+        auto dockScroll = new QScrollArea;
+        auto dockWidget = new QWidget(settingsDock);
+        settingsDock->setWidget(dockScroll);
+        
+        auto ly1 = new QFormLayout(dockWidget);
+        ly1->setSizeConstraint(QLayout::SetNoConstraint);
         {
-            hLayout5 = new QHBoxLayout;
-            hLayout5->setSizeConstraint(QLayout::SetMaximumSize);
-            hLayout5->setAlignment(Qt::AlignCenter);
-            hLayout2->addLayout(hLayout5);
+            auto devWidget = new QWidget;
+            auto devLayout = new QHBoxLayout(devWidget);
+            devLayout->setSizeConstraint(QLayout::SetMaximumSize);
+            devLayout->setContentsMargins(0, 0, 0, 0);
             {
-                for (int i = 0; i < 4; ++i) {
-                    auto field = new QLineEdit;
+                inputDevIn = new QComboBox;
+                inputDevIn->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
+                inputDevIn->setMaximumWidth(150);
 
-                    field->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-                    field->setReadOnly(true);
+                inputDevRefresh = new QPushButton;
+                inputDevRefresh->setIcon(style()->standardIcon(QStyle::SP_BrowserReload));
+                inputDevRefresh->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
 
-                    fieldFormant.push_back(field);
+                connect(inputDevRefresh, &QPushButton::clicked,
+                        [&]() { updateDevices(); });
 
-                    hLayout5->addWidget(field, 0, Qt::AlignCenter);
-                }
+                devLayout->addWidget(inputDevIn, 0, Qt::AlignLeft);
+                devLayout->addWidget(inputDevRefresh, 0, Qt::AlignRight);
             }
 
-            fieldPitch = new QLineEdit;
+            inputToggleSpectrum = new QCheckBox;
 
-            fieldPitch->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-            fieldPitch->setReadOnly(true);
+            connect(inputToggleSpectrum, &QCheckBox::toggled,
+                    [&](const bool checked) { canvas->setDrawSpectrum(checked); });
 
-            hLayout2->addWidget(fieldPitch, 0, Qt::AlignCenter);
+            inputFftSize = new QComboBox;
+            inputFftSize->addItems({"64", "128", "256", "512", "1024", "2048", "4096"});
 
+            connect(inputFftSize, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
+                    [&](const QString value) { analyser->setFftSize(value.toInt()); });
+
+            inputMinGain = new QSpinBox;
+            inputMinGain->setRange(-200, 60);
+            inputMinGain->setSingleStep(10);
+            inputMinGain->setSuffix(" dB");
+
+            inputMaxGain = new QSpinBox;
+            inputMaxGain->setRange(-200, 60);
+            inputMaxGain->setSingleStep(10);
+            inputMaxGain->setSuffix(" dB");
+            
+            connect(inputMinGain, QOverload<int>::of(&QSpinBox::valueChanged),
+                    [&](const int value) { canvas->setMinGainSpectrum(value);
+                                           inputMaxGain->setMinimum(value + 10); });
+
+            connect(inputMaxGain, QOverload<int>::of(&QSpinBox::valueChanged),
+                    [&](const int value) { canvas->setMaxGainSpectrum(value);
+                                           inputMinGain->setMaximum(value - 10); });
+
+            inputLpOrder = new QSpinBox;
+            inputLpOrder->setRange(5, 22);
+
+            connect(inputLpOrder, QOverload<int>::of(&QSpinBox::valueChanged),
+                    [&](const int value) { analyser->setLinearPredictionOrder(value); });
+
+            inputMaxFreq = new QSpinBox;
+            inputMaxFreq->setRange(2500, 7000);
+            inputMaxFreq->setStepType(QSpinBox::AdaptiveDecimalStepType);
+            inputMaxFreq->setSuffix(" Hz");
+
+            connect(inputMaxFreq, QOverload<int>::of(&QSpinBox::valueChanged),
+                    [&](const int value) { analyser->setMaximumFrequency(value); });
+
+            inputFreqScale = new QComboBox;
+            inputFreqScale->addItems({"Linear", "Logarithmic", "Mel"});
+
+            connect(inputFreqScale, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                    [&](const int value) { canvas->setFrequencyScale(value); });
+
+            inputFrameSpace = new QSpinBox;
+            inputFrameSpace->setRange(5, 30);
+            inputFrameSpace->setSingleStep(1);
+            inputFrameSpace->setSuffix(" ms");
+
+            connect(inputFrameSpace, QOverload<int>::of(&QSpinBox::valueChanged),
+                    [&](const int value) { analyser->setFrameSpace(std::chrono::milliseconds(value)); });
+
+            inputWindowSpan = new QDoubleSpinBox;
+            inputWindowSpan->setRange(2, 30);
+            inputWindowSpan->setSingleStep(0.5);
+            inputWindowSpan->setSuffix(" s");
+
+            connect(inputWindowSpan, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+                    [&](const double value) { analyser->setWindowSpan(std::chrono::milliseconds(int(1000 * value))); });
+
+            for (int nb = 0; nb < 4; ++nb) {
+                auto input = new QPushButton;
+                
+                connect(input, &QPushButton::clicked,
+                        [=] () {
+                            QColor c = QColorDialog::getColor(
+                                canvas->getFormantColor(nb),
+                                this,
+                                QString("Select F%1 color").arg(nb + 1),
+                                QColorDialog::DontUseNativeDialog
+                            );
+                            if (c.isValid()) {
+                                canvas->setFormantColor(nb, c);
+                            }
+                        });
+
+                inputFormantColor[nb] = input;
+            }
+             
+            inputPitchAlg = new QComboBox;
+            inputPitchAlg->addItems({
+                "Wavelet",
+                "McLeod",
+                "YIN",
+                "AMDF",
+            });
+
+            connect(inputPitchAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                    [&](const int value) { analyser->setPitchAlgorithm(static_cast<PitchAlg>(value)); });
+
+            inputFormantAlg = new QComboBox;
+            inputFormantAlg->addItems({
+                "Linear prediction",
+                "Kalman filter",
+            });
+
+            connect(inputFormantAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                    [&](const int value) { analyser->setFormantMethod(static_cast<FormantMethod>(value)); });
+
+            ly1->addRow(tr("Audio device:"), devWidget);
+            ly1->addRow(tr("Overlay spectrogram:"), inputToggleSpectrum);
+            ly1->addRow(tr("FFT size:"), inputFftSize);
+            ly1->addRow(tr("Minimum gain:"), inputMinGain);
+            ly1->addRow(tr("Maximum gain:"), inputMaxGain);
+            ly1->addRow(tr("Linear prediction order:"), inputLpOrder);
+            ly1->addRow(tr("Maximum frequency:"), inputMaxFreq);
+            ly1->addRow(tr("Frequency scale:"), inputFreqScale);
+            ly1->addRow(tr("Frame space:"), inputFrameSpace);
+            ly1->addRow(tr("Analysis duration:"), inputWindowSpan);
+
+            for (int nb = 0; nb < 4; ++nb) {
+                const QString labelStr = QString("F%1 color:").arg(nb + 1);
+                ly1->addRow(tr(qPrintable(labelStr)), inputFormantColor[nb]);
+            }
+
+            ly1->addRow(tr("Pitch algorithm:"), inputPitchAlg);
+            ly1->addRow(tr("Formant algorithm:"), inputFormantAlg);
+        }
+        
+        dockScroll->setWidget(dockWidget);
+    }
+    
+    auto ly1 = new QVBoxLayout(central);
+    {
+        auto ly2 = new QHBoxLayout;
+        ly1->addLayout(ly2);
+        {
             inputPause = new QPushButton;
             inputPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+            inputPause->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
            
             connect(inputPause, &QPushButton::clicked, [&]() { toggleAnalyser(); });
 
-            hLayout2->addWidget(inputPause, 0, Qt::AlignCenter);
+            ly2->addWidget(inputPause, 0, Qt::AlignRight);
         }
 
-        vLayout1->addSpacing(16);
+        ly1->addSpacing(16);
 
-        hLayout3 = new QHBoxLayout;
-        vLayout1->addLayout(hLayout3);
-        {
-            settingsDock = new QDockWidget(tr("Settings"), this);
-            settingsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-
-            auto settingsDockWidget = new QWidget(settingsDock);
-            settingsDock->setWidget(settingsDockWidget);
-
-            fLayout4 = new QFormLayout;
-            settingsDockWidget->setLayout(fLayout4);
-            fLayout4->setSizeConstraint(QLayout::SetNoConstraint);
-            {
-                auto devWidget = new QWidget;
-                auto devLayout = new QHBoxLayout(devWidget);
-                devLayout->setSizeConstraint(QLayout::SetMaximumSize);
-                devLayout->setContentsMargins(0, 0, 0, 0);
-                {
-                    inputDevIn = new QComboBox;
-                    inputDevIn->setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
-                    inputDevIn->setMaximumWidth(150);
-
-                    inputDevRefresh = new QPushButton;
-                    inputDevRefresh->setIcon(style()->standardIcon(QStyle::SP_BrowserReload));
-                    inputDevRefresh->setSizePolicy(QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred));
-
-                    connect(inputDevRefresh, &QPushButton::clicked,
-                            [&]() { updateDevices(); });
-
-                    devLayout->addWidget(inputDevIn, 0, Qt::AlignLeft);
-                    devLayout->addWidget(inputDevRefresh, 0, Qt::AlignRight);
-                }
-
-                inputToggleSpectrum = new QCheckBox;
-
-                connect(inputToggleSpectrum, &QCheckBox::toggled,
-                        [&](const bool checked) { canvas->setDrawSpectrum(checked); });
-
-                inputFftSize = new QComboBox;
-                inputFftSize->addItems({"64", "128", "256", "512", "1024", "2048", "4096"});
-
-                connect(inputFftSize, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
-                        [&](const QString value) { analyser->setFftSize(value.toInt()); });
-
-                inputMinGain = new QSpinBox;
-                inputMinGain->setRange(-200, 60);
-                inputMinGain->setSingleStep(10);
-                inputMinGain->setSuffix(" dB");
-
-                inputMaxGain = new QSpinBox;
-                inputMaxGain->setRange(-200, 60);
-                inputMaxGain->setSingleStep(10);
-                inputMaxGain->setSuffix(" dB");
-                
-                connect(inputMinGain, QOverload<int>::of(&QSpinBox::valueChanged),
-                        [&](const int value) { canvas->setMinGainSpectrum(value);
-                                               inputMaxGain->setMinimum(value + 10); });
-
-                connect(inputMaxGain, QOverload<int>::of(&QSpinBox::valueChanged),
-                        [&](const int value) { canvas->setMaxGainSpectrum(value);
-                                               inputMinGain->setMaximum(value - 10); });
-
-                inputLpOrder = new QSpinBox;
-                inputLpOrder->setRange(5, 22);
-
-                connect(inputLpOrder, QOverload<int>::of(&QSpinBox::valueChanged),
-                        [&](const int value) { analyser->setLinearPredictionOrder(value); });
-
-                inputMaxFreq = new QSpinBox;
-                inputMaxFreq->setRange(2500, 7000);
-                inputMaxFreq->setStepType(QSpinBox::AdaptiveDecimalStepType);
-                inputMaxFreq->setSuffix(" Hz");
-
-                connect(inputMaxFreq, QOverload<int>::of(&QSpinBox::valueChanged),
-                        [&](const int value) { analyser->setMaximumFrequency(value); });
-
-                inputFreqScale = new QComboBox;
-                inputFreqScale->addItems({"Linear", "Logarithmic", "Mel"});
-
-                connect(inputFreqScale, QOverload<int>::of(&QComboBox::currentIndexChanged),
-                        [&](const int value) { canvas->setFrequencyScale(value); });
-
-                inputFrameSpace = new QSpinBox;
-                inputFrameSpace->setRange(5, 30);
-                inputFrameSpace->setSingleStep(1);
-                inputFrameSpace->setSuffix(" ms");
-
-                connect(inputFrameSpace, QOverload<int>::of(&QSpinBox::valueChanged),
-                        [&](const int value) { analyser->setFrameSpace(std::chrono::milliseconds(value)); });
-
-                inputWindowSpan = new QDoubleSpinBox;
-                inputWindowSpan->setRange(2, 30);
-                inputWindowSpan->setSingleStep(0.5);
-                inputWindowSpan->setSuffix(" s");
-
-                connect(inputWindowSpan, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-                        [&](const double value) { analyser->setWindowSpan(std::chrono::milliseconds(int(1000 * value))); });
-
-                for (int nb = 0; nb < 4; ++nb) {
-                    auto input = new QPushButton;
-                    
-                    connect(input, &QPushButton::clicked,
-                            [=] () {
-                                QColor c = QColorDialog::getColor(
-                                    canvas->getFormantColor(nb),
-                                    this,
-                                    QString("Select F%1 color").arg(nb + 1),
-                                    QColorDialog::DontUseNativeDialog
-                                );
-                                if (c.isValid()) {
-                                    canvas->setFormantColor(nb, c);
-                                }
-                            });
-
-                    inputFormantColor[nb] = input;
-                }
-                 
-                inputPitchAlg = new QComboBox;
-                inputPitchAlg->addItems({
-                    "Wavelet",
-                    "McLeod",
-                    "YIN",
-                    "AMDF",
-                });
-
-                connect(inputPitchAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
-                        [&](const int value) { analyser->setPitchAlgorithm(static_cast<PitchAlg>(value)); });
-
-                inputFormantAlg = new QComboBox;
-                inputFormantAlg->addItems({
-                    "Linear prediction",
-                    "Kalman filter",
-                });
-
-                connect(inputFormantAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
-                        [&](const int value) { analyser->setFormantMethod(static_cast<FormantMethod>(value)); });
-
-                fLayout4->addRow(tr("Audio device:"), devWidget);
-                fLayout4->addRow(tr("Overlay spectrogram:"), inputToggleSpectrum);
-                fLayout4->addRow(tr("FFT size:"), inputFftSize);
-                fLayout4->addRow(tr("Minimum gain:"), inputMinGain);
-                fLayout4->addRow(tr("Maximum gain:"), inputMaxGain);
-                fLayout4->addRow(tr("Linear prediction order:"), inputLpOrder);
-                fLayout4->addRow(tr("Maximum frequency:"), inputMaxFreq);
-                fLayout4->addRow(tr("Frequency scale:"), inputFreqScale);
-                fLayout4->addRow(tr("Frame space:"), inputFrameSpace);
-                fLayout4->addRow(tr("Analysis duration:"), inputWindowSpan);
-
-                for (int nb = 0; nb < 4; ++nb) {
-                    const QString labelStr = QString("F%1 color:").arg(nb + 1);
-                    fLayout4->addRow(tr(qPrintable(labelStr)), inputFormantColor[nb]);
-                }
-
-                fLayout4->addRow(tr("Pitch algorithm:"), inputPitchAlg);
-                fLayout4->addRow(tr("Formant algorithm:"), inputFormantAlg);
-            }
-
-            addDockWidget(Qt::LeftDockWidgetArea, settingsDock);
-            
-            hLayout3->addWidget(canvas);
-            canvas->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-        }
+        ly1->addWidget(canvas);
+        canvas->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     }
+
+    addDockWidget(Qt::TopDockWidgetArea, fieldsDock);
+    addDockWidget(Qt::LeftDockWidgetArea, settingsDock);
 
     setWindowTitle(WINDOW_TITLE);
     resize(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -306,7 +330,7 @@ void MainWindow::updateFields() {
     QPalette palette = this->palette();
 
     if (pitch > 0) {
-        fieldPitch->setText(QString("%1 Hz").arg(pitch, 0, 'f', 1));
+        fieldPitch->setText(QString("H1 = %1 Hz").arg(pitch, 0, 'f', 1));
         fieldPitch->setStyleSheet("color: cyan");
     } else {
         fieldPitch->setText("Unvoiced");

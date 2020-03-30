@@ -43,12 +43,6 @@ private:
     QTimer timer;
 
     QWidget * central;
-    QVBoxLayout * vLayout1;
-    QHBoxLayout * hLayout2;
-    QHBoxLayout * hLayout3;
-    QFormLayout * fLayout4;
-    QHBoxLayout * hLayout5;
-    QVBoxLayout * vLayout6;
 
     QDockWidget * fieldsDock;
     QDockWidget * settingsDock;
