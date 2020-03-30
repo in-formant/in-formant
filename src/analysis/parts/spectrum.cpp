@@ -2,35 +2,20 @@
 // Created by clo on 7/12/2019.
 //
 
+#include <iostream>
 #include "../Analyser.h"
 #include "FFT/FFT.h"
 #include "Signal/Filter.h"
 #include "Signal/Window.h"
+#include "Signal/Resample.h"
 
 using namespace Eigen;
 
 void Analyser::analyseSpectrum()
 {
-    const int N = x.size();
-
-    const int nfft = this->nfft / 2;
-
     rfft_plan(nfft);
 
-    Map<ArrayXd> xin(rfft_in(nfft), nfft);
-
-    if (nfft < N) {
-        // Grab the center segment of the signal (to respect windowing).
-        xin = x.segment(N / 2 - nfft / 2, nfft) * Window::createHanning(nfft);
-    }
-    else if (nfft > N) {
-        // Zero-pad the signal.
-        xin.setZero();
-        xin.segment(nfft / 2 - N / 2, N) = x * Window::createHanning(N);
-    }
-    else {
-        xin = x * Window::createHanning(N);
-    }
+    Map<ArrayXd>(rfft_in(nfft), nfft) = x_fft.head(nfft) * Window::createHanning(nfft); 
 
     rfft(nfft);
 

@@ -52,7 +52,7 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
         repaint();
     });
     timer.setTimerType(Qt::PreciseTimer);
-    timer.start(1000.0 / 90.0);
+    timer.start(1000.0 / 60.0);
 }
 
 AnalyserCanvas::~AnalyserCanvas() {
@@ -307,7 +307,7 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
                 b = (1 - a) * b1 + a * b2;
             }
 
-            rects.push_back({ r, g, b, y, y2 });
+            rects.push_back({ r, g, b, (int) y, (int) y2 });
         }
        
         Tile prevRect = {
@@ -414,13 +414,17 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
     actualWidth = nframe;
 
     if (spectrogram.width() != actualWidth || spectrogram.height() != targetHeight) {
+        frameLock.lock();
         spectrogram = QPixmap(actualWidth, targetHeight);
         spectrogram.fill(Qt::black);
+        frameLock.unlock();
     }
 
     if (tracks.width() != targetWidth || tracks.height() != targetHeight) {
+        frameLock.lock();
         tracks = QPixmap(targetWidth, targetHeight);
-        tracks.fill(Qt::transparent);        
+        tracks.fill(Qt::transparent);
+        frameLock.unlock();
     }
     
     painter.begin(this);

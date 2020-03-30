@@ -30,9 +30,6 @@ Analyser::Analyser(ma_context * ctx)
 {
     loadSettings();
 
-    // Initialize the audio frames to zero.
-    x.setZero(nfft);
-
     setInputDevice(nullptr);
 }
 
@@ -83,6 +80,8 @@ void Analyser::setFftSize(int _nfft) {
     std::lock_guard<std::mutex> lock(mutex);
     nfft = _nfft;
     LS_INFO("Set FFT size to " << nfft);
+    
+    _updateCaptureDuration();
 }
 
 int Analyser::getFftSize() {
@@ -105,9 +104,9 @@ void Analyser::setCepstralOrder(int _cepOrder) {
     std::lock_guard<std::mutex> lock(mutex);
     
     cepOrder = std::clamp(_cepOrder, 7, 25);
-    _initEkfState();
-    
     LS_INFO("Set LPCC order to " << cepOrder);
+
+    _initEkfState(); 
 }
 
 int Analyser::getCepstralOrder() {
@@ -120,11 +119,26 @@ void Analyser::setMaximumFrequency(double _maximumFrequency) {
     maximumFrequency = std::clamp(_maximumFrequency, 2500.0, 7000.0);
     
     LS_INFO("Set maximum frequency to " << maximumFrequency);
+
+    _updateCaptureDuration();
 }
 
 double Analyser::getMaximumFrequency() {
     std::lock_guard<std::mutex> lock(mutex);
     return maximumFrequency;
+}
+
+void Analyser::setFrameLength(const std::chrono::duration<double, std::milli> & _frameLength) {
+    std::lock_guard<std::mutex> lock(mutex);
+    frameLength = _frameLength;
+    LS_INFO("Set frame length to " << frameLength.count() << " ms");
+    
+    _updateCaptureDuration();
+}
+
+const std::chrono::duration<double, std::milli> & Analyser::getFrameLength() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return frameLength;
 }
 
 void Analyser::setFrameSpace(const std::chrono::duration<double, std::milli> & _frameSpace) {
@@ -271,6 +285,23 @@ void Analyser::_updateFrameCount() {
     frameCount = newFrameCount;
 }
 
+void Analyser::_updateCaptureDuration()
+{
+    double fs = audioCapture->getSampleRate();
+    double refs = 2 * maximumFrequency;
+
+    // Account for resampling.
+    fftSamples = (fs * nfft) / refs;
+    frameSamples = frameLength.count() / 1000.0 * fs;
+
+    int nsamples = std::max(fftSamples, frameSamples);
+    if (nsamples != this->nsamples) {
+        audioCapture->setCaptureDuration(nsamples);
+
+        LS_INFO("Set capture duration to " << nsamples << " samples (" << (1000.0 * nsamples / fs) << " ms)");
+    }
+}
+
 void Analyser::_initEkfState()
 {
     int numF = 4;
@@ -278,9 +309,10 @@ void Analyser::_initEkfState()
     VectorXd x0(2 * numF);
     x0.setZero();
 
-    // Average over the last 20 frames.
+    // Average over the last few frames.
+    int nback = 30;
     
-    for (int i = 1; i <= 20; ++i) {
+    for (int i = 1; i <= nback; ++i) {
         VectorXd x(2 * numF);
         
         auto & frm = smoothedFormants[frameCount - i];
@@ -293,7 +325,7 @@ void Analyser::_initEkfState()
         x0 += x;
     }
 
-    x0 /= 20.0;
+    x0 /= (double) nback;
 
     ekfState.cepOrder = this->cepOrder;
 
@@ -308,9 +340,10 @@ void Analyser::loadSettings()
 
     settings.beginGroup("analysis");
 
+    setMaximumFrequency(settings.value("maxFreq", 4700.0).value<double>());
     setFftSize(settings.value("fftSize", 512).value<int>());
     setLinearPredictionOrder(settings.value("lpOrder", 12).value<int>());
-    setMaximumFrequency(settings.value("maxFreq", 4700.0).value<double>());
+    setFrameLength(std::chrono::milliseconds(settings.value("frameLength", 35).value<int>()));
     setFrameSpace(std::chrono::milliseconds(settings.value("frameSpace", 15).value<int>()));
     setWindowSpan(std::chrono::milliseconds(int(1000 * settings.value("windowSpan", 5.0).value<double>())));
     setPitchAlgorithm((PitchAlg) settings.value("pitchAlg", static_cast<int>(Wavelet)).value<int>());
@@ -328,10 +361,11 @@ void Analyser::saveSettings()
 
     settings.beginGroup("analysis");
 
+    settings.setValue("maxFreq", maximumFrequency);
     settings.setValue("fftSize", nfft);
     settings.setValue("lpOrder", lpOrder);
-    settings.setValue("maxFreq", maximumFrequency);
     settings.setValue("cepOrder", cepOrder);
+    settings.setValue("frameLength", frameLength.count());
     settings.setValue("frameSpace", frameSpace.count());
     settings.setValue("windowSpan", windowSpan.count());
     settings.setValue("pitchAlg", static_cast<int>(pitchAlg));

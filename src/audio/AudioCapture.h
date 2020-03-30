@@ -31,8 +31,9 @@ public:
 
     static void readCallback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount);
 
-    [[nodiscard]]
-    int getSampleRate() const noexcept;
+    void setCaptureDuration(int nsamples);
+
+    [[nodiscard]] int getSampleRate() const noexcept;
 
     void readBlock(Eigen::ArrayXd & capture) noexcept;
 

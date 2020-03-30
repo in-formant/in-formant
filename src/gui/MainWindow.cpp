@@ -84,7 +84,7 @@ MainWindow::MainWindow() {
                     }
                 });
 
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < inputFormantColor.size(); ++i) {
             auto field = new QLineEdit;
 
             field->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
@@ -185,6 +185,14 @@ MainWindow::MainWindow() {
             connect(inputFreqScale, QOverload<int>::of(&QComboBox::currentIndexChanged),
                     [&](const int value) { canvas->setFrequencyScale(value); });
 
+            inputFrameLength = new QSpinBox;
+            inputFrameLength->setRange(15, 100);
+            inputFrameLength->setSingleStep(5);
+            inputFrameLength->setSuffix(" ms");
+
+            connect(inputFrameLength, QOverload<int>::of(&QSpinBox::valueChanged),
+                    [&](const int value) { analyser->setFrameLength(std::chrono::milliseconds(value)); });
+
             inputFrameSpace = new QSpinBox;
             inputFrameSpace->setRange(5, 30);
             inputFrameSpace->setSingleStep(1);
@@ -201,7 +209,7 @@ MainWindow::MainWindow() {
             connect(inputWindowSpan, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
                     [&](const double value) { analyser->setWindowSpan(std::chrono::milliseconds(int(1000 * value))); });
 
-            for (int nb = 0; nb < 4; ++nb) {
+            for (int nb = 0; nb < inputFormantColor.size(); ++nb) {
                 auto input = new QPushButton;
                 
                 connect(input, &QPushButton::clicked,
@@ -248,10 +256,11 @@ MainWindow::MainWindow() {
             ly1->addRow(tr("Linear prediction order:"), inputLpOrder);
             ly1->addRow(tr("Maximum frequency:"), inputMaxFreq);
             ly1->addRow(tr("Frequency scale:"), inputFreqScale);
+            ly1->addRow(tr("Frame length:"), inputFrameLength);
             ly1->addRow(tr("Frame space:"), inputFrameSpace);
             ly1->addRow(tr("Analysis duration:"), inputWindowSpan);
 
-            for (int nb = 0; nb < 4; ++nb) {
+            for (int nb = 0; nb < inputFormantColor.size(); ++nb) {
                 const QString labelStr = QString("F%1 color:").arg(nb + 1);
                 ly1->addRow(tr(qPrintable(labelStr)), inputFormantColor[nb]);
             }
@@ -338,7 +347,7 @@ void MainWindow::updateFields() {
     }
     fieldPitch->adjustSize();
 
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < inputFormantColor.size(); ++i) {
         if (i < formants.nFormants) {
             fieldFormant[i]->setText(QString("F%1 = %2 Hz").arg(i + 1).arg(round(formants.formant[i].frequency)));
         }
@@ -437,6 +446,7 @@ void MainWindow::loadSettings()
     int lpOrder = analyser->getLinearPredictionOrder();
     double maxFreq = analyser->getMaximumFrequency();
     int cepOrder = analyser->getCepstralOrder();
+    double frameLength = analyser->getFrameLength().count();
     double frameSpace = analyser->getFrameSpace().count();
     double windowSpan = analyser->getWindowSpan().count();
     PitchAlg pitchAlg = analyser->getPitchAlgorithm();
@@ -464,6 +474,7 @@ void MainWindow::loadSettings()
     callWithBlocker(inputLpOrder, setValue(lpOrder));
     callWithBlocker(inputMaxFreq, setValue(maxFreq));
     callWithBlocker(inputFreqScale, setCurrentIndex(freqScale));
+    callWithBlocker(inputFrameLength, setValue(frameLength));
     callWithBlocker(inputFrameSpace, setValue(frameSpace));
     callWithBlocker(inputWindowSpan, setValue(windowSpan));
     callWithBlocker(inputMinGain, setValue(minGain));

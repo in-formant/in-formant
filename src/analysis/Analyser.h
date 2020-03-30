@@ -51,6 +51,7 @@ public:
     void setLinearPredictionOrder(int);
     void setMaximumFrequency(double);
     void setCepstralOrder(int);
+    void setFrameLength(const std::chrono::duration<double, std::milli> & frameLength);
     void setFrameSpace(const std::chrono::duration<double, std::milli> & frameSpace);
     void setWindowSpan(const std::chrono::duration<double> & windowSpan);
     void setPitchAlgorithm(enum PitchAlg);
@@ -61,6 +62,7 @@ public:
     [[nodiscard]] int getLinearPredictionOrder();
     [[nodiscard]] double getMaximumFrequency();
     [[nodiscard]] int getCepstralOrder();
+    [[nodiscard]] const std::chrono::duration<double, std::milli> & getFrameLength();
     [[nodiscard]] const std::chrono::duration<double, std::milli> & getFrameSpace();
     [[nodiscard]] const std::chrono::duration<double> & getWindowSpan();
     [[nodiscard]] PitchAlg getPitchAlgorithm();
@@ -81,6 +83,7 @@ private:
     void saveSettings();
 
     void _updateFrameCount();
+    void _updateCaptureDuration();
     void _initEkfState();
 
     void mainLoop();
@@ -100,9 +103,14 @@ private:
     AudioCapture * audioCapture;
 
     // Parameters.
+    std::chrono::duration<double, std::milli> frameLength;
     std::chrono::duration<double, std::milli> frameSpace;
     std::chrono::duration<double> windowSpan;
     int frameCount;
+
+    int fftSamples;
+    int frameSamples;
+    int nsamples;
 
     bool doAnalyse;
     int nfft;
@@ -114,7 +122,7 @@ private:
     PitchAlg pitchAlg;
 
     // Intermediate variables for analysis.
-    Eigen::ArrayXd x;
+    Eigen::ArrayXd x, x_fft;
     double fs;
     LPC::Frame lpcFrame;
     EKF::State ekfState;

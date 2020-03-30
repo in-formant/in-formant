@@ -8,6 +8,7 @@
 using namespace Eigen;
 
 void Analyser::resampleAudio(double newFs) {
-    x = std::move(Resample::resample(x, fs, newFs, 50));
+    x = Resample::resample(x, fs, newFs, 50);
+    x_fft = Resample::resample(x_fft, fs, newFs, 50);
     fs = newFs;
 }

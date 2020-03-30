@@ -2,6 +2,7 @@
 // Created by clo on 12/09/2019.
 //
 
+#include <QSettings>
 #include <iostream>
 #include "AudioCapture.h"
 #include "../Exceptions.h"
@@ -13,7 +14,6 @@ AudioCapture::AudioCapture(ma_context * maCtx)
     L_INFO("Initialising audio capture buffer...");
 
     audioContext.sampleRate = sampleRate;
-    audioContext.buffer.setCapacity(BUFFER_SAMPLE_COUNT(sampleRate));
 }
 
 AudioCapture::~AudioCapture()
@@ -86,12 +86,15 @@ void AudioCapture::closeStream()
     deviceInit = false;
 }
 
+void AudioCapture::setCaptureDuration(int nsamples) {
+    audioContext.buffer.setCapacity(nsamples);
+}
 
 int AudioCapture::getSampleRate() const noexcept {
     return sampleRate;
 }
 
 void AudioCapture::readBlock(Eigen::ArrayXd & capture) noexcept {
-    capture.conservativeResize(CAPTURE_SAMPLE_COUNT(sampleRate));
     audioContext.buffer.readFrom(capture);
 }
+

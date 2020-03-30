@@ -38,10 +38,20 @@ void Analyser::update()
         return;
     }
 
+    // Lock the tracks to prevent data race conditions.
+    mutex.lock();
+    
     // Read captured audio.
     audioLock.lock();
+    
+    x.resize(frameSamples);
     audioCapture->readBlock(x);
+
+    x_fft.resize(fftSamples);
+    audioCapture->readBlock(x_fft);
+    
     fs = audioCapture->getSampleRate();
+   
     audioLock.unlock();
 
     // Remove DC by subtraction of the mean.
@@ -67,9 +77,6 @@ void Analyser::update()
 
     // Perform formant analysis.
     analyseFormant();
-
-    // Lock the tracks to prevent data race conditions.
-    mutex.lock();
 
     // Update the raw tracks.
     pitchTrack.pop_front();

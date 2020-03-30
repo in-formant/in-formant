@@ -20,9 +20,10 @@ void Analyser::applyWindow()
 
 void Analyser::applyPreEmphasis()
 {
-    constexpr double preEmphasisFrequency = 200.0;
+    constexpr double preEmphasisFrequency = 150.0;
 
     if (preEmphasisFrequency < fs / 2.0) {
         Filter::preEmphasis(x, fs, preEmphasisFrequency);
+        Filter::preEmphasis(x_fft, fs, preEmphasisFrequency);
     }
 }

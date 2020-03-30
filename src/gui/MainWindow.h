@@ -60,6 +60,7 @@ private:
     QSpinBox * inputMaxFreq;
 
     QComboBox * inputFreqScale;
+    QSpinBox * inputFrameLength;
     QSpinBox * inputFrameSpace;
     QDoubleSpinBox * inputWindowSpan;
 
