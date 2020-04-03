@@ -9,7 +9,7 @@
 #include "../log/simpleQtLogger.h"
 
 AudioCapture::AudioCapture(ma_context * maCtx)
-    : sampleRate(32000), maCtx(maCtx), deviceInit(false)
+    : sampleRate(16000), maCtx(maCtx), deviceInit(false)
 {
     L_INFO("Initialising audio capture buffer...");
 

@@ -1,7 +1,7 @@
 #include <functional>
 #include <iostream>
 #include <deque>
-#include "MedianFilter.hpp"
+//#include "MedianFilter.hpp"
 #include "../Analyser.h"
 
 // Lowpass filter (Bessel, 0.08 cutoff, order 6)

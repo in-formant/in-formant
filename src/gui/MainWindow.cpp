@@ -142,7 +142,7 @@ MainWindow::MainWindow() {
                     [&](const bool checked) { canvas->setDrawSpectrum(checked); });
 
             inputFftSize = new QComboBox;
-            inputFftSize->addItems({"64", "128", "256", "512", "1024", "2048", "4096"});
+            inputFftSize->addItems({"64", "128", "256", "512", "1024", "2048"});
 
             connect(inputFftSize, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
                     [&](const QString value) { analyser->setFftSize(value.toInt()); });
@@ -186,7 +186,7 @@ MainWindow::MainWindow() {
                     [&](const int value) { canvas->setFrequencyScale(value); });
 
             inputFrameLength = new QSpinBox;
-            inputFrameLength->setRange(15, 100);
+            inputFrameLength->setRange(25, 80);
             inputFrameLength->setSingleStep(5);
             inputFrameLength->setSuffix(" ms");
 
@@ -194,7 +194,7 @@ MainWindow::MainWindow() {
                     [&](const int value) { analyser->setFrameLength(std::chrono::milliseconds(value)); });
 
             inputFrameSpace = new QSpinBox;
-            inputFrameSpace->setRange(5, 30);
+            inputFrameSpace->setRange(1, 30);
             inputFrameSpace->setSingleStep(1);
             inputFrameSpace->setSuffix(" ms");
 
@@ -277,16 +277,28 @@ MainWindow::MainWindow() {
         auto ly2 = new QHBoxLayout;
         ly1->addLayout(ly2);
         {
-            inputPause = new QPushButton;
-            inputPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
-            inputPause->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-           
-            connect(inputPause, &QPushButton::clicked, [&]() { toggleAnalyser(); });
+            auto w2 = new QWidget;
+            w2->setContentsMargins(0, 0, 0, 0);
+            auto ly3 = new QHBoxLayout(w2);
+            {
+                inputPause = new QPushButton;
+                inputPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+                inputPause->setFixedSize(30, 30);
+               
+                connect(inputPause, &QPushButton::clicked, [&]() { toggleAnalyser(); });
 
-            ly2->addWidget(inputPause, 0, Qt::AlignRight);
+                inputFullscreen = new QPushButton("F");
+                inputFullscreen->setCheckable(true);
+                inputFullscreen->setStyleSheet("padding: 0; font-weight: bold;");
+                inputFullscreen->setFixedSize(30, 30);
+
+                connect(inputFullscreen, &QPushButton::clicked, [&]() { toggleFullscreen(); });
+
+                ly3->addWidget(inputPause);
+                ly3->addWidget(inputFullscreen);
+            }
+            ly2->addWidget(w2, 0, Qt::AlignRight);
         }
-
-        ly1->addSpacing(16);
 
         ly1->addWidget(canvas);
         canvas->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -320,13 +332,8 @@ MainWindow::~MainWindow() {
     delete devs;
     delete analyser;
     ma_context_uninit(&maCtx);
-}
 
-void MainWindow::closeEvent(QCloseEvent *event) {
-
-    analyser->stopThread();
     all_fft_cleanup();
-
 }
 
 void MainWindow::updateFields() {
@@ -423,6 +430,9 @@ void MainWindow::keyPressEvent(QKeyEvent * event) {
     else if (key == Qt::Key_P) {
         toggleAnalyser();
     }
+    else if (key == Qt::Key_F) {
+        toggleFullscreen();
+    }
 }
 
 void MainWindow::toggleAnalyser() {
@@ -435,6 +445,19 @@ void MainWindow::toggleAnalyser() {
     }
     else {
         inputPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    }
+}
+
+void MainWindow::toggleFullscreen() {
+    bool isFullscreen = (windowState() == Qt::WindowFullScreen);
+
+    if (isFullscreen) {
+        inputFullscreen->setChecked(false);
+        setWindowState(Qt::WindowNoState);
+    }
+    else {
+        inputFullscreen->setChecked(true);
+        setWindowState(Qt::WindowFullScreen);
     }
 }
 
@@ -464,8 +487,6 @@ void MainWindow::loadSettings()
     if (fftInd < 0) {
         fftInd = inputFftSize->findText("512");
     }
-
-    QSettings settings;
 
 #define callWithBlocker(obj, call) do { QSignalBlocker blocker(obj); (obj) -> call; } while (false)
  

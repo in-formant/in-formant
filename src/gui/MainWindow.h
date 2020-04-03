@@ -25,7 +25,6 @@ public:
     ~MainWindow();
 
 protected:
-    void closeEvent(QCloseEvent * event) override;
     void keyPressEvent(QKeyEvent * event) override;
 
 private:
@@ -35,6 +34,7 @@ private:
     void updateFields();
 
     void toggleAnalyser();
+    void toggleFullscreen();
 
     ma_context maCtx;
     AudioDevices * devs;
@@ -52,6 +52,7 @@ private:
     QPushButton * inputDevRefresh;
 
     QPushButton * inputPause;
+    QPushButton * inputFullscreen;
 
     QCheckBox * inputToggleSpectrum;
     QComboBox * inputFftSize;

@@ -103,6 +103,8 @@ private:
     AudioCapture * audioCapture;
 
     // Parameters.
+    std::mutex paramLock;
+
     std::chrono::duration<double, std::milli> frameLength;
     std::chrono::duration<double, std::milli> frameSpace;
     std::chrono::duration<double> windowSpan;

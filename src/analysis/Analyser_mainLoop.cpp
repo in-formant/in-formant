@@ -38,16 +38,16 @@ void Analyser::update()
         return;
     }
 
-    // Lock the tracks to prevent data race conditions.
-    mutex.lock();
+    // Param lock.
+    paramLock.lock();
     
     // Read captured audio.
     audioLock.lock();
     
-    x.resize(frameSamples);
+    x.conservativeResize(frameSamples);
     audioCapture->readBlock(x);
 
-    x_fft.resize(fftSamples);
+    x_fft.conservativeResize(fftSamples);
     audioCapture->readBlock(x_fft);
     
     fs = audioCapture->getSampleRate();
@@ -59,9 +59,12 @@ void Analyser::update()
 
     // Get a pitch estimate.
     analysePitch();
-
+    
     // Resample audio.
     resampleAudio(2 * maximumFrequency);
+    
+    // Apply windowing.
+    applyWindow();
   
     // Apply pre-emphasis.
     applyPreEmphasis();
@@ -69,15 +72,15 @@ void Analyser::update()
     // Analyse spectrum.
     analyseSpectrum();
 
-    // Apply windowing.
-    applyWindow();
-
     // Perform LP analysis.
     analyseLp();
 
     // Perform formant analysis.
     analyseFormant();
 
+    // Lock the tracks to prevent data race conditions.
+    mutex.lock();
+    
     // Update the raw tracks.
     pitchTrack.pop_front();
     pitchTrack.push_back(lastPitchFrame);
@@ -100,4 +103,7 @@ void Analyser::update()
 
     // Unlock the tracks.
     mutex.unlock();
+
+    // Unlock the parameters.
+    paramLock.unlock();
 }

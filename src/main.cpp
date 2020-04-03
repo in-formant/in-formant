@@ -2,8 +2,25 @@
 #include <QStyleFactory>
 #include <QSharedPointer>
 #include <iostream>
+#include <csignal>
 #include "gui/MainWindow.h"
 #include "log/simpleQtLogger.h"
+
+void signalHandler(int sig)
+{
+    if (sig == SIGINT) {
+        L_INFO("Received SIGINT, quitting...");
+        qApp->quit();
+    }
+    else if (sig == SIGTERM) {
+        L_INFO("Received SIGTERM, quitting...");
+        qApp->quit();
+    }
+    else if (sig == SIGSEGV) {
+        L_INFO("Received SIGSEGV, quitting forcefully...");
+        exit(EXIT_FAILURE);
+    }
+}
 
 QString loadFont(const QString & url)
 {
@@ -74,6 +91,10 @@ int main(int argc, char * argv[])
     L_INFO("Application theme and palette set.");
 
     MainWindow mainWindow;
+
+    signal(SIGINT, &signalHandler);
+    signal(SIGTERM, &signalHandler);
+    signal(SIGSEGV, &signalHandler);
 
     return app.exec();
 }

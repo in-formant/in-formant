@@ -21,7 +21,7 @@ void Analyser::analyseSpectrum()
 
     Map<ArrayXd> xout(rfft_out(nfft), nfft);
 
-    lastSpectrumFrame.fs = fs;
+    lastSpectrumFrame.fs = audioCapture->getSampleRate();
     lastSpectrumFrame.nfft = nfft;
     lastSpectrumFrame.spec = xout;
 }

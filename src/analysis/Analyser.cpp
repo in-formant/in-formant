@@ -26,7 +26,8 @@ Analyser::Analyser(ma_context * ctx)
       running(false),
       lpFailed(true),
       nbNewFrames(0),
-      frameCount(0)
+      frameCount(0),
+      nsamples(0)
 {
     loadSettings();
 
@@ -34,6 +35,9 @@ Analyser::Analyser(ma_context * ctx)
 }
 
 Analyser::~Analyser() {
+    if (isAnalysing()) {
+        stopThread();
+    }
     delete audioCapture;
     saveSettings();
 }
@@ -77,7 +81,7 @@ void Analyser::setOutputDevice(const ma_device_id * id) {
 }
 
 void Analyser::setFftSize(int _nfft) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     nfft = _nfft;
     LS_INFO("Set FFT size to " << nfft);
     
@@ -85,23 +89,23 @@ void Analyser::setFftSize(int _nfft) {
 }
 
 int Analyser::getFftSize() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     return nfft;
 }
 
 void Analyser::setLinearPredictionOrder(int _lpOrder) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     lpOrder = std::clamp(_lpOrder, 5, 22);
     LS_INFO("Set LP order to " << lpOrder);
 }
 
 int Analyser::getLinearPredictionOrder() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     return lpOrder;
 }
 
 void Analyser::setCepstralOrder(int _cepOrder) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     
     cepOrder = std::clamp(_cepOrder, 7, 25);
     LS_INFO("Set LPCC order to " << cepOrder);
@@ -110,12 +114,12 @@ void Analyser::setCepstralOrder(int _cepOrder) {
 }
 
 int Analyser::getCepstralOrder() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     return cepOrder;
 }
 
 void Analyser::setMaximumFrequency(double _maximumFrequency) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     maximumFrequency = std::clamp(_maximumFrequency, 2500.0, 7000.0);
     
     LS_INFO("Set maximum frequency to " << maximumFrequency);
@@ -124,12 +128,12 @@ void Analyser::setMaximumFrequency(double _maximumFrequency) {
 }
 
 double Analyser::getMaximumFrequency() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     return maximumFrequency;
 }
 
 void Analyser::setFrameLength(const std::chrono::duration<double, std::milli> & _frameLength) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     frameLength = _frameLength;
     LS_INFO("Set frame length to " << frameLength.count() << " ms");
     
@@ -137,12 +141,12 @@ void Analyser::setFrameLength(const std::chrono::duration<double, std::milli> & 
 }
 
 const std::chrono::duration<double, std::milli> & Analyser::getFrameLength() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     return frameLength;
 }
 
 void Analyser::setFrameSpace(const std::chrono::duration<double, std::milli> & _frameSpace) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     frameSpace = _frameSpace;
     LS_INFO("Set frame space to " << frameSpace.count() << " ms");
     
@@ -150,12 +154,13 @@ void Analyser::setFrameSpace(const std::chrono::duration<double, std::milli> & _
 }
 
 const std::chrono::duration<double, std::milli> & Analyser::getFrameSpace() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
+    std::lock_guard<std::mutex> lock2(mutex);
     return frameSpace;
 }
 
 void Analyser::setWindowSpan(const std::chrono::duration<double> & _windowSpan) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     windowSpan = _windowSpan;
     LS_INFO("Set window span to " << windowSpan.count() << " ms");
     
@@ -163,12 +168,13 @@ void Analyser::setWindowSpan(const std::chrono::duration<double> & _windowSpan) 
 }
 
 const std::chrono::duration<double> & Analyser::getWindowSpan() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
+    std::lock_guard<std::mutex> lock2(mutex);
     return windowSpan;
 }
 
 void Analyser::setPitchAlgorithm(enum PitchAlg _pitchAlg) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     pitchAlg = _pitchAlg;
 
     switch (pitchAlg) {
@@ -188,12 +194,12 @@ void Analyser::setPitchAlgorithm(enum PitchAlg _pitchAlg) {
 }
 
 PitchAlg Analyser::getPitchAlgorithm() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     return pitchAlg;
 }
 
 void Analyser::setFormantMethod(enum FormantMethod _method) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     formantMethod = _method;
 
     switch (formantMethod) {
@@ -207,12 +213,13 @@ void Analyser::setFormantMethod(enum FormantMethod _method) {
 }
 
 FormantMethod Analyser::getFormantMethod() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
     return formantMethod;
 }
 
 int Analyser::getFrameCount() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(paramLock);
+    std::lock_guard<std::mutex> lock2(mutex);
 
     return frameCount;
 }
@@ -224,23 +231,11 @@ const SpecFrame & Analyser::getSpectrumFrame(int _iframe) {
     return spectra.at(iframe);
 }
 
-const SpecFrame & Analyser::getLastSpectrumFrame() {
-    std::lock_guard<std::mutex> lock(mutex);
-
-    return spectra.back();
-}
-
 const Formant::Frame & Analyser::getFormantFrame(int _iframe) {
     std::lock_guard<std::mutex> lock(mutex);
 
     int iframe = std::clamp(_iframe, 0, frameCount - 1);
     return smoothedFormants.at(iframe);
-}
-
-const Formant::Frame & Analyser::getLastFormantFrame() {
-    std::lock_guard<std::mutex> lock(mutex);
-
-    return formantTrack.back();
 }
 
 double Analyser::getPitchFrame(int _iframe) {
@@ -250,13 +245,9 @@ double Analyser::getPitchFrame(int _iframe) {
     return smoothedPitch.at(iframe);
 }
 
-double Analyser::getLastPitchFrame() {
+void Analyser::_updateFrameCount() {
     std::lock_guard<std::mutex> lock(mutex);
 
-    return pitchTrack.back();
-}
-
-void Analyser::_updateFrameCount() {
     const int newFrameCount = (1000 * windowSpan.count()) / frameSpace.count();
 
     if (frameCount < newFrameCount) {
@@ -287,16 +278,19 @@ void Analyser::_updateFrameCount() {
 
 void Analyser::_updateCaptureDuration()
 {
+    std::lock_guard<std::mutex> lock(audioLock);
+
     double fs = audioCapture->getSampleRate();
     double refs = 2 * maximumFrequency;
 
     // Account for resampling.
-    fftSamples = (fs * nfft) / refs;
+    fftSamples = nfft; //(fs * nfft) / refs;
     frameSamples = frameLength.count() / 1000.0 * fs;
 
     int nsamples = std::max(fftSamples, frameSamples);
     if (nsamples != this->nsamples) {
         audioCapture->setCaptureDuration(nsamples);
+        this->nsamples = nsamples;
 
         LS_INFO("Set capture duration to " << nsamples << " samples (" << (1000.0 * nsamples / fs) << " ms)");
     }
