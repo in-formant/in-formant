@@ -329,6 +329,24 @@ MainWindow::MainWindow() {
             w2->setContentsMargins(0, 0, 0, 0);
             auto ly3 = new QHBoxLayout(w2);
             {
+                auto github = new QPushButton;
+                github->setFixedSize(30, 30);
+                github->setStyleSheet("QPushButton { border-image: url(:/icons/github.png) 0 0 0 0 stretch stretch; border: none; }");
+                github->setCursor(Qt::PointingHandCursor);
+
+                connect(github, &QPushButton::clicked, [&]() {
+                            QDesktopServices::openUrl(QUrl("https://www.github.com/ichi-rika/speech-analysis"));
+                        });
+
+                auto patreon = new QPushButton;
+                patreon->setFixedSize(30, 30);
+                patreon->setStyleSheet("QPushButton { border-image: url(:/icons/patreon.png) 0 0 0 0 stretch stretch; border: none; }");
+                patreon->setCursor(Qt::PointingHandCursor);
+
+                connect(patreon, &QPushButton::clicked, [&]() {
+                            QDesktopServices::openUrl(QUrl("https://www.patreon.com/cloyunhee"));
+                        });
+
                 inputPause = new QPushButton;
                 inputPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
                 inputPause->setFixedSize(30, 30);
@@ -342,6 +360,10 @@ MainWindow::MainWindow() {
 
                 connect(inputFullscreen, &QPushButton::clicked, [&]() { toggleFullscreen(); });
 
+                ly3->addWidget(github);
+                ly3->addSpacing(8);
+                ly3->addWidget(patreon);
+                ly3->addSpacing(8);
                 ly3->addWidget(inputPause);
                 ly3->addWidget(inputFullscreen);
             }
