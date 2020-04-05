@@ -37,6 +37,8 @@ set(SOURCES
     audio/RingBuffer.h
     audio/miniaudio.h
     audio/implementation.cpp
+    gui/ColorMaps.cpp
+    gui/ColorMaps.h
     gui/AnalyserCanvas.cpp
     gui/AnalyserCanvas.h
     gui/MainWindow.cpp

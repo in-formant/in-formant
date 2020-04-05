@@ -4,24 +4,12 @@
 
 #include <iostream>
 #include "AnalyserCanvas.h"
+#include "ColorMaps.h"
 #include "MFCC/MFCC.h"
 #include "../Exceptions.h"
 #include "../log/simpleQtLogger.h"
 
 using namespace Eigen;
-
-static constexpr int cmrCount = 9;
-static const std::array<QColor, cmrCount> cmrMap = {
-    QColor(0, 0, 0),
-    QColor(38, 38, 128),
-    QColor(77, 38, 191),
-    QColor(153, 51, 128),
-    QColor(255, 64, 38),
-    QColor(230, 128, 0),
-    QColor(230, 191, 26),
-    QColor(230, 230, 128),
-    QColor(255, 255, 255)
-};
 
 AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
     : selectedFrame(analyser->getFrameCount() - 1),
@@ -44,6 +32,8 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
         0x7FFF00,
         0x57C8C8,
     };
+
+    buildColorMaps();
 
     loadSettings();
 
@@ -275,6 +265,9 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
 
     QPainter sPainter(&spectrogram);
 
+    const auto & cmrMap = colorMaps.find(colorMapName)->second;
+    const int cmrCount = cmrMap.size();
+
     for (int iframe = nframe - 1 - nNew; iframe < nframe; ++iframe) {
         QVector<Tile> rects;
 
@@ -292,7 +285,7 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
 
             double amplitude = abs(sframe.spec(i));
             double dB = std::clamp<double>(20.0 * log10(amplitude), minGain, maxGain);
-           
+
             double cmrInd = (cmrCount - 1) - (cmrCount - 1) * static_cast<double>(maxGain - dB) / static_cast<double>(maxGain - minGain);
             
             int ileft = floor(cmrInd);
@@ -493,6 +486,16 @@ const QColor & AnalyserCanvas::getFormantColor(int formantNb) const {
     return formantColors.at(formantNb);
 }
 
+void AnalyserCanvas::setSpectrumColor(const QString & name) {
+    if (colorMaps.find(name) != colorMaps.end()) {
+        colorMapName = name;
+    }
+}
+
+const QString & AnalyserCanvas::getSpectrumColor() const {
+    return colorMapName;
+}
+
 void AnalyserCanvas::setMinGainSpectrum(int gain) {
     minGain = gain;
 }
@@ -526,6 +529,8 @@ void AnalyserCanvas::loadSettings() {
         setFormantColor(i, settings.value(QString("formantColor/%1").arg(i), formantColors[i]).value<QColor>());
     }
 
+    setSpectrumColor(settings.value("spectrumColorMap", "iZotope").value<QString>());
+
     setMinGainSpectrum(settings.value("minGain", -40).value<int>());
     setMaxGainSpectrum(settings.value("maxGain", 20).value<int>());
 
@@ -548,6 +553,8 @@ void AnalyserCanvas::saveSettings() {
     for (int i = 0; i < 4; ++i) {
         settings.setValue(QString("formantColor/%1").arg(i), formantColors[i]);
     }
+   
+    settings.setValue("spectrumColorMap", colorMapName);
 
     settings.setValue("minGain", minGain);
     settings.setValue("maxGain", maxGain);

@@ -71,6 +71,7 @@ private:
     QComboBox * inputFreqScale;
     QPushButton * inputPitchColor;
     std::array<QPushButton *, 4> inputFormantColor;
+    QComboBox * inputColorMap;
 
     AnalyserCanvas * canvas;
 

@@ -3,6 +3,7 @@
 //
 
 #include "MainWindow.h"
+#include "ColorMaps.h"
 #include "FFT/FFT.h"
 #include "../log/simpleQtLogger.h"
 
@@ -295,6 +296,14 @@ MainWindow::MainWindow() {
             inputFormantColor[nb] = input;
         }
 
+        inputColorMap = new QComboBox;
+        for (auto & [name, map] : colorMaps) {
+            inputColorMap->addItem(name);
+        }
+
+        connect(inputColorMap, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
+                [&](const QString & name) { canvas->setSpectrumColor(name); });
+
         ly1->addRow(tr("Show spectrum:"), inputToggleSpectrum);
         ly1->addRow(tr("Show tracks:"), inputToggleTracks);
         ly1->addRow(tr("Minimum gain:"), inputMinGain);
@@ -307,6 +316,8 @@ MainWindow::MainWindow() {
             const QString labelStr = QString("F%1 color:").arg(nb + 1);
             ly1->addRow(tr(qPrintable(labelStr)), inputFormantColor[nb]);
         }
+
+        ly1->addRow(tr("Spectrum color map:"), inputColorMap);
     }
 
     auto ly1 = new QVBoxLayout(central);
@@ -525,6 +536,7 @@ void MainWindow::loadSettings()
     bool drawTracks = canvas->getDrawTracks();
     int minGain = canvas->getMinGainSpectrum();
     int maxGain = canvas->getMaxGainSpectrum();
+    QString colorMapName = canvas->getSpectrumColor();
 
     // Find the combobox index for nfft.
     int fftInd = inputFftSize->findText(QString::number(nfft));
@@ -549,5 +561,7 @@ void MainWindow::loadSettings()
     callWithBlocker(inputFormantAlg, setCurrentIndex(static_cast<int>(formantAlg)));
 
     updateColorButtons();
+
+    callWithBlocker(inputColorMap, setCurrentText(colorMapName));
 
 }
