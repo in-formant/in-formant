@@ -12,13 +12,14 @@ void Analyser::trackFormants() {
     while (i < frameCount) {
 
         // This frame is voiced.
-        if (pitchTrack[i] != 0) {
+        if (pitchTrack[i] != 0 && formantTrack[i].nFormants >= 3) {
 
             start = i;
 
+            voicedSegment.clear();
             voicedSegment.push_back(formantTrack[i]);
 
-            while (i + 1 < frameCount && pitchTrack[i + 1] != 0) {
+            while (i + 1 < frameCount && pitchTrack[i + 1] != 0 && formantTrack[i + 1].nFormants >= 3) {
                 voicedSegment.push_back(formantTrack[i + 1]);
                 i++;
             }
@@ -37,16 +38,14 @@ void Analyser::trackFormants() {
                     3850,
                     4950,
                     1.0,
-                    0.2,
-                    0.6
+                    1.0,
+                    2.0
                 );
 
                 for (int j = 0; j < voicedSegment.size(); ++j) {
                     finalTrack[start + j] = voicedSegment[j];
                 }
             }
-
-            voicedSegment.clear();
         }
         else {
             finalTrack[i] = formantTrack[i];

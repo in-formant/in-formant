@@ -38,10 +38,6 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
     loadSettings();
 
     connect(&timer, &QTimer::timeout, [this, analyser]() {
-        analyser->callIfNewFrames(
-                [this](auto&&... ts) { renderTracks(std::forward<decltype(ts)>(ts)...); },
-                [this](auto&&... ts) { renderSpectrogram(std::forward<decltype(ts)>(ts)...); }
-        );
         repaint();
     });
     timer.setTimerType(Qt::PreciseTimer);
@@ -54,7 +50,7 @@ AnalyserCanvas::~AnalyserCanvas() {
 
 void AnalyserCanvas::render() {
 
-    std::lock_guard<std::mutex> guard(frameLock);
+    frameLock.lock();
 
     if (drawSpectrum) {
         painter.scale((double) targetWidth / (double) actualWidth, 1);
@@ -65,8 +61,14 @@ void AnalyserCanvas::render() {
     if (drawTracks) {
         painter.drawPixmap(0, 0, tracks);
     }
-    
-    renderScaleAndCursor();
+
+    frameLock.unlock();
+
+    analyser->callIfNewFrames(
+                [this](auto&&... ts) { renderTracks(std::forward<decltype(ts)>(ts)...); },
+                [this](auto&&... ts) { renderSpectrogram(std::forward<decltype(ts)>(ts)...); },
+                [this](auto&&... ts) { renderScaleAndCursor(std::forward<decltype(ts)>(ts)...); }
+    );
 
 }
 
@@ -185,11 +187,9 @@ void AnalyserCanvas::renderPitchTrack(const int nframe, const double maximumFreq
     tPainter.drawPath(path);
 }
 
-void AnalyserCanvas::renderScaleAndCursor() {
+void AnalyserCanvas::renderScaleAndCursor(const int nframe, const double maximumFrequency) {
     constexpr int ruleSmall = 4;
     constexpr int ruleBig = 8;
-    
-    const double maximumFrequency = analyser->getMaximumFrequency();
 
     QFont font = painter.font();
     int oldSize = font.pixelSize();
@@ -224,7 +224,6 @@ void AnalyserCanvas::renderScaleAndCursor() {
         }
     }
 
-    const int nframe = analyser->getFrameCount();
     const double xstep = (double) targetWidth / (double) nframe;
     const int x = selectedFrame * xstep;
     const int y = yFromFrequency(selectedFrequency, maximumFrequency);

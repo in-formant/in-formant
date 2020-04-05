@@ -13,7 +13,7 @@ void Analyser::applyWindow()
     // Apply Hanning window.
     static ArrayXd win(0);
     if (win.size() != x.size()) {
-        win = Window::createHamming(x.size());
+        win = Window::createGaussian(x.size());
     }
     x *= win;
 }

@@ -70,7 +70,7 @@ bool Formant::track(
     }
 
     if (nFrmMin < ntrack) {
-        std::cerr << "Formant: number of tracks (" << ntrack << ") is greater than the minimum number of formants (" << nFrmMin << ")" << std::endl;
+        // "Number of formants to track (" << ntrack << ") is greater than the minimum number of formants (" << nFrmMin << ")";
         return false;
     }
 

@@ -150,8 +150,8 @@ private:
 
 public:
 
-    template<typename Func1, typename Func2>
-    void callIfNewFrames(Func1 fn1, Func2 fn2)
+    template<typename Func1, typename Func2, typename Func3>
+    void callIfNewFrames(Func1 fn1, Func2 fn2, Func3 fn3)
     {
         std::lock_guard<std::mutex> lock(mutex);
         
@@ -160,6 +160,8 @@ public:
             fn2(frameCount, nbNewFrames, maximumFrequency, spectra.cend() - 1 - nbNewFrames, spectra.cend());
             nbNewFrames = 0;
         }
+
+        fn3(frameCount, maximumFrequency);
     }
 
 };

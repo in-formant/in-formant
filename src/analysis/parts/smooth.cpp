@@ -40,9 +40,13 @@ void Analyser::applySmoothingFilters()
 {
     //smoothenPitch(pitchTrack, smoothedPitch);
     smoothedPitch = pitchTrack;
-    
-    //smoothenFormants(formantTrack, smoothedFormants);
-    smoothedFormants = formantTrack;
+   
+    if (formantMethod == LP) {
+        smoothenFormants(formantTrack, smoothedFormants);
+    }
+    else {
+        smoothedFormants = formantTrack;
+    }
 }
 
 void smoothenPitch(const std::deque<double>& in, std::deque<double>& out)
