@@ -1,6 +1,8 @@
 # Speech analysis software
 ### By Clo Yun-Hee Dufour.
 
+[Public todo list](https://trello.com/b/8x7L13iF/speech-analysis-app-todo-list)
+
 ===
 
 ## Description
