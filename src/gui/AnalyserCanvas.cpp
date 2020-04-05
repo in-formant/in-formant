@@ -326,7 +326,7 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
             int b2 = rect.b;
 
             for (int y = endy; y < starty; ++y) {
-                double a = (double) (y - endy) / (double) (starty - endy);
+                double a = (double) (starty - y) / (double) (starty - endy);
 
                 int r = (1 - a) * r1 + a * r2;
                 int g = (1 - a) * g1 + a * g2;
