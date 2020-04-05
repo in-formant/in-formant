@@ -27,6 +27,7 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
     : selectedFrame(analyser->getFrameCount() - 1),
       maxFreq(0),
       drawSpectrum(true),
+      drawTracks(true),
       frequencyScaleType(2),
       minGain(-60),
       maxGain(0),
@@ -35,6 +36,8 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
 
+    pitchColor = Qt::cyan;
+    
     formantColors = { 
         0xFFA700,
         0xFF57D9,
@@ -69,7 +72,9 @@ void AnalyserCanvas::render() {
         painter.scale((double) actualWidth / (double) targetWidth, 1);
     }
 
-    painter.drawPixmap(0, 0, tracks);
+    if (drawTracks) {
+        painter.drawPixmap(0, 0, tracks);
+    }
     
     renderScaleAndCursor();
 
@@ -186,7 +191,7 @@ void AnalyserCanvas::renderPitchTrack(const int nframe, const double maximumFreq
     }
    
     tPainter.setBrush(Qt::transparent);
-    tPainter.setPen(QPen(Qt::cyan, 3, Qt::SolidLine));
+    tPainter.setPen(QPen(pitchColor, 3, Qt::SolidLine));
     tPainter.drawPath(path);
 }
 
@@ -335,7 +340,8 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
                 int g = (1 - a) * g1 + a * g2;
                 int b = (1 - a) * b1 + a * b2;
 
-                sPainter.fillRect(x, y, xstep, 1, QColor(r, g, b));
+                sPainter.setPen(QColor(r, g, b));
+                sPainter.drawLine(x, y, x + xstep - 1, y);
             }
             
             prevRect = rect;
@@ -463,6 +469,22 @@ bool AnalyserCanvas::getDrawSpectrum() const {
     return drawSpectrum;
 }
 
+void AnalyserCanvas::setDrawTracks(bool toggle) {
+    drawTracks = toggle;
+}
+
+bool AnalyserCanvas::getDrawTracks() const {
+    return drawTracks;
+}
+
+void AnalyserCanvas::setPitchColor(const QColor & color) {
+    pitchColor = color;
+}
+
+const QColor & AnalyserCanvas::getPitchColor() const {
+    return pitchColor;
+}
+
 void AnalyserCanvas::setFormantColor(int formantNb, const QColor & color) {
     formantColors[formantNb] = color;
 }
@@ -496,7 +518,10 @@ void AnalyserCanvas::loadSettings() {
 
     setFrequencyScale(settings.value("freqScale", 2).value<int>());
     setDrawSpectrum(settings.value("drawSpectrum", true).value<bool>());
+    setDrawTracks(settings.value("drawTracks", true).value<bool>());
    
+    setPitchColor(settings.value("pitchColor", pitchColor).value<QColor>());
+
     for (int i = 0; i < 4; ++i) {
         setFormantColor(i, settings.value(QString("formantColor/%1").arg(i), formantColors[i]).value<QColor>());
     }
@@ -516,6 +541,9 @@ void AnalyserCanvas::saveSettings() {
 
     settings.setValue("freqScale", frequencyScaleType);
     settings.setValue("drawSpectrum", drawSpectrum);
+    settings.setValue("drawTracks", drawTracks);
+
+    settings.setValue("pitchColor", pitchColor);
 
     for (int i = 0; i < 4; ++i) {
         settings.setValue(QString("formantColor/%1").arg(i), formantColors[i]);

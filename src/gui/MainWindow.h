@@ -32,6 +32,7 @@ private:
 
     void updateDevices();
     void updateFields();
+    void updateColorButtons();
 
     void toggleAnalyser();
     void toggleFullscreen();
@@ -48,29 +49,28 @@ private:
     QDockWidget * settingsDock;
 
     QComboBox * inputDevIn;
-    QComboBox * inputDevOut;
     QPushButton * inputDevRefresh;
+    QPushButton * inputDisplayDialog;
+    QComboBox * inputFftSize;
+    QSpinBox * inputLpOrder;
+    QSpinBox * inputMaxFreq;
+    QSpinBox * inputFrameLength;
+    QSpinBox * inputFrameSpace;
+    QDoubleSpinBox * inputWindowSpan;
+    QComboBox * inputPitchAlg;
+    QComboBox * inputFormantAlg;
 
     QPushButton * inputPause;
     QPushButton * inputFullscreen;
 
+    QWidget * dialogDisplay;
     QCheckBox * inputToggleSpectrum;
-    QComboBox * inputFftSize;
-
-    QSpinBox * inputLpOrder;
-    QSpinBox * inputMaxFreq;
-
-    QComboBox * inputFreqScale;
-    QSpinBox * inputFrameLength;
-    QSpinBox * inputFrameSpace;
-    QDoubleSpinBox * inputWindowSpan;
-
-    std::array<QPushButton *, 4> inputFormantColor;
+    QCheckBox * inputToggleTracks;
     QSpinBox * inputMinGain;
     QSpinBox * inputMaxGain;
-
-    QComboBox * inputPitchAlg;
-    QComboBox * inputFormantAlg;
+    QComboBox * inputFreqScale;
+    QPushButton * inputPitchColor;
+    std::array<QPushButton *, 4> inputFormantColor;
 
     AnalyserCanvas * canvas;
 

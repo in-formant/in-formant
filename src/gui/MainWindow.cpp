@@ -103,7 +103,6 @@ MainWindow::MainWindow() {
         ly1->addWidget(fieldPitch, 0, Qt::AlignCenter);
     }
 
-
     settingsDock = new QDockWidget(tr("Settings"), this);
     {
         settingsDock->setAllowedAreas(Qt::AllDockWidgetAreas);
@@ -136,10 +135,10 @@ MainWindow::MainWindow() {
                 devLayout->addWidget(inputDevRefresh, 0, Qt::AlignRight);
             }
 
-            inputToggleSpectrum = new QCheckBox;
-
-            connect(inputToggleSpectrum, &QCheckBox::toggled,
-                    [&](const bool checked) { canvas->setDrawSpectrum(checked); });
+            inputDisplayDialog = new QPushButton("Open dialog");
+        
+            connect(inputDisplayDialog, &QPushButton::clicked,
+                    [&]() { dialogDisplay->setVisible(true); });
 
             inputFftSize = new QComboBox;
             inputFftSize->addItems({"64", "128", "256", "512", "1024", "2048"});
@@ -147,23 +146,6 @@ MainWindow::MainWindow() {
             connect(inputFftSize, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
                     [&](const QString value) { analyser->setFftSize(value.toInt()); });
 
-            inputMinGain = new QSpinBox;
-            inputMinGain->setRange(-200, 60);
-            inputMinGain->setSingleStep(10);
-            inputMinGain->setSuffix(" dB");
-
-            inputMaxGain = new QSpinBox;
-            inputMaxGain->setRange(-200, 60);
-            inputMaxGain->setSingleStep(10);
-            inputMaxGain->setSuffix(" dB");
-            
-            connect(inputMinGain, QOverload<int>::of(&QSpinBox::valueChanged),
-                    [&](const int value) { canvas->setMinGainSpectrum(value);
-                                           inputMaxGain->setMinimum(value + 10); });
-
-            connect(inputMaxGain, QOverload<int>::of(&QSpinBox::valueChanged),
-                    [&](const int value) { canvas->setMaxGainSpectrum(value);
-                                           inputMinGain->setMaximum(value - 10); });
 
             inputLpOrder = new QSpinBox;
             inputLpOrder->setRange(5, 22);
@@ -178,12 +160,6 @@ MainWindow::MainWindow() {
 
             connect(inputMaxFreq, QOverload<int>::of(&QSpinBox::valueChanged),
                     [&](const int value) { analyser->setMaximumFrequency(value); });
-
-            inputFreqScale = new QComboBox;
-            inputFreqScale->addItems({"Linear", "Logarithmic", "Mel"});
-
-            connect(inputFreqScale, QOverload<int>::of(&QComboBox::currentIndexChanged),
-                    [&](const int value) { canvas->setFrequencyScale(value); });
 
             inputFrameLength = new QSpinBox;
             inputFrameLength->setRange(25, 80);
@@ -209,25 +185,6 @@ MainWindow::MainWindow() {
             connect(inputWindowSpan, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
                     [&](const double value) { analyser->setWindowSpan(std::chrono::milliseconds(int(1000 * value))); });
 
-            for (int nb = 0; nb < inputFormantColor.size(); ++nb) {
-                auto input = new QPushButton;
-                
-                connect(input, &QPushButton::clicked,
-                        [=] () {
-                            QColor c = QColorDialog::getColor(
-                                canvas->getFormantColor(nb),
-                                this,
-                                QString("Select F%1 color").arg(nb + 1),
-                                QColorDialog::DontUseNativeDialog
-                            );
-                            if (c.isValid()) {
-                                canvas->setFormantColor(nb, c);
-                            }
-                        });
-
-                inputFormantColor[nb] = input;
-            }
-             
             inputPitchAlg = new QComboBox;
             inputPitchAlg->addItems({
                 "Wavelet",
@@ -249,21 +206,13 @@ MainWindow::MainWindow() {
                     [&](const int value) { analyser->setFormantMethod(static_cast<FormantMethod>(value)); });
 
             ly1->addRow(tr("Audio device:"), devWidget);
-            ly1->addRow(tr("Overlay spectrogram:"), inputToggleSpectrum);
+            ly1->addRow(tr("Display settings:"), inputDisplayDialog);
             ly1->addRow(tr("FFT size:"), inputFftSize);
-            ly1->addRow(tr("Minimum gain:"), inputMinGain);
-            ly1->addRow(tr("Maximum gain:"), inputMaxGain);
             ly1->addRow(tr("Linear prediction order:"), inputLpOrder);
             ly1->addRow(tr("Maximum frequency:"), inputMaxFreq);
-            ly1->addRow(tr("Frequency scale:"), inputFreqScale);
             ly1->addRow(tr("Frame length:"), inputFrameLength);
             ly1->addRow(tr("Frame space:"), inputFrameSpace);
             ly1->addRow(tr("Analysis duration:"), inputWindowSpan);
-
-            for (int nb = 0; nb < inputFormantColor.size(); ++nb) {
-                const QString labelStr = QString("F%1 color:").arg(nb + 1);
-                ly1->addRow(tr(qPrintable(labelStr)), inputFormantColor[nb]);
-            }
 
             ly1->addRow(tr("Pitch algorithm:"), inputPitchAlg);
             ly1->addRow(tr("Formant algorithm:"), inputFormantAlg);
@@ -271,7 +220,95 @@ MainWindow::MainWindow() {
         
         dockScroll->setWidget(dockWidget);
     }
-    
+   
+    dialogDisplay = new QWidget(window(), Qt::Tool);
+    {
+        auto ly1 = new QFormLayout(dialogDisplay);
+        
+        inputToggleSpectrum = new QCheckBox;
+
+        connect(inputToggleSpectrum, &QCheckBox::toggled,
+                [&](const bool checked) { canvas->setDrawSpectrum(checked); });
+
+        inputToggleTracks = new QCheckBox;
+
+        connect(inputToggleTracks, &QCheckBox::toggled,
+                [&](const bool checked) { canvas->setDrawTracks(checked); });
+
+        inputMinGain = new QSpinBox;
+        inputMinGain->setRange(-200, 60);
+        inputMinGain->setSingleStep(10);
+        inputMinGain->setSuffix(" dB");
+
+        connect(inputMinGain, QOverload<int>::of(&QSpinBox::valueChanged),
+                [&](const int value) { canvas->setMinGainSpectrum(value);
+                                       inputMaxGain->setMinimum(value + 10); });
+
+        inputMaxGain = new QSpinBox;
+        inputMaxGain->setRange(-200, 60);
+        inputMaxGain->setSingleStep(10);
+        inputMaxGain->setSuffix(" dB");
+
+        connect(inputMaxGain, QOverload<int>::of(&QSpinBox::valueChanged),
+                [&](const int value) { canvas->setMaxGainSpectrum(value);
+                                       inputMinGain->setMaximum(value - 10); });
+
+        inputFreqScale = new QComboBox;
+        inputFreqScale->addItems({"Linear", "Logarithmic", "Mel"});
+
+        connect(inputFreqScale, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                [&](const int value) { canvas->setFrequencyScale(value); });
+
+        inputPitchColor = new QPushButton;
+
+        connect(inputPitchColor, &QPushButton::clicked,
+                [=] () {
+                    QColor c = QColorDialog::getColor(
+                        canvas->getPitchColor(),
+                        this,
+                        QString("Select pitch color"),
+                        QColorDialog::DontUseNativeDialog
+                    );
+                    if (c.isValid()) {
+                        canvas->setPitchColor(c);
+                        updateColorButtons();
+                    }
+                });
+
+        for (int nb = 0; nb < inputFormantColor.size(); ++nb) {
+            auto input = new QPushButton;
+            
+            connect(input, &QPushButton::clicked,
+                    [=] () {
+                        QColor c = QColorDialog::getColor(
+                            canvas->getFormantColor(nb),
+                            this,
+                            QString("Select F%1 color").arg(nb + 1),
+                            QColorDialog::DontUseNativeDialog
+                        );
+                        if (c.isValid()) {
+                            canvas->setFormantColor(nb, c);
+                            updateColorButtons();
+                        }
+                    });
+
+            inputFormantColor[nb] = input;
+        }
+
+        ly1->addRow(tr("Show spectrum:"), inputToggleSpectrum);
+        ly1->addRow(tr("Show tracks:"), inputToggleTracks);
+        ly1->addRow(tr("Minimum gain:"), inputMinGain);
+        ly1->addRow(tr("Maximum gain:"), inputMaxGain);
+        ly1->addRow(tr("Frequency scale:"), inputFreqScale);
+
+        ly1->addRow(tr("Pitch color:"), inputPitchColor);
+
+        for (int nb = 0; nb < inputFormantColor.size(); ++nb) {
+            const QString labelStr = QString("F%1 color:").arg(nb + 1);
+            ly1->addRow(tr(qPrintable(labelStr)), inputFormantColor[nb]);
+        }
+    }
+
     auto ly1 = new QVBoxLayout(central);
     {
         auto ly2 = new QHBoxLayout;
@@ -347,10 +384,8 @@ void MainWindow::updateFields() {
 
     if (pitch > 0) {
         fieldPitch->setText(QString("H1 = %1 Hz").arg(pitch, 0, 'f', 1));
-        fieldPitch->setStyleSheet("color: cyan");
     } else {
         fieldPitch->setText("Unvoiced");
-        fieldPitch->setStyleSheet(QString("color: %1").arg(palette.color(QPalette::Text).name()));
     }
     fieldPitch->adjustSize();
 
@@ -361,23 +396,6 @@ void MainWindow::updateFields() {
         else {
             fieldFormant[i]->setText("");
         }
-
-        const QColor c = canvas->getFormantColor(i);
-        inputFormantColor[i]->setStyleSheet(QString(" \
-            QPushButton \
-            { \
-                background-color: %1; \
-                border: 1px solid #32414B; \
-                border-radius: 4px; \
-                padding: 5px; \
-                outline: none; \
-                min-width: 80px; \
-            } \
-            QPushButton:hover \
-            { \
-                border: 1px solid #148CD2; \
-            } \
-        ").arg(c.name()));
     }
 
 }
@@ -419,6 +437,31 @@ void MainWindow::updateDevices()
                     }
                 }
             });
+}
+
+void MainWindow::updateColorButtons() {
+    static QString css = QStringLiteral(" \
+                            QPushButton \
+                            { \
+                                background-color: %1; \
+                                border: 1px solid #32414B; \
+                                border-radius: 4px; \
+                                padding: 5px; \
+                                outline: none; \
+                                min-width: 80px; \
+                            } \
+                            QPushButton:hover \
+                            { \
+                                border: 1px solid #148CD2; \
+                            } \
+                        ");
+
+    inputPitchColor->setStyleSheet(css.arg(canvas->getPitchColor().name()));
+    
+    for (int i = 0; i < inputFormantColor.size(); ++i) {
+        inputFormantColor[i]->setStyleSheet(css.arg(canvas->getFormantColor(i).name()));
+    }
+
 }
 
 void MainWindow::keyPressEvent(QKeyEvent * event) {
@@ -479,6 +522,7 @@ void MainWindow::loadSettings()
    
     int freqScale = canvas->getFrequencyScale();
     bool drawSpectrum = canvas->getDrawSpectrum();
+    bool drawTracks = canvas->getDrawTracks();
     int minGain = canvas->getMinGainSpectrum();
     int maxGain = canvas->getMaxGainSpectrum();
 
@@ -491,6 +535,7 @@ void MainWindow::loadSettings()
 #define callWithBlocker(obj, call) do { QSignalBlocker blocker(obj); (obj) -> call; } while (false)
  
     callWithBlocker(inputToggleSpectrum, setChecked(drawSpectrum));
+    callWithBlocker(inputToggleTracks, setChecked(drawTracks));
     callWithBlocker(inputFftSize, setCurrentIndex(fftInd));
     callWithBlocker(inputLpOrder, setValue(lpOrder));
     callWithBlocker(inputMaxFreq, setValue(maxFreq));
@@ -502,5 +547,7 @@ void MainWindow::loadSettings()
     callWithBlocker(inputMaxGain, setValue(maxGain));
     callWithBlocker(inputPitchAlg, setCurrentIndex(static_cast<int>(pitchAlg)));
     callWithBlocker(inputFormantAlg, setCurrentIndex(static_cast<int>(formantAlg)));
+
+    updateColorButtons();
 
 }

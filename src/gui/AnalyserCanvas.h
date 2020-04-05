@@ -26,12 +26,16 @@ public:
 
     void setFrequencyScale(int type);
     void setDrawSpectrum(bool draw);
+    void setDrawTracks(bool draw);
+    void setPitchColor(const QColor & color);
     void setFormantColor(int formantNb, const QColor & color);
     void setMinGainSpectrum(int gain);
     void setMaxGainSpectrum(int gain);
 
     int getFrequencyScale() const;
     bool getDrawSpectrum() const;
+    bool getDrawTracks() const;
+    const QColor & getPitchColor() const;
     const QColor & getFormantColor(int formantNb) const;
     int getMinGainSpectrum() const;
     int getMaxGainSpectrum() const;
@@ -59,6 +63,7 @@ private:
     QTimer timer;
     std::mutex frameLock;
 
+    QColor pitchColor;
     std::array<QColor, 4> formantColors;
     int minGain, maxGain;
 
@@ -69,7 +74,7 @@ private:
     double maxFreq, maxFreqLog, maxFreqMel;
 
     // Rendering parameters
-    bool drawSpectrum;
+    bool drawSpectrum, drawTracks;
     int frequencyScaleType;
     int selectedFrame;
     double selectedFrequency;
