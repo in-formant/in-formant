@@ -29,6 +29,8 @@ public:
     void setDrawTracks(bool draw);
     void setPitchColor(const QColor & color);
     void setFormantColor(int formantNb, const QColor & color);
+    void setPitchThickness(int thick);
+    void setFormantThickness(int thick);
     void setSpectrumColor(const QString & name);
     void setMinGainSpectrum(int gain);
     void setMaxGainSpectrum(int gain);
@@ -38,6 +40,8 @@ public:
     bool getDrawTracks() const;
     const QColor & getPitchColor() const;
     const QColor & getFormantColor(int formantNb) const;
+    int getPitchThickness() const;
+    int getFormantThickness() const;
     const QString & getSpectrumColor() const;
     int getMinGainSpectrum() const;
     int getMaxGainSpectrum() const;
@@ -67,12 +71,15 @@ private:
 
     QColor pitchColor;
     std::array<QColor, 4> formantColors;
+    int pitchThick;
+    int formantThick;
     QString colorMapName;
 
     int minGain, maxGain;
 
-    QPixmap spectrogram;
-    QPixmap tracks;
+    QImage spectrogram;
+    QImage tracks;
+    double upFactor;
 
     int actualWidth, targetWidth, targetHeight;
     double maxFreq, maxFreqLog, maxFreqMel;

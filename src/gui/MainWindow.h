@@ -69,7 +69,9 @@ private:
     QSpinBox * inputMinGain;
     QSpinBox * inputMaxGain;
     QComboBox * inputFreqScale;
+    QSpinBox * inputPitchThick;
     QPushButton * inputPitchColor;
+    QSpinBox * inputFormantThick;
     std::array<QPushButton *, 4> inputFormantColor;
     QComboBox * inputColorMap;
 

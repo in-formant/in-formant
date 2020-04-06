@@ -19,10 +19,16 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
       frequencyScaleType(2),
       minGain(-60),
       maxGain(0),
-      analyser(analyser)
+      analyser(analyser),
+      upFactor(1.25),
+      spectrogram(1, 1, QImage::Format_ARGB32_Premultiplied),
+      tracks(1, 1, QImage::Format_ARGB32_Premultiplied)
 {
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
+
+    spectrogram.fill(Qt::black);
+    tracks.fill(Qt::black);
 
     pitchColor = Qt::cyan;
     
@@ -53,13 +59,11 @@ void AnalyserCanvas::render() {
     frameLock.lock();
 
     if (drawSpectrum) {
-        painter.scale((double) targetWidth / (double) actualWidth, 1);
-        painter.drawPixmap(0, 0, spectrogram);
-        painter.scale((double) actualWidth / (double) targetWidth, 1);
+        painter.drawImage(0, 0, spectrogram.scaled(targetWidth, targetHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     }
 
     if (drawTracks) {
-        painter.drawPixmap(0, 0, tracks);
+        painter.drawImage(0, 0, tracks.scaled(targetWidth, targetHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
 
     frameLock.unlock();
@@ -82,7 +86,7 @@ void AnalyserCanvas::renderTracks(const int nframe, const double maximumFrequenc
 
 void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFrequency, const std::deque<double> &pitches, const Formant::Frames &formants) {
 
-    const double xstep = (double) targetWidth / (double) nframe;
+    const double xstep = upFactor * (double) targetWidth / (double) nframe;
 
     QPainter tPainter(&tracks);
 
@@ -95,7 +99,7 @@ void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFr
 
     for (int iframe = 0; iframe < nframe; ++iframe) {
     
-        const int x = iframe * xstep;
+        const double x = iframe * xstep;
 
         const auto & frame = formants.at(iframe);
         const double pitch = pitches.at(iframe);
@@ -108,7 +112,7 @@ void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFr
                 continue;
             }
 
-            const int y = yFromFrequency(formant.frequency, maximumFrequency);
+            const double y = upFactor * yFromFrequency(formant.frequency, maximumFrequency);
 
             QColor c;
             if (pitch != 0 && formantNb < 4) {    
@@ -120,18 +124,18 @@ void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFr
             if (pitch == 0 || formantNb >= 4) {
                 tPainter.setPen(c);
                 tPainter.setBrush(c);
-                tPainter.drawRect(x, y, xstep - 1, 1);
+                tPainter.drawRect(QRectF{x, y, xstep - 1, upFactor});
                 if (formantNb < 4) {
                     startPath[formantNb] = true;
                 }
             }
             else {
                 if (startPath[formantNb]) {
-                    paths[formantNb].moveTo(x, y);
+                    paths[formantNb].moveTo(QPointF{x, y});
                     startPath[formantNb] = false;
                 }
                 else {
-                    paths[formantNb].lineTo(x, y);
+                    paths[formantNb].lineTo(QPointF{x, y});
                 }
             }
             
@@ -147,13 +151,13 @@ void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFr
     tPainter.setBrush(Qt::transparent);
 
     for (int nb = 0; nb < paths.size(); ++nb) {
-        tPainter.setPen(QPen(formantColors[nb], 2, Qt::SolidLine));
+        tPainter.setPen(QPen(formantColors[nb], upFactor * formantThick, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         tPainter.drawPath(paths[nb]);
     }
 }
 
 void AnalyserCanvas::renderPitchTrack(const int nframe, const double maximumFrequency, const std::deque<double> &pitches) {
-    const double xstep = (double) targetWidth / (double) nframe;
+    const double xstep = upFactor * (double) targetWidth / (double) nframe;
     
     QPainter tPainter(&tracks);
 
@@ -162,19 +166,19 @@ void AnalyserCanvas::renderPitchTrack(const int nframe, const double maximumFreq
 
     for (int iframe = 0; iframe < nframe; ++iframe) {
 
-        const int x = iframe * xstep;
+        const double x = iframe * xstep;
 
         const double pitch = pitches.at(iframe);
 
         if (pitch > 0) {
-            const double y = yFromFrequency(pitch, maximumFrequency);
+            const double y = upFactor * yFromFrequency(pitch, maximumFrequency);
             
             if (beginTrack) {
-                path.moveTo(x, y);
+                path.moveTo(QPointF{x, y});
                 beginTrack = false;
             }
             else {
-                path.lineTo(x, y);
+                path.lineTo(QPointF{x, y});
             }
         }
         else {
@@ -183,7 +187,7 @@ void AnalyserCanvas::renderPitchTrack(const int nframe, const double maximumFreq
     }
    
     tPainter.setBrush(Qt::transparent);
-    tPainter.setPen(QPen(pitchColor, 3, Qt::SolidLine));
+    tPainter.setPen(QPen(pitchColor, upFactor * pitchThick, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     tPainter.drawPath(path);
 }
 
@@ -250,14 +254,16 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
 {
     std::lock_guard<std::mutex> guard(frameLock);
     
-    struct Tile { int r, g, b; int y, y2; };
-    
-    const int xstep = 1;
+    struct Tile { int r, g, b; double y, y2; };
 
-    QPixmap spectrogramSnapshot = spectrogram.copy(0, 0, actualWidth, targetHeight);
+    const int upFactor = 2;
+
+    const double xstep = upFactor;
+
+    QImage spectrogramSnapshot = spectrogram.copy();
     spectrogram.fill(Qt::transparent);
     QPainter scrollPainter(&spectrogram);
-    scrollPainter.drawPixmap(QPoint(-nNew * xstep, 0), spectrogramSnapshot);
+    scrollPainter.drawImage(QPointF{-nNew * xstep, 0}, spectrogramSnapshot);
     scrollPainter.end();
 
     auto it = begin;
@@ -270,16 +276,16 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
     for (int iframe = nframe - 1 - nNew; iframe < nframe; ++iframe) {
         QVector<Tile> rects;
 
-        const int x = iframe * xstep;
+        const double x = iframe * xstep;
         const auto &sframe = *(it++);
 
         const double delta = sframe.fs / (2 * sframe.nfft);
 
         for (int i = 0; i < sframe.nfft; ++i) {
-            const double y = yFromFrequency(i * delta, maximumFrequency);
-            const double y2 = yFromFrequency((i + 1) * delta, maximumFrequency);
+            const double y = upFactor * yFromFrequency(i * delta, maximumFrequency);
+            const double y2 = upFactor * yFromFrequency((i + 1) * delta, maximumFrequency);
 
-            if (y < 0 || y2 >= targetHeight)
+            if (y < 0 || y2 >= upFactor * targetHeight)
                 continue;
 
             double amplitude = abs(sframe.spec(i));
@@ -304,7 +310,7 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
                 b = (1 - a) * b1 + a * b2;
             }
 
-            rects.push_back({ r, g, b, (int) y, (int) y2 });
+            rects.push_back({ r, g, b, y, y2 });
         }
        
         Tile prevRect = {
@@ -314,8 +320,8 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
         for (const auto & rect : rects) {
           
             // endy < starty
-            int starty = rect.y;
-            int endy = rect.y2;
+            double starty = rect.y;
+            double endy = rect.y2;
 
             int r1 = prevRect.r;
             int g1 = prevRect.g;
@@ -325,15 +331,15 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
             int g2 = rect.g;
             int b2 = rect.b;
 
-            for (int y = endy; y < starty; ++y) {
+            for (double y = endy; y < starty; y++) {
                 double a = (double) (starty - y) / (double) (starty - endy);
 
                 int r = (1 - a) * r1 + a * r2;
                 int g = (1 - a) * g1 + a * g2;
                 int b = (1 - a) * b1 + a * b2;
 
-                sPainter.setPen(QColor(r, g, b));
-                sPainter.drawLine(x, y, x + xstep - 1, y);
+                sPainter.setPen(QPen(QColor(r, g, b), 1));
+                sPainter.drawLine(QLineF{x, y, x + xstep - 1, y});
             }
             
             prevRect = rect;
@@ -408,20 +414,22 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
     targetWidth = width();
     targetHeight = height();
 
+    const int trackWidth = upFactor * targetWidth; 
+    const int trackHeight = upFactor * targetHeight; 
+   
     const int nframe = analyser->getFrameCount();
-    actualWidth = nframe;
+    const int specWidth = 2 * nframe;
+    const int specHeight = 2 * targetHeight;
 
-    if (spectrogram.width() != actualWidth || spectrogram.height() != targetHeight) {
+    if (spectrogram.width() != specWidth || spectrogram.height() != specHeight) {
         frameLock.lock();
-        spectrogram = QPixmap(actualWidth, targetHeight);
-        spectrogram.fill(Qt::black);
+        spectrogram = spectrogram.scaled(specWidth, specHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
         frameLock.unlock();
     }
 
-    if (tracks.width() != targetWidth || tracks.height() != targetHeight) {
+    if (tracks.width() != trackWidth || tracks.height() != trackHeight) {
         frameLock.lock();
-        tracks = QPixmap(targetWidth, targetHeight);
-        tracks.fill(Qt::transparent);
+        tracks = tracks.scaled(trackWidth, trackHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
         frameLock.unlock();
     }
     
@@ -485,6 +493,22 @@ const QColor & AnalyserCanvas::getFormantColor(int formantNb) const {
     return formantColors.at(formantNb);
 }
 
+void AnalyserCanvas::setPitchThickness(const int thick) {
+    pitchThick = thick;
+}
+
+int AnalyserCanvas::getPitchThickness() const {
+    return pitchThick;
+}
+
+void AnalyserCanvas::setFormantThickness(const int thick) {
+    formantThick = thick;
+}
+
+int AnalyserCanvas::getFormantThickness() const {
+    return formantThick;
+}
+
 void AnalyserCanvas::setSpectrumColor(const QString & name) {
     if (colorMaps.find(name) != colorMaps.end()) {
         colorMapName = name;
@@ -521,12 +545,15 @@ void AnalyserCanvas::loadSettings() {
     setFrequencyScale(settings.value("freqScale", 2).value<int>());
     setDrawSpectrum(settings.value("drawSpectrum", true).value<bool>());
     setDrawTracks(settings.value("drawTracks", true).value<bool>());
-   
+  
     setPitchColor(settings.value("pitchColor", pitchColor).value<QColor>());
 
     for (int i = 0; i < 4; ++i) {
         setFormantColor(i, settings.value(QString("formantColor/%1").arg(i), formantColors[i]).value<QColor>());
     }
+
+    setPitchThickness(settings.value("pitchThickness", 3).value<int>());
+    setFormantThickness(settings.value("formantThickness", 2).value<int>());
 
     setSpectrumColor(settings.value("spectrumColorMap", "iZotope").value<QString>());
 

@@ -260,6 +260,14 @@ MainWindow::MainWindow() {
         connect(inputFreqScale, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 [&](const int value) { canvas->setFrequencyScale(value); });
 
+        inputPitchThick = new QSpinBox;
+        inputPitchThick->setRange(1, 20);
+        inputPitchThick->setSingleStep(1);
+        inputPitchThick->setSuffix(" px");
+        
+        connect(inputPitchThick, QOverload<int>::of(&QSpinBox::valueChanged),
+                [&](const int value) { canvas->setPitchThickness(value); });
+
         inputPitchColor = new QPushButton;
 
         connect(inputPitchColor, &QPushButton::clicked,
@@ -275,6 +283,14 @@ MainWindow::MainWindow() {
                         updateColorButtons();
                     }
                 });
+
+        inputFormantThick = new QSpinBox;
+        inputFormantThick->setRange(1, 20);
+        inputFormantThick->setSingleStep(1);
+        inputFormantThick->setSuffix(" px");
+        
+        connect(inputFormantThick, QOverload<int>::of(&QSpinBox::valueChanged),
+                [&](const int value) { canvas->setFormantThickness(value); });
 
         for (int nb = 0; nb < inputFormantColor.size(); ++nb) {
             auto input = new QPushButton;
@@ -310,8 +326,10 @@ MainWindow::MainWindow() {
         ly1->addRow(tr("Maximum gain:"), inputMaxGain);
         ly1->addRow(tr("Frequency scale:"), inputFreqScale);
 
+        ly1->addRow(tr("Pitch thickness:"), inputPitchThick);
         ly1->addRow(tr("Pitch color:"), inputPitchColor);
 
+        ly1->addRow(tr("Formant thickness:"), inputFormantThick);
         for (int nb = 0; nb < inputFormantColor.size(); ++nb) {
             const QString labelStr = QString("F%1 color:").arg(nb + 1);
             ly1->addRow(tr(qPrintable(labelStr)), inputFormantColor[nb]);
@@ -558,6 +576,8 @@ void MainWindow::loadSettings()
     bool drawTracks = canvas->getDrawTracks();
     int minGain = canvas->getMinGainSpectrum();
     int maxGain = canvas->getMaxGainSpectrum();
+    int pitchThick = canvas->getPitchThickness();
+    int formantThick = canvas->getFormantThickness();
     QString colorMapName = canvas->getSpectrumColor();
 
     // Find the combobox index for nfft.
@@ -568,19 +588,22 @@ void MainWindow::loadSettings()
 
 #define callWithBlocker(obj, call) do { QSignalBlocker blocker(obj); (obj) -> call; } while (false)
  
-    callWithBlocker(inputToggleSpectrum, setChecked(drawSpectrum));
-    callWithBlocker(inputToggleTracks, setChecked(drawTracks));
     callWithBlocker(inputFftSize, setCurrentIndex(fftInd));
     callWithBlocker(inputLpOrder, setValue(lpOrder));
     callWithBlocker(inputMaxFreq, setValue(maxFreq));
-    callWithBlocker(inputFreqScale, setCurrentIndex(freqScale));
     callWithBlocker(inputFrameLength, setValue(frameLength));
     callWithBlocker(inputFrameSpace, setValue(frameSpace));
     callWithBlocker(inputWindowSpan, setValue(windowSpan));
-    callWithBlocker(inputMinGain, setValue(minGain));
-    callWithBlocker(inputMaxGain, setValue(maxGain));
     callWithBlocker(inputPitchAlg, setCurrentIndex(static_cast<int>(pitchAlg)));
     callWithBlocker(inputFormantAlg, setCurrentIndex(static_cast<int>(formantAlg)));
+
+    callWithBlocker(inputToggleSpectrum, setChecked(drawSpectrum));
+    callWithBlocker(inputToggleTracks, setChecked(drawTracks));
+    callWithBlocker(inputFreqScale, setCurrentIndex(freqScale));
+    callWithBlocker(inputMinGain, setValue(minGain));
+    callWithBlocker(inputMaxGain, setValue(maxGain));
+    callWithBlocker(inputPitchThick, setValue(pitchThick));
+    callWithBlocker(inputFormantThick, setValue(formantThick));
 
     updateColorButtons();
 
