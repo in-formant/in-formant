@@ -332,9 +332,10 @@ void Analyser::loadSettings()
     settings.beginGroup("analysis");
 
     setMaximumFrequency(settings.value("maxFreq", 4700.0).value<double>());
-    setFftSize(settings.value("fftSize", 512).value<int>());
+    nfft = settings.value("fftSize", 512).value<int>();
     setLinearPredictionOrder(settings.value("lpOrder", 12).value<int>());
-    setFrameLength(std::chrono::milliseconds(settings.value("frameLength", 35).value<int>()));
+    frameLength = std::chrono::milliseconds(settings.value("frameLength", 35).value<int>());
+    _updateCaptureDuration();
     setFrameSpace(std::chrono::milliseconds(settings.value("frameSpace", 15).value<int>()));
     setWindowSpan(std::chrono::milliseconds(int(1000 * settings.value("windowSpan", 5.0).value<double>())));
     setPitchAlgorithm((PitchAlg) settings.value("pitchAlg", static_cast<int>(Wavelet)).value<int>());
