@@ -103,7 +103,9 @@ void Analyser::update()
     applySmoothingFilters();
 
     // Set the has-new-frames flag.
-    nbNewFrames++;
+    for (auto & [k, v] : nbNewFrames) {
+        v++;
+    }
 
     // Unlock the tracks.
     mutex.unlock();

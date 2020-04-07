@@ -11,6 +11,7 @@
 #include <deque>
 #include <thread>
 #include <memory>
+#include <map>
 #include "../audio/AudioCapture.h"
 #include "../audio/AudioDevices.h"
 #include "../lib/Formant/Formant.h"
@@ -141,7 +142,7 @@ private:
     double lastPitchFrame;
 
     bool lpFailed;
-    int nbNewFrames;
+    std::map<int, int> nbNewFrames;
 
     // Thread-related members
     std::thread thread;
@@ -151,14 +152,18 @@ private:
 public:
 
     template<typename Func1, typename Func2, typename Func3>
-    void callIfNewFrames(Func1 fn1, Func2 fn2, Func3 fn3)
+    void callIfNewFrames(int nb, Func1 fn1, Func2 fn2, Func3 fn3)
     {
         std::lock_guard<std::mutex> lock(mutex);
         
-        if (nbNewFrames > 0) {
+        if (nbNewFrames.find(nb) == nbNewFrames.end()) {
+            nbNewFrames[nb] = 0;
+        }
+
+        if (nbNewFrames[nb] > 0) {
             fn1(frameCount, maximumFrequency, smoothedPitch, smoothedFormants);
-            fn2(frameCount, nbNewFrames, maximumFrequency, spectra.cend() - 1 - nbNewFrames, spectra.cend());
-            nbNewFrames = 0;
+            fn2(frameCount, nbNewFrames[nb], maximumFrequency, spectra.cend() - 1 - nbNewFrames[nb], spectra.cend());
+            nbNewFrames[nb] = 0;
         }
 
         fn3(frameCount, maximumFrequency);

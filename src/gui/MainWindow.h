@@ -11,6 +11,7 @@
 #include <utility>
 #include "../audio/AudioDevices.h"
 #include "AnalyserCanvas.h"
+#include "PowerSpectrum.h"
 
 using DevicePair = std::pair<bool, const ma_device_id *>;
 
@@ -76,6 +77,7 @@ private:
     QComboBox * inputColorMap;
 
     AnalyserCanvas * canvas;
+    PowerSpectrum * powerSpectrum;
 
     QLineEdit * fieldPitch;
     std::vector<QLineEdit *> fieldFormant;

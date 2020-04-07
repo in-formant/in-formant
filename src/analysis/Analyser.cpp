@@ -25,10 +25,10 @@ Analyser::Analyser(ma_context * ctx)
       doAnalyse(true),
       running(false),
       lpFailed(true),
-      nbNewFrames(0),
       frameCount(0),
       nsamples(0)
 {
+    fs = audioCapture->getSampleRate();
     loadSettings();
 
     setInputDevice(nullptr);
@@ -123,8 +123,6 @@ void Analyser::setMaximumFrequency(double _maximumFrequency) {
     maximumFrequency = std::clamp(_maximumFrequency, 2500.0, 7000.0);
     
     LS_INFO("Set maximum frequency to " << maximumFrequency);
-
-    _updateCaptureDuration();
 }
 
 double Analyser::getMaximumFrequency() {
@@ -281,7 +279,6 @@ void Analyser::_updateCaptureDuration()
     std::lock_guard<std::mutex> lock(audioLock);
 
     double fs = audioCapture->getSampleRate();
-    double refs = 2 * maximumFrequency;
 
     // Account for resampling.
     fftSamples = nfft; //(fs * nfft) / refs;

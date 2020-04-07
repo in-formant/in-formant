@@ -57,6 +57,7 @@ MainWindow::MainWindow() {
     setCentralWidget(central);
 
     canvas = new AnalyserCanvas(analyser);
+    powerSpectrum = new PowerSpectrum(analyser);
 
     fieldsDock = new QDockWidget(tr("Estimates"), this);
     {
@@ -343,9 +344,15 @@ MainWindow::MainWindow() {
         auto ly2 = new QHBoxLayout;
         ly1->addLayout(ly2);
         {
+            auto w1 = new QWidget;
+            w1->setContentsMargins(0, 0, 0, 0);
+            auto ly3 = new QHBoxLayout(w1);
+            {
+            }
+
             auto w2 = new QWidget;
             w2->setContentsMargins(0, 0, 0, 0);
-            auto ly3 = new QHBoxLayout(w2);
+            auto ly4 = new QHBoxLayout(w2);
             {
                 auto github = new QPushButton;
                 github->setFixedSize(30, 30);
@@ -378,20 +385,29 @@ MainWindow::MainWindow() {
 
                 connect(inputFullscreen, &QPushButton::clicked, [&]() { toggleFullscreen(); });
 
-                ly3->addWidget(github);
-                ly3->addSpacing(8);
-                ly3->addWidget(patreon);
-                ly3->addSpacing(8);
-                ly3->addWidget(inputPause);
-                ly3->addWidget(inputFullscreen);
+                ly4->addWidget(github);
+                ly4->addSpacing(8);
+                ly4->addWidget(patreon);
+                ly4->addSpacing(8);
+                ly4->addWidget(inputPause);
+                ly4->addWidget(inputFullscreen);
             }
+
+            ly2->addWidget(w1, 0, Qt::AlignLeft);
             ly2->addWidget(w2, 0, Qt::AlignRight);
         }
 
-        ly1->addWidget(canvas);
-        canvas->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    }
+        auto ly3 = new QHBoxLayout;
+        ly1->addLayout(ly3);
+        { 
+            ly3->addWidget(canvas, 3);
+            canvas->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
+            ly3->addWidget(powerSpectrum, 1);
+            powerSpectrum->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        }
+    }
+ 
     addDockWidget(Qt::TopDockWidgetArea, fieldsDock);
     addDockWidget(Qt::LeftDockWidgetArea, settingsDock);
 

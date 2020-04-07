@@ -41,6 +41,8 @@ set(SOURCES
     gui/ColorMaps.h
     gui/AnalyserCanvas.cpp
     gui/AnalyserCanvas.h
+    gui/PowerSpectrum.cpp
+    gui/PowerSpectrum.h
     gui/MainWindow.cpp
     gui/MainWindow.h)
 

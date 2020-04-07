@@ -69,14 +69,6 @@ private:
     QTimer timer;
     std::mutex frameLock;
 
-    QColor pitchColor;
-    std::array<QColor, 4> formantColors;
-    int pitchThick;
-    int formantThick;
-    QString colorMapName;
-
-    int minGain, maxGain;
-
     QImage spectrogram;
     QImage tracks;
     double upFactor;
@@ -85,6 +77,14 @@ private:
     double maxFreq, maxFreqLog, maxFreqMel;
 
     // Rendering parameters
+    QColor pitchColor;
+    std::array<QColor, 4> formantColors;
+    int pitchThick;
+    int formantThick;
+    QString colorMapName;
+
+    int minGain, maxGain;
+
     bool drawSpectrum, drawTracks;
     int frequencyScaleType;
     int selectedFrame;

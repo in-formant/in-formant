@@ -43,7 +43,7 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
 
     loadSettings();
 
-    connect(&timer, &QTimer::timeout, [this, analyser]() {
+    connect(&timer, &QTimer::timeout, [this]() {
         repaint();
     });
     timer.setTimerType(Qt::PreciseTimer);
@@ -69,6 +69,7 @@ void AnalyserCanvas::render() {
     frameLock.unlock();
 
     analyser->callIfNewFrames(
+                0,
                 [this](auto&&... ts) { renderTracks(std::forward<decltype(ts)>(ts)...); },
                 [this](auto&&... ts) { renderSpectrogram(std::forward<decltype(ts)>(ts)...); },
                 [this](auto&&... ts) { renderScaleAndCursor(std::forward<decltype(ts)>(ts)...); }
