@@ -81,6 +81,7 @@ private:
 
     QLineEdit * fieldPitch;
     std::vector<QLineEdit *> fieldFormant;
+    QLineEdit * fieldOq;
 
 };
 

@@ -74,10 +74,7 @@ public:
     [[nodiscard]] const SpecFrame & getSpectrumFrame(int iframe);
     [[nodiscard]] const Formant::Frame & getFormantFrame(int iframe);
     [[nodiscard]] double getPitchFrame(int iframe);
-
-    [[nodiscard]] const SpecFrame & getLastSpectrumFrame();
-    [[nodiscard]] const Formant::Frame & getLastFormantFrame();
-    [[nodiscard]] double getLastPitchFrame();
+    [[nodiscard]] double getOqFrame(int iframe);
 
 private:
     void loadSettings();
@@ -92,6 +89,7 @@ private:
     void applyWindow();
     void analyseSpectrum();
     void analysePitch();
+    void analyseOq();
     void resampleAudio(double newFs);
     void applyPreEmphasis();
     void analyseLp();
@@ -101,6 +99,10 @@ private:
     void applySmoothingFilters();
 
     std::mutex audioLock;
+
+//#ifdef Q_OS_MAC
+    void * audioCaptureMem;
+//#endif
     AudioCapture * audioCapture;
 
     // Parameters.
@@ -133,13 +135,16 @@ private:
     Formant::Frames formantTrack;
     std::deque<double> pitchTrack;
 
+    // Results
     std::deque<SpecFrame> spectra;
     Formant::Frames smoothedFormants;
     std::deque<double> smoothedPitch;
+    std::deque<double> oqTrack;
 
     SpecFrame lastSpectrumFrame;
     Formant::Frame lastFormantFrame;
     double lastPitchFrame;
+    double lastOqFrame;
 
     bool lpFailed;
     std::map<int, int> nbNewFrames;

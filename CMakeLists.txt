@@ -14,8 +14,6 @@ set(CMAKE_ARGS
     -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
     -Dlibspeech_INCLUDE_DIR=${CMAKE_SOURCE_DIR}/lib
     -Dlibspeech_LIBRARY=${CMAKE_BINARY_DIR}/libspeech/src/libspeech-build/${CMAKE_STATIC_LIBRARY_PREFIX}speech${CMAKE_STATIC_LIBRARY_SUFFIX}
-
-    -DEigen3_DIR=${Eigen3_DIR}
 )
 
 ExternalProject_Add(libspeech

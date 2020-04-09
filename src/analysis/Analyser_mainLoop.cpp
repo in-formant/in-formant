@@ -60,6 +60,9 @@ void Analyser::update()
     // Get a pitch estimate.
     analysePitch();
     
+    // Get an Oq estimate.
+    analyseOq();
+    
     // Resample audio.
     resampleAudio(2 * maximumFrequency);
     
@@ -98,6 +101,9 @@ void Analyser::update()
     
     spectra.pop_front();
     spectra.push_back(lastSpectrumFrame);
+
+    oqTrack.pop_front();
+    oqTrack.push_back(lastOqFrame);
 
     // Smooth out the pitch and formant tracks.
     applySmoothingFilters();

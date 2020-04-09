@@ -21,14 +21,21 @@ static const SpecFrame defaultSpec = {
 };
 
 Analyser::Analyser(ma_context * ctx)
-    : audioCapture(new AudioCapture(ctx)),
-      doAnalyse(true),
+    : doAnalyse(true),
       running(false),
       lpFailed(true),
       frameCount(0),
+      nfft(1),
+      frameLength(25),
       nsamples(0)
 {
-    fs = audioCapture->getSampleRate();
+//#ifdef Q_OS_MAC
+    audioCaptureMem = malloc(sizeof(AudioCapture));
+    audioCapture = new (audioCaptureMem) AudioCapture(ctx);
+//#else
+//    audioCapture = new AudioCapture(ctx);
+//#endif
+
     loadSettings();
 
     setInputDevice(nullptr);
@@ -38,7 +45,12 @@ Analyser::~Analyser() {
     if (isAnalysing()) {
         stopThread();
     }
-    delete audioCapture;
+//#ifdef Q_OS_MAC
+    audioCapture->~AudioCapture();
+    free(audioCaptureMem);
+//#else
+//    delete audioCapture;
+//#endif
     saveSettings();
 }
 
@@ -243,6 +255,13 @@ double Analyser::getPitchFrame(int _iframe) {
     return smoothedPitch.at(iframe);
 }
 
+double Analyser::getOqFrame(int _iframe) {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    int iframe = std::clamp(_iframe, 0, frameCount - 1);
+    return oqTrack.at(iframe);
+}
+
 void Analyser::_updateFrameCount() {
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -257,6 +276,7 @@ void Analyser::_updateFrameCount() {
         spectra.insert(spectra.begin(), diff, defaultSpec);
         smoothedPitch.insert(smoothedPitch.begin(), diff, 0.0);
         smoothedFormants.insert(smoothedFormants.begin(), diff, defaultFrame);
+        oqTrack.insert(oqTrack.begin(), diff, 0.0);
     }
     else if (frameCount > newFrameCount) {
         int diff = frameCount - newFrameCount;
@@ -267,6 +287,7 @@ void Analyser::_updateFrameCount() {
         spectra.erase(spectra.begin(), spectra.begin() + diff);
         smoothedPitch.erase(smoothedPitch.begin(), smoothedPitch.begin() + diff);
         smoothedFormants.erase(smoothedFormants.begin(), smoothedFormants.begin() + diff);
+        oqTrack.erase(oqTrack.begin(), oqTrack.begin() + diff);
     }
 
     LS_INFO("Resized tracks from " << frameCount << " to " << newFrameCount);

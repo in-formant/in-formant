@@ -50,6 +50,10 @@ set(SOURCES
     Pitch/Pitch_DynWav.cpp
     Pitch/Pitch_YIN.cpp
     Pitch/Pitch.h
+    GCOI/GCOI.h
+    GCOI/findpeaks.cpp
+    GCOI/MP.cpp
+    GCOI/OQ.cpp
     Signal/Filter.cpp
     Signal/Filter.h
     Signal/Resample.cpp
@@ -63,6 +67,10 @@ set(SOURCES
 
 find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(FFTW REQUIRED COMPONENTS DOUBLE_LIB)
+
+if (APPLE)
+    include_directories($ENV{OSXCROSS}/SDK/MacOSX10.13.sdk/usr/include/c++/v1)
+endif()
 
 include_directories(
     ${EIGEN_INCLUDE_DIRS}

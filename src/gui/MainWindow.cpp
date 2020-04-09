@@ -85,7 +85,13 @@ MainWindow::MainWindow() {
                         ly1->setDirection(QBoxLayout::LeftToRight);
                     }
                 });
+        
+        fieldOq = new QLineEdit;
+        fieldOq->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+        fieldOq->setReadOnly(true);
 
+        ly1->addWidget(fieldOq, 0, Qt::AlignCenter);
+        
         for (int i = 0; i < inputFormantColor.size(); ++i) {
             auto field = new QLineEdit;
 
@@ -95,10 +101,9 @@ MainWindow::MainWindow() {
             fieldFormant.push_back(field);
 
             ly1->addWidget(field, 0, Qt::AlignCenter);
-        }
+        }  
 
         fieldPitch = new QLineEdit;
-
         fieldPitch->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
         fieldPitch->setReadOnly(true);
 
@@ -147,7 +152,6 @@ MainWindow::MainWindow() {
 
             connect(inputFftSize, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
                     [&](const QString value) { analyser->setFftSize(value.toInt()); });
-
 
             inputLpOrder = new QSpinBox;
             inputLpOrder->setRange(5, 22);
@@ -442,19 +446,16 @@ MainWindow::~MainWindow() {
 
 void MainWindow::updateFields() {
 
-    int frame = canvas->getSelectedFrame();
+    const int frame = canvas->getSelectedFrame();
 
     const auto & formants = analyser->getFormantFrame(frame);
-    double pitch = analyser->getPitchFrame(frame);
+    const double pitch = analyser->getPitchFrame(frame);
+    const double Oq = analyser->getOqFrame(frame);
+
 
     QPalette palette = this->palette();
 
-    if (pitch > 0) {
-        fieldPitch->setText(QString("H1 = %1 Hz").arg(pitch, 0, 'f', 1));
-    } else {
-        fieldPitch->setText("Unvoiced");
-    }
-    fieldPitch->adjustSize();
+    fieldOq->setText(QString("Oq = %1").arg(Oq));
 
     for (int i = 0; i < inputFormantColor.size(); ++i) {
         if (i < formants.nFormants) {
@@ -464,6 +465,13 @@ void MainWindow::updateFields() {
             fieldFormant[i]->setText("");
         }
     }
+
+    if (pitch > 0) {
+        fieldPitch->setText(QString("H1 = %1 Hz").arg(pitch, 0, 'f', 1));
+    } else {
+        fieldPitch->setText("Unvoiced");
+    }
+    fieldPitch->adjustSize();
 
 }
 

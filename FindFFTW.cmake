@@ -46,7 +46,7 @@ find_package(PkgConfig)
 
 #Determine from PKG
 if( PKG_CONFIG_FOUND AND NOT FFTW_ROOT )
-  pkg_check_modules( PKG_FFTW QUIET "fftw3" )
+    pkg_check_modules( PKG_FFTW "fftw3" )
 endif()
 
 #Check whether to search static or dynamic libs

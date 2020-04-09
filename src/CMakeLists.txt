@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
+set(CMAKE_OSX_DEPLOYMENT_TARGET 10.12)
 project(main)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -10,9 +11,9 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 set(SOURCES
+    qt_plugin.cpp
     main.cpp
     Exceptions.cpp
     Exceptions.h
@@ -25,6 +26,7 @@ set(SOURCES
     analysis/parts/lpc.cpp
     analysis/parts/smooth.cpp
     analysis/parts/pitch.cpp
+    analysis/parts/openquotient.cpp
     analysis/parts/preprocess.cpp
     analysis/parts/resample.cpp
     analysis/parts/spectrum.cpp
@@ -44,27 +46,11 @@ set(SOURCES
     gui/PowerSpectrum.cpp
     gui/PowerSpectrum.h
     gui/MainWindow.cpp
-    gui/MainWindow.h)
-
-set(QT_SOURCES
-    qt_plugin.cpp
+    gui/MainWindow.h
     ../resources.qrc)
 
-if(NOT APPLE)
+if (NOT APPLE)
     find_package(Qt5 COMPONENTS Widgets REQUIRED)
-else()
-    set(QT_PREFIX /usr/osxcross/target/macports/pkgs/opt/local/libexec/qt5)
-    set(Qt5Widgets_INCLUDE_DIRS
-        ${QT_PREFIX}/include
-        ${QT_PREFIX}/include/QtCore
-        ${QT_PREFIX}/include/QtGui
-        ${QT_PREFIX}/include/QtWidgets
-    )
-    set(Qt5Widgets_LIBRARIES
-        Qt5Core
-        Qt5Gui
-        Qt5Widgets
-    )
 endif()
 
 find_package(Eigen3 REQUIRED NO_MODULE)
@@ -77,7 +63,38 @@ include_directories(
     ${FFTW_INCLUDE_DIRS}
 )
 
-add_executable(speech_analysis WIN32 ${SOURCES} ${QT_SOURCES})
+if (APPLE)
+    set(QT_PREFIX $ENV{OSXCROSS}/macports/pkgs/opt/local)
+    
+    set(MOC_EXE ${QT_PREFIX}/bin/moc)
+    set(RCC_EXE ${QT_PREFIX}/bin/rcc)
+
+    foreach (src ${SOURCES})
+
+        get_filename_component(dir "${src}" DIRECTORY)
+        get_filename_component(name "${src}" NAME_WE)
+        get_filename_component(ext "${src}" EXT)
+
+        if (${ext} MATCHES ".qrc")
+            set(outfile "${CMAKE_BINARY_DIR}/qrc_${name}.cpp")
+            execute_process(COMMAND ${RCC_EXE} ${src} -o ${outfile} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+            list(APPEND SOURCES ${outfile})
+        elseif (${ext} MATCHES ".cpp" OR ${ext} MATCHES ".h")
+            file(READ "${src}" content)
+            foreach (macro_name ${CMAKE_AUTOMOC_MACRO_NAMES})
+                string(FIND "${content}" "${macro_name}" match_res)
+                if (NOT ${match_res} EQUAL -1)
+                    set(outfile "${CMAKE_BINARY_DIR}/moc_${name}.cpp")
+                    execute_process(COMMAND ${MOC_EXE} ${src} -o ${outfile} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+                    list(APPEND SOURCES ${outfile})
+                endif()
+            endforeach()
+        endif()
+
+    endforeach()
+endif()
+
+add_executable(speech_analysis WIN32 ${SOURCES})
 
 target_link_libraries(speech_analysis
     ${libspeech_LIBRARY}
@@ -86,11 +103,59 @@ target_link_libraries(speech_analysis
 )
 
 if(APPLE)
+    set(SDK_PREFIX $ENV{OSXCROSS}/SDK/MacOSX10.13.sdk)
+    include_directories(
+        ${SDK_PREFIX}/usr/include/c++/v1
+        ${QT_PREFIX}/include
+        ${QT_PREFIX}/include/QtCore
+        ${QT_PREFIX}/include/QtGui
+        ${QT_PREFIX}/include/QtWidgets
+    )
     target_link_libraries(speech_analysis
-        -framework Qt5Core
-        ${Qt5Core_LIBRARIES}
-        ${Qt5Gui_LIBRARIES}
-        ${Qt5Widgets_LIBRARIES}
+        -L${QT_PREFIX}/lib
+        -L${QT_PREFIX}/plugins
+        -L${QT_PREFIX}/plugins/platforms
+        -L${QT_PREFIX}/plugins/imageformats
+        -F${SDK_PREFIX}/System/Library/Frameworks
+        "-framework AppKit"
+        "-framework Carbon"
+        "-framework CoreFoundation"
+        "-framework CoreGraphics"
+        "-framework CoreText"
+        "-framework CoreServices"
+        "-framework CoreVideo"
+        "-framework Foundation"
+        "-framework ImageIO"
+        "-framework IOKit"
+        "-framework IOSurface"
+        "-framework Metal"
+        "-framework OpenGL"
+        "-framework QuartzCore"
+        "-framework Security"
+        "-framework System"
+        qminimal
+        Qt5AccessibilitySupport
+        Qt5ClipboardSupport
+        Qt5ThemeSupport
+        Qt5FontDatabaseSupport
+        Qt5GraphicsSupport
+        Qt5PrintSupport
+        cups
+        qcocoa
+        qtfreetype
+        Qt5DBus
+        qgif
+        qico
+        qjpeg
+        Qt5Widgets
+        Qt5Gui
+        qtlibpng
+        qtharfbuzz
+        Qt5Core
+        m
+        qtpcre2
+        dl
+        pthread
     )
 elseif(UNIX)
     target_link_libraries(speech_analysis
