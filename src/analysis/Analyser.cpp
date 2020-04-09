@@ -29,12 +29,12 @@ Analyser::Analyser(ma_context * ctx)
       frameLength(25),
       nsamples(0)
 {
-//#ifdef Q_OS_MAC
+#ifdef Q_OS_MAC
     audioCaptureMem = malloc(sizeof(AudioCapture));
     audioCapture = new (audioCaptureMem) AudioCapture(ctx);
-//#else
-//    audioCapture = new AudioCapture(ctx);
-//#endif
+#else
+   audioCapture = new AudioCapture(ctx);
+#endif
 
     loadSettings();
 
