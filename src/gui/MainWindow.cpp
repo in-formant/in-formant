@@ -504,7 +504,7 @@ void MainWindow::updateDevices()
                 if (index >= 0) {
                     const auto [ isInput, id ] = inputDevIn->itemData(index).value<DevicePair>();
 
-                    if (isInput) {
+                    if (isInput || id == nullptr) {
                         analyser->setInputDevice(id);
                     }
                     else {
