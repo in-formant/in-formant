@@ -1,10 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 
 BUILD_DIR=/tmp/speech-analysis/osx
 
 mkdir -p $BUILD_DIR
 
-docker container rm -f extract-osx
-docker container run --name extract-osx -v "$(pwd)":/src -v $BUILD_DIR:/build -e "CMAKE_BUILD_TYPE=$1" -a stdin -a stdout -a stderr clorika/osx:latest
-docker container cp extract-osx:/build/speech_analysis/src/main-build/speech_analysis ./out.OSX
-docker container rm -f extract-osx
+[[ -t 1 ]] && it_param=-it
+
+docker rm -f extract-osx >/dev/null 2>&1
+docker run --name extract-osx -v "$(pwd)":/src -v $BUILD_DIR:/build -e "CMAKE_BUILD_TYPE=$1" $it_param clorika/osx:latest
+docker cp extract-osx:/build/speech_analysis/src/main-build/speech_analysis ./out.OSX
+docker rm -f extract-osx
