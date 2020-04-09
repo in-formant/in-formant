@@ -45,12 +45,12 @@ Analyser::~Analyser() {
     if (isAnalysing()) {
         stopThread();
     }
-//#ifdef Q_OS_MAC
+#ifdef Q_OS_MAC
     audioCapture->~AudioCapture();
     free(audioCaptureMem);
-//#else
-//    delete audioCapture;
-//#endif
+#else
+    delete audioCapture;
+#endif
     saveSettings();
 }
 

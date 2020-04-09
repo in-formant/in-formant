@@ -100,9 +100,9 @@ private:
 
     std::mutex audioLock;
 
-//#ifdef Q_OS_MAC
+#ifdef Q_OS_MAC
     void * audioCaptureMem;
-//#endif
+#endif
     AudioCapture * audioCapture;
 
     // Parameters.
