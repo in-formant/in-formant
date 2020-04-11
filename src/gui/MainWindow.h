@@ -17,6 +17,8 @@ using DevicePair = std::pair<bool, const ma_device_id *>;
 
 Q_DECLARE_METATYPE(DevicePair);
 
+constexpr int numFormants = 4;
+
 extern QFont * appFont;
 
 class MainWindow : public QMainWindow {
@@ -26,17 +28,21 @@ public:
     ~MainWindow();
 
 protected:
+#ifndef Q_OS_ANDROID
     void keyPressEvent(QKeyEvent * event) override;
+#endif
 
 private:
     void loadSettings();
 
-    void updateDevices();
     void updateFields();
+#ifndef Q_OS_ANDROID
+    void updateDevices();
     void updateColorButtons();
 
     void toggleAnalyser();
     void toggleFullscreen();
+#endif
 
     ma_context maCtx;
     AudioDevices * devs;
@@ -44,8 +50,11 @@ private:
 
     QTimer timer;
 
+    QStringList fftSizes;
+
     QWidget * central;
 
+#ifndef Q_OS_ANDROID
     QDockWidget * fieldsDock;
     QDockWidget * settingsDock;
 
@@ -61,9 +70,6 @@ private:
     QComboBox * inputPitchAlg;
     QComboBox * inputFormantAlg;
 
-    QPushButton * inputPause;
-    QPushButton * inputFullscreen;
-
     QWidget * dialogDisplay;
     QCheckBox * inputToggleSpectrum;
     QCheckBox * inputToggleTracks;
@@ -73,8 +79,12 @@ private:
     QSpinBox * inputPitchThick;
     QPushButton * inputPitchColor;
     QSpinBox * inputFormantThick;
-    std::array<QPushButton *, 4> inputFormantColor;
+    std::array<QPushButton *, numFormants> inputFormantColor;
     QComboBox * inputColorMap;
+
+    QPushButton * inputPause;
+    QPushButton * inputFullscreen;
+#endif
 
     AnalyserCanvas * canvas;
     PowerSpectrum * powerSpectrum;

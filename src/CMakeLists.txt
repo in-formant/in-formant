@@ -4,7 +4,7 @@ project(main)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -march=x86-64 -mtune=generic")
+set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g0")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
@@ -49,11 +49,18 @@ set(SOURCES
     gui/MainWindow.h
     ../resources.qrc)
 
-if (NOT APPLE)
+if (NOT APPLE AND NOT ANDROID)
     find_package(Qt5 COMPONENTS Widgets REQUIRED)
 endif()
 
 find_package(Eigen3 REQUIRED NO_MODULE)
+
+if (FFTW_ROOT)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
+endif()
+
 find_package(FFTW REQUIRED COMPONENTS DOUBLE_LIB)
 
 include_directories(
@@ -63,8 +70,12 @@ include_directories(
     ${FFTW_INCLUDE_DIRS}
 )
 
-if (APPLE)
-    set(QT_PREFIX $ENV{OSXCROSS}/macports/pkgs/opt/local)
+if (APPLE OR ANDROID)
+    if (APPLE)
+        set(QT_PREFIX $ENV{OSXCROSS}/macports/pkgs/opt/local)
+    elseif (ANDROID)
+        set(QT_PREFIX /usr/android)
+    endif()
     
     set(MOC_EXE ${QT_PREFIX}/bin/moc)
     set(RCC_EXE ${QT_PREFIX}/bin/rcc)
@@ -94,7 +105,33 @@ if (APPLE)
     endforeach()
 endif()
 
-add_executable(speech_analysis WIN32 ${SOURCES})
+if (ANDROID)
+    add_library(speech_analysis SHARED ${SOURCES})
+    set_property(TARGET speech_analysis PROPERTY OUTPUT_NAME speech_analysis_${ANDROID_ABI})
+
+    #    include(FindJava.cmake)
+    #    include(UseJava.cmake)
+    #    find_package(Java 1.8 REQUIRED COMPONENTS Development)
+
+    set(QT_ANDROID_SDK_ROOT /opt/android-sdk)
+    set(QT_ANDROID_NDK_ROOT /opt/android-ndk/android-ndk-r21)
+    set(Qt5Core_DIR ${QT_PREFIX}/lib/cmake/Qt5Core)
+    set(ANDROID_STL c++_shared)
+    include(/usr/qt-android-cmake/AddQtAndroidApk.cmake)
+
+    file(READ ${CMAKE_SOURCE_DIR}/../android/keystore.password KEYSTORE_PASSWORD)
+    add_qt_android_apk(apk speech_analysis
+        NAME "Speech analysis"
+        VERSION_CODE 15
+        PACKAGE_NAME "fr.cloyunhee.speechanalysis"
+        PACKAGE_SOURCES ${CMAKE_SOURCE_DIR}/../android
+        KEYSTORE ${CMAKE_SOURCE_DIR}/../android/keystore.jks speechanalysis-key-alias
+        KEYSTORE_PASSWORD ${KEYSTORE_PASSWORD}
+        DEPENDS ${libspeech_LIBRARY} ${FFTW_LIBRARIES}
+    )
+else()
+    add_executable(speech_analysis WIN32 ${SOURCES})
+endif()
 
 target_link_libraries(speech_analysis
     ${libspeech_LIBRARY}
@@ -157,6 +194,53 @@ if(APPLE)
         dl
         pthread
     )
+elseif(ANDROID)
+    set(libsuff "_${ANDROID_ABI}")
+    set(imforpre "plugins_imageformats_")
+    set(platfpre "plugins_platforms_")
+    include_directories(
+        ${QT_PREFIX}/include
+        ${QT_PREFIX}/include/QtCore
+        ${QT_PREFIX}/include/QtGui
+        ${QT_PREFIX}/include/QtWidgets
+        ${QT_PREFIX}/include/QtAndroidExtras
+    )
+    target_link_libraries(speech_analysis
+        -L${SYSROOT}/usr/lib
+        -L${QT_PREFIX}/${ANDROID_ABI}/lib
+        -L${QT_PREFIX}/lib
+        -L${QT_PREFIX}/plugins
+        -L${QT_PREFIX}/plugins/platforms
+        -L${QT_PREFIX}/plugins/imageformats
+        ${platfpre}qtforandroid${libsuff}
+        Qt5EventDispatcherSupport${libsuff}
+        Qt5EglSupport${libsuff}
+        Qt5VulkanSupport${libsuff}
+        Qt5AccessibilitySupport${libsuff}
+        Qt5ServiceSupport${libsuff}
+        Qt5ThemeSupport${libsuff}
+        Qt5FontDatabaseSupport${libsuff}
+        qtfreetype${libsuff}
+        Qt5EdidSupport${libsuff}
+        Qt5AndroidExtras${libsuff}
+        ${imforpre}qgif${libsuff}
+        ${imforpre}qico${libsuff}
+        ${imforpre}qjpeg${libsuff}
+        Qt5Widgets${libsuff}
+        Qt5Gui${libsuff}
+        qtlibpng${libsuff}
+        #qtharfbuzz${libsuff}
+        Qt5Core${libsuff}
+        #qtpcre2${libsuff}
+        z
+        log
+        EGL
+        GLESv2
+        OpenSLES
+        android
+        jnigraphics
+        dl
+    )
 elseif(UNIX)
     target_link_libraries(speech_analysis
         /usr/plugins/platforms/libqminimal.a
@@ -194,6 +278,8 @@ elseif(UNIX)
         gthread-2.0
         glib-2.0
         GL
+        GLX
+        EGL
         pthread
     )
 elseif (WIN32)

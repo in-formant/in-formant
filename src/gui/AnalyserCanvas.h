@@ -15,7 +15,8 @@
 #define WINDOW_WIDTH  1280
 #define WINDOW_HEIGHT 720
 
-class AnalyserCanvas : public QWidget {
+class AnalyserCanvas : public QWidget
+{
     Q_OBJECT
 public:
     AnalyserCanvas(Analyser * analyser) noexcept(false);
@@ -71,7 +72,8 @@ private:
 
     QImage spectrogram;
     QImage tracks;
-    double upFactor;
+    double upFactorTracks;
+    double upFactorSpec;
 
     int actualWidth, targetWidth, targetHeight;
     double maxFreq, maxFreqLog, maxFreqMel;

@@ -20,7 +20,13 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
       minGain(-60),
       maxGain(0),
       analyser(analyser),
-      upFactor(1.25),
+#ifdef Q_OS_ANDROID
+      upFactorTracks(0.75),
+      upFactorSpec(1),
+#else
+      upFactorTracks(1.25),
+      upFactorSpec(2),
+#endif
       spectrogram(1, 1, QImage::Format_ARGB32_Premultiplied),
       tracks(1, 1, QImage::Format_ARGB32_Premultiplied)
 {
@@ -42,12 +48,6 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
     buildColorMaps();
 
     loadSettings();
-
-    connect(&timer, &QTimer::timeout, [this]() {
-        repaint();
-    });
-    timer.setTimerType(Qt::PreciseTimer);
-    timer.start(1000.0 / 60.0);
 }
 
 AnalyserCanvas::~AnalyserCanvas() {
@@ -87,7 +87,7 @@ void AnalyserCanvas::renderTracks(const int nframe, const double maximumFrequenc
 
 void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFrequency, const std::deque<double> &pitches, const Formant::Frames &formants) {
 
-    const double xstep = upFactor * (double) targetWidth / (double) nframe;
+    const double xstep = upFactorTracks * (double) targetWidth / (double) nframe;
 
     QPainter tPainter(&tracks);
 
@@ -113,7 +113,7 @@ void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFr
                 continue;
             }
 
-            const double y = upFactor * yFromFrequency(formant.frequency, maximumFrequency);
+            const double y = upFactorTracks * yFromFrequency(formant.frequency, maximumFrequency);
 
             QColor c;
             if (pitch != 0 && formantNb < 4) {    
@@ -125,7 +125,7 @@ void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFr
             if (pitch == 0 || formantNb >= 4) {
                 tPainter.setPen(c);
                 tPainter.setBrush(c);
-                tPainter.drawRect(QRectF{x, y, xstep - 1, upFactor});
+                tPainter.drawRect(QRectF{x, y, xstep - 1, upFactorTracks});
                 if (formantNb < 4) {
                     startPath[formantNb] = true;
                 }
@@ -152,13 +152,13 @@ void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFr
     tPainter.setBrush(Qt::transparent);
 
     for (int nb = 0; nb < paths.size(); ++nb) {
-        tPainter.setPen(QPen(formantColors[nb], upFactor * formantThick, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        tPainter.setPen(QPen(formantColors[nb], upFactorTracks * formantThick, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         tPainter.drawPath(paths[nb]);
     }
 }
 
 void AnalyserCanvas::renderPitchTrack(const int nframe, const double maximumFrequency, const std::deque<double> &pitches) {
-    const double xstep = upFactor * (double) targetWidth / (double) nframe;
+    const double xstep = upFactorTracks * (double) targetWidth / (double) nframe;
     
     QPainter tPainter(&tracks);
 
@@ -172,7 +172,7 @@ void AnalyserCanvas::renderPitchTrack(const int nframe, const double maximumFreq
         const double pitch = pitches.at(iframe);
 
         if (pitch > 0) {
-            const double y = upFactor * yFromFrequency(pitch, maximumFrequency);
+            const double y = upFactorTracks * yFromFrequency(pitch, maximumFrequency);
             
             if (beginTrack) {
                 path.moveTo(QPointF{x, y});
@@ -188,7 +188,7 @@ void AnalyserCanvas::renderPitchTrack(const int nframe, const double maximumFreq
     }
    
     tPainter.setBrush(Qt::transparent);
-    tPainter.setPen(QPen(pitchColor, upFactor * pitchThick, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    tPainter.setPen(QPen(pitchColor, upFactorTracks * pitchThick, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     tPainter.drawPath(path);
 }
 
@@ -197,8 +197,12 @@ void AnalyserCanvas::renderScaleAndCursor(const int nframe, const double maximum
     constexpr int ruleBig = 8;
 
     QFont font = painter.font();
-    int oldSize = font.pixelSize();
-    font.setPixelSize(14);
+    int oldSize = font.pointSize();
+#ifdef Q_OS_ANDROID
+    font.setPointSize(14);
+#else
+    font.setPointSize(11);
+#endif
     painter.setFont(font);
 
     QFontMetrics metrics(font);
@@ -247,7 +251,7 @@ void AnalyserCanvas::renderScaleAndCursor(const int nframe, const double maximum
                      y - 10,
                      cursorFreqStr);
 
-    font.setPixelSize(oldSize);
+    font.setPointSize(oldSize);
     painter.setFont(font);
 }
 
@@ -257,9 +261,7 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
     
     struct Tile { int r, g, b; double y, y2; };
 
-    const int upFactor = 2;
-
-    const double xstep = upFactor;
+    const double xstep = upFactorSpec;
 
     QImage spectrogramSnapshot = spectrogram.copy();
     spectrogram.fill(Qt::transparent);
@@ -283,10 +285,10 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
         const double delta = sframe.fs / (2 * sframe.nfft);
 
         for (int i = 0; i < sframe.nfft; ++i) {
-            const double y = upFactor * yFromFrequency(i * delta, maximumFrequency);
-            const double y2 = upFactor * yFromFrequency((i + 1) * delta, maximumFrequency);
+            const double y = upFactorSpec * yFromFrequency(i * delta, maximumFrequency);
+            const double y2 = upFactorSpec * yFromFrequency((i + 1) * delta, maximumFrequency);
 
-            if (y < 0 || y2 >= upFactor * targetHeight)
+            if (y < 0 || y2 >= upFactorSpec * targetHeight)
                 continue;
 
             double amplitude = abs(sframe.spec(i));
@@ -415,12 +417,12 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
     targetWidth = width();
     targetHeight = height();
 
-    const int trackWidth = upFactor * targetWidth; 
-    const int trackHeight = upFactor * targetHeight; 
+    const int trackWidth = upFactorTracks * targetWidth; 
+    const int trackHeight = upFactorTracks * targetHeight; 
    
     const int nframe = analyser->getFrameCount();
-    const int specWidth = 2 * nframe;
-    const int specHeight = 2 * targetHeight;
+    const int specWidth = upFactorSpec * nframe;
+    const int specHeight = targetHeight;
 
     if (spectrogram.width() != specWidth || spectrogram.height() != specHeight) {
         frameLock.lock();
@@ -553,8 +555,13 @@ void AnalyserCanvas::loadSettings() {
         setFormantColor(i, settings.value(QString("formantColor/%1").arg(i), formantColors[i]).value<QColor>());
     }
 
+#ifdef Q_OS_ANDROID
+    setPitchThickness(settings.value("pitchThickness", 6).value<int>());
+    setFormantThickness(settings.value("formantThickness", 6).value<int>());
+#else
     setPitchThickness(settings.value("pitchThickness", 3).value<int>());
     setFormantThickness(settings.value("formantThickness", 2).value<int>());
+#endif
 
     setSpectrumColor(settings.value("spectrumColorMap", "iZotope").value<QString>());
 

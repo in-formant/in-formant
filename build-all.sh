@@ -4,7 +4,7 @@ echo -e "\n\e[33mBuilding...\n\e[39m"
 
 mkdir -p /tmp/speech-analysis
 
-trap "kill \$p1; kill \$p2; kill \$p3; exit" SIGINT
+trap "kill \$p1; kill \$p2; kill \$p3; kill \$p4; exit" SIGINT
 
 {
     echo -e "\e[36m * Building for Linux...\n\e[39m"
@@ -36,9 +36,21 @@ p2=$!
 } &
 p3=$!
 
+{
+    echo -e "\e[36m * Building for Android...\n\e[39m"
+    logfile=/tmp/speech-analysis/android.log
+    rm -f $logfile
+    ./build-android.sh $1 1>>$logfile 2> >(tee -a $logfile >&2)
+    echo -e "\e[92m Android build finished.\e[39m"
+} &
+p4=$!
+
 wait
 wait
 wait
+wait
+
+trap "kill \$p1; kill \$p2; kill \$p3; exit" SIGINT
 
 echo -e "\n\e[33mCompressing binaries...\n\e[39m"
 

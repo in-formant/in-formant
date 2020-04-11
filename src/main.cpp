@@ -1,6 +1,9 @@
 #include <QApplication>
 #include <QStyleFactory>
 #include <QSharedPointer>
+#ifdef Q_OS_ANDROID
+    #include <QtAndroid>
+#endif
 #include <iostream>
 #include <csignal>
 #include "gui/MainWindow.h"
@@ -57,8 +60,13 @@ int main(int argc, char * argv[])
     logger->setLogFileName("speechanalysis.log", 10*1000*1000, 20);
     logger->setLogLevels_console(simpleqtlogger::ENABLE_LOG_LEVELS);
 
+#ifdef Q_OS_ANDROID
+    QFont font = app.font();
+    font.setPointSize(16);
+#else
     QFont font(loadFont(":/fonts/Montserrat-Medium.ttf"));
-    font.setPixelSize(15);
+    font.setPointSize(12);
+#endif
     QApplication::setFont(font);
     appFont = &font;
 
@@ -89,6 +97,20 @@ int main(int argc, char * argv[])
     app.setPalette(darkPalette);
     
     L_INFO("Application theme and palette set.");
+
+#ifdef Q_OS_ANDROID
+
+    L_INFO("Asking for RECORD_AUDIO permission...");
+    
+    auto permRecordAudio = QtAndroid::checkPermission(QString("android.permission.RECORD_AUDIO"));
+    if (permRecordAudio == QtAndroid::PermissionResult::Denied) {
+        auto resultHash = QtAndroid::requestPermissionsSync(QStringList({"android.permission.RECORD_AUDIO"}));
+        if (resultHash["android.permission.RECORD_AUDIO"] == QtAndroid::PermissionResult::Denied) {
+            return EXIT_FAILURE;
+        }
+    }
+
+#endif
 
     MainWindow mainWindow;
 

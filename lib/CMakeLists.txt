@@ -3,7 +3,7 @@ project(libspeech)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "-static -fPIC -march=x86-64 -mtune=generic")
+set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g0")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
@@ -66,6 +66,13 @@ set(SOURCES
     MFCC/MFCC.h)
 
 find_package(Eigen3 REQUIRED NO_MODULE)
+
+if (FFTW_ROOT)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
+endif()
+
 find_package(FFTW REQUIRED COMPONENTS DOUBLE_LIB)
 
 if (APPLE)
@@ -77,7 +84,11 @@ include_directories(
     ${FFTW_INCLUDE_DIRS}
 )
 
-add_library(speech ${SOURCES})
+if (ANDROID)
+    add_library(speech SHARED ${SOURCES})
+else()
+    add_library(speech STATIC ${SOURCES})
+endif()
 
 target_link_libraries(speech
     Eigen3::Eigen
