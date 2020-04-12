@@ -44,10 +44,10 @@ void Analyser::update()
     // Read captured audio.
     audioLock.lock();
     
-    x.conservativeResize(frameSamples);
+    x.setZero(frameSamples);
     audioCapture->readBlock(x);
 
-    x_fft.conservativeResize(fftSamples);
+    x_fft.setZero(fftSamples);
     audioCapture->readBlock(x_fft);
     
     fs = audioCapture->getSampleRate();

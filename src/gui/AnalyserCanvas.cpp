@@ -270,17 +270,19 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
     scrollPainter.end();
 
     auto it = begin;
-
+   
     QPainter sPainter(&spectrogram);
 
     const auto & cmrMap = colorMaps.find(colorMapName)->second;
     const int cmrCount = cmrMap.size();
 
-    for (int iframe = nframe - 1 - nNew; iframe < nframe; ++iframe) {
+    int iframe = nframe - 1 - nNew;
+
+    while (it != end) {
         QVector<Tile> rects;
 
         const double x = iframe * xstep;
-        const auto &sframe = *(it++);
+        const auto &sframe = *it;
 
         const double delta = sframe.fs / (2 * sframe.nfft);
 
@@ -347,6 +349,9 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
             
             prevRect = rect;
         }
+
+        iframe++;
+        it++;
     }
 }
 

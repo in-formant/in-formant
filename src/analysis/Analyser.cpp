@@ -15,7 +15,7 @@ static const Formant::Frame defaultFrame = {
 };
 
 static const SpecFrame defaultSpec = {
-    .fs = 0,
+    .fs = 16000,
     .nfft = 512,
     .spec = ArrayXd::Zero(512),
 };

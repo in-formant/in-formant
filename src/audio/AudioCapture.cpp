@@ -28,6 +28,9 @@ void AudioCapture::openInputDevice(const ma_device_id * id)
     deviceConfig.capture.format = ma_format_f32;
     deviceConfig.capture.channels = 1;
     deviceConfig.sampleRate = sampleRate;
+    deviceConfig.periodSizeInFrames = 0;
+    deviceConfig.periodSizeInMilliseconds = 25;
+    deviceConfig.periods = 3;
     deviceConfig.noClip = true;
     deviceConfig.dataCallback = readCallback;
     deviceConfig.pUserData = &audioContext;
@@ -51,9 +54,12 @@ void AudioCapture::openOutputDevice(const ma_device_id * id)
 
     auto deviceConfig = ma_device_config_init(ma_device_type_loopback);
     deviceConfig.playback.pDeviceID = const_cast<ma_device_id *>(id);
-    deviceConfig.playback.format = ma_format_f32;
-    deviceConfig.playback.channels = 1;
+    deviceConfig.capture.format = ma_format_f32;
+    deviceConfig.capture.channels = 1;
     deviceConfig.sampleRate = sampleRate;
+    deviceConfig.periodSizeInFrames = 0;
+    deviceConfig.periodSizeInMilliseconds = 25;
+    deviceConfig.periods = 3;
     deviceConfig.noClip = true;
     deviceConfig.dataCallback = readCallback;
     deviceConfig.pUserData = &audioContext; 

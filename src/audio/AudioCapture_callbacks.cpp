@@ -2,6 +2,7 @@
 // Created by clo on 13/09/2019.
 //
 
+#include <iostream>
 #include "AudioCapture.h"
 
 using namespace Eigen;
