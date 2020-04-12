@@ -54,26 +54,12 @@ trap "kill \$p1; kill \$p2; kill \$p3; exit" SIGINT
 
 echo -e "\n\e[33mCompressing binaries...\n\e[39m"
 
-{
-    upx --lzma -qq out.Linux
-    echo -e "\e[92m Linux binary compressed.\e[39m"
-} &
-p1=$!
+upx --lzma -qq out.Linux
+echo -e "\e[92m Linux binary compressed.\e[39m"
 
-{
-    upx --lzma -qq out.Windows.exe
-    echo -e "\e[92m Windows binary compressed.\e[39m"
-} &
-p2=$!
+upx --lzma -qq out.Windows.exe
+echo -e "\e[92m Windows binary compressed.\e[39m"
 
-{
-    upx --lzma -qq out.OSX
-    echo -e "\e[92m OS X binary compressed.\e[39m"
-} &
-p3=$!
-
-wait 
-wait
-wait
-
+upx --lzma -qq out.OSX
+echo -e "\e[92m OS X binary compressed.\e[39m"
 

@@ -422,7 +422,7 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
    
     const int nframe = analyser->getFrameCount();
     const int specWidth = upFactorSpec * nframe;
-    const int specHeight = targetHeight;
+    const int specHeight = upFactorSpec * targetHeight;
 
     if (spectrogram.width() != specWidth || spectrogram.height() != specHeight) {
         frameLock.lock();
