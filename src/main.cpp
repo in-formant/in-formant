@@ -62,7 +62,7 @@ int main(int argc, char * argv[])
 
 #ifdef Q_OS_ANDROID
     QFont font = app.font();
-    font.setPointSize(16);
+    font.setPointSize(14);
 #else
     QFont font(loadFont(":/fonts/Montserrat-Medium.ttf"));
     font.setPointSize(12);

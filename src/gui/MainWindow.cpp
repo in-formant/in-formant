@@ -6,6 +6,12 @@
 #include "ColorMaps.h"
 #include "FFT/FFT.h"
 #include "../log/simpleQtLogger.h"
+#ifdef Q_OS_ANDROID
+    #include <QtAndroid>
+    #include <QAndroidIntent>
+    #include <jni.h>
+    #include "../jni/JniInstance.h"
+#endif
 
 constexpr int maxWidthComboBox = 200;
 
@@ -62,13 +68,14 @@ MainWindow::MainWindow()
     powerSpectrum = new PowerSpectrum(analyser);
 
 #ifdef Q_OS_ANDROID
-    
+    JniInstance::createInstance(analyser, canvas, powerSpectrum);
+#endif 
+
+#ifdef Q_OS_ANDROID
     auto fieldsWidget = new QWidget(central);
     {
         auto ly1 = new QHBoxLayout(fieldsWidget);
-
 #else
-
     fieldsDock = new QDockWidget("Estimates", this);
     {
         fieldsDock->setAllowedAreas(Qt::AllDockWidgetAreas);
@@ -95,7 +102,6 @@ MainWindow::MainWindow()
                         ly1->setDirection(QBoxLayout::LeftToRight);
                     }
                 });
-        
 #endif // Q_OS_ANDROID
         
         fieldOq = new QLineEdit;
@@ -113,13 +119,23 @@ MainWindow::MainWindow()
             fieldFormant.push_back(field);
 
             ly1->addWidget(field, 0, Qt::AlignCenter);
-        }  
+        }
 
         fieldPitch = new QLineEdit;
         fieldPitch->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
         fieldPitch->setReadOnly(true);
 
         ly1->addWidget(fieldPitch, 0, Qt::AlignCenter);
+
+#ifdef Q_OS_ANDROID
+        inputSettings = new QPushButton("Settings");
+
+        connect(inputSettings, &QPushButton::clicked,
+                [&]() { openSettings(); });
+
+        ly1->addWidget(inputSettings, 0, Qt::AlignRight);
+#endif
+
     }
 
 #ifndef Q_OS_ANDROID
@@ -275,7 +291,7 @@ MainWindow::MainWindow()
         inputFreqScale = new QComboBox;
         inputFreqScale->addItems({"Linear", "Logarithmic", "Mel"});
 
-        connect(inputFreqScale, QOverload<int>::of(&QComboBox::currentIndexChanged),
+         connect(inputFreqScale, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 [&](const int value) { canvas->setFrequencyScale(value); });
 
         inputPitchThick = new QSpinBox;
@@ -511,7 +527,7 @@ void MainWindow::updateDevices()
     inputDevIn->disconnect();
     inputDevIn->clear();
 
-    inputDevIn->addItem("", QVariant::fromValue(nullptr));
+    inputDevIn->addItem("Default input device", QVariant::fromValue(nullptr));
 
     for (const auto & dev : inputs) {
         const QString name = QString::fromLocal8Bit(dev.name.c_str());
@@ -568,15 +584,14 @@ void MainWindow::updateColorButtons() {
 }
 
 void MainWindow::toggleAnalyser() {
-    analyser->toggle();
-
     bool running = analyser->isAnalysing();
 
+    analyser->toggle(!running);
+
     if (running) {
-        inputPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
-    }
-    else {
         inputPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    } else {
+        inputPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
     }
 }
 
@@ -606,7 +621,13 @@ void MainWindow::keyPressEvent(QKeyEvent * event) {
         toggleFullscreen();
     }
 }
-#endif
+#else
+void MainWindow::openSettings()
+{
+    QAndroidIntent intent(QtAndroid::androidActivity().object(), "fr.cloyunhee.speechanalysis.SettingsActivity");
+    QtAndroid::startActivity(intent, 0);
+}
+#endif // Q_OS_ANDROID
 
 void MainWindow::loadSettings()
 {

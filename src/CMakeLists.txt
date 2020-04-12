@@ -49,6 +49,11 @@ set(SOURCES
     gui/MainWindow.h
     ../resources.qrc)
 
+set(ANDROID_JNI_SOURCES
+    jni/JniInstance.h
+    jni/JniInstance.cpp
+    jni/bindings.cpp)
+
 if (NOT APPLE AND NOT ANDROID)
     find_package(Qt5 COMPONENTS Widgets REQUIRED)
 endif()
@@ -106,12 +111,8 @@ if (APPLE OR ANDROID)
 endif()
 
 if (ANDROID)
-    add_library(speech_analysis SHARED ${SOURCES})
+    add_library(speech_analysis SHARED ${SOURCES} ${ANDROID_JNI_SOURCES})
     set_property(TARGET speech_analysis PROPERTY OUTPUT_NAME speech_analysis_${ANDROID_ABI})
-
-    #    include(FindJava.cmake)
-    #    include(UseJava.cmake)
-    #    find_package(Java 1.8 REQUIRED COMPONENTS Development)
 
     set(QT_ANDROID_SDK_ROOT /opt/android-sdk)
     set(QT_ANDROID_NDK_ROOT /opt/android-ndk/android-ndk-r21)

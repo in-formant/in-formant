@@ -3,11 +3,15 @@
     package="@QT_ANDROID_APP_PACKAGE_NAME@"
     android:installLocation="auto"
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:versionCode="@QT_ANDROID_APP_VERSION_CODE@">
     <application
         android:label="@QT_ANDROID_APP_NAME@"
-        android:name="org.qtproject.qt5.android.bindings.QtApplication">
+        android:name="org.qtproject.qt5.android.bindings.QtApplication"
+        tools:replace="android:label,android:appComponentFactory"
+        android:appComponentFactory="androidx">
         <activity
+            android:theme="@style/AppTheme"
             android:label="@QT_ANDROID_APP_NAME@"
             android:name="org.qtproject.qt5.android.bindings.QtActivity"
             android:screenOrientation="unspecified"
@@ -57,7 +61,16 @@
             <!-- extract android style -->
         </activity>
 
-    <!-- For adding service(s) please check: https://wiki.qt.io/AndroidServices -->
+        <!-- For adding service(s) please check: https://wiki.qt.io/AndroidServices -->
+
+        <activity
+            android:theme="@style/AppTheme"
+            android:label="Settings"
+            android:name="fr.cloyunhee.speechanalysis.SettingsActivity"
+            android:screenOrientation="unspecified"
+            android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation">
+
+        </activity>
 
     </application>
     <supports-screens android:anyDensity="true" android:normalScreens="true" android:smallScreens="true" android:largeScreens="true"/>

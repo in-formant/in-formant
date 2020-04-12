@@ -43,7 +43,7 @@ public:
     void startThread();
     void stopThread();
 
-    void toggle();
+    void toggle(bool running);
     
     void setInputDevice(const ma_device_id * id);
     void setOutputDevice(const ma_device_id * id);

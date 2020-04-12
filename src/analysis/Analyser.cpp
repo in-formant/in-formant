@@ -64,9 +64,9 @@ void Analyser::stopThread() {
     thread.join();
 }
 
-void Analyser::toggle() {
+void Analyser::toggle(bool running) {
     std::lock_guard<std::mutex> lock(mutex);
-    doAnalyse = !doAnalyse;
+    doAnalyse = running;
 }
 
 bool Analyser::isAnalysing() {

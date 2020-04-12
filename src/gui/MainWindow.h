@@ -42,6 +42,8 @@ private:
 
     void toggleAnalyser();
     void toggleFullscreen();
+#else
+    void openSettings();
 #endif
 
     ma_context maCtx;
@@ -54,7 +56,9 @@ private:
 
     QWidget * central;
 
-#ifndef Q_OS_ANDROID
+#ifdef Q_OS_ANDROID
+    QPushButton * inputSettings;
+#else
     QDockWidget * fieldsDock;
     QDockWidget * settingsDock;
 

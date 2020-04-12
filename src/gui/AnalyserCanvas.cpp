@@ -199,7 +199,7 @@ void AnalyserCanvas::renderScaleAndCursor(const int nframe, const double maximum
     QFont font = painter.font();
     int oldSize = font.pointSize();
 #ifdef Q_OS_ANDROID
-    font.setPointSize(14);
+    font.setPointSize(13);
 #else
     font.setPointSize(11);
 #endif
