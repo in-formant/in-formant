@@ -574,8 +574,8 @@ void AnalyserCanvas::loadSettings() {
     setPitchThickness(settings.value("pitchThickness", 6).value<int>());
     setFormantThickness(settings.value("formantThickness", 6).value<int>());
 #else
-    setPitchThickness(settings.value("pitchThickness", 3).value<int>());
-    setFormantThickness(settings.value("formantThickness", 2).value<int>());
+    setPitchThickness(settings.value("pitchThickness", 4).value<int>());
+    setFormantThickness(settings.value("formantThickness", 4).value<int>());
 #endif
 
     setSpectrumColor(settings.value("spectrumColorMap", "iZotope").value<QString>());
@@ -602,7 +602,10 @@ void AnalyserCanvas::saveSettings() {
     for (int i = 0; i < 4; ++i) {
         settings.setValue(QString("formantColor/%1").arg(i), formantColors[i]);
     }
-   
+
+    settings.setValue("pitchThickness", pitchThick);
+    settings.setValue("formantThickness", formantThick);
+
     settings.setValue("spectrumColorMap", colorMapName);
 
     settings.setValue("minGain", minGain);
