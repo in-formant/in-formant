@@ -3,8 +3,8 @@
 #include "PowerSpectrum.h"
 #include "MFCC/MFCC.h"
 
-PowerSpectrum::PowerSpectrum(Analyser * analyser)
-    : analyser(analyser), image(1, 1, QImage::Format_ARGB32_Premultiplied)
+PowerSpectrum::PowerSpectrum(Analyser * analyser, AnalyserCanvas * canvas)
+    : analyser(analyser), canvas(canvas), image(1, 1, QImage::Format_ARGB32_Premultiplied)
 { 
     SpecFrame frame;
     frame.nfft = 1;
@@ -14,16 +14,9 @@ PowerSpectrum::PowerSpectrum(Analyser * analyser)
     Eigen::ArrayXd one;
     one.setOnes(1);
     
-    holdLength = 50;
+    holdLength = 25;
     hold.resize(holdLength, frame);
     holdIndex = 0;
-
-    minGain = -60;
-    maxGain = 20;
-}
-
-PowerSpectrum::~PowerSpectrum()
-{
 }
 
 void PowerSpectrum::renderSpectrum(const int nframe, const int nNew, const double maximumFrequency, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end)
@@ -32,8 +25,11 @@ void PowerSpectrum::renderSpectrum(const int nframe, const int nNew, const doubl
   
     std::lock_guard<std::mutex> guard(imageLock);
    
+    int minGain = canvas->getMinGainSpectrum();
+    int maxGain = canvas->getMaxGainSpectrum();
+
     image.fill(Qt::black);
-    
+
     QPainter painter(&image);
     painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
 

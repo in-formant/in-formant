@@ -65,7 +65,7 @@ MainWindow::MainWindow()
     setCentralWidget(central);
 
     canvas = new AnalyserCanvas(analyser);
-    powerSpectrum = new PowerSpectrum(analyser);
+    powerSpectrum = new PowerSpectrum(analyser, canvas);
 
 #ifdef Q_OS_ANDROID
     JniInstance::createInstance(analyser, canvas, powerSpectrum);
@@ -478,7 +478,7 @@ MainWindow::MainWindow()
         canvas->repaint();
         powerSpectrum->repaint();
     });
-    timer.setTimerType(Qt::PreciseTimer);
+    timer.setTimerType(Qt::CoarseTimer);
 #ifdef Q_OS_ANDROID
     timer.start(1000.0 / 30.0);
 #else

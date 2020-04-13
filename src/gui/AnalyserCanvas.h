@@ -69,7 +69,6 @@ private:
 
     // Graphics-related members
     QPainter painter;
-    QTimer timer;
 
     std::mutex imageLock;
     QImage spectrogram;

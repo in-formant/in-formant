@@ -5,12 +5,12 @@
 #include <QTimer>
 #include <mutex>
 #include "../analysis/Analyser.h"
+#include "../gui/AnalyserCanvas.h"
 
 class PowerSpectrum : public QWidget {
     Q_OBJECT
 public:
-    PowerSpectrum(Analyser * analyser);
-    ~PowerSpectrum();
+    PowerSpectrum(Analyser * analyser, AnalyserCanvas * canvas);
 
 protected:
     void paintEvent(QPaintEvent * event) override;
@@ -27,15 +27,12 @@ private:
 
     std::mutex imageLock;
     QImage image;
-
-    QTimer timer;
    
     QPainter painter;
     int targetWidth, targetHeight;
 
-    int minGain, maxGain;
-
     Analyser * analyser;
+    AnalyserCanvas * canvas;
 };
 
 #endif // POWER_SPECTRUM_H

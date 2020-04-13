@@ -233,7 +233,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             });
 
             gain.setMin(-80);
-            gain.setMax(20);
+            gain.setMax(60);
             int lo = JniBridge.getMinGain();
             int hi = JniBridge.getMaxGain();
             gain.setProgress(lo, hi);
