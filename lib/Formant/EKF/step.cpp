@@ -5,6 +5,9 @@
 using namespace Eigen;
 
 static double clamp(double f, double fs) {
+    if (f < 0) {
+        f = -f;
+    }
     if (f > fs / 2) {
         f = fs / 2 - (f - fs / 2);
     }
@@ -42,7 +45,7 @@ void EKF::step(EKF::State & state)
     H = EKF::getH_FBW(curFVals, curBVals, numF, cepOrder, fs);
     auto Ht = H.transpose();
 
-    if (/*voiced*/true) {
+    if (voiced) {
         S = H * P_pred * Ht + R;
         K = (P_pred * Ht) * S.inverse();
     }

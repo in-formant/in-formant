@@ -316,28 +316,15 @@ void Analyser::_updateCaptureDuration()
 
 void Analyser::_initEkfState()
 {
-    int numF = 4;
+    int numF = 3;
 
     VectorXd x0(2 * numF);
     x0.setZero();
 
-    // Average over the last few frames.
-    int nback = 30;
-    
-    for (int i = 1; i <= nback; ++i) {
-        VectorXd x(2 * numF);
-        
-        auto & frm = smoothedFormants[frameCount - i];
-
-        for (int k = 0; k < std::min(frm.nFormants, numF); ++k) {
-            x(k) = frm.formant[k].frequency;
-            x(numF + k) = frm.formant[k].bandwidth;
-        }
-        
-        x0 += x;
+    for (int k = 0; k < numF; ++k) {
+        x0(k) = 550 + 600 * k;
+        x0(numF + k) = 90 + 20 * k;
     }
-
-    x0 /= (double) nback;
 
     ekfState.cepOrder = this->cepOrder;
 

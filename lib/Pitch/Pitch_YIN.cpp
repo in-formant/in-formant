@@ -1,5 +1,6 @@
 #include "Pitch.h"
 #include "Yin/YIN.h"
+#include <iostream>
 
 using namespace Eigen;
 
@@ -11,7 +12,7 @@ void Pitch::estimate_YIN(const ArrayXd & x, double fs, Pitch::Estimation & resul
 
     if (tau != -1) {
         result.isVoiced = true;
-        result.pitch = fs / std::get<0>(YIN::parabolic_interpolation(cmnd, tau));
+        result.pitch = fs / YIN::parabolic_interpolation(cmnd, tau);
     }
     else {
         result.isVoiced = false;

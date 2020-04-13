@@ -19,7 +19,7 @@ void Analyser::analysePitch()
             Pitch::estimate_MPM(x, fs, est);
             break;
         case YIN:
-            Pitch::estimate_YIN(x, fs, est, 0.2);
+            Pitch::estimate_YIN(x, fs, est, 0.30);
             break;
         case AMDF:
             Pitch::estimate_AMDF(x, fs, est, 90, 1000, 4.0, 0.1);

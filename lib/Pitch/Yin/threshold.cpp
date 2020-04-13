@@ -4,15 +4,18 @@ using namespace Eigen;
 
 int YIN::absolute_threshold(const ArrayXd & x, double threshold)
 {
-    int N = x.size();
+    const int halfN = x.size();
+
     int tau;
-    for (tau = 2; tau < N; ++tau) {
+
+    for (tau = 2; tau < halfN; ++tau) {
         if (x(tau) < threshold) {
-            while (tau + 1 < N && x(tau + 1) < x(tau)) {
+            while (tau + 1 < halfN && x(tau + 1) < x(tau)) {
                 tau++;
             }
             break;
         }
     }
-    return (tau == N || x(tau) >= threshold) ? -1 : tau;
+
+    return (tau == halfN || x(tau) >= threshold) ? -1 : tau;
 }

@@ -14,7 +14,7 @@ namespace YIN
 
     int absolute_threshold(const Eigen::ArrayXd & x, double threshold);
 
-    std::pair<double, double> parabolic_interpolation(Eigen::Ref<const Eigen::ArrayXd> array, int x);
+    double parabolic_interpolation(Eigen::Ref<const Eigen::ArrayXd> array, int x);
 }
 
 #endif // YIN_H

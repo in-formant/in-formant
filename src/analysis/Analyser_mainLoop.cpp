@@ -2,6 +2,12 @@
 // Created by rika on 16/11/2019.
 //
 
+#ifdef __linux__
+#include <unistd.h>
+#elif _WIN32
+#include <windows.h>
+#endif
+
 #include <chrono>
 #include "Analyser.h"
 #include "../lib/Pitch/Pitch.h"
@@ -14,21 +20,40 @@ void Analyser::mainLoop()
 {
     using namespace std::chrono;
 
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    time_point t1 = steady_clock::now();
 
     while (running) {
         update();
 
-        high_resolution_clock::time_point t2 = high_resolution_clock::now();
+        time_point t2 = steady_clock::now();
 
         auto dt = t2 - t1;
         if (dt < frameSpace) {
-            std::this_thread::sleep_for(frameSpace - dt);
+            long waitMicro = duration_cast<microseconds>(frameSpace - dt).count();
+
+#if (_XOPEN_SOURCE >= 500) && ! (_POSIX_C_SOURCE >= 200809L) \
+                   || /* Glibc since 2.19: */ _DEFAULT_SOURCE \
+                   || /* Glibc versions <= 2.19: */ _BSD_SOURCE \
+                   || /* Android platform */ defined(__ANDROID__)
+            usleep(waitMicro);
+#elif _WIN32
+            HANDLE timer; 
+            LARGE_INTEGER ft; 
+
+            ft.QuadPart = -(10 * waitMicro); // Convert to 100 nanosecond interval, negative value indicates relative time
+
+            timer = CreateWaitableTimer(nullptr, TRUE, nullptr); 
+            SetWaitableTimer(timer, &ft, 0, nullptr, nullptr, 0); 
+            WaitForSingleObject(timer, INFINITE); 
+            CloseHandle(timer); 
+#else
+#warning "Unknown platform, using unreliable sleep_for wait."
+            std::this_thread::sleep_for(duration_cast<microseconds>(frameSpace - dt));
+#endif
         }
         else {
             t1 = t2;
         }
-
     }
 }
 
