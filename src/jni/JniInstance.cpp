@@ -30,7 +30,7 @@ JniInstance::JniInstance(Analyser * analyser, AnalyserCanvas * canvas, PowerSpec
     java_pitchAlgs = QAndroidJniObject("java/util/ArrayList", "(I)V", pitchAlgs.size());
     for (const auto & algName : pitchAlgs) {
         QAndroidJniObject string = QAndroidJniObject::fromString(algName);
-        java_pitchAlgs.callMethod<jboolean>("add", "(Ljava/lang/Object)Z", string.object());
+        java_pitchAlgs.callMethod<jboolean>("add", "(Ljava/lang/Object;)Z", string.object());
     }
 
     std::vector<QString> formantAlgs{
@@ -41,7 +41,7 @@ JniInstance::JniInstance(Analyser * analyser, AnalyserCanvas * canvas, PowerSpec
     java_formantAlgs = QAndroidJniObject("java/util/ArrayList", "(I)V", formantAlgs.size());
     for (const auto & algName : formantAlgs) {
         QAndroidJniObject string = QAndroidJniObject::fromString(algName);
-        java_formantAlgs.callMethod<jboolean>("add", "(Ljava/lang/Object)Z", string.object());
+        java_formantAlgs.callMethod<jboolean>("add", "(Ljava/lang/Object;)Z", string.object());
     }
 }
 

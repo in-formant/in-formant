@@ -200,6 +200,64 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         }
         analysis.addPreference(duration);
 
+        final DropDownPreference pitchAlg = new DropDownPreference(context);
+        {
+            pitchAlg.setPersistent(false);
+            pitchAlg.setKey("pitchalg");
+            pitchAlg.setTitle("Pitch algorithm");
+            pitchAlg.setSummaryProvider(ListPreference.SimpleSummaryProvider.getInstance());
+    
+            pitchAlg.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    JniBridge.setPitchAlg(Integer.parseInt(newValue.toString()));
+                    return true;
+                }
+            });
+ 
+            final List<String> pitchAlgs = JniBridge.getPitchAlgs();
+            final int pitchAlgCount = pitchAlgs.size();
+            String[] entryValues = new String[pitchAlgCount];
+            String[] entries = new String[pitchAlgCount];
+            for (int i = 0; i < pitchAlgCount; ++i) {
+                entryValues[i] = Integer.toString(i);
+                entries[i] = pitchAlgs.get(i);
+            }
+
+            pitchAlg.setEntries(entries);
+            pitchAlg.setEntryValues(entryValues);
+            pitchAlg.setValue(Integer.toString(JniBridge.getPitchAlg()));
+        }
+        analysis.addPreference(pitchAlg);
+
+        final DropDownPreference formantAlg = new DropDownPreference(context);
+        {
+            formantAlg.setPersistent(false);
+            formantAlg.setKey("formantalg");
+            formantAlg.setTitle("Formant algorithm");
+            formantAlg.setSummaryProvider(ListPreference.SimpleSummaryProvider.getInstance());
+    
+            formantAlg.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    JniBridge.setFormantAlg(Integer.parseInt(newValue.toString()));
+                    return true;
+                }
+            });
+ 
+            final List<String> formantAlgs = JniBridge.getFormantAlgs();
+            final int formantAlgCount = formantAlgs.size();
+            String[] entryValues = new String[formantAlgCount];
+            String[] entries = new String[formantAlgCount];
+            for (int i = 0; i < formantAlgCount; ++i) {
+                entryValues[i] = Integer.toString(i);
+                entries[i] = formantAlgs.get(i);
+            }
+
+            formantAlg.setEntries(entries);
+            formantAlg.setEntryValues(entryValues);
+            formantAlg.setValue(Integer.toString(JniBridge.getFormantAlg()));
+        }
+        analysis.addPreference(formantAlg);
+
     }
 
     private void createDisplayCategory(final Context context) {
