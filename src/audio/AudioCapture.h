@@ -17,6 +17,7 @@
 struct RecordContext {
     RingBuffer buffer;
     double sampleRate;
+    int numChannels;
 };
 
 class AudioCapture {

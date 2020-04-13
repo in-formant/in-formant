@@ -543,7 +543,7 @@ void MainWindow::updateDevices()
     inputDevIn->disconnect();
     inputDevIn->clear();
 
-    inputDevIn->addItem("Default input device", QVariant::fromValue(nullptr));
+    inputDevIn->addItem("Default input device", QVariant::fromValue(std::make_pair(true, (const ma_device_id *) nullptr)));
 
     for (const auto & dev : inputs) {
         const QString name = QString::fromLocal8Bit(dev.name.c_str());

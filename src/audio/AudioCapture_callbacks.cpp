@@ -12,9 +12,11 @@ void AudioCapture::readCallback(ma_device *pDevice, void *pOutput, const void *p
     if (pInput != nullptr) {
         auto context = (struct RecordContext *) pDevice->pUserData;
 
-        ArrayXd block = Map<const ArrayXf>((float *) pInput, frameCount).cast<double>();
+        ArrayXXd deinterleavedInput = Map<const ArrayXXf>((float *) pInput, context->numChannels, frameCount).cast<double>();
 
-        context->buffer.writeInto(block);
+        ArrayXd meanInput = deinterleavedInput.colwise().mean();
+
+        context->buffer.writeInto(meanInput);
     }
 
     if (pOutput != nullptr) {

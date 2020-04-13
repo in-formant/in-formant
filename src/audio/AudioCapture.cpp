@@ -26,12 +26,16 @@ void AudioCapture::openInputDevice(const ma_device_id * id)
     auto deviceConfig = ma_device_config_init(ma_device_type_capture);
     deviceConfig.capture.pDeviceID = const_cast<ma_device_id *>(id);
     deviceConfig.capture.format = ma_format_f32;
-    deviceConfig.capture.channels = 1;
     deviceConfig.sampleRate = sampleRate;
     deviceConfig.periodSizeInFrames = 0;
     deviceConfig.periodSizeInMilliseconds = 25;
     deviceConfig.periods = 3;
     deviceConfig.noClip = true;
+#ifdef Q_OS_ANDROID
+    deviceConfig.resampling.linear.lpfOrder = 0;
+#else
+    deviceConfig.resampling.linear.lpfOrder = MA_MAX_FILTER_ORDER;
+#endif
     deviceConfig.dataCallback = readCallback;
     deviceConfig.pUserData = &audioContext;
    
@@ -43,6 +47,7 @@ void AudioCapture::openInputDevice(const ma_device_id * id)
     }
     
     deviceCaptureInit = true;
+    audioContext.numChannels = deviceCapture.capture.channels;
     
     openZeroPlaybackDevice();
 }
@@ -55,16 +60,20 @@ void AudioCapture::openOutputDevice(const ma_device_id * id)
     }
 
     auto deviceConfig = ma_device_config_init(ma_device_type_loopback);
-    deviceConfig.playback.pDeviceID = const_cast<ma_device_id *>(id);
+    deviceConfig.capture.pDeviceID = const_cast<ma_device_id *>(id);
     deviceConfig.capture.format = ma_format_f32;
-    deviceConfig.capture.channels = 1;
     deviceConfig.sampleRate = sampleRate;
     deviceConfig.periodSizeInFrames = 0;
     deviceConfig.periodSizeInMilliseconds = 25;
     deviceConfig.periods = 3;
     deviceConfig.noClip = true;
+#ifdef Q_OS_ANDROID
+    deviceConfig.resampling.linear.lpfOrder = 0;
+#else
+    deviceConfig.resampling.linear.lpfOrder = MA_MAX_FILTER_ORDER;
+#endif
     deviceConfig.dataCallback = readCallback;
-    deviceConfig.pUserData = &audioContext; 
+    deviceConfig.pUserData = &audioContext;
 
     L_INFO("Opening output device as loopback...");
 
@@ -73,7 +82,8 @@ void AudioCapture::openOutputDevice(const ma_device_id * id)
         throw AudioException("Failed to initialise miniaudio device");
     }
 
-    deviceCaptureInit = true;
+    deviceCaptureInit = true; 
+    audioContext.numChannels = deviceCapture.capture.channels;
 
     openZeroPlaybackDevice();
 }
@@ -96,18 +106,24 @@ void AudioCapture::openZeroPlaybackDevice() {
 
 void AudioCapture::startStream() {
 
-    L_INFO("Starting zero-filled audio device...");
+    if (deviceZeroPlaybackInit) {
 
-    if (ma_device_start(&deviceZeroPlayback) != MA_SUCCESS) {
-        L_FATAL("Failed to start zero-filled audio device...");
-        throw AudioException("Failed to start miniaudio device");
+        L_INFO("Starting zero-filled audio device...");
+
+        if (ma_device_start(&deviceZeroPlayback) != MA_SUCCESS) {
+            L_FATAL("Failed to start zero-filled audio device...");
+            throw AudioException("Failed to start miniaudio device");
+        }
     }
 
-    L_INFO("Starting capture device...");
+    if (deviceCaptureInit) {
 
-    if (ma_device_start(&deviceCapture) != MA_SUCCESS) {
-        L_FATAL("Failed to start audio device...");
-        throw AudioException("Failed to start miniaudio device");
+        L_INFO("Starting capture device...");
+
+        if (ma_device_start(&deviceCapture) != MA_SUCCESS) {
+            L_FATAL("Failed to start audio device...");
+            throw AudioException("Failed to start miniaudio device");
+        }
     }
 
 }
