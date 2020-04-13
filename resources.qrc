@@ -3,5 +3,6 @@
         <file>fonts/Montserrat-Medium.ttf</file>
         <file>icons/github.png</file>
         <file>icons/patreon.png</file>
+        <file>icons/settings.png</file>
     </qresource>
 </RCC>

@@ -7,6 +7,18 @@
 
 #define declare_binding3(ret, name, args...) extern "C" JNIEXPORT ret JNICALL Java_fr_cloyunhee_speechanalysis_JniBridge_##name (JNIEnv * env, jobject obj, args)
 
+// Version info
+
+static QAndroidJniObject versionStringObject = QAndroidJniObject::fromString(VERSION_STRING);
+
+declare_binding(jstring, getVersionString) {
+    return versionStringObject.object<jstring>();
+}
+
+declare_binding(jint, getVersionCode) {
+    return VERSION_CODE;
+}
+
 // Toggle analysis
 
 declare_binding2(toggleAnalysis, jboolean running) {

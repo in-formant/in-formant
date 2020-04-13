@@ -27,4 +27,6 @@
         at a premium, we don't pre-allocate any space. -->
     <dimen name="preference_icon_minWidth">0dp</dimen>
 
+    <dimen name="icons_inset">4dp</dimen>
+
 </resources>

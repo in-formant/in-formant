@@ -5,6 +5,9 @@ import android.os.*;
 
 public class JniBridge {
 
+    public static native String getVersionString();
+    public static native int getVersionCode();
+
     public static native void toggleAnalysis(boolean running);
 
     public static native int getFftSize();

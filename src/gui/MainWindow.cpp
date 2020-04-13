@@ -128,11 +128,16 @@ MainWindow::MainWindow()
         ly1->addWidget(fieldPitch, 0, Qt::AlignCenter);
 
 #ifdef Q_OS_ANDROID
-        inputSettings = new QPushButton("Settings");
+        constexpr int buttonSize = 96;
+
+        inputSettings = new QPushButton;
+        inputSettings->setFixedSize(buttonSize, buttonSize);
+        inputSettings->setStyleSheet("QPushButton { border-image: url(:/icons/settings.png) 0 0 0 0 stretch stretch; border: none; }");
 
         connect(inputSettings, &QPushButton::clicked,
                 [&]() { openSettings(); });
 
+        ly1->addSpacing(16);
         ly1->addWidget(inputSettings, 0, Qt::AlignRight);
 #endif
 
@@ -506,7 +511,6 @@ void MainWindow::updateFields() {
     const auto & formants = analyser->getFormantFrame(frame);
     const double pitch = analyser->getPitchFrame(frame);
     const double Oq = analyser->getOqFrame(frame);
-
 
     QPalette palette = this->palette();
 

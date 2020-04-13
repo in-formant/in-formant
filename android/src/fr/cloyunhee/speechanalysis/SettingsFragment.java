@@ -2,6 +2,7 @@ package fr.cloyunhee.speechanalysis;
 
 import android.os.*;
 import android.content.*;
+import android.net.*;
 import android.util.*;
 import android.view.*;
 import android.widget.*;
@@ -28,10 +29,6 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     public static final int MIN_WIN_SPAN = 2;
     public static final int MAX_WIN_SPAN = 10;
 
-    private static final SuffixSummaryProvider hertzSuffix = new SuffixSummaryProvider("Hz");
-    private static final SuffixSummaryProvider millisecondSuffix = new SuffixSummaryProvider("ms");
-    private static final SuffixSummaryProvider secondSuffix = new SuffixSummaryProvider("s");
-
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootPreferenceKey) {
         final Context activityContext = getActivity();
@@ -45,6 +42,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         setPreferenceScreen(preferenceScreen);
         createAnalysisCategory(contextThemeWrapper);
         createDisplayCategory(contextThemeWrapper);
+        createAboutCategory(contextThemeWrapper);
     }
 
     private void createAnalysisCategory(final ContextThemeWrapper context) {
@@ -283,20 +281,39 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             display.addPreference(formantColor);
 
         }
-
-
     }
-
-    private static class SuffixSummaryProvider implements Preference.SummaryProvider<SeekBarPreference> {
-        private final String mSuffix;
-
-        public SuffixSummaryProvider(String suffix) {
-            mSuffix = suffix;
+    
+    private void createAboutCategory(final Context context) {
+        final PreferenceCategory about = new PreferenceCategory(context);
+        {
+            about.setTitle("About");
         }
+        getPreferenceScreen().addPreference(about);
 
-        public CharSequence provideSummary(SeekBarPreference preference) {
-            return String.format("%d %s", preference.getValue(), mSuffix);
+        final Preference github = new Preference(context);
+        {
+            github.setIcon(R.drawable.github);
+            github.setTitle("GitHub repository");
+            github.setSummary("github.com/ichi-rika/speech-analysis");
+            github.setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.github.com/ichi-rika/speech-analysis")));
         }
+        about.addPreference(github);
+
+        final Preference patreon = new Preference(context);
+        {
+            patreon.setIcon(R.drawable.patreon);
+            patreon.setTitle("Patreon page");
+            patreon.setSummary("patreon.com/cloyunhee");
+            patreon.setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.patreon.com/cloyunhee")));
+        }
+        about.addPreference(patreon);
+
+        final Preference version = new Preference(context);
+        {
+            version.setTitle(String.format("Version %s", JniBridge.getVersionString()));
+            version.setSummary(String.format("Build number %d", JniBridge.getVersionCode()));
+        }
+        about.addPreference(version);
     }
 
 }

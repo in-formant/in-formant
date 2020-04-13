@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<inset
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/github_img"
+    android:insetTop="@dimen/icons_inset"
+    android:insetRight="@dimen/icons_inset"
+    android:insetBottom="@dimen/icons_inset"
+    android:insetLeft="@dimen/icons_inset" />

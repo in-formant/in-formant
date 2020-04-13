@@ -120,10 +120,15 @@ if (ANDROID)
     set(ANDROID_STL c++_shared)
     include(/usr/qt-android-cmake/AddQtAndroidApk.cmake)
 
+    message(STATUS "Version string: ${VERSION_STRING}")
+    message(STATUS "Version code: ${VERSION_CODE}")
+
+    add_definitions(-DVERSION_STRING=\"${VERSION_STRING}\" -DVERSION_CODE=${VERSION_CODE})
+
     file(READ ${CMAKE_SOURCE_DIR}/../android/keystore.password KEYSTORE_PASSWORD)
     add_qt_android_apk(apk speech_analysis
         NAME "Speech analysis"
-        VERSION_CODE 15
+        VERSION_CODE ${VERSION_CODE}
         PACKAGE_NAME "fr.cloyunhee.speechanalysis"
         PACKAGE_SOURCES ${CMAKE_SOURCE_DIR}/../android
         KEYSTORE ${CMAKE_SOURCE_DIR}/../android/keystore.jks speechanalysis-key-alias
