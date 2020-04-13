@@ -51,16 +51,18 @@ protected:
     void mouseMoveEvent(QMouseEvent * event) override;
     void paintEvent(QPaintEvent * event) override;
 
+public slots:
+    void renderTracks(int nframe, double maxFreq, const std::deque<double> & pitches, const Formant::Frames & formants);
+    void renderSpectrogram(int nframe, int nNew, double maxFreq, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end);
+    void renderScaleAndCursor(int nframe, double maxFreq);
+
 private:
     void loadSettings();
     void saveSettings();
 
     void render();
-    void renderTracks(int nframe, double maxFreq, const std::deque<double> &pitches, const Formant::Frames &formants);
     void renderPitchTrack(int nframe, double maxFreq, const std::deque<double> &pitches);
     void renderFormantTrack(int nframe, double maxFreq, const std::deque<double> &pitches, const Formant::Frames &formants);
-    void renderSpectrogram(int nframe, int nNew, double maxFreq, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end);
-    void renderScaleAndCursor(int nframe, double maxFreq);
 
     double yFromFrequency(double frequency, double maxFreq);
     double frequencyFromY(int y, double maxFreq);
@@ -68,10 +70,11 @@ private:
     // Graphics-related members
     QPainter painter;
     QTimer timer;
-    std::mutex frameLock;
 
+    std::mutex imageLock;
     QImage spectrogram;
     QImage tracks;
+    QImage scaleAndCursor;
     double upFactorTracks;
     double upFactorSpec;
 

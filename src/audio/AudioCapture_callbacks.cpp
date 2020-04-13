@@ -9,9 +9,15 @@ using namespace Eigen;
 
 void AudioCapture::readCallback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount)
 {
-    auto context = (struct RecordContext *) pDevice->pUserData;
+    if (pInput != nullptr) {
+        auto context = (struct RecordContext *) pDevice->pUserData;
 
-    ArrayXd block = Map<const ArrayXf>((float *) pInput, frameCount).cast<double>();
+        ArrayXd block = Map<const ArrayXf>((float *) pInput, frameCount).cast<double>();
 
-    context->buffer.writeInto(block);
+        context->buffer.writeInto(block);
+    }
+
+    if (pOutput != nullptr) {
+        Map<ArrayXf>((float *) pOutput, frameCount).setZero();
+    }
 }

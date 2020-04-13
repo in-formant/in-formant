@@ -26,6 +26,8 @@ public:
 
     void openInputDevice(const ma_device_id * id);
     void openOutputDevice(const ma_device_id * id);
+    void openZeroPlaybackDevice();
+
     void startStream();
     void closeStream();
 
@@ -39,8 +41,12 @@ public:
 
 private:
     ma_context * maCtx;
-    bool deviceInit;
-    ma_device device;
+    
+    bool deviceCaptureInit;
+    ma_device deviceCapture;
+    
+    bool deviceZeroPlaybackInit;
+    ma_device deviceZeroPlayback;
 
     double sampleRate;
 

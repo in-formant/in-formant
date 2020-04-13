@@ -32,6 +32,11 @@ protected:
     void keyPressEvent(QKeyEvent * event) override;
 #endif
 
+signals:
+    void newFramesTracks(int nframe, double maxFreq, const std::deque<double> & pitches, const Formant::Frames & formants);
+    void newFramesSpectrum(int nframe, int nNew, double maxFreq, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end);
+    void newFramesUI(int nframe, double maxFreq);
+
 private:
     void loadSettings();
 

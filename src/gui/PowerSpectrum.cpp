@@ -4,7 +4,7 @@
 #include "MFCC/MFCC.h"
 
 PowerSpectrum::PowerSpectrum(Analyser * analyser)
-    : analyser(analyser)
+    : analyser(analyser), image(1, 1, QImage::Format_ARGB32_Premultiplied)
 { 
     SpecFrame frame;
     frame.nfft = 1;
@@ -20,12 +20,6 @@ PowerSpectrum::PowerSpectrum(Analyser * analyser)
 
     minGain = -60;
     maxGain = 20;
-
-    connect(&timer, &QTimer::timeout, [this]() {
-        repaint();
-    });
-    timer.setTimerType(Qt::PreciseTimer);
-    timer.start(1000.0 / 60.0);
 }
 
 PowerSpectrum::~PowerSpectrum()
@@ -35,6 +29,13 @@ PowerSpectrum::~PowerSpectrum()
 void PowerSpectrum::renderSpectrum(const int nframe, const int nNew, const double maximumFrequency, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end)
 {
     using Eigen::ArrayXd;
+  
+    std::lock_guard<std::mutex> guard(imageLock);
+   
+    image.fill(Qt::black);
+    
+    QPainter painter(&image);
+    painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
 
     const double fs = begin->fs;
     
@@ -130,17 +131,21 @@ void PowerSpectrum::paintEvent(QPaintEvent * event)
     targetWidth = width();
     targetHeight = height();
 
+    if (image.width() != targetWidth || image.height() != targetHeight) {
+        imageLock.lock();
+        image = QImage(targetWidth, targetHeight, QImage::Format_ARGB32_Premultiplied);
+        image.fill(Qt::black);
+        imageLock.unlock();
+    }
+
     painter.begin(this);
 
     painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
-    painter.fillRect(0, 0, targetWidth, targetHeight, QColor(0xC0C0C0));
+    painter.fillRect(0, 0, targetWidth, targetHeight, Qt::black);
 
-    analyser->callIfNewFrames(
-            1,
-            [](auto&&... ts) {},
-            [this](auto&&... ts) { renderSpectrum(std::forward<decltype(ts)>(ts)...); },
-            [](auto&&... ts) {}
-    );
+    imageLock.lock();
+    painter.drawImage(0, 0, image);
+    imageLock.unlock();
     
     painter.end();
 }

@@ -462,9 +462,21 @@ MainWindow::MainWindow()
 #endif
     analyser->startThread();
 
+    connect(this, &MainWindow::newFramesTracks, canvas, &AnalyserCanvas::renderTracks);
+    connect(this, &MainWindow::newFramesSpectrum, canvas, &AnalyserCanvas::renderSpectrogram);
+    connect(this, &MainWindow::newFramesSpectrum, powerSpectrum, &PowerSpectrum::renderSpectrum);
+    connect(this, &MainWindow::newFramesUI, canvas, &AnalyserCanvas::renderScaleAndCursor);
+
     connect(&timer, &QTimer::timeout, [&]() {
+        analyser->callIfNewFrames(
+                    0,
+                    [this](auto&&... ts) { emit newFramesTracks(std::forward<decltype(ts)>(ts)...); },
+                    [this](auto&&... ts) { emit newFramesSpectrum(std::forward<decltype(ts)>(ts)...); },
+                    [this](auto&&... ts) { emit newFramesUI(std::forward<decltype(ts)>(ts)...); }
+        );
         updateFields();
         canvas->repaint();
+        powerSpectrum->repaint();
     });
     timer.setTimerType(Qt::PreciseTimer);
 #ifdef Q_OS_ANDROID
@@ -472,7 +484,7 @@ MainWindow::MainWindow()
 #else
     timer.start(1000.0 / 60.0);
 #endif
-
+    
     show();
 
 }

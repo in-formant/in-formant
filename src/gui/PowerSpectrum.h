@@ -3,6 +3,7 @@
 
 #include <QtWidgets>
 #include <QTimer>
+#include <mutex>
 #include "../analysis/Analyser.h"
 
 class PowerSpectrum : public QWidget {
@@ -14,14 +15,18 @@ public:
 protected:
     void paintEvent(QPaintEvent * event) override;
 
-private:
+public slots:
     void renderSpectrum(int nframe, int nNew, double maximumFrequency, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end);
 
+private:
     double frequencyFromY(int y, double maximumFrequency);
     int yFromFrequency(double freq, double maximumFrequency);
 
     std::vector<SpecFrame> hold;
     int holdLength, holdIndex;
+
+    std::mutex imageLock;
+    QImage image;
 
     QTimer timer;
    

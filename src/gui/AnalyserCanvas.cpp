@@ -28,7 +28,8 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
       upFactorSpec(2),
 #endif
       spectrogram(1, 1, QImage::Format_ARGB32_Premultiplied),
-      tracks(1, 1, QImage::Format_ARGB32_Premultiplied)
+      tracks(1, 1, QImage::Format_ARGB32_Premultiplied),
+      scaleAndCursor(1, 1, QImage::Format_ARGB32_Premultiplied)
 {
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
@@ -56,7 +57,7 @@ AnalyserCanvas::~AnalyserCanvas() {
 
 void AnalyserCanvas::render() {
 
-    frameLock.lock();
+    imageLock.lock();
 
     if (drawSpectrum) {
         painter.drawImage(0, 0, spectrogram.scaled(targetWidth, targetHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
@@ -66,19 +67,14 @@ void AnalyserCanvas::render() {
         painter.drawImage(0, 0, tracks.scaled(targetWidth, targetHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
 
-    frameLock.unlock();
+    painter.drawImage(0, 0, scaleAndCursor);
 
-    analyser->callIfNewFrames(
-                0,
-                [this](auto&&... ts) { renderTracks(std::forward<decltype(ts)>(ts)...); },
-                [this](auto&&... ts) { renderSpectrogram(std::forward<decltype(ts)>(ts)...); },
-                [this](auto&&... ts) { renderScaleAndCursor(std::forward<decltype(ts)>(ts)...); }
-    );
+    imageLock.unlock();
 
 }
 
 void AnalyserCanvas::renderTracks(const int nframe, const double maximumFrequency, const std::deque<double> &pitches, const Formant::Frames &formants) {
-    std::lock_guard<std::mutex> guard(frameLock);
+    std::lock_guard<std::mutex> guard(imageLock);
 
     tracks.fill(Qt::transparent);
     renderFormantTrack(nframe, maximumFrequency, pitches, formants);
@@ -193,8 +189,15 @@ void AnalyserCanvas::renderPitchTrack(const int nframe, const double maximumFreq
 }
 
 void AnalyserCanvas::renderScaleAndCursor(const int nframe, const double maximumFrequency) {
+    std::lock_guard<std::mutex> guard(imageLock);
+
     constexpr int ruleSmall = 4;
     constexpr int ruleBig = 8;
+
+    scaleAndCursor.fill(Qt::transparent);
+
+    QPainter painter(&scaleAndCursor);
+    painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
 
     QFont font = painter.font();
     int oldSize = font.pointSize();
@@ -257,7 +260,7 @@ void AnalyserCanvas::renderScaleAndCursor(const int nframe, const double maximum
 
 void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const double maximumFrequency, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end)
 {
-    std::lock_guard<std::mutex> guard(frameLock);
+    std::lock_guard<std::mutex> guard(imageLock);
     
     struct Tile { int r, g, b; double y, y2; };
 
@@ -268,13 +271,14 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
     QPainter scrollPainter(&spectrogram);
     scrollPainter.drawImage(QPointF{-nNew * xstep, 0}, spectrogramSnapshot);
     scrollPainter.end();
-
-    auto it = begin;
    
     QPainter sPainter(&spectrogram);
+    sPainter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
 
     const auto & cmrMap = colorMaps.find(colorMapName)->second;
     const int cmrCount = cmrMap.size();
+
+    auto it = begin;
 
     int iframe = nframe - 1 - nNew;
 
@@ -430,15 +434,21 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
     const int specHeight = upFactorSpec * targetHeight;
 
     if (spectrogram.width() != specWidth || spectrogram.height() != specHeight) {
-        frameLock.lock();
+        imageLock.lock();
         spectrogram = spectrogram.scaled(specWidth, specHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-        frameLock.unlock();
+        imageLock.unlock();
     }
 
     if (tracks.width() != trackWidth || tracks.height() != trackHeight) {
-        frameLock.lock();
+        imageLock.lock();
         tracks = tracks.scaled(trackWidth, trackHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-        frameLock.unlock();
+        imageLock.unlock();
+    }
+
+    if (scaleAndCursor.width() != targetWidth || scaleAndCursor.height() != targetHeight) {
+        imageLock.lock();
+        scaleAndCursor = QImage(targetWidth, targetHeight, QImage::Format_ARGB32_Premultiplied);
+        imageLock.unlock();
     }
     
     painter.begin(this);

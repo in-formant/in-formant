@@ -110,7 +110,9 @@ void Analyser::update()
 
     // Set the has-new-frames flag.
     for (auto & [k, v] : nbNewFrames) {
-        v++;
+        if (v < frameCount) {
+            v++;
+        }
     }
 
     // Unlock the tracks.

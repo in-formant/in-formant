@@ -9,7 +9,7 @@
 #include "../log/simpleQtLogger.h"
 
 AudioCapture::AudioCapture(ma_context * maCtx)
-    : sampleRate(16000), maCtx(maCtx), deviceInit(false)
+    : sampleRate(16000), maCtx(maCtx), deviceCaptureInit(false), deviceZeroPlaybackInit(false)
 {
     L_INFO("Initialising audio capture buffer...");
 
@@ -37,12 +37,14 @@ void AudioCapture::openInputDevice(const ma_device_id * id)
    
     L_INFO("Opening input device...");
 
-    if (ma_device_init(maCtx, &deviceConfig, &device) != MA_SUCCESS) {
+    if (ma_device_init(maCtx, &deviceConfig, &deviceCapture) != MA_SUCCESS) {
         L_FATAL("Failed to open input device...");
         throw AudioException("Failed to initialise miniaudio device");
     }
     
-    deviceInit = true;
+    deviceCaptureInit = true;
+    
+    openZeroPlaybackDevice();
 }
 
 void AudioCapture::openOutputDevice(const ma_device_id * id)
@@ -66,17 +68,44 @@ void AudioCapture::openOutputDevice(const ma_device_id * id)
 
     L_INFO("Opening output device as loopback...");
 
-    if (ma_device_init(maCtx, &deviceConfig, &device) != MA_SUCCESS) {
+    if (ma_device_init(maCtx, &deviceConfig, &deviceCapture) != MA_SUCCESS) {
         L_FATAL("Failed to open output device...");
         throw AudioException("Failed to initialise miniaudio device");
     }
 
-    deviceInit = true;
+    deviceCaptureInit = true;
+
+    openZeroPlaybackDevice();
+}
+
+void AudioCapture::openZeroPlaybackDevice() {
+
+    auto deviceConfig = ma_device_config_init(ma_device_type_playback);
+    deviceConfig.playback.pDeviceID = nullptr;
+    deviceConfig.dataCallback = readCallback;
+
+    L_INFO("Opening zero-filled output device for loopback inputs...");
+
+    if (ma_device_init(maCtx, &deviceConfig, &deviceZeroPlayback) != MA_SUCCESS) {
+        L_FATAL("Failed to open zero-filled output device...");
+        throw AudioException("Failed to initialise miniaudio device");
+    }
+
+    deviceZeroPlaybackInit = true;
 }
 
 void AudioCapture::startStream() {
 
-    if (ma_device_start(&device) != MA_SUCCESS) {
+    L_INFO("Starting zero-filled audio device...");
+
+    if (ma_device_start(&deviceZeroPlayback) != MA_SUCCESS) {
+        L_FATAL("Failed to start zero-filled audio device...");
+        throw AudioException("Failed to start miniaudio device");
+    }
+
+    L_INFO("Starting capture device...");
+
+    if (ma_device_start(&deviceCapture) != MA_SUCCESS) {
         L_FATAL("Failed to start audio device...");
         throw AudioException("Failed to start miniaudio device");
     }
@@ -85,11 +114,17 @@ void AudioCapture::startStream() {
 
 void AudioCapture::closeStream()
 {
-    if (deviceInit) {
+    if (deviceCaptureInit) {
         L_INFO("Closing audio device...");
-        ma_device_uninit(&device);
+        ma_device_uninit(&deviceCapture);
+        deviceCaptureInit = false;
     }
-    deviceInit = false;
+
+    if (deviceZeroPlaybackInit) {
+        L_INFO("Closing zero-filled audio device...");
+        ma_device_uninit(&deviceZeroPlayback);
+        deviceZeroPlaybackInit = false;
+    }
 }
 
 void AudioCapture::setCaptureDuration(int nsamples) {
