@@ -30,7 +30,7 @@ public:
 
 protected:
 #ifndef Q_OS_ANDROID
-    void keyPressEvent(QKeyEvent * event) override;
+    bool eventFilter(QObject * obj, QEvent * event) override;
 #endif
 
 signals:

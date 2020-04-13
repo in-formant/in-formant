@@ -28,6 +28,8 @@ Analyser::Analyser(ma_context * ctx)
       frameCount(0),
       nfft(1),
       frameLength(25),
+      windowSpan(1),
+      frameSpace(10),
       nsamples(0),
       maximumFrequency(3700)
 {
@@ -348,7 +350,7 @@ void Analyser::_initResampler()
             audioCapture->getSampleRate(),
             2 * maximumFrequency,
             ma_resample_algorithm_speex);
-    config.speex.quality = 4;
+    config.speex.quality = 10;
 
     if (ma_resampler_init(&config, &resampler) != MA_SUCCESS) {
         LS_FATAL("Unable to initialise resampler");

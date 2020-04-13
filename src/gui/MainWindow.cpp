@@ -179,7 +179,11 @@ MainWindow::MainWindow()
             inputDisplayDialog = new QPushButton("Open dialog");
         
             connect(inputDisplayDialog, &QPushButton::clicked,
-                    [&]() { dialogDisplay->setVisible(true); });
+                    [&]() {
+                        dialogDisplay->setVisible(true);
+                        dialogDisplay->activateWindow();
+                        dialogDisplay->setFocus(Qt::ActiveWindowFocusReason);
+                    });
 
             inputFftSize = new QComboBox;
             inputFftSize->addItems(fftSizes);
@@ -460,6 +464,9 @@ MainWindow::MainWindow()
     setWindowTitle(WINDOW_TITLE);
     resize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
+    window()->installEventFilter(this);
+    dialogDisplay->installEventFilter(this);
+
     loadSettings();
 
 #ifndef Q_OS_ANDROID
@@ -537,6 +544,7 @@ void MainWindow::updateFields() {
 }
 
 #ifndef Q_OS_ANDROID
+
 void MainWindow::updateDevices()
 {
     const auto & inputs = devs->getInputs();
@@ -626,20 +634,41 @@ void MainWindow::toggleFullscreen() {
     }
 }
 
-void MainWindow::keyPressEvent(QKeyEvent * event) {
-    const int key = event->key();
+bool MainWindow::eventFilter(QObject * obj, QEvent * event)
+{
+    if (event->type() == QEvent::KeyPress) {
+        const auto keyEvent = static_cast<QKeyEvent *>(event);
+        const int key = keyEvent->key();
 
-    if (key == Qt::Key_Escape) {
-        close();
+        if (obj == window()) {
+            if (key == Qt::Key_Escape) {
+                close();
+                return true;
+            }
+            else if (key == Qt::Key_P) {
+                toggleAnalyser();
+                return true;
+            }
+            else if (key == Qt::Key_F) {
+                toggleFullscreen();
+                return true;
+            }
+        }
+        else if (obj == dialogDisplay) {
+            if (key == Qt::Key_Escape) {
+                dialogDisplay->setVisible(false);
+                window()->activateWindow();
+                window()->setFocus(Qt::ActiveWindowFocusReason);
+                return true;
+            }
+        }
     }
-    else if (key == Qt::Key_P) {
-        toggleAnalyser();
-    }
-    else if (key == Qt::Key_F) {
-        toggleFullscreen();
-    }
+        
+    return QObject::eventFilter(obj, event);
 }
+
 #else
+
 void MainWindow::openSettings()
 {
     QAndroidIntent intent(QtAndroid::androidActivity().object(), "fr.cloyunhee.speechanalysis.SettingsActivity");

@@ -96,12 +96,12 @@ void Analyser::update()
   
     // Apply pre-emphasis.
     applyPreEmphasis();
-    
+ 
+    // Perform LP analysis.
+    analyseLp();   
+
     // Analyse spectrum.
     analyseSpectrum();
-
-    // Perform LP analysis.
-    analyseLp();
 
     // Perform formant analysis.
     analyseFormant();
