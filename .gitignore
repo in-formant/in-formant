@@ -39,7 +39,7 @@ testcase.*
 # Executables
 *.exe
 *.out
-*.app
+#*.app
 ### C template
 # Prerequisites
 *.d
@@ -74,7 +74,7 @@ testcase.*
 # Executables
 *.exe
 *.out
-*.app
+#*.app
 *.i*86
 *.x86_64
 *.hex
@@ -245,7 +245,7 @@ $RECYCLE.BIN/
 # Executables
 *.exe
 *.out
-*.app
+#*.app
 *.i*86
 *.x86_64
 *.hex
@@ -394,7 +394,7 @@ CTestTestfile.cmake
 # Executables
 *.exe
 *.out
-*.app
+#*.app
 ### Linux template
 *~
 

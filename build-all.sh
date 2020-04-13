@@ -63,3 +63,7 @@ echo -e "\e[92m Windows binary compressed.\e[39m"
 upx --lzma -qq out.OSX
 echo -e "\e[92m OS X binary compressed.\e[39m"
 
+echo -e "\n\e[33m Creating DMG image for OS X...\n\e[39m"
+./make-dmg.sh
+rm -v out.OSX
+
