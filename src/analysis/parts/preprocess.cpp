@@ -23,7 +23,7 @@ void Analyser::applyPreEmphasis()
     constexpr double preEmphasisFrequency = 150.0;
 
     if (preEmphasisFrequency < fs / 2.0) {
-        Filter::preEmphasis(x, fs, preEmphasisFrequency);
+        Filter::preEmphasis(x, fs, 0.68);
         Filter::preEmphasis(x_fft, fs, preEmphasisFrequency);
     }
 }

@@ -348,7 +348,7 @@ void Analyser::_initResampler()
             audioCapture->getSampleRate(),
             2 * maximumFrequency,
             ma_resample_algorithm_speex);
-    config.speex.quality = 8;
+    config.speex.quality = 4;
 
     if (ma_resampler_init(&config, &resampler) != MA_SUCCESS) {
         LS_FATAL("Unable to initialise resampler");
