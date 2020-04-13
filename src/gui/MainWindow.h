@@ -12,6 +12,7 @@
 #include "../audio/AudioDevices.h"
 #include "AnalyserCanvas.h"
 #include "PowerSpectrum.h"
+#include "LPC/Frame/LPC_Frame.h"
 
 using DevicePair = std::pair<bool, const ma_device_id *>;
 
@@ -35,6 +36,7 @@ protected:
 signals:
     void newFramesTracks(int nframe, double maxFreq, FormantMethod formantAlg, const std::deque<double> & pitches, const Formant::Frames & formants);
     void newFramesSpectrum(int nframe, int nNew, double maxFreq, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end);
+    void newFramesLpc(double maxFreq, SpecFrame lpcFrame);
     void newFramesUI(int nframe, double maxFreq);
 
 private:

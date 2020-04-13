@@ -13,15 +13,50 @@ using namespace Eigen;
 
 void Analyser::analyseSpectrum()
 {
+    // Speech signal spectrum
+    
     rfft_plan(nfft);
 
-    Map<ArrayXd>(rfft_in(nfft), nfft) = x_fft.head(nfft) * Window::createHanning(nfft); 
+    Map<ArrayXd> xin(rfft_in(nfft), nfft);
+    Map<ArrayXd> xout(rfft_out(nfft), nfft);
+    
+    xin = x_fft.head(nfft) * Window::createHanning(nfft); 
 
     rfft(nfft);
-
-    Map<ArrayXd> xout(rfft_out(nfft), nfft);
     
     lastSpectrumFrame.fs = audioCapture->getSampleRate();
     lastSpectrumFrame.nfft = nfft;
     lastSpectrumFrame.spec = xout;
+
+    // LPC spectrum
+
+    constexpr int nfftLpc = 128;
+    const int p = lpcFrame.nCoefficients;
+
+    rfft_plan(nfftLpc);
+
+    Map<ArrayXd> yin(rfft_in(nfftLpc), nfftLpc);
+    Map<ArrayXd> yout(rfft_out(nfftLpc), nfftLpc);
+
+    ArrayXd h;
+
+    yin.setZero();
+    yin(0) = 0.5;
+
+    rfft(nfftLpc);
+
+    h = yout;
+
+    yin.setZero();
+    yin(0) = 1.0;
+    yin.segment(1, p) = lpcFrame.a;
+
+    rfft(nfftLpc);
+
+    h /= yout;
+
+    lpcSpectrum.fs = fs;
+    lpcSpectrum.nfft = nfftLpc;
+    lpcSpectrum.spec = h;
+
 }

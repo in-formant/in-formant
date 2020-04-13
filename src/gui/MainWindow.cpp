@@ -470,6 +470,7 @@ MainWindow::MainWindow()
     connect(this, &MainWindow::newFramesTracks, canvas, &AnalyserCanvas::renderTracks);
     connect(this, &MainWindow::newFramesSpectrum, canvas, &AnalyserCanvas::renderSpectrogram);
     connect(this, &MainWindow::newFramesSpectrum, powerSpectrum, &PowerSpectrum::renderSpectrum);
+    connect(this, &MainWindow::newFramesLpc, powerSpectrum, &PowerSpectrum::renderLpc);
     connect(this, &MainWindow::newFramesUI, canvas, &AnalyserCanvas::renderScaleAndCursor);
 
     connect(&timer, &QTimer::timeout, [&]() {
@@ -477,6 +478,7 @@ MainWindow::MainWindow()
                     0,
                     [this](auto&&... ts) { emit newFramesTracks(std::forward<decltype(ts)>(ts)...); },
                     [this](auto&&... ts) { emit newFramesSpectrum(std::forward<decltype(ts)>(ts)...); },
+                    [this](auto&&... ts) { emit newFramesLpc(std::forward<decltype(ts)>(ts)...); },
                     [this](auto&&... ts) { emit newFramesUI(std::forward<decltype(ts)>(ts)...); }
         );
         updateFields();

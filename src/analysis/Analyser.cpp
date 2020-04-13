@@ -5,6 +5,7 @@
 #include <QSettings>
 #include "Analyser.h"
 #include "../log/simpleQtLogger.h"
+#include "../Exceptions.h"
 
 using namespace Eigen;
 
@@ -27,15 +28,17 @@ Analyser::Analyser(ma_context * ctx)
       frameCount(0),
       nfft(1),
       frameLength(25),
-      nsamples(0)
+      nsamples(0),
+      maximumFrequency(3700)
 {
 #ifdef Q_OS_MAC
     audioCaptureMem = malloc(sizeof(AudioCapture));
     audioCapture = new (audioCaptureMem) AudioCapture(ctx);
 #else
-   audioCapture = new AudioCapture(ctx);
+    audioCapture = new AudioCapture(ctx);
 #endif
 
+    _initResampler();
     loadSettings();
 
     setInputDevice(nullptr);
@@ -52,6 +55,7 @@ Analyser::~Analyser() {
     delete audioCapture;
 #endif
     saveSettings();
+    ma_resampler_uninit(&resampler);
 }
 
 void Analyser::startThread() {
@@ -133,8 +137,13 @@ int Analyser::getCepstralOrder() {
 void Analyser::setMaximumFrequency(double _maximumFrequency) {
     std::lock_guard<std::mutex> lock(paramLock);
     maximumFrequency = std::clamp(_maximumFrequency, 2500.0, 7000.0);
-    
+   
     LS_INFO("Set maximum frequency to " << maximumFrequency);
+
+    if (ma_resampler_set_rate(&resampler, audioCapture->getSampleRate(), 2 * maximumFrequency) != MA_SUCCESS) {
+        LS_FATAL("Unable to change resampler output rate");
+        throw AudioException("Unable to change resampler output rate");
+    }
 }
 
 double Analyser::getMaximumFrequency() {
@@ -329,6 +338,22 @@ void Analyser::_initEkfState()
     ekfState.cepOrder = this->cepOrder;
 
     EKF::init(ekfState, x0);
+}
+
+void Analyser::_initResampler()
+{
+    ma_resampler_config config = ma_resampler_config_init(
+            ma_format_f32,
+            1,
+            audioCapture->getSampleRate(),
+            2 * maximumFrequency,
+            ma_resample_algorithm_speex);
+    config.speex.quality = 8;
+
+    if (ma_resampler_init(&config, &resampler) != MA_SUCCESS) {
+        LS_FATAL("Unable to initialise resampler");
+        throw AudioException("Unable to initialise resampler");
+    }
 }
 
 void Analyser::loadSettings()

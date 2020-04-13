@@ -83,6 +83,7 @@ private:
     void _updateFrameCount();
     void _updateCaptureDuration();
     void _initEkfState();
+    void _initResampler();
 
     void mainLoop();
     void update();
@@ -90,7 +91,7 @@ private:
     void analyseSpectrum();
     void analysePitch();
     void analyseOq();
-    void resampleAudio(double newFs);
+    void resampleAudio();
     void applyPreEmphasis();
     void analyseLp();
     void analyseFormant();
@@ -104,6 +105,8 @@ private:
     void * audioCaptureMem;
 #endif
     AudioCapture * audioCapture;
+
+    ma_resampler resampler;
 
     // Parameters.
     std::mutex paramLock;
@@ -136,6 +139,7 @@ private:
     std::deque<double> pitchTrack;
 
     // Results
+    SpecFrame lpcSpectrum;
     std::deque<SpecFrame> spectra;
     Formant::Frames smoothedFormants;
     std::deque<double> smoothedPitch;
@@ -156,8 +160,8 @@ private:
 
 public:
 
-    template<typename Func1, typename Func2, typename Func3>
-    void callIfNewFrames(int nb, Func1 fn1, Func2 fn2, Func3 fn3)
+    template<typename Func1, typename Func2, typename Func3, typename Func4>
+    void callIfNewFrames(int nb, Func1 fn1, Func2 fn2, Func3 fn3, Func4 fn4)
     {
         std::lock_guard<std::mutex> lock(mutex);
         
@@ -168,10 +172,11 @@ public:
         if (nbNewFrames[nb] > 0) {
             fn1(frameCount, maximumFrequency, formantMethod, smoothedPitch, smoothedFormants);
             fn2(frameCount, nbNewFrames[nb], maximumFrequency, spectra.cend() - 1 - nbNewFrames[nb], spectra.cend());
+            fn3(maximumFrequency, lpcSpectrum);
             nbNewFrames[nb] = 0;
         }
 
-        fn3(frameCount, maximumFrequency);
+        fn4(frameCount, maximumFrequency);
     }
 
 };

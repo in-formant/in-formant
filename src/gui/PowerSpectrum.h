@@ -17,6 +17,7 @@ protected:
 
 public slots:
     void renderSpectrum(int nframe, int nNew, double maximumFrequency, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end);
+    void renderLpc(double maxFreq, SpecFrame lpcSpectrum);
 
 private:
     double frequencyFromY(int y, double maximumFrequency);
@@ -26,7 +27,8 @@ private:
     int holdLength, holdIndex;
 
     std::mutex imageLock;
-    QImage image;
+    QImage spectrum;
+    QImage lpcIm;
    
     QPainter painter;
     int targetWidth, targetHeight;

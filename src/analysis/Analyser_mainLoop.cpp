@@ -89,7 +89,7 @@ void Analyser::update()
     analyseOq();
     
     // Resample audio.
-    resampleAudio(2 * maximumFrequency);
+    resampleAudio();
     
     // Apply windowing.
     applyWindow();

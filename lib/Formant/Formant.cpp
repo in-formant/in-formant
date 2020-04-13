@@ -45,7 +45,7 @@ void Formant::frameFromRoots(
         double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
 
         if (f >= 50.0 && f <= (samplingFrequency / 2.0 - 50.0)) {
-            double b = -std::log(r) * samplingFrequency / (2.0 * M_PI);
+            double b = -std::log(r) * samplingFrequency / M_PI;
 
             roots.push_back({r, phi, f, b});
         }
@@ -53,7 +53,7 @@ void Formant::frameFromRoots(
 
     std::sort(roots.begin(), roots.end(),
             [](const auto & a, const auto & b) { return a.f < b.f; });
-
+   
     int ncand = roots.size();
     for (int i = 0; i < ncand; ++i) {
         double f1 = roots[i].f;
@@ -112,7 +112,7 @@ void Formant::frameFromRoots(
         double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
 
         if (f >= 50.0 && f <= (samplingFrequency / 2.0 - 50.0)) {
-            double b = -std::log(r) * samplingFrequency / (2.0 * M_PI);
+            double b = -std::log(r) * samplingFrequency / M_PI;
 
             frm.formant.push_back({f, b});
         }

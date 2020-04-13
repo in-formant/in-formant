@@ -72,6 +72,9 @@ namespace Polynomial {
         c.bottomRows<1>() = -p.head(n - 1);
         c.topRightCorner(n - 2, n - 2).setIdentity();
 
+        static Eigen::EigenSolver<Eigen::MatrixXd> solver;
+        solver.setMaxIterations(20);
+        solver.compute(c, false);
         r = c.eigenvalues();
         Polynomial::polishRoots(p, r);
     }

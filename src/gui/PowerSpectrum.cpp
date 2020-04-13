@@ -4,7 +4,9 @@
 #include "MFCC/MFCC.h"
 
 PowerSpectrum::PowerSpectrum(Analyser * analyser, AnalyserCanvas * canvas)
-    : analyser(analyser), canvas(canvas), image(1, 1, QImage::Format_ARGB32_Premultiplied)
+    : analyser(analyser), canvas(canvas),
+      spectrum(1, 1, QImage::Format_ARGB32_Premultiplied),
+      lpcIm(1, 1, QImage::Format_ARGB32_Premultiplied)
 { 
     SpecFrame frame;
     frame.nfft = 1;
@@ -28,9 +30,9 @@ void PowerSpectrum::renderSpectrum(const int nframe, const int nNew, const doubl
     int minGain = canvas->getMinGainSpectrum();
     int maxGain = canvas->getMaxGainSpectrum();
 
-    image.fill(Qt::black);
+    spectrum.fill(Qt::transparent);
 
-    QPainter painter(&image);
+    QPainter painter(&spectrum);
     painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
 
     const double fs = begin->fs;
@@ -86,7 +88,7 @@ void PowerSpectrum::renderSpectrum(const int nframe, const int nNew, const doubl
             break;
         }
 
-        double gain = std::clamp<double>(20 * std::log10(abs(maxHold(i))), minGain - 100, maxGain);
+        double gain = std::clamp<double>(20 * std::log10(abs(maxHold(i))), minGain - 20, maxGain + 20);
 
         int x = targetWidth - (targetWidth * (maxGain - gain)) / (maxGain - minGain);
         int y = yFromFrequency(freq, maximumFrequency);
@@ -101,7 +103,50 @@ void PowerSpectrum::renderSpectrum(const int nframe, const int nNew, const doubl
 
     painter.setPen(QPen(QColor(0xFFA500), 2));
     painter.drawPath(path);
+}
 
+void PowerSpectrum::renderLpc(double maximumFrequency, SpecFrame lpcSpectrum)
+{
+    std::lock_guard<std::mutex> guard(imageLock);
+   
+    const double fs = lpcSpectrum.fs;
+    const int nfft = lpcSpectrum.nfft;
+    const auto& spec = lpcSpectrum.spec;
+    
+    const double delta = lpcSpectrum.fs / (2.0 * lpcSpectrum.nfft);
+   
+    int minGain = canvas->getMinGainSpectrum();
+    int maxGain = canvas->getMaxGainSpectrum();
+
+    lpcIm.fill(Qt::transparent);
+
+    QPainter painter(&lpcIm);
+    painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
+
+    QPainterPath path;
+
+    for (int i = 0; i < nfft; ++i) {
+        double freq = i * delta;
+
+        if (freq > maximumFrequency) {
+            break;
+        }
+
+        double gain = std::clamp<double>(20 * std::log10(abs(spec(i))), minGain - 20, maxGain + 20);
+
+        int x = targetWidth - (targetWidth * (maxGain - gain)) / (maxGain - minGain);
+        int y = yFromFrequency(freq, maximumFrequency);
+      
+        if (i == 0) {
+            path.moveTo(x, y);
+        }
+        else {
+            path.lineTo(x, y);
+        }
+    }
+
+    painter.setPen(QPen(QColor(0xC0C0C0), 2));
+    painter.drawPath(path);
 }
 
 double PowerSpectrum::frequencyFromY(const int y, const double maximumFrequency)
@@ -127,10 +172,17 @@ void PowerSpectrum::paintEvent(QPaintEvent * event)
     targetWidth = width();
     targetHeight = height();
 
-    if (image.width() != targetWidth || image.height() != targetHeight) {
+    if (spectrum.width() != targetWidth || spectrum.height() != targetHeight) {
         imageLock.lock();
-        image = QImage(targetWidth, targetHeight, QImage::Format_ARGB32_Premultiplied);
-        image.fill(Qt::black);
+        spectrum = QImage(targetWidth, targetHeight, QImage::Format_ARGB32_Premultiplied);
+        spectrum.fill(Qt::transparent);
+        imageLock.unlock();
+    }
+
+    if (lpcIm.width() != targetWidth || lpcIm.height() != targetHeight) {
+        imageLock.lock();
+        lpcIm = QImage(targetWidth, targetHeight, QImage::Format_ARGB32_Premultiplied);
+        lpcIm.fill(Qt::transparent);
         imageLock.unlock();
     }
 
@@ -140,7 +192,8 @@ void PowerSpectrum::paintEvent(QPaintEvent * event)
     painter.fillRect(0, 0, targetWidth, targetHeight, Qt::black);
 
     imageLock.lock();
-    painter.drawImage(0, 0, image);
+    painter.drawImage(0, 0, lpcIm);
+    painter.drawImage(0, 0, spectrum);
     imageLock.unlock();
     
     painter.end();
