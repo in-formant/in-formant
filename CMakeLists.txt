@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 cmake_policy(SET CMP0048 NEW)
-project(speech_analysis VERSION 1.5.1)
+project(speech_analysis VERSION 1.5.2)
 
 include(ExternalProject)
 
