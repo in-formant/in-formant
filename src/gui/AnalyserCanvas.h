@@ -52,7 +52,7 @@ protected:
     void paintEvent(QPaintEvent * event) override;
 
 public slots:
-    void renderTracks(int nframe, double maxFreq, const std::deque<double> & pitches, const Formant::Frames & formants);
+    void renderTracks(int nframe, double maxFreq, FormantMethod formantAlg, const std::deque<double> & pitches, const Formant::Frames & formants);
     void renderSpectrogram(int nframe, int nNew, double maxFreq, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end);
     void renderScaleAndCursor(int nframe, double maxFreq);
 
@@ -62,7 +62,7 @@ private:
 
     void render();
     void renderPitchTrack(int nframe, double maxFreq, const std::deque<double> &pitches);
-    void renderFormantTrack(int nframe, double maxFreq, const std::deque<double> &pitches, const Formant::Frames &formants);
+    void renderFormantTrack(int nframe, double maxFreq, FormantMethod formantAlg, const std::deque<double> &pitches, const Formant::Frames &formants);
 
     double yFromFrequency(double frequency, double maxFreq);
     double frequencyFromY(int y, double maxFreq);

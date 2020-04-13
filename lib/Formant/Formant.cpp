@@ -95,7 +95,7 @@ void Formant::frameFromRoots(
         int n = abs(n4 - n3);
 
         // If there *are* two poles in the section, polish them as a pair and add them.
-        if (n == 2) {
+        if (n >= 2) {
             std::vector<dcomplex> polished;
             Bairstow::solve(p, 0.7, phiPeak, polished);
             finalRoots.insert(finalRoots.end(), polished.begin(), polished.end());
@@ -108,7 +108,7 @@ void Formant::frameFromRoots(
     for (const auto & v : finalRoots) {
         double r = std::abs(v);
         double phi = std::arg(v);
-
+    
         double f = std::abs(phi) * samplingFrequency / (2.0 * M_PI);
 
         if (f >= 50.0 && f <= (samplingFrequency / 2.0 - 50.0)) {

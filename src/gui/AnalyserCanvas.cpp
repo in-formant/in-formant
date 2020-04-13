@@ -73,15 +73,15 @@ void AnalyserCanvas::render() {
 
 }
 
-void AnalyserCanvas::renderTracks(const int nframe, const double maximumFrequency, const std::deque<double> &pitches, const Formant::Frames &formants) {
+void AnalyserCanvas::renderTracks(const int nframe, const double maximumFrequency, FormantMethod formantAlg, const std::deque<double> &pitches, const Formant::Frames &formants) {
     std::lock_guard<std::mutex> guard(imageLock);
 
     tracks.fill(Qt::transparent);
-    renderFormantTrack(nframe, maximumFrequency, pitches, formants);
+    renderFormantTrack(nframe, maximumFrequency, formantAlg, pitches, formants);
     renderPitchTrack(nframe, maximumFrequency, pitches);
 }
 
-void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFrequency, const std::deque<double> &pitches, const Formant::Frames &formants) {
+void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFrequency, FormantMethod formantAlg, const std::deque<double> &pitches, const Formant::Frames &formants) {
 
     const double xstep = upFactorTracks * (double) targetWidth / (double) nframe;
 
@@ -118,11 +118,11 @@ void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFr
                 c = Qt::black;
             }
 
-            if (pitch == 0 || formantNb >= 4) {
+            if (pitch == 0 || formantAlg == LP || formantNb >= 4) {
                 tPainter.setPen(c);
                 tPainter.setBrush(c);
-                tPainter.drawRect(QRectF{x, y, xstep - 1, upFactorTracks});
-                if (formantNb < 4) {
+                tPainter.drawEllipse(QPointF(x + xstep / 2, y - upFactorTracks / 2), formantThick / 2, formantThick / 2);
+                if (formantAlg != LP && formantNb < 4) {
                     startPath[formantNb] = true;
                 }
             }

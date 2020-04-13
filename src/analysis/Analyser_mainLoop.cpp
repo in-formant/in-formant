@@ -91,13 +91,13 @@ void Analyser::update()
     formantTrack.push_back(lastFormantFrame);
 
     // Apply postprocessing formant track correction.
-    if (formantMethod == LP) {
+    /*if (formantMethod == LP) {
         static int count = 0;
         if (++count >= (frameCount / 100)) {
             count = 0;
             trackFormants();
         }
-    }
+    }*/
     
     spectra.pop_front();
     spectra.push_back(lastSpectrumFrame);

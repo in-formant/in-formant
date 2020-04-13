@@ -166,7 +166,7 @@ public:
         }
 
         if (nbNewFrames[nb] > 0) {
-            fn1(frameCount, maximumFrequency, smoothedPitch, smoothedFormants);
+            fn1(frameCount, maximumFrequency, formantMethod, smoothedPitch, smoothedFormants);
             fn2(frameCount, nbNewFrames[nb], maximumFrequency, spectra.cend() - 1 - nbNewFrames[nb], spectra.cend());
             nbNewFrames[nb] = 0;
         }
