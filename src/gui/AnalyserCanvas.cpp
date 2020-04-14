@@ -360,6 +360,12 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
 }
 
 void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
+#ifndef Q_OS_ANDROID
+    if (!(event->buttons() & Qt::LeftButton)) {
+        return;
+    }
+#endif
+
     const auto p = event->localPos();
 
     const int nframe = analyser->getFrameCount();
@@ -367,7 +373,6 @@ void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
 
     const double xstep = (double) targetWidth / (double) nframe;
     selectedFrame = p.x() / xstep;
-    //selectedFrame = std::clamp<int>(int(p.x() * scaleFactor) / xstep, 0, nframe - 1);
     selectedFrequency = std::clamp<double>(frequencyFromY(p.y(), maximumFrequency), 0.0, maximumFrequency);
 }
 
