@@ -13,7 +13,9 @@ namespace GCOI {
     };
 
     std::vector<GIPair> estimate_MultiProduct(const Eigen::ArrayXd & x, double fs, int lev);
-    
+   
+    std::vector<GIPair> estimate_Sedreams(const Eigen::ArrayXd & x, double fs, double meanF0);
+
     double estimateOq(const std::vector<GIPair> & pairs);
 
 }

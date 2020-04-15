@@ -70,12 +70,12 @@ void Analyser::update()
     audioLock.lock();
     
     x.setZero(frameSamples);
-    audioCapture->readBlock(x);
+    audioInterface->readBlock(x);
 
     x_fft.setZero(fftSamples);
-    audioCapture->readBlock(x_fft);
+    audioInterface->readBlock(x_fft);
     
-    fs = audioCapture->getSampleRate();
+    fs = audioInterface->getSampleRate();
    
     audioLock.unlock();
 

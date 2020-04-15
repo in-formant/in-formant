@@ -2,12 +2,13 @@
 // Created by clo on 12/09/2019.
 //
 
-#ifndef SPEECH_ANALYSIS_AUDIOCAPTURE_H
-#define SPEECH_ANALYSIS_AUDIOCAPTURE_H
+#ifndef SPEECH_ANALYSIS_AUDIOINTERFACE_H
+#define SPEECH_ANALYSIS_AUDIOINTERFACE_H
 
 #include "miniaudio.h"
 #include <Eigen/Core>
 #include "RingBuffer.h"
+#include "SineWave.h"
 
 #define CAPTURE_DURATION 50.0
 #define CAPTURE_SAMPLE_COUNT(sampleRate) ((CAPTURE_DURATION * sampleRate) / 1000)
@@ -20,19 +21,26 @@ struct RecordContext {
     int numChannels;
 };
 
-class AudioCapture {
+struct PlaybackContext {
+    SineWave * sineWave;
+    int numChannels;
+};
+
+class AudioInterface {
 public:
-    AudioCapture(ma_context * maCtx);
-    ~AudioCapture();
+    AudioInterface(ma_context * maCtx, SineWave * sineWave);
+    ~AudioInterface();
 
     void openInputDevice(const ma_device_id * id);
     void openOutputDevice(const ma_device_id * id);
-    void openZeroPlaybackDevice();
+
+    void openPlaybackDevice();
 
     void startStream();
     void closeStream();
 
-    static void readCallback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount);
+    static void recordCallback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount);
+    static void playCallback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount);
 
     void setCaptureDuration(int nsamples);
 
@@ -46,14 +54,17 @@ private:
     bool deviceCaptureInit;
     ma_device deviceCapture;
     
-    bool deviceZeroPlaybackInit;
-    ma_device deviceZeroPlayback;
+    bool devicePlaybackInit;
+    ma_device devicePlayback;
 
     double sampleRate;
 
-    // Ring buffer
-    struct RecordContext audioContext;
+    // Record context
+    struct RecordContext recordContext;
+
+    // Playback context
+    struct PlaybackContext playbackContext;
 
 };
 
-#endif //SPEECH_ANALYSIS_AUDIOCAPTURE_H
+#endif //SPEECH_ANALYSIS_AUDIOINTERFACE_H

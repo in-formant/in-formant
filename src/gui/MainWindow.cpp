@@ -57,14 +57,24 @@ MainWindow::MainWindow()
     }
     
     devs = new AudioDevices(&maCtx);
-    analyser = new Analyser(&maCtx);
+
+    sineWave = new SineWave();
+
+#ifdef Q_OS_MAC
+    audioInterfaceMem = malloc(sizeof(AudioInterface));
+    audioInterface = new (audioInterfaceMem) AudioInterface(&maCtx, sineWave);
+#else
+    audioInterface = new AudioInterface(&maCtx, sineWave);
+#endif
+
+    analyser = new Analyser(audioInterface);
 
     QPalette palette = this->palette();
 
     central = new QWidget;
     setCentralWidget(central);
 
-    canvas = new AnalyserCanvas(analyser);
+    canvas = new AnalyserCanvas(analyser, sineWave);
     powerSpectrum = new PowerSpectrum(analyser, canvas);
 
 #ifdef Q_OS_ANDROID
@@ -504,10 +514,18 @@ MainWindow::MainWindow()
 }
 
 MainWindow::~MainWindow() {
-    delete central;
-    
-    delete devs;
     delete analyser;
+
+#ifdef Q_OS_MAC
+    audioInterface->~AudioInterface();
+    free(audioInterfaceMem);
+#else
+    delete audioInterface;
+#endif
+
+    delete sineWave;
+
+    delete devs;
     ma_context_uninit(&maCtx);
 
     all_fft_cleanup();

@@ -5,8 +5,8 @@ using namespace Eigen;
 
 std::vector<GCOI::GIPair> GCOI::estimate_MultiProduct(const ArrayXd & _x, double fs, int lev)
 {
-    // Resize to a multiple of 64.
-    int dataLen = (_x.size() / 64) * 64;
+    // Resize to a multiple of (2^lev).
+    int dataLen = (_x.size() / (2 << (lev + 1))) * (2 << (lev + 1));
 
     ArrayXd a = _x.head(dataLen);
     ArrayXd p = ArrayXd::Ones(dataLen);
@@ -33,6 +33,8 @@ std::vector<GCOI::GIPair> GCOI::estimate_MultiProduct(const ArrayXd & _x, double
     std::vector<int> gcis = findPeaks(-p);
     std::vector<GIPair> pairs;
 
+    double pitch = 0;
+
     for (int k = 0; k < signed(gcis.size()) - 1; ++k) {
         GIPair pair;
     
@@ -46,7 +48,11 @@ std::vector<GCOI::GIPair> GCOI::estimate_MultiProduct(const ArrayXd & _x, double
         pair.goi += pair.gci;
 
         pairs.push_back(std::move(pair));
+
+        pitch += fs / (2 * (pair.nextgci - pair.gci));
     }
+
+    pitch /= signed(gcis.size()) - 1;
 
     return std::move(pairs);
 

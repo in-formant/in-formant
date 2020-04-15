@@ -21,8 +21,9 @@ static const SpecFrame defaultSpec = {
     .spec = ArrayXd::Zero(512),
 };
 
-Analyser::Analyser(ma_context * ctx)
-    : doAnalyse(true),
+Analyser::Analyser(AudioInterface * audioInterface)
+    : audioInterface(audioInterface),
+      doAnalyse(true),
       running(false),
       lpFailed(true),
       frameCount(0),
@@ -33,13 +34,6 @@ Analyser::Analyser(ma_context * ctx)
       nsamples(0),
       maximumFrequency(3700)
 {
-#ifdef Q_OS_MAC
-    audioCaptureMem = malloc(sizeof(AudioCapture));
-    audioCapture = new (audioCaptureMem) AudioCapture(ctx);
-#else
-    audioCapture = new AudioCapture(ctx);
-#endif
-
     _initResampler();
     loadSettings();
 
@@ -50,12 +44,6 @@ Analyser::~Analyser() {
     if (isAnalysing()) {
         stopThread();
     }
-#ifdef Q_OS_MAC
-    audioCapture->~AudioCapture();
-    free(audioCaptureMem);
-#else
-    delete audioCapture;
-#endif
     saveSettings();
     ma_resampler_uninit(&resampler);
 }
@@ -82,20 +70,24 @@ bool Analyser::isAnalysing() {
 
 void Analyser::setInputDevice(const ma_device_id * id) {
     std::lock_guard<std::mutex> guard(audioLock);
-    audioCapture->closeStream();
-    audioCapture->openInputDevice(id);
-    fs = audioCapture->getSampleRate();
+    audioInterface->closeStream();
+    audioInterface->openInputDevice(id);
+    fs = audioInterface->getSampleRate();
     x.setZero(CAPTURE_SAMPLE_COUNT(fs));
-    audioCapture->startStream();
+    audioInterface->startStream();
 }
 
 void Analyser::setOutputDevice(const ma_device_id * id) {
     std::lock_guard<std::mutex> guard(audioLock);
-    audioCapture->closeStream();
-    audioCapture->openOutputDevice(id);
-    fs = audioCapture->getSampleRate();
+    audioInterface->closeStream();
+    audioInterface->openOutputDevice(id);
+    fs = audioInterface->getSampleRate();
     x.setZero(CAPTURE_SAMPLE_COUNT(fs));
-    audioCapture->startStream();
+    audioInterface->startStream();
+}
+
+double Analyser::getSampleRate() {
+    return audioInterface->getSampleRate();
 }
 
 void Analyser::setFftSize(int _nfft) {
@@ -142,7 +134,7 @@ void Analyser::setMaximumFrequency(double _maximumFrequency) {
    
     LS_INFO("Set maximum frequency to " << maximumFrequency);
 
-    if (ma_resampler_set_rate(&resampler, audioCapture->getSampleRate(), 2 * maximumFrequency) != MA_SUCCESS) {
+    if (ma_resampler_set_rate(&resampler, audioInterface->getSampleRate(), 2 * maximumFrequency) != MA_SUCCESS) {
         LS_FATAL("Unable to change resampler output rate");
         throw AudioException("Unable to change resampler output rate");
     }
@@ -310,7 +302,7 @@ void Analyser::_updateCaptureDuration()
 {
     std::lock_guard<std::mutex> lock(audioLock);
 
-    double fs = audioCapture->getSampleRate();
+    double fs = audioInterface->getSampleRate();
 
     // Account for resampling.
     fftSamples = nfft; //(fs * nfft) / refs;
@@ -318,7 +310,7 @@ void Analyser::_updateCaptureDuration()
 
     int nsamples = std::max(fftSamples, frameSamples);
     if (nsamples != this->nsamples) {
-        audioCapture->setCaptureDuration(nsamples);
+        audioInterface->setCaptureDuration(nsamples);
         this->nsamples = nsamples;
 
         LS_INFO("Set capture duration to " << nsamples << " samples (" << (1000.0 * nsamples / fs) << " ms)");
@@ -347,7 +339,7 @@ void Analyser::_initResampler()
     ma_resampler_config config = ma_resampler_config_init(
             ma_format_f32,
             1,
-            audioCapture->getSampleRate(),
+            audioInterface->getSampleRate(),
             2 * maximumFrequency,
             ma_resample_algorithm_speex);
     config.speex.quality = 10;

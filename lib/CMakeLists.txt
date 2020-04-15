@@ -30,6 +30,7 @@ set(SOURCES
     LPC/LPC_huber.cpp
     LPC/LPC_huber.h
     LPC/LPC_huber_stat.cpp
+    LPC/residual.cpp
     Math/Bairstow.cpp
     Math/Bairstow.h
     Math/Polynomial.cpp
@@ -52,8 +53,14 @@ set(SOURCES
     Pitch/Pitch.h
     GCOI/GCOI.h
     GCOI/findpeaks.cpp
+    GCOI/SEDREAMS.cpp
     GCOI/MP.cpp
     GCOI/OQ.cpp
+    GCOI/gci_sedreams/gci_sedreams.h
+    GCOI/gci_sedreams/sedreams.cpp
+    GCOI/gci_sedreams/zerocrossings.cpp
+    GCOI/gci_sedreams/findpeaks.cpp
+    GCOI/gci_sedreams/median.cpp
     Signal/Filter.cpp
     Signal/Filter.h
     Signal/Resample.cpp

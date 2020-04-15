@@ -11,7 +11,7 @@
 
 using namespace Eigen;
 
-AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
+AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave) noexcept(false)
     : selectedFrame(analyser->getFrameCount() - 1),
       maxFreq(0),
       drawSpectrum(true),
@@ -20,11 +20,12 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser) noexcept(false)
       minGain(-60),
       maxGain(0),
       analyser(analyser),
+      sineWave(sineWave),
 #ifdef Q_OS_ANDROID
       upFactorTracks(0.75),
       upFactorSpec(1),
 #else
-      upFactorTracks(1.25),
+      upFactorTracks(1),
       upFactorSpec(2),
 #endif
       spectrogram(1, 1, QImage::Format_ARGB32_Premultiplied),
@@ -359,21 +360,44 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
     }
 }
 
-void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
+void AnalyserCanvas::cursorMoveEvent(QMouseEvent * event) {
+    const auto p = event->localPos();
+    const double maximumFrequency = analyser->getMaximumFrequency();
+    
+    const double freq = std::clamp<double>(frequencyFromY(p.y(), maximumFrequency), 0.0, maximumFrequency);
+
 #ifndef Q_OS_ANDROID
-    if (!(event->buttons() & Qt::LeftButton)) {
-        return;
+    if (event->buttons() & Qt::LeftButton) {
+#endif
+
+        const int nframe = analyser->getFrameCount();
+
+        const double xstep = (double) targetWidth / (double) nframe;
+        selectedFrame = p.x() / xstep;
+        selectedFrequency = freq;
+
+#ifndef Q_OS_ANDROID
     }
 #endif
 
-    const auto p = event->localPos();
+    if (event->buttons() & Qt::RightButton) {
+        sineWave->setFrequency(freq);
+        sineWave->setPlaying(true);
+    }
+}
 
-    const int nframe = analyser->getFrameCount();
-    const double maximumFrequency = analyser->getMaximumFrequency();
+void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
+    cursorMoveEvent(event);
+}
 
-    const double xstep = (double) targetWidth / (double) nframe;
-    selectedFrame = p.x() / xstep;
-    selectedFrequency = std::clamp<double>(frequencyFromY(p.y(), maximumFrequency), 0.0, maximumFrequency);
+void AnalyserCanvas::mousePressEvent(QMouseEvent * event) {
+    cursorMoveEvent(event);
+}
+
+void AnalyserCanvas::mouseReleaseEvent(QMouseEvent * event) {
+    if (~event->buttons() & Qt::RightButton) {
+        sineWave->setPlaying(false);
+    }
 }
 
 double AnalyserCanvas::yFromFrequency(const double frequency, const double maximumFrequency) {

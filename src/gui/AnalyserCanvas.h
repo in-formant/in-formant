@@ -10,6 +10,7 @@
 #include <mutex>
 #include "../Exceptions.h"
 #include "../analysis/Analyser.h"
+#include "../audio/SineWave.h"
 
 #define WINDOW_TITLE  "Speech analysis"
 #define WINDOW_WIDTH  1280
@@ -19,7 +20,7 @@ class AnalyserCanvas : public QWidget
 {
     Q_OBJECT
 public:
-    AnalyserCanvas(Analyser * analyser) noexcept(false);
+    AnalyserCanvas(Analyser * analyser, SineWave * sineWave) noexcept(false);
     ~AnalyserCanvas();
 
     void setSelectedFrame(int frame);
@@ -49,8 +50,12 @@ public:
 
 protected:
     void mouseMoveEvent(QMouseEvent * event) override;
+    void mousePressEvent(QMouseEvent * event) override;
+    void mouseReleaseEvent(QMouseEvent * event) override;
     void paintEvent(QPaintEvent * event) override;
 
+
+    friend class Analyser;
 public slots:
     void renderTracks(int nframe, double maxFreq, FormantMethod formantAlg, const std::deque<double> & pitches, const Formant::Frames & formants);
     void renderSpectrogram(int nframe, int nNew, double maxFreq, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end);
@@ -59,6 +64,8 @@ public slots:
 private:
     void loadSettings();
     void saveSettings();
+
+    void cursorMoveEvent(QMouseEvent * event);
 
     void render();
     void renderPitchTrack(int nframe, double maxFreq, const std::deque<double> &pitches);
@@ -95,8 +102,7 @@ private:
     double selectedFrequency;
 
     Analyser * analyser;
-
-    friend class Analyser;
+    SineWave * sineWave;
 
 };
 

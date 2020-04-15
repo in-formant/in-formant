@@ -12,7 +12,7 @@
 #include <thread>
 #include <memory>
 #include <map>
-#include "../audio/AudioCapture.h"
+#include "../audio/AudioInterface.h"
 #include "../audio/AudioDevices.h"
 #include "../lib/Formant/Formant.h"
 #include "../lib/Formant/EKF/EKF.h"
@@ -37,7 +37,7 @@ enum FormantMethod {
 
 class Analyser {
 public:
-    Analyser(ma_context * ctx);
+    Analyser(AudioInterface * audioInterface);
     ~Analyser();
 
     void startThread();
@@ -57,6 +57,8 @@ public:
     void setWindowSpan(const std::chrono::duration<double> & windowSpan);
     void setPitchAlgorithm(enum PitchAlg);
     void setFormantMethod(enum FormantMethod);
+
+    [[nodiscard]] double getSampleRate();
 
     [[nodiscard]] bool isAnalysing();
     [[nodiscard]] int getFftSize();
@@ -101,10 +103,7 @@ private:
 
     std::mutex audioLock;
 
-#ifdef Q_OS_MAC
-    void * audioCaptureMem;
-#endif
-    AudioCapture * audioCapture;
+    AudioInterface * audioInterface;
 
     ma_resampler resampler;
 

@@ -10,8 +10,11 @@
 #include <QSharedPointer>
 #include <utility>
 #include "../audio/AudioDevices.h"
+#include "../audio/AudioInterface.h"
+#include "../audio/SineWave.h"
 #include "AnalyserCanvas.h"
 #include "PowerSpectrum.h"
+#include "../analysis/Analyser.h"
 #include "LPC/Frame/LPC_Frame.h"
 
 using DevicePair = std::pair<bool, const ma_device_id *>;
@@ -55,7 +58,13 @@ private:
 
     ma_context maCtx;
     AudioDevices * devs;
+    SineWave * sineWave;
+    AudioInterface * audioInterface;
     Analyser * analyser;
+
+#ifdef Q_OS_MAC
+    void * audioInterfaceMem;
+#endif
 
     QTimer timer;
 

@@ -31,12 +31,15 @@ set(SOURCES
     analysis/parts/resample.cpp
     analysis/parts/spectrum.cpp
     analysis/parts/track.cpp
-    audio/AudioCapture.cpp
-    audio/AudioCapture_callbacks.cpp
+    audio/AudioInterface.h
+    audio/AudioInterface.cpp
+    audio/AudioInterface_callbacks.cpp
     audio/AudioDevices.cpp
     audio/AudioDevices.h
     audio/RingBuffer.cpp
     audio/RingBuffer.h
+    audio/SineWave.cpp
+    audio/SineWave.h
     audio/miniaudio.h
     audio/implementation.cpp
     gui/ColorMaps.cpp

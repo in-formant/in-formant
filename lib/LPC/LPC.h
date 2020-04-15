@@ -43,6 +43,8 @@ namespace LPC {
     Frames analyseCovar(const Eigen::ArrayXd & sound, int predictionOrder, double samplingFrequency);
     Frames analyseBurg(const Eigen::ArrayXd & sound, int predictionOrder, double samplingFrequency);
 
+    Eigen::ArrayXd residual(const Eigen::ArrayXd & x, int L, int shift, int order);
+
 };
 
 #endif //SPEECH_ANALYSIS_LPC_H
