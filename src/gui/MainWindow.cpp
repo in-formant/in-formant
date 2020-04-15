@@ -59,12 +59,13 @@ MainWindow::MainWindow()
     devs = new AudioDevices(&maCtx);
 
     sineWave = new SineWave();
+    noiseFilter = new NoiseFilter();
 
 #ifdef Q_OS_MAC
     audioInterfaceMem = malloc(sizeof(AudioInterface));
-    audioInterface = new (audioInterfaceMem) AudioInterface(&maCtx, sineWave);
+    audioInterface = new (audioInterfaceMem) AudioInterface(&maCtx, sineWave, noiseFilter);
 #else
-    audioInterface = new AudioInterface(&maCtx, sineWave);
+    audioInterface = new AudioInterface(&maCtx, sineWave, noiseFilter);
 #endif
 
     analyser = new Analyser(audioInterface);
@@ -74,7 +75,7 @@ MainWindow::MainWindow()
     central = new QWidget;
     setCentralWidget(central);
 
-    canvas = new AnalyserCanvas(analyser, sineWave);
+    canvas = new AnalyserCanvas(analyser, sineWave, noiseFilter);
     powerSpectrum = new PowerSpectrum(analyser, canvas);
 
 #ifdef Q_OS_ANDROID
@@ -367,6 +368,8 @@ MainWindow::MainWindow()
 
         inputColorMap = new QComboBox;
         for (auto & [name, map] : colorMaps) {
+            (void) map;
+
             inputColorMap->addItem(name);
         }
 
@@ -701,7 +704,7 @@ void MainWindow::loadSettings()
     int nfft = analyser->getFftSize();
     int lpOrder = analyser->getLinearPredictionOrder();
     double maxFreq = analyser->getMaximumFrequency();
-    int cepOrder = analyser->getCepstralOrder();
+    //int cepOrder = analyser->getCepstralOrder();
     double frameLength = analyser->getFrameLength().count();
     double frameSpace = analyser->getFrameSpace().count();
     double windowSpan = analyser->getWindowSpan().count();

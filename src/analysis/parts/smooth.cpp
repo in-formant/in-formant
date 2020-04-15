@@ -55,7 +55,7 @@ void smoothenPitch(const std::deque<double>& in, std::deque<double>& out)
 
     input.clear();
 
-    for (int i = 0; i < in.size(); ++i) {
+    for (int i = 0; i < signed(in.size()); ++i) {
         if (in[i] != 0) {
             input.push_back({i, in[i]});
         }
@@ -63,7 +63,7 @@ void smoothenPitch(const std::deque<double>& in, std::deque<double>& out)
 
     filtfilt(input);
     
-    for (int i = 0; i < in.size(); ++i) {
+    for (int i = 0; i < signed(in.size()); ++i) {
         out[i] = 0.0;
     }
 
@@ -84,7 +84,7 @@ void smoothenFormants(const Formant::Frames& in, Formant::Frames& out)
 
     out.resize(in.size());
 
-    for (int i = 0; i < in.size(); ++i) {
+    for (int i = 0; i < signed(in.size()); ++i) {
         const int in_nFormants = in[i].nFormants;
 
         if (in_nFormants > numForms) {
@@ -149,12 +149,12 @@ static void lfilt(std::vector<IdxElt> & data)
     for (const auto & [i, x] : data) {
         double y = x / filt_gain;
 
-        for (int i = 0; i < filt_ma_ord; ++i) {
-            y += filt_ma[i] * prevIn[i];
+        for (int k = 0; k < filt_ma_ord; ++k) {
+            y += filt_ma[k] * prevIn[k];
         }
 
-        for (int i = 0; i < filt_ar_ord; ++i) {
-            y -= filt_ar[i] * prevOut[i];
+        for (int k = 0; k < filt_ar_ord; ++k) {
+            y -= filt_ar[k] * prevOut[k];
         }
 
         prevIn.pop_back();

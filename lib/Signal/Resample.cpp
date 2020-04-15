@@ -80,8 +80,6 @@ ArrayXd Resample::upsample(const ArrayXd & x)
     int nfft = 1;
     while (nfft < nx + antiTurnAround * numberOfPaddingSides) nfft *= 2;
 
-    const int numberOfSamples = nx * sampleRateFactor;
-
     int n = sampleRateFactor * nfft;
 
     rfft_plan(n);

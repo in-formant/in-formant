@@ -11,7 +11,7 @@ static constexpr int hpfilt = 20;
 
 std::pair<std::vector<int>, std::vector<int>> Sedreams::gci_sedreams(const ArrayXd & signal, const double fs, const double T0mean) {
     const int N(signal.size());
-    int n, k;
+    int n;
 
     ArrayXd res = LPC::residual(
             signal,

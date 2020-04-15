@@ -11,16 +11,10 @@
 
 using namespace Eigen;
 
-AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave) noexcept(false)
-    : selectedFrame(analyser->getFrameCount() - 1),
-      maxFreq(0),
-      drawSpectrum(true),
-      drawTracks(true),
-      frequencyScaleType(2),
-      minGain(-60),
-      maxGain(0),
-      analyser(analyser),
-      sineWave(sineWave),
+AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave, NoiseFilter * noiseFilter) noexcept(false)
+    : spectrogram(1, 1, QImage::Format_ARGB32_Premultiplied),
+      tracks(1, 1, QImage::Format_ARGB32_Premultiplied),
+      scaleAndCursor(1, 1, QImage::Format_ARGB32_Premultiplied),
 #ifdef Q_OS_ANDROID
       upFactorTracks(0.75),
       upFactorSpec(1),
@@ -28,9 +22,17 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave) noexcep
       upFactorTracks(1),
       upFactorSpec(2),
 #endif
-      spectrogram(1, 1, QImage::Format_ARGB32_Premultiplied),
-      tracks(1, 1, QImage::Format_ARGB32_Premultiplied),
-      scaleAndCursor(1, 1, QImage::Format_ARGB32_Premultiplied)
+      maxFreq(0),
+      minGain(-60),
+      maxGain(0),
+      drawSpectrum(true),
+      drawTracks(true),
+      frequencyScaleType(2),
+      selectedFrame(analyser->getFrameCount() - 1),
+      selectedFrequency(0),
+      analyser(analyser),
+      sineWave(sineWave),
+      noiseFilter(noiseFilter)
 {
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
@@ -148,7 +150,7 @@ void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFr
 
     tPainter.setBrush(Qt::transparent);
 
-    for (int nb = 0; nb < paths.size(); ++nb) {
+    for (int nb = 0; nb < signed(paths.size()); ++nb) {
         tPainter.setPen(QPen(formantColors[nb], upFactorTracks * formantThick, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         tPainter.drawPath(paths[nb]);
     }
@@ -392,11 +394,18 @@ void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
 
 void AnalyserCanvas::mousePressEvent(QMouseEvent * event) {
     cursorMoveEvent(event);
+
+    if (event->buttons() & Qt::MiddleButton) {
+        noiseFilter->setPlaying(true);
+    }
 }
 
 void AnalyserCanvas::mouseReleaseEvent(QMouseEvent * event) {
     if (~event->buttons() & Qt::RightButton) {
         sineWave->setPlaying(false);
+    }
+    if (~event->buttons() & Qt::MiddleButton) {
+        noiseFilter->setPlaying(false);
     }
 }
 

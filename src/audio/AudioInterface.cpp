@@ -8,14 +8,17 @@
 #include "../Exceptions.h"
 #include "../log/simpleQtLogger.h"
 
-AudioInterface::AudioInterface(ma_context * maCtx, SineWave * sineWave)
-    : sampleRate(16000), maCtx(maCtx),
-      deviceCaptureInit(false), devicePlaybackInit(false)
+AudioInterface::AudioInterface(ma_context * maCtx, SineWave * sineWave, NoiseFilter * noiseFilter)
+    : maCtx(maCtx),
+      deviceCaptureInit(false),
+      devicePlaybackInit(false), 
+      sampleRate(16000)
 {
     L_INFO("Initialising audio capture buffer...");
 
     recordContext.sampleRate = sampleRate;
     playbackContext.sineWave = sineWave;
+    playbackContext.noiseFilter = noiseFilter;
 }
 
 AudioInterface::~AudioInterface()
@@ -95,7 +98,7 @@ void AudioInterface::openPlaybackDevice() {
     auto deviceConfig = ma_device_config_init(ma_device_type_playback);
     deviceConfig.playback.pDeviceID = nullptr;
     deviceConfig.playback.format = ma_format_f32;
-    deviceConfig.sampleRate = 96000;
+    deviceConfig.sampleRate = 96000; // This is needed to have a precise enough time resolution.
     deviceConfig.dataCallback = playCallback;
     deviceConfig.pUserData = &playbackContext;
 
@@ -106,7 +109,9 @@ void AudioInterface::openPlaybackDevice() {
         throw AudioException("Failed to initialise miniaudio device");
     }
 
-    playbackContext.sineWave->initWaveform(devicePlayback.sampleRate, devicePlayback.playback.channels);
+    playbackContext.numChannels = devicePlayback.playback.channels;
+    playbackContext.sineWave->initWaveform(devicePlayback.sampleRate, playbackContext.numChannels);
+    playbackContext.noiseFilter->initOutput(devicePlayback.sampleRate, playbackContext.numChannels);
 
     devicePlaybackInit = true;
 }
@@ -154,11 +159,19 @@ void AudioInterface::setCaptureDuration(int nsamples) {
     recordContext.buffer.setCapacity(nsamples);
 }
 
-int AudioInterface::getSampleRate() const noexcept {
+int AudioInterface::getRecordSampleRate() const noexcept {
     return sampleRate;
+}
+
+int AudioInterface::getPlaybackSampleRate() const noexcept {
+    return devicePlayback.sampleRate;
 }
 
 void AudioInterface::readBlock(Eigen::ArrayXd & capture) noexcept {
     recordContext.buffer.readFrom(capture);
+}
+
+NoiseFilter * AudioInterface::getNoiseFilter() {
+    return playbackContext.noiseFilter;
 }
 

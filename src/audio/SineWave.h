@@ -1,8 +1,6 @@
 #ifndef SINE_WAVE_H
 #define SINE_WAVE_H
 
-#include "miniaudio.h"
-
 class SineWave {
 public:
     SineWave();
@@ -23,15 +21,12 @@ private:
     double targetFrequency;
 
     double mSampleRate;
-
-    double mTimeInSamples;
     
     double mGain;
-    
     double mFrequency;
+    
+    double mTimeInSamples;
     double mPeriodInSamples;
-
-    ma_waveform waveform;
 };
 
 #endif // SINE_WAVE_H

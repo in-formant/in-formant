@@ -4,7 +4,7 @@ project(main)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic")
+set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g0")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
@@ -40,6 +40,8 @@ set(SOURCES
     audio/RingBuffer.h
     audio/SineWave.cpp
     audio/SineWave.h
+    audio/NoiseFilter.cpp
+    audio/NoiseFilter.h
     audio/miniaudio.h
     audio/implementation.cpp
     gui/ColorMaps.cpp

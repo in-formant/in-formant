@@ -4,9 +4,9 @@
 #include "MFCC/MFCC.h"
 
 PowerSpectrum::PowerSpectrum(Analyser * analyser, AnalyserCanvas * canvas)
-    : analyser(analyser), canvas(canvas),
-      spectrum(1, 1, QImage::Format_ARGB32_Premultiplied),
-      lpcIm(1, 1, QImage::Format_ARGB32_Premultiplied)
+    : spectrum(1, 1, QImage::Format_ARGB32_Premultiplied),
+      lpcIm(1, 1, QImage::Format_ARGB32_Premultiplied),
+      analyser(analyser), canvas(canvas)
 { 
     SpecFrame frame;
     frame.nfft = 1;
@@ -113,7 +113,7 @@ void PowerSpectrum::renderLpc(double maximumFrequency, SpecFrame lpcSpectrum)
     const int nfft = lpcSpectrum.nfft;
     const auto& spec = lpcSpectrum.spec;
     
-    const double delta = lpcSpectrum.fs / (2.0 * lpcSpectrum.nfft);
+    const double delta = fs / (2.0 * nfft);
    
     int minGain = canvas->getMinGainSpectrum();
     int maxGain = canvas->getMaxGainSpectrum();

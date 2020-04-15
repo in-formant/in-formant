@@ -15,7 +15,7 @@ void Polynomial::fixRootsIntoUnitCircle(ArrayXcd & r)
     }
 }
 
-void Polynomial::polishRoot(const Eigen::ArrayXd & poly, double * x, int maxit)
+void Polynomial::polishRoot(const ArrayXd & poly, double * x, int maxit)
 {
     constexpr double eps = std::numeric_limits<double>::epsilon();
 
@@ -42,7 +42,7 @@ void Polynomial::polishRoot(const Eigen::ArrayXd & poly, double * x, int maxit)
     }
 }
 
-void Polynomial::polishRoot(const Eigen::ArrayXd & poly, dcomplex * z, int maxit)
+void Polynomial::polishRoot(const ArrayXd & poly, dcomplex * z, int maxit)
 {
     constexpr double eps = std::numeric_limits<double>::epsilon();
 
@@ -69,7 +69,7 @@ void Polynomial::polishRoot(const Eigen::ArrayXd & poly, dcomplex * z, int maxit
     }
 }
 
-void Polynomial::polishRoots(const Eigen::ArrayXd & p, Eigen::ArrayXcd & r)
+void Polynomial::polishRoots(const ArrayXd & p, ArrayXcd & r)
 {
     constexpr int maxit = 80;
     int i = 0;
@@ -92,4 +92,19 @@ void Polynomial::polishRoots(const Eigen::ArrayXd & p, Eigen::ArrayXcd & r)
 
         i++;
     }
+}
+
+void Polynomial::fromRoots(const ArrayXcd & r, ArrayXd & p)
+{
+    const int n = r.size();
+
+    ArrayXcd pz(n + 1);
+    pz.setZero();
+    pz(0) = 1;
+
+    for (int j = 0; j < n; ++j) {
+        pz.segment(1, j) = (pz.segment(1, j) - r(j) * pz.segment(0, j)).eval();
+    }
+
+    p = pz.real();
 }

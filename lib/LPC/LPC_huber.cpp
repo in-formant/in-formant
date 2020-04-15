@@ -20,7 +20,7 @@ LPC::Frames LPC::refineRobust(
 
     double t1, tol_svd = 1e-6;
     double location = 0, windowDuration = 2 * analysisWidth; // Gaussian window.
-    int numberOfFrames, frameErrorCount = 0, iter = 0;
+    int numberOfFrames;
     int p = lpc1.maxnCoefficients;
     int frameLength = std::round(windowDuration * samplingFrequency);
 

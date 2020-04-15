@@ -17,5 +17,8 @@ void Analyser::analyseLp() {
     }
     else {
         ekfState.y.setZero(ekfState.cepOrder);
+        lpcFrame.a.setZero(lpOrder);
     }
+
+    audioInterface->getNoiseFilter()->setFilter(fs, lpcFrame.a);
 }

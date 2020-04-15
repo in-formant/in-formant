@@ -2,8 +2,8 @@
 #include "SineWave.h"
 
 SineWave::SineWave()
-    : targetGain(0), targetFrequency(-1),
-      gainDecay(0.92), frequencyDecay(0.9)
+    : gainDecay(0.92), frequencyDecay(0.9),
+      targetGain(0), targetFrequency(-1)
 {
 }
 
@@ -40,7 +40,7 @@ void SineWave::readFrames(float *output, int frameCount)
         }
 
         for (int ch = 0; ch < mChannels; ++ch) {
-            output[mChannels * i + ch] = value;
+            output[mChannels * i + ch] += value;
         }
 
         mTimeInSamples += 1;

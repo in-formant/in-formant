@@ -81,6 +81,8 @@ namespace Polynomial {
 
     void fixRootsIntoUnitCircle(Eigen::ArrayXcd & r);
 
+    void fromRoots(const Eigen::ArrayXcd & r, Eigen::ArrayXd & p);
+
 }
 
 #endif //SPEECH_ANALYSIS_POLYNOMIAL_H

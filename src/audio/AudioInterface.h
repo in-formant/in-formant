@@ -9,6 +9,7 @@
 #include <Eigen/Core>
 #include "RingBuffer.h"
 #include "SineWave.h"
+#include "NoiseFilter.h"
 
 #define CAPTURE_DURATION 50.0
 #define CAPTURE_SAMPLE_COUNT(sampleRate) ((CAPTURE_DURATION * sampleRate) / 1000)
@@ -23,12 +24,13 @@ struct RecordContext {
 
 struct PlaybackContext {
     SineWave * sineWave;
+    NoiseFilter * noiseFilter;
     int numChannels;
 };
 
 class AudioInterface {
 public:
-    AudioInterface(ma_context * maCtx, SineWave * sineWave);
+    AudioInterface(ma_context * maCtx, SineWave * sineWave, NoiseFilter * noiseFilter);
     ~AudioInterface();
 
     void openInputDevice(const ma_device_id * id);
@@ -44,7 +46,10 @@ public:
 
     void setCaptureDuration(int nsamples);
 
-    [[nodiscard]] int getSampleRate() const noexcept;
+    [[nodiscard]] int getRecordSampleRate() const noexcept;
+    [[nodiscard]] int getPlaybackSampleRate() const noexcept;
+
+    NoiseFilter * getNoiseFilter();
 
     void readBlock(Eigen::ArrayXd & capture) noexcept;
 

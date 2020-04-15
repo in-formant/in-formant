@@ -3,7 +3,7 @@ project(libspeech)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic")
+set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g0")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
@@ -69,7 +69,6 @@ set(SOURCES
     Signal/Window.h
     FFT/FFT.cpp
     FFT/FFT.h
-    MFCC/MFCC.cpp
     MFCC/MFCC.h)
 
 find_package(Eigen3 REQUIRED NO_MODULE)

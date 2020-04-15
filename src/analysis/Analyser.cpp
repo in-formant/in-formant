@@ -23,16 +23,16 @@ static const SpecFrame defaultSpec = {
 
 Analyser::Analyser(AudioInterface * audioInterface)
     : audioInterface(audioInterface),
-      doAnalyse(true),
-      running(false),
-      lpFailed(true),
-      frameCount(0),
-      nfft(1),
       frameLength(25),
-      windowSpan(1),
       frameSpace(10),
+      windowSpan(1), 
+      frameCount(0),
       nsamples(0),
-      maximumFrequency(3700)
+      doAnalyse(true),
+      nfft(1),
+      maximumFrequency(3700),
+      lpFailed(true),
+      running(false)
 {
     _initResampler();
     loadSettings();
@@ -72,7 +72,7 @@ void Analyser::setInputDevice(const ma_device_id * id) {
     std::lock_guard<std::mutex> guard(audioLock);
     audioInterface->closeStream();
     audioInterface->openInputDevice(id);
-    fs = audioInterface->getSampleRate();
+    fs = audioInterface->getRecordSampleRate();
     x.setZero(CAPTURE_SAMPLE_COUNT(fs));
     audioInterface->startStream();
 }
@@ -81,13 +81,13 @@ void Analyser::setOutputDevice(const ma_device_id * id) {
     std::lock_guard<std::mutex> guard(audioLock);
     audioInterface->closeStream();
     audioInterface->openOutputDevice(id);
-    fs = audioInterface->getSampleRate();
+    fs = audioInterface->getRecordSampleRate();
     x.setZero(CAPTURE_SAMPLE_COUNT(fs));
     audioInterface->startStream();
 }
 
 double Analyser::getSampleRate() {
-    return audioInterface->getSampleRate();
+    return audioInterface->getRecordSampleRate();
 }
 
 void Analyser::setFftSize(int _nfft) {
@@ -134,9 +134,9 @@ void Analyser::setMaximumFrequency(double _maximumFrequency) {
    
     LS_INFO("Set maximum frequency to " << maximumFrequency);
 
-    if (ma_resampler_set_rate(&resampler, audioInterface->getSampleRate(), 2 * maximumFrequency) != MA_SUCCESS) {
-        LS_FATAL("Unable to change resampler output rate");
-        throw AudioException("Unable to change resampler output rate");
+    if (ma_resampler_set_rate(&resampler, audioInterface->getRecordSampleRate(), 2 * maximumFrequency) != MA_SUCCESS) {
+        LS_FATAL("Unable to change analysis resampler output rate");
+        throw AudioException("Unable to change analysis resampler output rate");
     }
 }
 
@@ -175,7 +175,7 @@ const std::chrono::duration<double, std::milli> & Analyser::getFrameSpace() {
 void Analyser::setWindowSpan(const std::chrono::duration<double> & _windowSpan) {
     std::lock_guard<std::mutex> lock(paramLock);
     windowSpan = _windowSpan;
-    LS_INFO("Set window span to " << windowSpan.count() << " ms");
+    LS_INFO("Set window span to " << windowSpan.count() << " s");
     
     _updateFrameCount();
 }
@@ -302,7 +302,7 @@ void Analyser::_updateCaptureDuration()
 {
     std::lock_guard<std::mutex> lock(audioLock);
 
-    double fs = audioInterface->getSampleRate();
+    double fs = audioInterface->getRecordSampleRate();
 
     // Account for resampling.
     fftSamples = nfft; //(fs * nfft) / refs;
@@ -339,14 +339,14 @@ void Analyser::_initResampler()
     ma_resampler_config config = ma_resampler_config_init(
             ma_format_f32,
             1,
-            audioInterface->getSampleRate(),
+            audioInterface->getRecordSampleRate(),
             2 * maximumFrequency,
             ma_resample_algorithm_speex);
     config.speex.quality = 10;
 
     if (ma_resampler_init(&config, &resampler) != MA_SUCCESS) {
-        LS_FATAL("Unable to initialise resampler");
-        throw AudioException("Unable to initialise resampler");
+        LS_FATAL("Unable to initialise analysis resampler");
+        throw AudioException("Unable to initialise analysis resampler");
     }
 }
 

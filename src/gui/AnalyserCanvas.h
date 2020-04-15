@@ -20,7 +20,7 @@ class AnalyserCanvas : public QWidget
 {
     Q_OBJECT
 public:
-    AnalyserCanvas(Analyser * analyser, SineWave * sineWave) noexcept(false);
+    AnalyserCanvas(Analyser * analyser, SineWave * sineWave, NoiseFilter * noiseFilter) noexcept(false);
     ~AnalyserCanvas();
 
     void setSelectedFrame(int frame);
@@ -103,6 +103,7 @@ private:
 
     Analyser * analyser;
     SineWave * sineWave;
+    NoiseFilter * noiseFilter;
 
 };
 

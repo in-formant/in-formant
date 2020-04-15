@@ -29,7 +29,7 @@ void Analyser::trackFormants() {
                 i++;
             }
             else {
-                bool result = Formant::track(
+                (void) Formant::track(
                     voicedSegment,
                     3,
                     550,
@@ -42,7 +42,7 @@ void Analyser::trackFormants() {
                     2.0
                 );
 
-                for (int j = 0; j < voicedSegment.size(); ++j) {
+                for (int j = 0; j < signed(voicedSegment.size()); ++j) {
                     finalTrack[start + j] = voicedSegment[j];
                 }
             }

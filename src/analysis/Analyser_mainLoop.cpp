@@ -75,7 +75,7 @@ void Analyser::update()
     x_fft.setZero(fftSamples);
     audioInterface->readBlock(x_fft);
     
-    fs = audioInterface->getSampleRate();
+    fs = audioInterface->getRecordSampleRate();
    
     audioLock.unlock();
 
@@ -98,7 +98,7 @@ void Analyser::update()
     applyPreEmphasis();
  
     // Perform LP analysis.
-    analyseLp();   
+    analyseLp();
 
     // Analyse spectrum.
     analyseSpectrum();
@@ -135,6 +135,8 @@ void Analyser::update()
 
     // Set the has-new-frames flag.
     for (auto & [k, v] : nbNewFrames) {
+        (void) k;
+
         if (v < frameCount) {
             v++;
         }

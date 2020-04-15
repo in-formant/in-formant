@@ -25,7 +25,7 @@ bool AudioDevices::refreshList()
 
     ma_context_get_devices(maCtx, &playback, &playbackCount, &capture, &captureCount);
 
-    for (int i = 0; i < playbackCount; ++i) {
+    for (int i = 0; i < signed(playbackCount); ++i) {
         ma_device_info info = playback[i];
         
         outputs.push_back({
@@ -34,7 +34,7 @@ bool AudioDevices::refreshList()
         });
     }
 
-    for (int i = 0; i < captureCount; ++i) {
+    for (int i = 0; i < signed(captureCount); ++i) {
         ma_device_info info = capture[i];
         
         inputs.push_back({

@@ -12,6 +12,7 @@
 #include "../audio/AudioDevices.h"
 #include "../audio/AudioInterface.h"
 #include "../audio/SineWave.h"
+#include "../audio/NoiseFilter.h"
 #include "AnalyserCanvas.h"
 #include "PowerSpectrum.h"
 #include "../analysis/Analyser.h"
@@ -59,6 +60,7 @@ private:
     ma_context maCtx;
     AudioDevices * devs;
     SineWave * sineWave;
+    NoiseFilter * noiseFilter;
     AudioInterface * audioInterface;
     Analyser * analyser;
 

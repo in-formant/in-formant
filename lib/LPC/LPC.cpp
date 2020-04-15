@@ -23,10 +23,9 @@ LPC::Frames LPC::analyse(const Eigen::ArrayXd & _sound, int predictionOrder,
                          double samplingFrequency,
                          int method)
 {
-    int frameErrorCount = 0, iter = 0;
+    int frameErrorCount = 0;
     int numberOfFrames = 1;
     int frameLength = _sound.size();
-    double windowDuration = frameLength / samplingFrequency;
 
     ArrayXd sound(_sound);
     ArrayXd sframe(frameLength);

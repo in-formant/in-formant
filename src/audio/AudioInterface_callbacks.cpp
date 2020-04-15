@@ -23,5 +23,14 @@ void AudioInterface::playCallback(ma_device *pDevice, void *pOutput, const void 
     auto context = static_cast<PlaybackContext *>(pDevice->pUserData);
     auto output = static_cast<float *>(pOutput);
     
+    const int numChannels = context->numChannels;
+
+    for (int i = 0; i < signed(frameCount); ++i) {
+        for (int ch = 0; ch < numChannels; ++ch) {
+            output[numChannels * i + ch] = 0.0;
+        }
+    }
+
     context->sineWave->readFrames(output, frameCount);
+    context->noiseFilter->readFrames(output, frameCount);
 }

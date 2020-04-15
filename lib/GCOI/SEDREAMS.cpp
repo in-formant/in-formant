@@ -11,12 +11,12 @@ std::vector<GCOI::GIPair> GCOI::estimate_Sedreams(const ArrayXd & x, const doubl
 
     std::vector<GIPair> pairs;
 
-    for (int i = 0; i < gci.size() - 1; ++i) {
+    for (int i = 0; i < signed(gci.size()) - 1; ++i) {
         GIPair pair;
         pair.gci = gci[i];
         pair.nextgci = gci[i + 1];
 
-        for (int j = 0; j < goi.size(); ++j) {
+        for (int j = 0; j < signed(goi.size()); ++j) {
             int to = goi[i];
 
             if (pair.gci < to && to < pair.nextgci) {

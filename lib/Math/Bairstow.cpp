@@ -28,7 +28,6 @@ void Bairstow::solve(const ArrayXd & poly, double initialMag, double initialPha,
 {
     int n, iter, totalIter;
     double u, v, du, dv, denom;
-    bool isCloseToZero;
 
     ArrayXd x = poly.reverse();
 

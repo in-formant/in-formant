@@ -140,7 +140,7 @@ static void snellCalcPartition(const std::vector<double> & t, std::map<double, i
 {
     std::vector<std::pair<double, double>> partNext;
     std::vector<std::pair<double, double>> partCurrent;
-    for (int i = 0; i < t.size() - 1; ++i) {
+    for (int i = 0; i < signed(t.size()) - 1; ++i) {
         partCurrent.emplace_back(t[i], t[i + 1]);
     }
 
@@ -170,6 +170,8 @@ static void snellCalcPartition(const std::vector<double> & t, std::map<double, i
 
     partition.push_back(partCurrent.at(0).first);
     for (const auto & [t1, t2] : partCurrent) {
+        (void) t1;
+
         partition.push_back(t2);
     }
 }
@@ -198,7 +200,7 @@ static int cauchyIntegral(const ArrayXd & p, double r1, double r2, double phi, i
 
     int Np = 0, Nm = 0;
 
-    for (int i = 0; i < finalPartition.size() - 1; ++i) {
+    for (int i = 0; i < signed(finalPartition.size()) - 1; ++i) {
         double t1 = finalPartition[i];
         double t2 = finalPartition[i + 1];
         // Make sure all C values are calculated for the final partition.

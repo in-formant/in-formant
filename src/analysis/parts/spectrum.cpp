@@ -24,7 +24,7 @@ void Analyser::analyseSpectrum()
 
     rfft(nfft);
     
-    lastSpectrumFrame.fs = audioInterface->getSampleRate();
+    lastSpectrumFrame.fs = audioInterface->getRecordSampleRate();
     lastSpectrumFrame.nfft = nfft;
     lastSpectrumFrame.spec = xout;
 
