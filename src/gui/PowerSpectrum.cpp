@@ -195,6 +195,13 @@ void PowerSpectrum::paintEvent(QPaintEvent * event)
     painter.drawImage(0, 0, lpcIm);
     painter.drawImage(0, 0, spectrum);
     imageLock.unlock();
+
+    const double maxFreq = analyser->getMaximumFrequency();
+    const double freq = canvas->getSelectedFrequency();
+    const int y = yFromFrequency(freq, maxFreq);
+
+    painter.setPen(QPen(QColor(0x7F7F7F), 1));
+    painter.drawLine(0, y, targetWidth, y);
     
     painter.end();
 }

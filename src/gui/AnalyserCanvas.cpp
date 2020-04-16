@@ -244,7 +244,7 @@ void AnalyserCanvas::renderScaleAndCursor(const int nframe, const double maximum
     const int y = yFromFrequency(selectedFrequency, maximumFrequency);
 
     // Draw a vertical line where the selected frame is.
-    painter.setPen(0x7F7F7F);
+    painter.setPen(QPen(QColor(0x7F7F7F), 2));
     painter.drawLine(x, 0, x, targetHeight);
     painter.drawLine(0, y, targetWidth, y);
     // Draw freq string right next to it.
@@ -518,6 +518,11 @@ void AnalyserCanvas::setSelectedFrame(int frame)
 int AnalyserCanvas::getSelectedFrame() const
 {
     return selectedFrame;
+}
+
+double AnalyserCanvas::getSelectedFrequency() const
+{
+    return selectedFrequency;
 }
 
 void AnalyserCanvas::setFrequencyScale(int type) {

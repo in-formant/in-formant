@@ -27,6 +27,8 @@ public:
     void setSelectedFrame(int frame);
     [[nodiscard]] int getSelectedFrame() const;
 
+    [[nodiscard]] double getSelectedFrequency() const;
+
     void setFrequencyScale(int type);
     void setDrawSpectrum(bool draw);
     void setDrawTracks(bool draw);

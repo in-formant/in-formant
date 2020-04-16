@@ -35,7 +35,6 @@ private:
     double mGain;
 
     int filterPassCount;
-    int nfft;
     Eigen::ArrayXd filter;
     std::mutex mutex;
 

@@ -58,7 +58,9 @@ void AudioInterface::openInputDevice(const ma_device_id * id)
     
     deviceCaptureInit = true;
     
+#ifndef Q_OS_ANDROID
     openPlaybackDevice();
+#endif
 }
 
 void AudioInterface::openOutputDevice(const ma_device_id * id)
@@ -98,7 +100,9 @@ void AudioInterface::openOutputDevice(const ma_device_id * id)
     
     deviceCaptureInit = true; 
 
+#ifndef Q_OS_ANDROID
     openPlaybackDevice();
+#endif
 }
 
 void AudioInterface::openPlaybackDevice()
