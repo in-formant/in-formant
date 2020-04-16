@@ -66,7 +66,7 @@ ArrayXd Resample::resample(const ArrayXd & x, double sourceFs, double targetFs, 
         }
     }
 
-    return std::move(y);
+    return y;
 
 }
 
@@ -98,7 +98,7 @@ ArrayXd Resample::upsample(const ArrayXd & x)
     irfft(n); // return to time domain
     ArrayXd z = data3.segment(antiTurnAround, nx) / static_cast<double>(nfft);
 
-    return std::move(z);
+    return z;
 }
 
 double Resample::interpolate_sinc(const ArrayXd & y, double x, int maxDepth)

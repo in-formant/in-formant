@@ -17,8 +17,8 @@ void Pitch::estimate_MPM(const ArrayXd & x, double fs, Pitch::Estimation & resul
     ArrayXd nsdf = MPM::autocorrelation(x);
     nsdf /= nsdf.abs().maxCoeff();
 
-    std::vector<int> maxPositions = MPM::peakPicking(nsdf);
-    std::vector<std::pair<double, double>> estimates;
+    rpm::vector<int> maxPositions = MPM::peakPicking(nsdf);
+    rpm::vector<std::pair<double, double>> estimates;
 
     double highestAmplitude = -DBL_MAX;
 

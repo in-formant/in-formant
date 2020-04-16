@@ -8,7 +8,7 @@
 #include "miniaudio.h"
 #include <string>
 #include <memory>
-#include <vector>
+#include "rpmalloc.h"
 
 struct AudioDevice {
     ma_device_id id;
@@ -21,14 +21,14 @@ public:
 
     bool refreshList();
 
-    const std::vector<AudioDevice> & getInputs() const;
-    const std::vector<AudioDevice> & getOutputs() const;
+    const rpm::vector<AudioDevice> & getInputs() const;
+    const rpm::vector<AudioDevice> & getOutputs() const;
 
 private:
     ma_context * maCtx;
 
-    std::vector<AudioDevice> inputs;
-    std::vector<AudioDevice> outputs;
+    rpm::vector<AudioDevice> inputs;
+    rpm::vector<AudioDevice> outputs;
 };
 
 #endif // SPEECH_ANALYSIS_AUDIODEVICES_H

@@ -2,10 +2,10 @@
 
 using namespace Eigen;
 
-std::pair<std::vector<int>, std::vector<int>> Sedreams::findZeroCrossings(const ArrayXd & signal)
+std::pair<rpm::vector<int>, rpm::vector<int>> Sedreams::findZeroCrossings(const ArrayXd & signal)
 {
 
-    std::vector<int> pos, neg;
+    rpm::vector<int> pos, neg;
 
     double cur, next;
 

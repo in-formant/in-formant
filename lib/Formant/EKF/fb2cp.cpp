@@ -21,5 +21,5 @@ VectorXd EKF::fb2cp(
         cepCoeffs(i) = C_int.sum();
     }
 
-    return std::move(cepCoeffs);
+    return cepCoeffs;
 }

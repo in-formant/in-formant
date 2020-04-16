@@ -7,7 +7,7 @@
 
 using namespace Eigen;
 
-static void getRoots(double u, double v, double eps, std::vector<dcomplex> & roots)
+static void getRoots(double u, double v, double eps, rpm::vector<dcomplex> & roots)
 {
     double discr = u * u - 4 * v;
     if (std::abs(discr) < eps) {
@@ -24,7 +24,7 @@ static void getRoots(double u, double v, double eps, std::vector<dcomplex> & roo
     }
 }
 
-void Bairstow::solve(const ArrayXd & poly, double initialMag, double initialPha, std::vector<dcomplex> & roots, int maxTotalIter, int maxIter, double eps1, double eps2)
+void Bairstow::solve(const ArrayXd & poly, double initialMag, double initialPha, rpm::vector<dcomplex> & roots, int maxTotalIter, int maxIter, double eps1, double eps2)
 {
     int n, iter, totalIter;
     double u, v, du, dv, denom;

@@ -28,6 +28,10 @@ AudioInterface::~AudioInterface()
 
 void AudioInterface::openInputDevice(const ma_device_id * id)
 {
+    if (deviceCaptureInit) {
+        return;
+    }
+
     auto deviceConfig = ma_device_config_init(ma_device_type_capture);
     deviceConfig.capture.pDeviceID = const_cast<ma_device_id *>(id);
     deviceConfig.capture.format = ma_format_f32;
@@ -59,6 +63,10 @@ void AudioInterface::openInputDevice(const ma_device_id * id)
 
 void AudioInterface::openOutputDevice(const ma_device_id * id)
 {
+    if (deviceCaptureInit) {
+        return;
+    }
+
     if (!ma_context_is_loopback_supported(maCtx)) {
         L_FATAL("Audio loopback devices are not supported.");
         throw AudioException("Failed to initialise loopback device: backend not supported");
@@ -93,15 +101,13 @@ void AudioInterface::openOutputDevice(const ma_device_id * id)
     openPlaybackDevice();
 }
 
-void AudioInterface::openPlaybackDevice() {
+void AudioInterface::openPlaybackDevice()
+{
 
     auto deviceConfig = ma_device_config_init(ma_device_type_playback);
     deviceConfig.playback.pDeviceID = nullptr;
     deviceConfig.playback.format = ma_format_f32;
     deviceConfig.sampleRate = 96000; // This is needed to have a precise enough time resolution.
-    deviceConfig.periodSizeInFrames = 0;
-    deviceConfig.periodSizeInMilliseconds = 50;
-    deviceConfig.periods = 3;
     deviceConfig.dataCallback = playCallback;
     deviceConfig.pUserData = &playbackContext;
 
@@ -121,16 +127,6 @@ void AudioInterface::openPlaybackDevice() {
 
 void AudioInterface::startStream() {
 
-    if (devicePlaybackInit) {
-
-        L_INFO("Starting playback audio device...");
-
-        if (ma_device_start(&devicePlayback) != MA_SUCCESS) {
-            L_FATAL("Failed to start playback audio device...");
-            throw AudioException("Failed to start miniaudio device");
-        }
-    }
-
     if (deviceCaptureInit) {
 
         L_INFO("Starting capture audio device...");
@@ -141,6 +137,15 @@ void AudioInterface::startStream() {
         }
     }
 
+    if (devicePlaybackInit) {
+
+        L_INFO("Starting playback audio device...");
+
+        if (ma_device_start(&devicePlayback) != MA_SUCCESS) {
+            L_FATAL("Failed to start playback audio device...");
+            throw AudioException("Failed to start miniaudio device");
+        }
+    }
 }
 
 void AudioInterface::closeStream()

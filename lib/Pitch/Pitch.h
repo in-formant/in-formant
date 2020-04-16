@@ -6,6 +6,7 @@
 #define SPEECH_ANALYSIS_PITCH_H
 
 #include <Eigen/Core>
+#include "../rpmalloc.h"
 
 namespace Pitch {
 

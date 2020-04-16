@@ -30,10 +30,10 @@ constexpr std::array<double, filt_ar_ord> filt_ma = {
 
 using IdxElt = std::pair<int, double>;
 
-static void lfilt(std::vector<IdxElt> & data);
-static void filtfilt(std::vector<IdxElt> & data);
+static void lfilt(rpm::vector<IdxElt> & data);
+static void filtfilt(rpm::vector<IdxElt> & data);
 
-static void smoothenPitch(const std::deque<double>& in, std::deque<double>& out);
+static void smoothenPitch(const rpm::deque<double>& in, rpm::deque<double>& out);
 static void smoothenFormants(const Formant::Frames& in, Formant::Frames& out);
 
 void Analyser::applySmoothingFilters()
@@ -49,9 +49,9 @@ void Analyser::applySmoothingFilters()
     //}
 }
 
-void smoothenPitch(const std::deque<double>& in, std::deque<double>& out)
+void smoothenPitch(const rpm::deque<double>& in, rpm::deque<double>& out)
 {
-    static std::vector<IdxElt> input;
+    static rpm::vector<IdxElt> input;
 
     input.clear();
 
@@ -76,7 +76,7 @@ void smoothenFormants(const Formant::Frames& in, Formant::Frames& out)
 {
     constexpr int numForms = 3;
    
-    static std::array<std::vector<IdxElt>, numForms> inputs;
+    static std::array<rpm::vector<IdxElt>, numForms> inputs;
 
     for (int k = 0; k < numForms; ++k) {
         inputs[k].clear();
@@ -114,7 +114,7 @@ void smoothenFormants(const Formant::Frames& in, Formant::Frames& out)
     }
 }
 
-static void filtfilt(std::vector<IdxElt> & data)
+static void filtfilt(rpm::vector<IdxElt> & data)
 {
     if (data.size() == 0) return;
 
@@ -124,18 +124,18 @@ static void filtfilt(std::vector<IdxElt> & data)
     std::reverse(data.begin(), data.end());
 }
 
-static void lfilt(std::vector<IdxElt> & data)
+static void lfilt(rpm::vector<IdxElt> & data)
 {
     constexpr int edge = 4 * std::max(filt_ma_ord, filt_ar_ord);
-    std::vector<IdxElt> edgeData(edge);
+    rpm::vector<IdxElt> edgeData(edge);
 
     for (int i = 0; i < edge; ++i) {
         edgeData[i] = data.front();
     }
     data.insert(data.begin(), edgeData.begin(), edgeData.end());
 
-    static std::deque<double> prevIn(filt_ma_ord);
-    static std::deque<double> prevOut(filt_ar_ord);
+    static rpm::deque<double> prevIn(filt_ma_ord);
+    static rpm::deque<double> prevOut(filt_ar_ord);
 
     for (int i = 0; i < filt_ma_ord; ++i) {
         prevIn[i] = 0.0;
@@ -144,7 +144,7 @@ static void lfilt(std::vector<IdxElt> & data)
         prevOut[i] = 0.0;
     }
 
-    std::vector<IdxElt> out;
+    rpm::vector<IdxElt> out;
 
     for (const auto & [i, x] : data) {
         double y = x / filt_gain;

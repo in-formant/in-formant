@@ -2,7 +2,7 @@
 
 using namespace Eigen;
 
-std::vector<int> Sedreams::findPeaks(const ArrayXd & signal, double sign) {
+rpm::vector<int> Sedreams::findPeaks(const ArrayXd & signal, double sign) {
     
     const int N(signal.size());
 
@@ -18,7 +18,7 @@ std::vector<int> Sedreams::findPeaks(const ArrayXd & signal, double sign) {
     df2 *= sign;
     
     // Find sign changes in df1 and negativity in df2
-    std::vector<int> idx;
+    rpm::vector<int> idx;
     for (n = 0; n < N; ++n) {
         bool df1_sgn = (df1(n) * (n+1 < N ? df1(n+1) : 0.)) <= 0;
         bool df2_neg = (n+1 < N ? df2(n+1) : 0.) < 0;
@@ -28,5 +28,5 @@ std::vector<int> Sedreams::findPeaks(const ArrayXd & signal, double sign) {
         }
     }
 
-    return std::move(idx);
+    return idx;
 }

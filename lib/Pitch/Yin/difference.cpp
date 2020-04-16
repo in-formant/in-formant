@@ -14,5 +14,5 @@ ArrayXd YIN::difference(const ArrayXd & x)
         yin_buffer(tau) = acorr(0) + acorr(1) - 2 * acorr(tau);
     }
 
-    return std::move(yin_buffer);
+    return yin_buffer;
 }

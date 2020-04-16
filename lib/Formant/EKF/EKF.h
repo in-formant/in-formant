@@ -2,7 +2,7 @@
 #define EKF_H
 
 #include <Eigen/Dense>
-#include <deque>
+#include "../../rpmalloc.h"
 #include "../Formant.h"
 
 namespace EKF

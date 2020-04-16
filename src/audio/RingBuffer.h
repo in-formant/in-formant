@@ -7,7 +7,7 @@
 
 #include <Eigen/Core>
 #include <mutex>
-#include <vector>
+#include "rpmalloc.h"
 
 class RingBuffer {
 public:
@@ -20,7 +20,7 @@ public:
 
 private:
     int capacity, writeCursor;
-    std::vector<double> data;
+    rpm::vector<double> data;
     std::mutex mut;
 };
 

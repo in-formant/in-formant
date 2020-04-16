@@ -2,6 +2,7 @@
 #include <QAndroidJniObject>
 
 #include "JniInstance.h"
+#include "rpmalloc.h"
 #include "../analysis/Analyser.h"
 #include "../audio/AudioDevices.h"
 
@@ -20,7 +21,7 @@ JniInstance * JniInstance::getInstance()
 JniInstance::JniInstance(Analyser * analyser, AnalyserCanvas * canvas, PowerSpectrum * powerSpectrum)
     : analyser(analyser), canvas(canvas), powerSpectrum(powerSpectrum)
 {
-    std::vector<QString> pitchAlgs{
+    rpm::vector<QString> pitchAlgs{
         QStringLiteral("Wavelet"),
         QStringLiteral("McLeod"),
         QStringLiteral("YIN"),
@@ -33,7 +34,7 @@ JniInstance::JniInstance(Analyser * analyser, AnalyserCanvas * canvas, PowerSpec
         java_pitchAlgs.callMethod<jboolean>("add", "(Ljava/lang/Object;)Z", string.object());
     }
 
-    std::vector<QString> formantAlgs{
+    rpm::vector<QString> formantAlgs{
         QStringLiteral("Linear prediction"),
         QStringLiteral("Kalman filter"),
     };

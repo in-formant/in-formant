@@ -9,7 +9,7 @@ using namespace Eigen;
 
 static constexpr int hpfilt = 20;
 
-std::pair<std::vector<int>, std::vector<int>> Sedreams::gci_sedreams(const ArrayXd & signal, const double fs, const double T0mean) {
+std::pair<rpm::vector<int>, rpm::vector<int>> Sedreams::gci_sedreams(const ArrayXd & signal, const double fs, const double T0mean) {
     const int N(signal.size());
     int n;
 
@@ -50,7 +50,7 @@ std::pair<std::vector<int>, std::vector<int>> Sedreams::gci_sedreams(const Array
     auto maxInd = findPeaks(meanBasedSignal, 1.);
     auto minInd = findPeaks(meanBasedSignal, -1.);
    
-    std::vector<int> gci;
+    rpm::vector<int> gci;
 
     for (int start : minInd) {
         int end = start + std::round(0.25 * fs * T0mean);
@@ -71,7 +71,7 @@ std::pair<std::vector<int>, std::vector<int>> Sedreams::gci_sedreams(const Array
         gci.push_back(maxResInd);
     }
      
-    std::vector<int> goi;
+    rpm::vector<int> goi;
 
     for (int start : maxInd) {
         int end = start + std::round(0.15 * fs * T0mean);

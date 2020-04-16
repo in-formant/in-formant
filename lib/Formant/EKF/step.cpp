@@ -68,7 +68,7 @@ void EKF::step(EKF::State & state)
 
     // Sort the formants by absolute frequency.
     
-    std::vector<int> inds(numF);
+    rpm::vector<int> inds(numF);
     std::iota(inds.begin(), inds.end(), 0);
     std::sort(inds.begin(), inds.end(),
             [&](int i, int j) {

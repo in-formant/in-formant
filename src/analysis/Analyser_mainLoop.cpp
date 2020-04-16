@@ -2,54 +2,30 @@
 // Created by rika on 16/11/2019.
 //
 
-#ifdef __linux__
-#include <unistd.h>
-#elif _WIN32
-#include <windows.h>
-#endif
-
 #include <chrono>
 #include "Analyser.h"
-#include "../lib/Pitch/Pitch.h"
-#include "../lib/Signal/Filter.h"
-#include "../lib/Signal/Window.h"
+#include "../time/time_util.h"
+#include "Pitch/Pitch.h"
+#include "Signal/Filter.h"
+#include "Signal/Window.h"
 
 using namespace Eigen;
 
 void Analyser::mainLoop()
 {
-    using namespace std::chrono;
-
-    time_point t1 = steady_clock::now();
+    uint64 t1 = NowInUs();
 
     while (running) {
         update();
 
-        time_point t2 = steady_clock::now();
+        uint64 t2 = NowInUs();
+        uint64 dt = t2 - t1;
 
-        auto dt = t2 - t1;
-        if (dt < frameSpace) {
-            long waitMicro = duration_cast<microseconds>(frameSpace - dt).count();
+        uint64 frameSpaceUs = std::chrono::duration_cast<std::chrono::microseconds>(frameSpace).count();
 
-#if (_XOPEN_SOURCE >= 500) && ! (_POSIX_C_SOURCE >= 200809L) \
-                   || /* Glibc since 2.19: */ _DEFAULT_SOURCE \
-                   || /* Glibc versions <= 2.19: */ _BSD_SOURCE \
-                   || /* Android platform */ defined(__ANDROID__)
-            usleep(waitMicro);
-#elif _WIN32
-            HANDLE timer; 
-            LARGE_INTEGER ft; 
-
-            ft.QuadPart = -(10 * waitMicro); // Convert to 100 nanosecond interval, negative value indicates relative time
-
-            timer = CreateWaitableTimer(nullptr, TRUE, nullptr); 
-            SetWaitableTimer(timer, &ft, 0, nullptr, nullptr, 0); 
-            WaitForSingleObject(timer, INFINITE); 
-            CloseHandle(timer); 
-#else
-#warning "Unknown platform, using unreliable sleep_for wait."
-            std::this_thread::sleep_for(duration_cast<microseconds>(frameSpace - dt));
-#endif
+        if (dt < frameSpaceUs) {
+            long waitUs = frameSpaceUs - dt;
+            SleepInUs(waitUs);
         }
         else {
             t1 = t2;

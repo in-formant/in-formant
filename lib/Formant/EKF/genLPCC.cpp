@@ -28,5 +28,5 @@ VectorXd EKF::genLPCC(const ArrayXd & a, const int cepOrder)
 
     }
 
-    return std::move(c);
+    return c;
 }

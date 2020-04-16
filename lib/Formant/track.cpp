@@ -6,8 +6,8 @@
 using Formant::Frame;
 
 struct fparm {
-    const std::deque<Frame> *me;
-    std::deque<Frame> *thee;
+    const rpm::deque<Frame> *me;
+    rpm::deque<Frame> *thee;
     double dfCost, bfCost, octaveJumpCost;
     double refF[5];
 };
@@ -53,7 +53,7 @@ static void putResult(int iframe, int place, int itrack, void *closure)
 }
 
 bool Formant::track(
-        std::deque<Frame> &frms,
+        rpm::deque<Frame> &frms,
         int ntrack,
         double refF1, double refF2, double refF3, double refF4, double refF5,
         double dfCost, double bfCost, double octaveJumpCost)
@@ -75,7 +75,7 @@ bool Formant::track(
     }
 
     int nframe = frms.size();
-    std::deque<Frame> outFrms;
+    rpm::deque<Frame> outFrms;
     for (int i = 0; i < nframe; ++i) {
         Frame frame;
         frame.formant.resize(ntrack, {.frequency = 0, .bandwidth = 0});

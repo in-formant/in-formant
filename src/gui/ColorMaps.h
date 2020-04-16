@@ -3,12 +3,11 @@
 
 #include <QColor>
 #include <QString>
-#include <vector>
-#include <map>
+#include "rpmalloc.h"
 
-using ColorMap = std::vector<QColor>;
+using ColorMap = rpm::vector<QColor>;
 
-extern std::map<QString, ColorMap> colorMaps;
+extern rpm::map<QString, ColorMap> colorMaps;
 
 void buildColorMaps();
 

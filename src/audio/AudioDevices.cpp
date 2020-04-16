@@ -54,11 +54,11 @@ bool AudioDevices::refreshList()
     return true;
 }
 
-const std::vector<AudioDevice> & AudioDevices::getInputs() const {
+const rpm::vector<AudioDevice> & AudioDevices::getInputs() const {
     return inputs;
 }
 
-const std::vector<AudioDevice> & AudioDevices::getOutputs() const {
+const rpm::vector<AudioDevice> & AudioDevices::getOutputs() const {
     return outputs;
 }
 

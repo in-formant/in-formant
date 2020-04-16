@@ -19,8 +19,10 @@ public:
 public:
     fft_s() : n(-1), in(nullptr), out(nullptr), plan(nullptr) {}
     fft_s(int n)
-            : n(n), in((T1 *) fftw_malloc(n * sizeof(T1))),
-              out((T2 *) fftw_malloc(n * sizeof(T2))) {
+            : n(n),
+              in((T1 *) fftw_malloc(n * sizeof(T1))),
+              out((T2 *) fftw_malloc(n * sizeof(T2))),
+              plan(nullptr) {
     }
     ~fft_s() {
         if (n > 0) {

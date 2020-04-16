@@ -19,14 +19,14 @@ void Pitch::estimate_DynWav(const ArrayXd & _x, double fs, Pitch::Estimation & r
     // Set old mode if old freq is set.
     double oldMode = oldFreq > 0 ? fs / oldFreq : 0;
     
-    std::vector<int> maxCount(lev, 0);
-    std::vector<int> minCount(lev, 0);
-    std::vector<int> mode(lev, 0);
+    rpm::vector<int> maxCount(lev, 0);
+    rpm::vector<int> minCount(lev, 0);
+    rpm::vector<int> mode(lev, 0);
     
-    std::vector<int> maxIndices;
-    std::vector<int> minIndices;
+    rpm::vector<int> maxIndices;
+    rpm::vector<int> minIndices;
 
-    std::vector<ArrayXd> a(lev);
+    rpm::vector<ArrayXd> a(lev);
     a[0] = _x.head(dataLen);
 
     double aver = a[0].mean();
@@ -100,7 +100,7 @@ void Pitch::estimate_DynWav(const ArrayXd & _x, double fs, Pitch::Estimation & r
 
             // Calculate the differences at diffLevs distances
             
-            std::vector<int> differs;
+            rpm::vector<int> differs;
             for (int j = 1; j <= diffLevs; ++j) { // Interval of differences (neighbor, next-neighbor)
                 for (int k = 0; k < maxCount[i] - j; ++k) { // Starting point of each run
                     differs.push_back(maxIndices[k + j] - maxIndices[k]);

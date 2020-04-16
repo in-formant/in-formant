@@ -3,11 +3,10 @@
 
 #include <Eigen/Core>
 #include "miniaudio.h"
-#include <vector>
-#include <deque>
 #include <mutex>
+#include "rpmalloc.h"
 
-#define MAX_BUFFER_SIZE 2048
+#define MAX_NOISE_BUFFER 8192
 
 class NoiseFilter {
 public:
@@ -22,7 +21,7 @@ public:
     void readFrames(float *output, int frameCount);
 
 private:
-    void applyFilter();
+    void applyFilter(rpm::vector<float>& noiseIn, rpm::vector<float>& noiseOut);
 
     int mChannels;
     int mSampleRateIn;
@@ -43,11 +42,9 @@ private:
     ma_noise noise;
     ma_resampler resampler;
 
-    std::vector<float> noiseIn;
-    std::vector<float> noiseOut;
-    std::vector<float> noiseRes;
+    rpm::vector<float> noiseIn, noiseOut, noiseRes;
 
-    std::vector<std::deque<float>> memoryOut;
+    rpm::vector<rpm::deque<float>> memoryOut;
 };
 
 #endif // NOISE_FILTER_H

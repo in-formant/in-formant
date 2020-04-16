@@ -21,7 +21,7 @@ PowerSpectrum::PowerSpectrum(Analyser * analyser, AnalyserCanvas * canvas)
     holdIndex = 0;
 }
 
-void PowerSpectrum::renderSpectrum(const int nframe, const int nNew, const double maximumFrequency, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end)
+void PowerSpectrum::renderSpectrum(const int nframe, const int nNew, const double maximumFrequency, rpm::deque<SpecFrame>::const_iterator begin, rpm::deque<SpecFrame>::const_iterator end)
 {
     using Eigen::ArrayXd;
   

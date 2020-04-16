@@ -6,7 +6,7 @@
 #define SPEECH_ANALYSIS_LPC_H
 
 #include <Eigen/Core>
-#include <deque>
+#include "../rpmalloc.h"
 
 // #define LPC_DEBUG
 
@@ -20,7 +20,7 @@ namespace LPC {
 
     struct Frames {
         int maxnCoefficients;
-        std::deque<Frame> d_frames;
+        rpm::deque<Frame> d_frames;
     };
 
     enum Method {

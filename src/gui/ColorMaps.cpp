@@ -1,16 +1,12 @@
 #include "ColorMaps.h"
 
-std::map<QString, ColorMap> colorMaps;
-
-static const std::vector<QColor> map1 = {
-    };
+rpm::map<QString, ColorMap> colorMaps;
 
 void buildColorMaps()
 {
-
     colorMaps.emplace(
         "iZotope",
-        std::vector<QColor>{
+        rpm::vector<QColor>{
             QColor(0, 0, 0),
             QColor(0, 12, 35),
             QColor(17, 32, 67),
@@ -28,7 +24,7 @@ void buildColorMaps()
    
     colorMaps.emplace(
         "Heatmap",
-        std::vector<QColor>{
+        rpm::vector<QColor>{
             QColor(0, 0, 0),
             QColor(0, 0, 79),
             QColor(80, 0, 123),
@@ -43,7 +39,7 @@ void buildColorMaps()
 
     colorMaps.emplace(
         "Legacy",
-        std::vector<QColor>{
+        rpm::vector<QColor>{
             QColor(0, 0, 0),
             QColor(38, 38, 128),
             QColor(77, 38, 191),

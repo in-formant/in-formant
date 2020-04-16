@@ -4,6 +4,7 @@
 #include <QtWidgets>
 #include <QTimer>
 #include <mutex>
+#include "rpmalloc.h"
 #include "../analysis/Analyser.h"
 #include "../gui/AnalyserCanvas.h"
 
@@ -16,14 +17,14 @@ protected:
     void paintEvent(QPaintEvent * event) override;
 
 public slots:
-    void renderSpectrum(int nframe, int nNew, double maximumFrequency, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end);
+    void renderSpectrum(int nframe, int nNew, double maximumFrequency, rpm::deque<SpecFrame>::const_iterator begin, rpm::deque<SpecFrame>::const_iterator end);
     void renderLpc(double maxFreq, SpecFrame lpcSpectrum);
 
 private:
     double frequencyFromY(int y, double maximumFrequency);
     int yFromFrequency(double freq, double maximumFrequency);
 
-    std::vector<SpecFrame> hold;
+    rpm::vector<SpecFrame> hold;
     int holdLength, holdIndex;
 
     std::mutex imageLock;

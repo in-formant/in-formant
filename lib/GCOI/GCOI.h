@@ -2,9 +2,9 @@
 #define GCOI_H
 
 #include <Eigen/Dense>
-#include <vector>
+#include "../rpmalloc.h"
 
-std::vector<int> findPeaks(Eigen::Ref<const Eigen::ArrayXd> x);
+rpm::vector<int> findPeaks(Eigen::Ref<const Eigen::ArrayXd> x);
 
 namespace GCOI {
     
@@ -12,11 +12,11 @@ namespace GCOI {
         int gci, goi, nextgci;
     };
 
-    std::vector<GIPair> estimate_MultiProduct(const Eigen::ArrayXd & x, double fs, int lev);
+    rpm::vector<GIPair> estimate_MultiProduct(const Eigen::ArrayXd & x, double fs, int lev);
    
-    std::vector<GIPair> estimate_Sedreams(const Eigen::ArrayXd & x, double fs, double meanF0);
+    rpm::vector<GIPair> estimate_Sedreams(const Eigen::ArrayXd & x, double fs, double meanF0);
 
-    double estimateOq(const std::vector<GIPair> & pairs);
+    double estimateOq(const rpm::vector<GIPair> & pairs);
 
 }
 

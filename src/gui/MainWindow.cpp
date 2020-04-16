@@ -6,6 +6,7 @@
 #include "ColorMaps.h"
 #include "FFT/FFT.h"
 #include "../log/simpleQtLogger.h"
+#include "rpmalloc.h"
 #ifdef Q_OS_ANDROID
     #include <QtAndroid>
     #include <QAndroidIntent>
@@ -16,12 +17,12 @@
 constexpr int maxWidthComboBox = 200;
 
 MainWindow::MainWindow()
-    : fftSizes{"64", "128", "256", "512", "1024", "2048"}
+    : fftSizes{"32", "64", "128", "256", "512", "1024", "2048"}
 {
 
     L_INFO("Initialising miniaudio context...");
 
-    std::vector<ma_backend> backends{
+    rpm::vector<ma_backend> backends{
         ma_backend_wasapi,
         ma_backend_winmm,
         ma_backend_dsound,
@@ -487,14 +488,13 @@ MainWindow::MainWindow()
 #ifndef Q_OS_ANDROID
     updateDevices();
 #endif
-    analyser->startThread();
 
     connect(this, &MainWindow::newFramesTracks, canvas, &AnalyserCanvas::renderTracks);
     connect(this, &MainWindow::newFramesSpectrum, canvas, &AnalyserCanvas::renderSpectrogram);
     connect(this, &MainWindow::newFramesSpectrum, powerSpectrum, &PowerSpectrum::renderSpectrum);
     connect(this, &MainWindow::newFramesLpc, powerSpectrum, &PowerSpectrum::renderLpc);
     connect(this, &MainWindow::newFramesUI, canvas, &AnalyserCanvas::renderScaleAndCursor);
-
+    
     connect(&timer, &QTimer::timeout, [&]() {
         analyser->callIfNewFrames(
                     0,
@@ -513,9 +513,10 @@ MainWindow::MainWindow()
 #else
     timer.start(1000.0 / 60.0);
 #endif
-    
+
     show();
 
+    analyser->startThread();
 }
 
 MainWindow::~MainWindow() {

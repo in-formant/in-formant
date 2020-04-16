@@ -1,7 +1,7 @@
 #include "GCOI.h"
 #include <iostream>
 
-double GCOI::estimateOq(const std::vector<GIPair> & pairs)
+double GCOI::estimateOq(const rpm::vector<GIPair> & pairs)
 {
     
     double Oq = 0.0;

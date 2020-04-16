@@ -20,5 +20,5 @@ MatrixXd EKF::getH_FBW(
         }
     }
 
-    return std::move(H);
+    return H;
 }

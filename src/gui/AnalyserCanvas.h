@@ -8,6 +8,7 @@
 #include <QtWidgets>
 #include <QTimer>
 #include <mutex>
+#include "rpmalloc.h"
 #include "../Exceptions.h"
 #include "../analysis/Analyser.h"
 #include "../audio/SineWave.h"
@@ -57,8 +58,8 @@ protected:
 
     friend class Analyser;
 public slots:
-    void renderTracks(int nframe, double maxFreq, FormantMethod formantAlg, const std::deque<double> & pitches, const Formant::Frames & formants);
-    void renderSpectrogram(int nframe, int nNew, double maxFreq, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end);
+    void renderTracks(int nframe, double maxFreq, FormantMethod formantAlg, const rpm::deque<double> & pitches, const Formant::Frames & formants);
+    void renderSpectrogram(int nframe, int nNew, double maxFreq, rpm::deque<SpecFrame>::const_iterator begin, rpm::deque<SpecFrame>::const_iterator end);
     void renderScaleAndCursor(int nframe, double maxFreq);
 
 private:
@@ -68,8 +69,8 @@ private:
     void cursorMoveEvent(QMouseEvent * event);
 
     void render();
-    void renderPitchTrack(int nframe, double maxFreq, const std::deque<double> &pitches);
-    void renderFormantTrack(int nframe, double maxFreq, FormantMethod formantAlg, const std::deque<double> &pitches, const Formant::Frames &formants);
+    void renderPitchTrack(int nframe, double maxFreq, const rpm::deque<double> &pitches);
+    void renderFormantTrack(int nframe, double maxFreq, FormantMethod formantAlg, const rpm::deque<double> &pitches, const Formant::Frames &formants);
 
     double yFromFrequency(double frequency, double maxFreq);
     double frequencyFromY(int y, double maxFreq);

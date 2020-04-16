@@ -15,5 +15,5 @@ ArrayXd YIN::cumulative_mean_normalized_difference(const ArrayXd & x)
         cmnd(tau) = (tau * x(tau)) / runningSum;
     }
 
-    return std::move(cmnd);
+    return cmnd;
 }

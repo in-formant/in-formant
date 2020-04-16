@@ -4,8 +4,8 @@
 
 #include "MPM.h"
 
-std::vector<int> MPM::peakPicking(Ref<const ArrayXd> x) {
-    std::vector<int> maxPositions;
+rpm::vector<int> MPM::peakPicking(Ref<const ArrayXd> x) {
+    rpm::vector<int> maxPositions;
 
     int pos = 0;
     int currentMaxPos = 0;

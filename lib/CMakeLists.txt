@@ -69,7 +69,9 @@ set(SOURCES
     Signal/Window.h
     FFT/FFT.cpp
     FFT/FFT.h
-    MFCC/MFCC.h)
+    MFCC/MFCC.h
+    rpmalloc/rpmalloc.c
+    rpmalloc/rpmalloc.h)
 
 find_package(Eigen3 REQUIRED NO_MODULE)
 

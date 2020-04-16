@@ -38,6 +38,6 @@ ArrayXd LPC::residual(const ArrayXd & x, int L, int shift, int order)
 
     res /= res.abs().maxCoeff();
 
-    return std::move(res);
+    return res;
 
 }

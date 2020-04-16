@@ -1,8 +1,7 @@
 #include <algorithm>
 #include "gci_sedreams.h"
 
-
-double Sedreams::median(std::vector<double> & x) {
+double Sedreams::median(rpm::vector<double> & x) {
     const int len(x.size());
 
     if (len == 0) {

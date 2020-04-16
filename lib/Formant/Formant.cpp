@@ -2,8 +2,6 @@
 // Created by clo on 08/11/2019.
 //
 
-#include <map>
-#include <stack>
 #include <iostream>
 #include <iterator>
 #include "Formant.h"
@@ -30,9 +28,9 @@ void Formant::frameFromRoots(
     frm.formant.clear();
     frm.formant.reserve(r.size());
 
-    std::vector<root> roots;
-    std::vector<root> peakMergers;
-    std::vector<dcomplex> finalRoots;
+    rpm::vector<root> roots;
+    rpm::vector<root> peakMergers;
+    rpm::vector<dcomplex> finalRoots;
 
     for (const auto & v : r) {
         if (v.imag() < 0) {
@@ -96,7 +94,7 @@ void Formant::frameFromRoots(
 
         // If there *are* two poles in the section, polish them as a pair and add them.
         if (n >= 2) {
-            std::vector<dcomplex> polished;
+            rpm::vector<dcomplex> polished;
             Bairstow::solve(p, 0.7, phiPeak, polished);
             finalRoots.insert(finalRoots.end(), polished.begin(), polished.end());
         }
@@ -122,7 +120,7 @@ void Formant::frameFromRoots(
     ::Formant::sort(frm);
 }
 
-static void snellCalcRegion(double t, std::map<double, int> & C, const ArrayXd & p, double phi)
+static void snellCalcRegion(double t, rpm::map<double, int> & C, const ArrayXd & p, double phi)
 {
     // Do not calculate again.
     if (C.find(t) == C.end()) {
@@ -136,10 +134,10 @@ static void snellCalcRegion(double t, std::map<double, int> & C, const ArrayXd &
     }
 }
 
-static void snellCalcPartition(const std::vector<double> & t, std::map<double, int> & C, const ArrayXd & p, double phi, int maxDepth, std::vector<double> & partition)
+static void snellCalcPartition(const rpm::vector<double> & t, rpm::map<double, int> & C, const ArrayXd & p, double phi, int maxDepth, rpm::vector<double> & partition)
 {
-    std::vector<std::pair<double, double>> partNext;
-    std::vector<std::pair<double, double>> partCurrent;
+    rpm::vector<std::pair<double, double>> partNext;
+    rpm::vector<std::pair<double, double>> partCurrent;
     for (int i = 0; i < signed(t.size()) - 1; ++i) {
         partCurrent.emplace_back(t[i], t[i + 1]);
     }
@@ -182,10 +180,10 @@ static int cauchyIntegral(const ArrayXd & p, double r1, double r2, double phi, i
     // If ti, i = 0 to i = M is a partition of the ray (r1 -> r2),
     // then p(ti, ti+1) denotes the number of octants (mod 8) between C(ti) and C(ti-1)
 
-    std::map<double, int> C; // Memoised counts for every value of t encountered.
+    rpm::map<double, int> C; // Memoised counts for every value of t encountered.
 
-    std::vector<double> initialPartition({0, 0.2, 0.4, 0.6, 0.8, 1.0, 2.0});
-    std::vector<double> finalPartition;
+    rpm::vector<double> initialPartition({0, 0.2, 0.4, 0.6, 0.8, 1.0, 2.0});
+    rpm::vector<double> finalPartition;
     snellCalcPartition(initialPartition, C, p, phi, maxDepth, finalPartition);
 
     /*for (int i = 0; i < finalPartition.size(); ++i) {

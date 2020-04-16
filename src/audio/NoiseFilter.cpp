@@ -12,11 +12,11 @@ NoiseFilter::NoiseFilter()
     : gainDecay(0.98), filterDecay(0.95),
       targetGain(0), filterPassCount(4)
 {
-    noiseIn.reserve(MAX_BUFFER_SIZE);
-    noiseOut.reserve(MAX_BUFFER_SIZE);
-    noiseRes.reserve(MAX_BUFFER_SIZE);
+    noiseIn.reserve(MAX_NOISE_BUFFER);
+    noiseOut.reserve(MAX_NOISE_BUFFER);
+    noiseRes.reserve(MAX_NOISE_BUFFER);
 
-    memoryOut.resize(filterPassCount, std::deque<float>(30, 0.0));
+    memoryOut.resize(filterPassCount, rpm::deque<float>(30, 0.0));
 }
 
 NoiseFilter::~NoiseFilter()
@@ -95,22 +95,22 @@ void NoiseFilter::readFrames(float *output, int frameCount)
     ma_uint64 outLength = mChannels * frameCount;
     ma_uint64 inLength = mChannels * inCount;
 
-    this->noiseIn.resize(inLength);
-    this->noiseOut.resize(inLength);
-    this->noiseRes.resize(outLength);
+    noiseIn.resize(inLength);
+    noiseOut.resize(inLength);
+    noiseRes.resize(inLength);
 
     // Generate noise
-    ma_noise_read_pcm_frames(&noise, this->noiseIn.data(), inLength);
+    ma_noise_read_pcm_frames(&noise, noiseIn.data(), inLength);
     
     // Apply filter 
-    applyFilter();
+    applyFilter(noiseIn, noiseOut);
     
     // Resample
-    ma_resampler_process_pcm_frames(&resampler, this->noiseOut.data(), &inLength, this->noiseRes.data(), &outLength);
+    ma_resampler_process_pcm_frames(&resampler, noiseOut.data(), &inLength, noiseRes.data(), &outLength);
 
     // Apply gain
     for (int i = 0; i < signed(outLength); ++i) {
-        output[i] += mGain * this->noiseRes[i];
+        output[i] += mGain * noiseRes[i];
     }
     
     if (std::abs(mGain - targetGain) > 1e-9) {
@@ -120,13 +120,13 @@ void NoiseFilter::readFrames(float *output, int frameCount)
     filter = filterDecay * filter + (1 - filterDecay) * targetFilter;
 }
 
-void NoiseFilter::applyFilter()
+void NoiseFilter::applyFilter(rpm::vector<float>& noiseIn, rpm::vector<float>& noiseOut)
 {
     const int count = noiseIn.size() / mChannels;
     const int nfilt = filter.size();
 
-    std::vector<double> in(count);
-    std::vector<double> out(count);
+    rpm::vector<double> in(count);
+    rpm::vector<double> out(count);
     for (int i = 0; i < count; ++i) {
         in[i] = 0;
         for (int ch = 0; ch < mChannels; ++ch) {
@@ -137,7 +137,7 @@ void NoiseFilter::applyFilter()
     // All but one passes are LPC filtering
     for (int pass = 0; pass < filterPassCount; ++pass) {
         
-        auto& memory = this->memoryOut[pass];
+        auto& memory = memoryOut[pass];
 
         for (int i = 0; i < count; ++i) {
 

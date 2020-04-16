@@ -9,6 +9,7 @@
 #include <QtWidgets>
 #include <QSharedPointer>
 #include <utility>
+#include "rpmalloc.h"
 #include "../audio/AudioDevices.h"
 #include "../audio/AudioInterface.h"
 #include "../audio/SineWave.h"
@@ -38,8 +39,8 @@ protected:
 #endif
 
 signals:
-    void newFramesTracks(int nframe, double maxFreq, FormantMethod formantAlg, const std::deque<double> & pitches, const Formant::Frames & formants);
-    void newFramesSpectrum(int nframe, int nNew, double maxFreq, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end);
+    void newFramesTracks(int nframe, double maxFreq, FormantMethod formantAlg, const rpm::deque<double> & pitches, const Formant::Frames & formants);
+    void newFramesSpectrum(int nframe, int nNew, double maxFreq, rpm::deque<SpecFrame>::const_iterator begin, rpm::deque<SpecFrame>::const_iterator end);
     void newFramesLpc(double maxFreq, SpecFrame lpcFrame);
     void newFramesUI(int nframe, double maxFreq);
 
@@ -112,7 +113,7 @@ private:
     PowerSpectrum * powerSpectrum;
 
     QLineEdit * fieldPitch;
-    std::vector<QLineEdit *> fieldFormant;
+    rpm::vector<QLineEdit *> fieldFormant;
     QLineEdit * fieldOq;
 
 };

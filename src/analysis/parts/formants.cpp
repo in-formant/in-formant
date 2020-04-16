@@ -8,13 +8,13 @@
 
 using namespace Eigen;
 
-static const Formant::Frame defaultFrame = {
-    .nFormants = 5,
-    .formant = {{550, 60}, {1650, 60}, {2750, 60}, {3850, 60}, {4950, 60}},
-    .intensity = 1.0,
-};
-
 void Analyser::analyseFormant() {
+    static const Formant::Frame defaultFrame = {
+        .nFormants = 5,
+        .formant = {{550, 60}, {1650, 60}, {2750, 60}, {3850, 60}, {4950, 60}},
+        .intensity = 1.0,
+    };
+
     if (lpFailed) {
         lastFormantFrame = defaultFrame;
         return;

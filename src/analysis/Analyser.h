@@ -8,10 +8,9 @@
 #include "../audio/miniaudio.h"
 #include <QColor>
 #include <Eigen/Core>
-#include <deque>
 #include <thread>
 #include <memory>
-#include <map>
+#include "rpmalloc.h"
 #include "../audio/AudioInterface.h"
 #include "../audio/AudioDevices.h"
 #include "../lib/Formant/Formant.h"
@@ -135,14 +134,14 @@ private:
     EKF::State ekfState;
 
     Formant::Frames formantTrack;
-    std::deque<double> pitchTrack;
+    rpm::deque<double> pitchTrack;
 
     // Results
     SpecFrame lpcSpectrum;
-    std::deque<SpecFrame> spectra;
+    rpm::deque<SpecFrame> spectra;
     Formant::Frames smoothedFormants;
-    std::deque<double> smoothedPitch;
-    std::deque<double> oqTrack;
+    rpm::deque<double> smoothedPitch;
+    rpm::deque<double> oqTrack;
 
     SpecFrame lastSpectrumFrame;
     Formant::Frame lastFormantFrame;
@@ -150,7 +149,7 @@ private:
     double lastOqFrame;
 
     bool lpFailed;
-    std::map<int, int> nbNewFrames;
+    rpm::map<int, int> nbNewFrames;
 
     // Thread-related members
     std::thread thread;

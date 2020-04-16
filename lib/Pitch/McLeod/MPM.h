@@ -6,8 +6,8 @@
 #define SPEECH_ANALYSIS_MPM_H
 
 #include <Eigen/Core>
-#include <vector>
 #include <utility>
+#include "../../rpmalloc.h"
 
 using Eigen::ArrayXd, Eigen::Ref;
 
@@ -15,7 +15,7 @@ namespace MPM {
 
     ArrayXd autocorrelation(Ref<const ArrayXd> x);
 
-    std::vector<int> peakPicking(Ref<const ArrayXd> x);
+    rpm::vector<int> peakPicking(Ref<const ArrayXd> x);
 
     std::pair<double, double> parabolicInterpolation(Ref<const ArrayXd> array, int x);
 

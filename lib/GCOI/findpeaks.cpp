@@ -2,9 +2,9 @@
 
 using namespace Eigen;
 
-std::vector<int> findPeaks(Ref<const ArrayXd> x) {
+rpm::vector<int> findPeaks(Ref<const ArrayXd> x) {
  
-    std::vector<int> maxPositions;
+    rpm::vector<int> maxPositions;
 
     int pos = 0;
     int currentMaxPos = 0;
@@ -38,6 +38,6 @@ std::vector<int> findPeaks(Ref<const ArrayXd> x) {
         maxPositions.push_back(currentMaxPos);
     }
 
-    return std::move(maxPositions);
+    return maxPositions;
 
 }

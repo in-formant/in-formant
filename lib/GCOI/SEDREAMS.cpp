@@ -3,13 +3,13 @@
 
 using namespace Eigen;
 
-std::vector<GCOI::GIPair> GCOI::estimate_Sedreams(const ArrayXd & x, const double fs, const double meanF0) {
+rpm::vector<GCOI::GIPair> GCOI::estimate_Sedreams(const ArrayXd & x, const double fs, const double meanF0) {
     
     const double meanT0 = 1.0 / meanF0;
 
     const auto & [ gci, goi ] = Sedreams::gci_sedreams(x, fs, meanT0);
 
-    std::vector<GIPair> pairs;
+    rpm::vector<GIPair> pairs;
 
     for (int i = 0; i < signed(gci.size()) - 1; ++i) {
         GIPair pair;
@@ -26,6 +26,6 @@ std::vector<GCOI::GIPair> GCOI::estimate_Sedreams(const ArrayXd & x, const doubl
         }
     }
     
-    return std::move(pairs);
+    return pairs;
 
 }

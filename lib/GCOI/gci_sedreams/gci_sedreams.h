@@ -2,19 +2,18 @@
 #define GCI_SEDREAMS_H
 
 #include <Eigen/Dense>
-#include <deque>
 #include <utility>
-#include <vector>
+#include "../../rpmalloc.h"
 
 namespace Sedreams {
 
-    std::pair<std::vector<int>, std::vector<int>> gci_sedreams(const Eigen::ArrayXd & signal, double fs, double T0mean);
+    std::pair<rpm::vector<int>, rpm::vector<int>> gci_sedreams(const Eigen::ArrayXd & signal, double fs, double T0mean);
 
-    std::vector<int> findPeaks(const Eigen::ArrayXd & signal, double sign);
+    rpm::vector<int> findPeaks(const Eigen::ArrayXd & signal, double sign);
 
-    std::pair<std::vector<int>, std::vector<int>> findZeroCrossings(const Eigen::ArrayXd & signal);
+    std::pair<rpm::vector<int>, rpm::vector<int>> findZeroCrossings(const Eigen::ArrayXd & signal);
 
-    double median(std::vector<double>& x);
+    double median(rpm::vector<double>& x);
 
 }
 

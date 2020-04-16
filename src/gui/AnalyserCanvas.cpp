@@ -16,10 +16,10 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave, NoiseFi
       tracks(1, 1, QImage::Format_ARGB32_Premultiplied),
       scaleAndCursor(1, 1, QImage::Format_ARGB32_Premultiplied),
 #ifdef Q_OS_ANDROID
-      upFactorTracks(0.75),
+      upFactorTracks(0.6),
       upFactorSpec(1),
 #else
-      upFactorTracks(1),
+      upFactorTracks(0.8),
       upFactorSpec(1),
 #endif
       maxFreq(0),
@@ -76,7 +76,7 @@ void AnalyserCanvas::render() {
 
 }
 
-void AnalyserCanvas::renderTracks(const int nframe, const double maximumFrequency, FormantMethod formantAlg, const std::deque<double> &pitches, const Formant::Frames &formants) {
+void AnalyserCanvas::renderTracks(const int nframe, const double maximumFrequency, FormantMethod formantAlg, const rpm::deque<double> &pitches, const Formant::Frames &formants) {
     std::lock_guard<std::mutex> guard(imageLock);
 
     tracks.fill(Qt::transparent);
@@ -84,7 +84,7 @@ void AnalyserCanvas::renderTracks(const int nframe, const double maximumFrequenc
     renderPitchTrack(nframe, maximumFrequency, pitches);
 }
 
-void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFrequency, FormantMethod formantAlg, const std::deque<double> &pitches, const Formant::Frames &formants) {
+void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFrequency, FormantMethod formantAlg, const rpm::deque<double> &pitches, const Formant::Frames &formants) {
 
     const double xstep = upFactorTracks * (double) targetWidth / (double) nframe;
 
@@ -156,7 +156,7 @@ void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFr
     }
 }
 
-void AnalyserCanvas::renderPitchTrack(const int nframe, const double maximumFrequency, const std::deque<double> &pitches) {
+void AnalyserCanvas::renderPitchTrack(const int nframe, const double maximumFrequency, const rpm::deque<double> &pitches) {
     const double xstep = upFactorTracks * (double) targetWidth / (double) nframe;
     
     QPainter tPainter(&tracks);
@@ -261,7 +261,7 @@ void AnalyserCanvas::renderScaleAndCursor(const int nframe, const double maximum
     painter.setFont(font);
 }
 
-void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const double maximumFrequency, std::deque<SpecFrame>::const_iterator begin, std::deque<SpecFrame>::const_iterator end)
+void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const double maximumFrequency, rpm::deque<SpecFrame>::const_iterator begin, rpm::deque<SpecFrame>::const_iterator end)
 {
     std::lock_guard<std::mutex> guard(imageLock);
     
@@ -286,7 +286,7 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
     int iframe = nframe - 1 - nNew;
 
     while (it != end) {
-        QVector<Tile> rects;
+        rpm::vector<Tile> rects;
 
         const double x = iframe * xstep;
         const auto &sframe = *it;
