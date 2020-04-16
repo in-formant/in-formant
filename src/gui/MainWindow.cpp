@@ -478,7 +478,9 @@ MainWindow::MainWindow()
     resize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
     window()->installEventFilter(this);
+#ifndef Q_OS_ANDROID
     dialogDisplay->installEventFilter(this);
+#endif
 
     loadSettings();
 
