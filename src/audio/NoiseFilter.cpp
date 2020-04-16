@@ -9,7 +9,7 @@
 using namespace Eigen;
 
 NoiseFilter::NoiseFilter()
-    : gainDecay(0.98), filterDecay(0.95),
+    : gainDecay(0.99), filterDecay(0.95),
       targetGain(0), filterPassCount(4)
 {
     noiseIn.reserve(MAX_NOISE_BUFFER);
@@ -52,7 +52,7 @@ void NoiseFilter::initOutput(int sampleRate, int numChannels)
 
 void NoiseFilter::setPlaying(bool playing)
 {
-    targetGain = playing ? 0.015 : 0;
+    targetGain = playing ? 0.02 : 0;
 }
 
 void NoiseFilter::setFilter(int sampleRateIn, const ArrayXd & a)
@@ -90,27 +90,29 @@ void NoiseFilter::readFrames(float *output, int frameCount)
 {
     std::lock_guard<std::mutex> guard(mutex);
 
-    ma_uint64 inCount = ma_resampler_get_required_input_frame_count(&resampler, frameCount);
+    if (mGain > 1e-9) {
+        ma_uint64 inCount = ma_resampler_get_required_input_frame_count(&resampler, frameCount);
 
-    ma_uint64 outLength = mChannels * frameCount;
-    ma_uint64 inLength = mChannels * inCount;
+        ma_uint64 outLength = mChannels * frameCount;
+        ma_uint64 inLength = mChannels * inCount;
 
-    noiseIn.resize(inLength);
-    noiseOut.resize(inLength);
-    noiseRes.resize(inLength);
+        noiseIn.resize(inLength);
+        noiseOut.resize(inLength);
+        noiseRes.resize(inLength);
 
-    // Generate noise
-    ma_noise_read_pcm_frames(&noise, noiseIn.data(), inLength);
-    
-    // Apply filter 
-    applyFilter(noiseIn, noiseOut);
-    
-    // Resample
-    ma_resampler_process_pcm_frames(&resampler, noiseOut.data(), &inLength, noiseRes.data(), &outLength);
+        // Generate noise
+        ma_noise_read_pcm_frames(&noise, noiseIn.data(), inLength);
+        
+        // Apply filter 
+        applyFilter(noiseIn, noiseOut);
+        
+        // Resample
+        ma_resampler_process_pcm_frames(&resampler, noiseOut.data(), &inLength, noiseRes.data(), &outLength);
 
-    // Apply gain
-    for (int i = 0; i < signed(outLength); ++i) {
-        output[i] += mGain * noiseRes[i];
+        // Apply gain
+        for (int i = 0; i < signed(outLength); ++i) {
+            output[i] += mGain * noiseRes[i];
+        }
     }
     
     if (std::abs(mGain - targetGain) > 1e-9) {

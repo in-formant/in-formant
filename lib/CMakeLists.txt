@@ -93,8 +93,10 @@ include_directories(
 )
 
 if (ANDROID)
+    add_definitions(-DENABLE_PRELOAD=1)
     add_library(speech SHARED ${SOURCES})
 else()
+    add_definitions(-DENABLE_OVERRIDE=1 -DENABLE_PRELOAD=1)
     add_library(speech STATIC ${SOURCES})
 endif()
 

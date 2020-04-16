@@ -301,12 +301,17 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
                 continue;
 
             double amplitude = abs(sframe.spec(i));
+            if (!std::isnormal(amplitude)) {
+                amplitude = 1e-16;
+            }
+
             double dB = std::clamp<double>(20.0 * log10(amplitude), minGain, maxGain);
 
             double cmrInd = (cmrCount - 1) - (cmrCount - 1) * static_cast<double>(maxGain - dB) / static_cast<double>(maxGain - minGain);
             
             int ileft = floor(cmrInd);
             int r, g, b;
+
             if (ileft < 0 || ileft >= cmrCount - 1) {
                 cmrMap[ileft].getRgb(&r, &g, &b);
             }

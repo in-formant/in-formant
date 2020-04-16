@@ -2,7 +2,7 @@
 #include "SineWave.h"
 
 SineWave::SineWave()
-    : gainDecay(0.92), frequencyDecay(0.9),
+    : gainDecay(0.99975), frequencyDecay(0.9),
       targetGain(0), targetFrequency(-1)
 {
 }
@@ -18,7 +18,7 @@ void SineWave::initWaveform(int sampleRate, int numChannels)
 
 void SineWave::setPlaying(bool playing)
 {
-    targetGain = playing ? 0.1 : 0;
+    targetGain = playing ? 0.05 : 0;
 }
 
 void SineWave::setFrequency(double frequency)
@@ -40,7 +40,7 @@ void SineWave::readFrames(float *output, int frameCount)
         }
 
         for (int ch = 0; ch < mChannels; ++ch) {
-            output[mChannels * i + ch] += value;
+            output[mChannels * i + ch] += std::isnormal(value) ? value : 0;
         }
 
         mTimeInSamples += 1;
@@ -54,10 +54,10 @@ void SineWave::readFrames(float *output, int frameCount)
                 mFrequency = frequencyDecay * mFrequency + (1 - frequencyDecay) * targetFrequency;
                 mPeriodInSamples = (double) mSampleRate / mFrequency;
             }
+        }
 
-            if (std::abs(mGain - targetGain) > 1e-6) {
-                mGain = gainDecay * mGain + (1 - gainDecay) * targetGain;
-            }
+        if (std::abs(mGain - targetGain) > 1e-9) {
+            mGain = gainDecay * mGain + (1 - gainDecay) * targetGain;
         }
     }
 }

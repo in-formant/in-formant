@@ -80,7 +80,7 @@ void Polynomial::polishRoots(const ArrayXd & p, ArrayXcd & r)
         if (im != 0.0) {
             Polynomial::polishRoot(p, &r(i), maxit);
             // Check for complex-conjugate pairs.
-            if (i < r.size() && re == r(i + 1).real() && im == -r(i + 1).imag()) {
+            if (i + 1 < r.size() && re == r(i + 1).real() && im == -r(i + 1).imag()) {
                 r(i + 1) = std::conj(r(i));
                 i++;
             }
