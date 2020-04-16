@@ -20,7 +20,7 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave, NoiseFi
       upFactorSpec(1),
 #else
       upFactorTracks(1),
-      upFactorSpec(2),
+      upFactorSpec(1),
 #endif
       maxFreq(0),
       minGain(-60),
@@ -382,10 +382,12 @@ void AnalyserCanvas::cursorMoveEvent(QMouseEvent * event) {
     }
 #endif
 
+#ifndef Q_OS_ANDROID
     if (event->buttons() & Qt::RightButton) {
         sineWave->setFrequency(freq);
         sineWave->setPlaying(true);
     }
+#endif
 }
 
 void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
@@ -395,18 +397,22 @@ void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
 void AnalyserCanvas::mousePressEvent(QMouseEvent * event) {
     cursorMoveEvent(event);
 
+#ifndef Q_OS_ANDROID
     if (event->buttons() & Qt::MiddleButton) {
         noiseFilter->setPlaying(true);
     }
+#endif
 }
 
 void AnalyserCanvas::mouseReleaseEvent(QMouseEvent * event) {
+#ifndef Q_OS_ANDROID
     if (~event->buttons() & Qt::RightButton) {
         sineWave->setPlaying(false);
     }
     if (~event->buttons() & Qt::MiddleButton) {
         noiseFilter->setPlaying(false);
     }
+#endif
 }
 
 double AnalyserCanvas::yFromFrequency(const double frequency, const double maximumFrequency) {

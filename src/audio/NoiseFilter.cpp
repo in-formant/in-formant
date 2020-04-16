@@ -2,19 +2,21 @@
 #include "NoiseFilter.h"
 #include "../Exceptions.h"
 #include "Signal/Filter.h"
+#include "Signal/Window.h"
+#include "FFT/FFT.h"
 #include "../log/simpleQtLogger.h"
 
 using namespace Eigen;
 
 NoiseFilter::NoiseFilter()
-    : gainDecay(0.99), filterDecay(0.9975),
-      targetGain(0), filterPassCount(5)
+    : gainDecay(0.98), filterDecay(0.95),
+      targetGain(0), filterPassCount(4)
 {
     noiseIn.reserve(MAX_BUFFER_SIZE);
     noiseOut.reserve(MAX_BUFFER_SIZE);
     noiseRes.reserve(MAX_BUFFER_SIZE);
-    
-    memoryOut.resize(filterPassCount, std::deque<float>(25, 0.0));
+
+    memoryOut.resize(filterPassCount, std::deque<float>(30, 0.0));
 }
 
 NoiseFilter::~NoiseFilter()
@@ -24,7 +26,7 @@ NoiseFilter::~NoiseFilter()
 
 void NoiseFilter::initOutput(int sampleRate, int numChannels)
 {
-    ma_noise_config noiseConfig = ma_noise_config_init(ma_format_f32, numChannels, ma_noise_type_brownian, time(nullptr), 1.0);
+    ma_noise_config noiseConfig = ma_noise_config_init(ma_format_f32, numChannels, ma_noise_type_white, time(nullptr), 1.0);
     noiseConfig.duplicateChannels = MA_TRUE;
 
     if (ma_noise_init(&noiseConfig, &noise) != MA_SUCCESS) {
@@ -33,7 +35,7 @@ void NoiseFilter::initOutput(int sampleRate, int numChannels)
     }
 
     ma_resampler_config resConfig = ma_resampler_config_init(ma_format_f32, numChannels, 7000, sampleRate, ma_resample_algorithm_linear);
-    resConfig.linear.lpfOrder = 1;
+    resConfig.linear.lpfOrder = 2;
 
     if (ma_resampler_init(&resConfig, &resampler)) {
         LS_FATAL("Unable to initialise noise resampler");
@@ -44,12 +46,13 @@ void NoiseFilter::initOutput(int sampleRate, int numChannels)
     mSampleRateOut = sampleRate;
     mChannels = numChannels;
     mGain = 0;
+    targetFilter.setOnes(1);
     filter.setOnes(1);
 }
 
 void NoiseFilter::setPlaying(bool playing)
 {
-    targetGain = playing ? 0.01 : 0;
+    targetGain = playing ? 0.015 : 0;
 }
 
 void NoiseFilter::setFilter(int sampleRateIn, const ArrayXd & a)
@@ -64,13 +67,22 @@ void NoiseFilter::setFilter(int sampleRateIn, const ArrayXd & a)
         mSampleRateIn = sampleRateIn;
     }
 
-    if (a.size() == filter.size()) {
-        filter.tail(a.size()) = (filterDecay * filter.tail(a.size()) + (1 - filterDecay) * a).eval();
+    const int nfilt = filter.size();
+    const int ntarget = a.size() + 1;
+    if (ntarget > nfilt) {
+        filter.conservativeResize(ntarget);
+        filter.tail(ntarget - nfilt).setZero();
+        targetFilter.resize(ntarget);
+        targetFilter(0) = 1.0;
+        targetFilter.tail(a.size()) = a;
+    }
+    else if (nfilt > ntarget) {
+        targetFilter.setZero(nfilt);
+        targetFilter(0) = 1.0;
+        targetFilter.segment(1, a.size()) = a;
     }
     else {
-        filter.resize(a.size() + 1);
-        filter(0) = 1;
-        filter.tail(a.size()) = a;
+        targetFilter.tail(a.size()) = a;
     }
 }
 
@@ -78,8 +90,10 @@ void NoiseFilter::readFrames(float *output, int frameCount)
 {
     std::lock_guard<std::mutex> guard(mutex);
 
+    ma_uint64 inCount = ma_resampler_get_required_input_frame_count(&resampler, frameCount);
+
     ma_uint64 outLength = mChannels * frameCount;
-    ma_uint64 inLength = ma_resampler_get_required_input_frame_count(&resampler, outLength);
+    ma_uint64 inLength = mChannels * inCount;
 
     this->noiseIn.resize(inLength);
     this->noiseOut.resize(inLength);
@@ -87,8 +101,8 @@ void NoiseFilter::readFrames(float *output, int frameCount)
 
     // Generate noise
     ma_noise_read_pcm_frames(&noise, this->noiseIn.data(), inLength);
-
-    // Apply filter
+    
+    // Apply filter 
     applyFilter();
     
     // Resample
@@ -102,39 +116,61 @@ void NoiseFilter::readFrames(float *output, int frameCount)
     if (std::abs(mGain - targetGain) > 1e-9) {
         mGain = gainDecay * mGain + (1 - gainDecay) * targetGain;
     }
+
+    filter = filterDecay * filter + (1 - filterDecay) * targetFilter;
 }
 
 void NoiseFilter::applyFilter()
 {
-    const int length = noiseIn.size();
+    const int count = noiseIn.size() / mChannels;
     const int nfilt = filter.size();
-    
+
+    std::vector<double> in(count);
+    std::vector<double> out(count);
+    for (int i = 0; i < count; ++i) {
+        in[i] = 0;
+        for (int ch = 0; ch < mChannels; ++ch) {
+            in[i] += noiseIn[mChannels * i + ch];
+        }
+    }
+
+    // All but one passes are LPC filtering
     for (int pass = 0; pass < filterPassCount; ++pass) {
         
         auto& memory = this->memoryOut[pass];
 
-        double maxAmplitude = std::numeric_limits<double>::min();
+        for (int i = 0; i < count; ++i) {
 
-        for (int i = 0; i < length; ++i) {
-            double val = noiseIn[i];
+            double val = in[i];
 
             for (int j = 1; j < nfilt; ++j) {
                 val -= (filter[j] * memory[j-1]) / filter[0];
             }
 
-            noiseOut[i] = val;
-
-            if (abs(val) > maxAmplitude) {
-                maxAmplitude = abs(val);
-            }
+            out[i] = val;
 
             memory.pop_back();
             memory.push_front(val);
         }
 
-        for (int i = 0; i < length; ++i) {
-            noiseIn[i] = noiseOut[i] / maxAmplitude;
+        for (int i = 0; i < count; ++i) {
+            in[i] = out[i];
         }
     }
+
+    double maxAmp = std::numeric_limits<double>::min();
+
+    for (int i = 0; i < count; ++i) {
+        if (abs(out[i]) > maxAmp) {
+            maxAmp = abs(out[i]);
+        }
+    }
+
+    for (int i = 0; i < count; ++i) {
+        for (int ch = 0; ch < mChannels; ++ch) {
+            noiseOut[mChannels * i + ch] = out[i] / maxAmp / (double) mChannels;
+        }
+    }
+
 }
 

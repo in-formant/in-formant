@@ -99,6 +99,9 @@ void AudioInterface::openPlaybackDevice() {
     deviceConfig.playback.pDeviceID = nullptr;
     deviceConfig.playback.format = ma_format_f32;
     deviceConfig.sampleRate = 96000; // This is needed to have a precise enough time resolution.
+    deviceConfig.periodSizeInFrames = 0;
+    deviceConfig.periodSizeInMilliseconds = 50;
+    deviceConfig.periods = 3;
     deviceConfig.dataCallback = playCallback;
     deviceConfig.pUserData = &playbackContext;
 

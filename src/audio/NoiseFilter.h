@@ -17,7 +17,7 @@ public:
     void initOutput(int sampleRate, int numChannels);
 
     void setPlaying(bool playing);
-    void setFilter(int sampleRateIn, const Eigen::ArrayXd & a);
+    void setFilter(int sampleRateIn, const Eigen::ArrayXd & spec);
 
     void readFrames(float *output, int frameCount);
 
@@ -32,9 +32,11 @@ private:
     double filterDecay;
 
     double targetGain;
+    Eigen::ArrayXd targetFilter;
     double mGain;
 
     int filterPassCount;
+    int nfft;
     Eigen::ArrayXd filter;
     std::mutex mutex;
 

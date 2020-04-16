@@ -21,7 +21,7 @@ static ArrayXd resample(ma_resampler * resampler, ArrayXd x) {
 
     delete[] yf;
 
-    return std::move(y);
+    return y;
 }
 
 void Analyser::resampleAudio() {

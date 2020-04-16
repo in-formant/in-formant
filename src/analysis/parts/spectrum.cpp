@@ -57,6 +57,6 @@ void Analyser::analyseSpectrum()
 
     lpcSpectrum.fs = fs;
     lpcSpectrum.nfft = nfftLpc;
-    lpcSpectrum.spec = h;
+    lpcSpectrum.spec = h;    
 
 }

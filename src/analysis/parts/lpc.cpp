@@ -22,3 +22,4 @@ void Analyser::analyseLp() {
 
     audioInterface->getNoiseFilter()->setFilter(fs, lpcFrame.a);
 }
+
