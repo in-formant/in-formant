@@ -30,6 +30,8 @@ _Static_assert(sizeof(void*) == 4, "Data type size mismatch");
 #pragma GCC visibility push(default)
 #endif
 
+#if ENABLE_OVERRIDE
+
 #define USE_IMPLEMENT 1
 #define USE_INTERPOSE 0
 #define USE_ALIAS 0
@@ -37,17 +39,6 @@ _Static_assert(sizeof(void*) == 4, "Data type size mismatch");
 #if defined(__APPLE__) && ENABLE_PRELOAD
 #undef USE_INTERPOSE
 #define USE_INTERPOSE 1
-
-typedef struct interpose_t {
-	void* new_func;
-	void* orig_func;
-} interpose_t;
-
-#define MAC_INTERPOSE_PAIR(newf, oldf) 	{ (void*)newf, (void*)oldf }
-#define MAC_INTERPOSE_SINGLE(newf, oldf) \
-__attribute__((used)) static const interpose_t macinterpose##newf##oldf \
-__attribute__ ((section("__DATA, __interpose"))) = MAC_INTERPOSE_PAIR(newf, oldf)
-
 #endif
 
 #if !defined(_WIN32) && !USE_INTERPOSE
@@ -63,8 +54,6 @@ __attribute__ ((section("__DATA, __interpose"))) = MAC_INTERPOSE_PAIR(newf, oldf
 #undef free
 #undef calloc
 #endif
-
-#if ENABLE_OVERRIDE
 
 #if USE_IMPLEMENT
 
@@ -94,13 +83,23 @@ extern void* _Znamm(uint64_t size, uint64_t align); void* _Znamm(uint64_t size, 
 // 32-bit operators new and new[], normal and aligned
 extern void* _Znwj(uint32_t size); void* _Znwj(uint32_t size) { return rpmalloc(size); }
 extern void* _Znaj(uint32_t size); void* _Znaj(uint32_t size) { return rpmalloc(size); }
-extern void* _Znwjj(uint32_t size, uint32_t align); void* _Znwjj(uint32_t size, uint32_t align) { return rpaligned_alloc(align, size); }
-extern void* _Znajj(uint32_t size, uint32_t align); void* _Znajj(uint32_t size, uint32_t align) { return rpaligned_alloc(align, size); }
+extern void* _Znwjj(uint64_t size, uint64_t align); void* _Znwjj(uint64_t size, uint64_t align) { return rpaligned_alloc(align, size); }
+extern void* _Znajj(uint64_t size, uint64_t align); void* _Znajj(uint64_t size, uint64_t align) { return rpaligned_alloc(align, size); }
 #endif
 
 #endif
 
 #if USE_INTERPOSE
+
+typedef struct interpose_t {
+	void* new_func;
+	void* orig_func;
+} interpose_t;
+
+#define MAC_INTERPOSE_PAIR(newf, oldf) 	{ (void*)newf, (void*)oldf }
+#define MAC_INTERPOSE_SINGLE(newf, oldf) \
+__attribute__((used)) static const interpose_t macinterpose##newf##oldf \
+__attribute__ ((section("__DATA, __interpose"))) = MAC_INTERPOSE_PAIR(newf, oldf)
 
 __attribute__((used)) static const interpose_t macinterpose_malloc[]
 __attribute__ ((section("__DATA, __interpose"))) = {
@@ -114,9 +113,7 @@ __attribute__ ((section("__DATA, __interpose"))) = {
 	MAC_INTERPOSE_PAIR(rpmalloc, calloc),
 	MAC_INTERPOSE_PAIR(rprealloc, realloc),
 	MAC_INTERPOSE_PAIR(rprealloc, reallocf),
-#if defined(__MAC_10_15) && __MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_15
 	MAC_INTERPOSE_PAIR(rpaligned_alloc, aligned_alloc),
-#endif
 	MAC_INTERPOSE_PAIR(rpmemalign, memalign),
 	MAC_INTERPOSE_PAIR(rpposix_memalign, posix_memalign),
 	MAC_INTERPOSE_PAIR(rpfree, free),
@@ -160,11 +157,7 @@ void* memalign(size_t alignment, size_t size) RPALIAS(rpmemalign)
 int posix_memalign(void** memptr, size_t alignment, size_t size) RPALIAS(rpposix_memalign)
 void free(void* ptr) RPALIAS(rpfree)
 void cfree(void* ptr) RPALIAS(rpfree)
-#if defined(__ANDROID__)
-size_t malloc_usable_size(const void* ptr) RPALIAS(rpmalloc_usable_size)
-#else
 size_t malloc_usable_size(void* ptr) RPALIAS(rpmalloc_usable_size)
-#endif
 size_t malloc_size(void* ptr) RPALIAS(rpmalloc_usable_size)
 
 #endif
@@ -233,10 +226,7 @@ pvalloc(size_t size) {
 
 #if defined(BUILD_DYNAMIC_LINK) && BUILD_DYNAMIC_LINK
 
-extern __declspec(dllexport) BOOL WINAPI
-DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved);
-
-extern __declspec(dllexport) BOOL WINAPI
+__declspec(dllexport) BOOL WINAPI
 DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
 	(void)sizeof(reserved);
 	(void)sizeof(instance);

@@ -29,10 +29,7 @@ p2=$!
     logfile=/tmp/speech-analysis/osx.log
     rm -f $logfile
     ./build-osx.sh $1 1>>$logfile 2> >(tee -a $logfile >&2)
-    echo -e "\e[92m OS X build first pass finished.\e[39m"
-    sleep 1
-    ./build-osx.sh $1 1>>$logfile 2> >(tee -a $logfile >&2)
-    echo -e "\e[92m OS X build second pass finished.\e[39m"
+    echo -e "\e[92m OS X build finished.\e[39m"
 } &
 p3=$!
 

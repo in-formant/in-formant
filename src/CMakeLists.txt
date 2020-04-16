@@ -9,6 +9,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g0")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 
+add_definitions(-DVERSION_STRING=\"${VERSION_STRING}\" -DVERSION_CODE=${VERSION_CODE})
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
@@ -130,8 +132,6 @@ if (ANDROID)
     message(STATUS "Version string: ${VERSION_STRING}")
     message(STATUS "Version code: ${VERSION_CODE}")
 
-    add_definitions(-DVERSION_STRING=\"${VERSION_STRING}\" -DVERSION_CODE=${VERSION_CODE})
-
     file(READ ${CMAKE_SOURCE_DIR}/../android/keystore.password KEYSTORE_PASSWORD)
     add_qt_android_apk(apk speech_analysis
         NAME "Speech analysis"
@@ -167,6 +167,7 @@ if(APPLE)
         -L${QT_PREFIX}/plugins/platforms
         -L${QT_PREFIX}/plugins/imageformats
         -F${SDK_PREFIX}/System/Library/Frameworks
+        "-framework ApplicationServices"
         "-framework AppKit"
         "-framework Carbon"
         "-framework CoreFoundation"
