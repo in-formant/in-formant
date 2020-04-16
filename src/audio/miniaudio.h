@@ -192,7 +192,7 @@ miniaudio is a single file library for audio playback and capture. To use it, do
 
     ```c
     #define MINIAUDIO_IMPLEMENTATION
-    #include "miniaudio.h
+    #include "miniaudio.h"
     ```
 
 You can #include miniaudio.h in other parts of the program just like any other header.
@@ -9381,6 +9381,10 @@ Null Backend
 
 static ma_thread_result MA_THREADCALL ma_device_thread__null(void* pData)
 {
+#ifdef USE_RPMALLOC
+    rpmalloc_thread_initialize();
+#endif
+
     ma_device* pDevice = (ma_device*)pData;
     MA_ASSERT(pDevice != NULL);
 
@@ -9438,6 +9442,10 @@ static ma_thread_result MA_THREADCALL ma_device_thread__null(void* pData)
             continue;   /* Continue the loop. Don't terminate. */
         }
     }
+
+#ifdef USE_RPMALLOC
+    rpmalloc_thread_finalize();
+#endif
 
     return (ma_thread_result)0;
 }
@@ -29516,6 +29524,10 @@ static ma_result ma_device__post_init_setup(ma_device* pDevice, ma_device_type d
 
 static ma_thread_result MA_THREADCALL ma_worker_thread(void* pData)
 {
+#ifdef USE_RPMALLOC
+    rpmalloc_thread_initialize();
+#endif
+
     ma_device* pDevice = (ma_device*)pData;
     MA_ASSERT(pDevice != NULL);
 
@@ -29596,6 +29608,10 @@ static ma_thread_result MA_THREADCALL ma_worker_thread(void* pData)
 
 #ifdef MA_WIN32
     ma_CoUninitialize(pDevice->pContext);
+#endif
+
+#ifdef USE_RPMALLOC
+    rpmalloc_thread_finalize();
 #endif
 
     return (ma_thread_result)0;

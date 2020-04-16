@@ -92,11 +92,18 @@ include_directories(
     ${FFTW_INCLUDE_DIRS}
 )
 
+add_definitions(
+    -DENABLE_ASSERTS=1
+)
+
 if (ANDROID)
     add_definitions(-DENABLE_PRELOAD=1)
     add_library(speech SHARED ${SOURCES})
 else()
-    add_definitions(-DENABLE_OVERRIDE=1 -DENABLE_PRELOAD=1)
+    if (NOT WIN32)
+        add_definitions(-DENABLE_PRELOAD=1)
+        add_definitions(-DENABLE_OVERRIDE=1)
+    endif()
     add_library(speech STATIC ${SOURCES})
 endif()
 

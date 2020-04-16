@@ -107,9 +107,11 @@
 
 /// Platform and arch specifics
 #if defined(_MSC_VER) && !defined(__clang__)
-#  define FORCEINLINE inline __forceinline
+#  undef FORCEINLINE
+#  define FORCEINLINE inline  __forceinline
 #  define _Static_assert static_assert
 #else
+#  undef FORCEINLINE
 #  define FORCEINLINE inline __attribute__((__always_inline__))
 #endif
 #if PLATFORM_WINDOWS
@@ -181,6 +183,14 @@ static FORCEINLINE int     atomic_cas_ptr(atomicptr_t* dst, void* val, void* ref
 #else
 
 #include <stdatomic.h>
+
+#undef FORCEINLINE  
+#if defined(_MSC_VER) && !defined(__clang__)
+#  define FORCEINLINE inline  __forceinline
+#  define _Static_assert static_assert
+#else
+#  define FORCEINLINE inline __attribute__((__always_inline__))
+#endif
 
 typedef volatile _Atomic(int32_t) atomic32_t;
 typedef volatile _Atomic(int64_t) atomic64_t;

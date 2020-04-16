@@ -9,8 +9,8 @@
 using namespace Eigen;
 
 NoiseFilter::NoiseFilter()
-    : gainDecay(0.99), filterDecay(0.95),
-      targetGain(0), filterPassCount(4)
+    : gainDecay(0.999), filterDecay(0.6), 
+      targetGain(0), filterPassCount(2)
 {
     noiseIn.reserve(MAX_NOISE_BUFFER);
     noiseOut.reserve(MAX_NOISE_BUFFER);
@@ -26,16 +26,16 @@ NoiseFilter::~NoiseFilter()
 
 void NoiseFilter::initOutput(int sampleRate, int numChannels)
 {
-    ma_noise_config noiseConfig = ma_noise_config_init(ma_format_f32, numChannels, ma_noise_type_white, time(nullptr), 1.0);
-    noiseConfig.duplicateChannels = MA_TRUE;
+    ma_noise_config noiseConfig = ma_noise_config_init(ma_format_f32, 1, ma_noise_type_white, time(nullptr), 1.0);
 
     if (ma_noise_init(&noiseConfig, &noise) != MA_SUCCESS) {
         LS_FATAL("Unable to initialise noise generator");
         throw AudioException("Unable to initialise noise generator");
     }
 
-    ma_resampler_config resConfig = ma_resampler_config_init(ma_format_f32, numChannels, 7000, sampleRate, ma_resample_algorithm_linear);
-    resConfig.linear.lpfOrder = 2;
+    ma_resampler_config resConfig = ma_resampler_config_init(ma_format_f32, 1, 7000, sampleRate, ma_resample_algorithm_linear);
+    resConfig.linear.lpfOrder = 3;
+    resConfig.linear.lpfNyquistFactor = 0.8;
 
     if (ma_resampler_init(&resConfig, &resampler)) {
         LS_FATAL("Unable to initialise noise resampler");
@@ -52,7 +52,7 @@ void NoiseFilter::initOutput(int sampleRate, int numChannels)
 
 void NoiseFilter::setPlaying(bool playing)
 {
-    targetGain = playing ? 0.02 : 0;
+    targetGain = playing ? 0.05 : 0;
 }
 
 void NoiseFilter::setFilter(int sampleRateIn, const ArrayXd & a)
@@ -90,33 +90,35 @@ void NoiseFilter::readFrames(float *output, int frameCount)
 {
     std::lock_guard<std::mutex> guard(mutex);
 
+    ma_uint64 outCount = frameCount;
+
+    noiseRes.resize(outCount, 0.0);
+
     if (mGain > 1e-9) {
         ma_uint64 inCount = ma_resampler_get_required_input_frame_count(&resampler, frameCount);
 
-        ma_uint64 outLength = mChannels * frameCount;
-        ma_uint64 inLength = mChannels * inCount;
-
-        noiseIn.resize(inLength);
-        noiseOut.resize(inLength);
-        noiseRes.resize(inLength);
+        noiseIn.resize(inCount);
+        noiseOut.resize(inCount);
 
         // Generate noise
-        ma_noise_read_pcm_frames(&noise, noiseIn.data(), inLength);
+        ma_noise_read_pcm_frames(&noise, noiseIn.data(), inCount);
         
         // Apply filter 
         applyFilter(noiseIn, noiseOut);
         
         // Resample
-        ma_resampler_process_pcm_frames(&resampler, noiseOut.data(), &inLength, noiseRes.data(), &outLength);
-
-        // Apply gain
-        for (int i = 0; i < signed(outLength); ++i) {
-            output[i] += mGain * noiseRes[i];
-        }
+        ma_resampler_process_pcm_frames(&resampler, noiseOut.data(), &inCount, noiseRes.data(), &outCount);
     }
-    
-    if (std::abs(mGain - targetGain) > 1e-9) {
-        mGain = gainDecay * mGain + (1 - gainDecay) * targetGain;
+
+    // Apply gain
+    for (int i = 0; i < signed(outCount); ++i) {
+        for (int ch = 0; ch < mChannels; ++ch) {
+            output[mChannels * i + ch] += mGain * noiseRes[i];
+        }
+        
+        if (std::abs(mGain - targetGain) > 1e-9) {
+            mGain = gainDecay * mGain + (1 - gainDecay) * targetGain;
+        }
     }
 
     filter = filterDecay * filter + (1 - filterDecay) * targetFilter;
@@ -124,24 +126,21 @@ void NoiseFilter::readFrames(float *output, int frameCount)
 
 void NoiseFilter::applyFilter(rpm::vector<float>& noiseIn, rpm::vector<float>& noiseOut)
 {
-    const int count = noiseIn.size() / mChannels;
+    const int length = noiseIn.size();
     const int nfilt = filter.size();
 
-    rpm::vector<double> in(count);
-    rpm::vector<double> out(count);
-    for (int i = 0; i < count; ++i) {
-        in[i] = 0;
-        for (int ch = 0; ch < mChannels; ++ch) {
-            in[i] += noiseIn[mChannels * i + ch];
-        }
+    rpm::vector<double> in(length);
+    rpm::vector<double> out(length);
+    for (int i = 0; i < length; ++i) {
+        in[i] = noiseIn[i];
     }
 
-    // All but one passes are LPC filtering
+    // LPC filtering
     for (int pass = 0; pass < filterPassCount; ++pass) {
         
         auto& memory = memoryOut[pass];
 
-        for (int i = 0; i < count; ++i) {
+        for (int i = 0; i < length; ++i) {
 
             double val = in[i];
 
@@ -155,23 +154,22 @@ void NoiseFilter::applyFilter(rpm::vector<float>& noiseIn, rpm::vector<float>& n
             memory.push_front(val);
         }
 
-        for (int i = 0; i < count; ++i) {
+        for (int i = 0; i < length; ++i) {
             in[i] = out[i];
         }
     }
 
-    double maxAmp = std::numeric_limits<double>::min();
+    // Minimum amplitude to be normalized is 1.
+    double maxAmp = 1;
 
-    for (int i = 0; i < count; ++i) {
+    for (int i = 0; i < length; ++i) {
         if (abs(out[i]) > maxAmp) {
             maxAmp = abs(out[i]);
         }
     }
 
-    for (int i = 0; i < count; ++i) {
-        for (int ch = 0; ch < mChannels; ++ch) {
-            noiseOut[mChannels * i + ch] = out[i] / maxAmp / (double) mChannels;
-        }
+    for (int i = 0; i < length; ++i) {
+        noiseOut[i] = out[i] / maxAmp;
     }
 
 }

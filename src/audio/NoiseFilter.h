@@ -6,7 +6,7 @@
 #include <mutex>
 #include "rpmalloc.h"
 
-#define MAX_NOISE_BUFFER 2048
+#define MAX_NOISE_BUFFER 1024
 
 class NoiseFilter {
 public:

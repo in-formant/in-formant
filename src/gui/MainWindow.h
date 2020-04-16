@@ -5,11 +5,11 @@
 #ifndef SPEECH_ANALYSIS_MAINWINDOW_H
 #define SPEECH_ANALYSIS_MAINWINDOW_H
 
+#include "rpmalloc.h"
 #include "../audio/miniaudio.h"
 #include <QtWidgets>
 #include <QSharedPointer>
 #include <utility>
-#include "rpmalloc.h"
 #include "../audio/AudioDevices.h"
 #include "../audio/AudioInterface.h"
 #include "../audio/SineWave.h"

@@ -5,6 +5,7 @@
 #include <chrono>
 #include "Analyser.h"
 #include "../time/time_util.h"
+#include "rpmalloc/rpmalloc.h"
 #include "Pitch/Pitch.h"
 #include "Signal/Filter.h"
 #include "Signal/Window.h"
@@ -13,24 +14,29 @@ using namespace Eigen;
 
 void Analyser::mainLoop()
 {
-    uint64 t1 = NowInUs();
+#ifdef Q_OS_WINDOWS
+    rpmalloc_thread_initialize();
+#endif
+
+    uint64 t1 = NowInMs();
 
     while (running) {
         update();
 
-        uint64 t2 = NowInUs();
+        uint64 t2 = NowInMs();
         uint64 dt = t2 - t1;
 
-        uint64 frameSpaceUs = std::chrono::duration_cast<std::chrono::microseconds>(frameSpace).count();
-
-        if (dt < frameSpaceUs) {
-            long waitUs = frameSpaceUs - dt;
-            SleepInUs(waitUs);
+        if (dt < frameSpace.count()) {
+            SleepInUs(1000 * (frameSpace.count() - dt));
         }
         else {
             t1 = t2;
         }
     }
+    
+#ifdef Q_OS_WINDOWS
+    rpmalloc_thread_finalize();
+#endif
 }
 
 void Analyser::update()

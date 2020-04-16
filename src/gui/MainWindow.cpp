@@ -50,6 +50,9 @@ MainWindow::MainWindow()
     ctxCfg.alsa.useVerboseDeviceEnumeration = false;
     ctxCfg.pulse.tryAutoSpawn = true;
     ctxCfg.jack.tryStartServer = true;
+    ctxCfg.allocationCallbacks.onMalloc = [](size_t sz, void *) { return rpmalloc(sz); };
+    ctxCfg.allocationCallbacks.onRealloc = [](void *p, size_t sz, void *) { return rprealloc(p, sz); };
+    ctxCfg.allocationCallbacks.onFree = [](void *p, void *) { return rpfree(p); };
 
     if (ma_context_init(backends.data(), backends.size(), &ctxCfg, &maCtx) != MA_SUCCESS) {
         L_FATAL("Failed to initialise miniaudio context");
