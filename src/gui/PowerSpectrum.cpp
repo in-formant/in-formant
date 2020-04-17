@@ -6,19 +6,19 @@
 PowerSpectrum::PowerSpectrum(Analyser * analyser, AnalyserCanvas * canvas)
     : spectrum(1, 1, QImage::Format_ARGB32_Premultiplied),
       lpcIm(1, 1, QImage::Format_ARGB32_Premultiplied),
+      maxNfft(512),
       analyser(analyser), canvas(canvas)
-{ 
-    SpecFrame frame;
-    frame.nfft = 1;
-    frame.fs = 16000;
-    frame.spec.setOnes(1);
-
-    Eigen::ArrayXd one;
-    one.setOnes(1);
-    
+{
     holdLength = 25;
-    hold.resize(holdLength, frame);
-    holdIndex = 0;
+
+    spectrum.fill(Qt::black);
+    lpcIm.fill(Qt::black);
+
+    rpm::vector<double> initialValues(holdLength);
+    std::fill(initialValues.begin(), initialValues.end(), 1e-12);
+
+    holdQues.resize(maxNfft, rpm::deque<double>(initialValues.begin(), initialValues.end()));
+    holdSets.resize(maxNfft, rpm::multiset<double, std::greater<double>>(initialValues.begin(), initialValues.end()));
 }
 
 void PowerSpectrum::renderSpectrum(const int nframe, const int nNew, const double maximumFrequency, rpm::deque<SpecFrame>::const_iterator begin, rpm::deque<SpecFrame>::const_iterator end)
@@ -34,61 +34,34 @@ void PowerSpectrum::renderSpectrum(const int nframe, const int nNew, const doubl
 
     QPainter painter(&spectrum);
     painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
-
-    const double fs = begin->fs;
     
+    const double fs = begin->fs;
+
     // Advance the hold buffer.
     for (auto it = begin; it != end; ++it) {
-        const auto & frame = *it;
-
-        hold[holdIndex] = frame;
-        holdIndex = (holdIndex + 1) % holdLength;
+        advanceHold(*it);
     }
 
-    int maxNfft = 1;
+    const int nfft = maxNfft;
 
-    for (const auto & holdFrame : hold) {
-        if (holdFrame.nfft > maxNfft) {
-            maxNfft = holdFrame.nfft;
-        }
-    }
-    
-    ArrayXd maxHold(maxNfft);
-    maxHold.setZero();
+    rpm::vector<double> spec(nfft, 0.0);
 
-    double maxAmplitude = 1e-16;
-
-    for (const auto & holdFrame : hold) {
-        // Each frame needs to be resampled first.
-        int gap = maxNfft / holdFrame.nfft;
-
-        for (int i = 0; i < holdFrame.nfft; ++i) {
-            for (int j = gap * i; j < gap * (i + 1); ++j) {
-
-                if (holdFrame.spec(i) > maxHold(j)) {
-                    maxHold(j) = holdFrame.spec(i);
-                }
-
-            }
-
-            if (abs(holdFrame.spec(i)) > maxAmplitude) {
-                maxAmplitude = abs(holdFrame.spec(i));
-            }
-        }
+    for (int i = 0; i < nfft; ++i) {
+        spec[i] = *(holdSets[i].begin());
     }
 
-    const double delta = fs / (2 * maxNfft);
+    const double delta = fs / (2 * nfft);
 
     QPainterPath path;
 
-    for (int i = 0; i < maxNfft; ++i) {
+    for (int i = 0; i < nfft; ++i) {
         double freq = i * delta;
 
         if (freq > maximumFrequency) {
             break;
         }
 
-        double gain = std::clamp<double>(20 * std::log10(abs(maxHold(i))), minGain - 20, maxGain + 20);
+        double gain = std::clamp<double>(20 * std::log10(spec[i]), minGain - 20, maxGain + 20);
 
         int x = targetWidth - (targetWidth * (maxGain - gain)) / (maxGain - minGain);
         int y = yFromFrequency(freq, maximumFrequency);
@@ -101,8 +74,49 @@ void PowerSpectrum::renderSpectrum(const int nframe, const int nNew, const doubl
         }
     }
 
-    painter.setPen(QPen(QColor(0xFFA500), 2));
+    painter.setPen(QColor(0xFFA500));
     painter.drawPath(path);
+}
+
+void PowerSpectrum::advanceHold(const SpecFrame& frame)
+{
+    // The frame needs to be resampled first.
+    const int nfft = maxNfft;
+
+    if (nfft >= frame.nfft) {
+        int gap = nfft / frame.nfft;
+
+        for (int i = 0; i < frame.nfft; ++i) {
+            for (int j = gap * i; j < gap * (i + 1); ++j) {
+                const double val = abs(frame.spec(i));
+
+                const double back = holdQues[j].back();
+                holdQues[j].pop_back();
+                holdQues[j].push_front(val);
+
+                holdSets[j].erase(holdSets[j].find(back));
+                holdSets[j].emplace(val);
+            }
+        }
+    }
+    else {
+        int gap = frame.nfft / nfft;
+
+        for (int i = 0; i < nfft; ++i) {
+            double val = 0;
+            for (int j = gap * i; j < gap * (i + 1); ++j) {
+                val += abs(frame.spec(j));
+            }
+            val /= (double) gap;
+    
+            const double back = holdQues[i].back();
+            holdQues[i].pop_back();
+            holdQues[i].push_front(val);
+
+            holdSets[i].erase(holdSets[i].find(back));
+            holdSets[i].emplace(val);
+        }
+    }
 }
 
 void PowerSpectrum::renderLpc(double maximumFrequency, SpecFrame lpcSpectrum)
@@ -132,7 +146,7 @@ void PowerSpectrum::renderLpc(double maximumFrequency, SpecFrame lpcSpectrum)
             break;
         }
 
-        double gain = std::clamp<double>(20 * std::log10(abs(spec(i))), minGain - 20, maxGain + 20);
+        double gain = std::clamp<double>(20 * std::log10(abs(spec(i))) - 15, minGain - 20, maxGain + 20);
 
         int x = targetWidth - (targetWidth * (maxGain - gain)) / (maxGain - minGain);
         int y = yFromFrequency(freq, maximumFrequency);
@@ -174,15 +188,13 @@ void PowerSpectrum::paintEvent(QPaintEvent * event)
 
     if (spectrum.width() != targetWidth || spectrum.height() != targetHeight) {
         imageLock.lock();
-        spectrum = QImage(targetWidth, targetHeight, QImage::Format_ARGB32_Premultiplied);
-        spectrum.fill(Qt::transparent);
+        spectrum = spectrum.scaled(targetWidth, targetHeight, Qt::IgnoreAspectRatio, Qt::FastTransformation);
         imageLock.unlock();
     }
 
     if (lpcIm.width() != targetWidth || lpcIm.height() != targetHeight) {
         imageLock.lock();
-        lpcIm = QImage(targetWidth, targetHeight, QImage::Format_ARGB32_Premultiplied);
-        lpcIm.fill(Qt::transparent);
+        lpcIm = lpcIm.scaled(targetWidth, targetHeight, Qt::IgnoreAspectRatio, Qt::FastTransformation);
         imageLock.unlock();
     }
 

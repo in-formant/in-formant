@@ -24,13 +24,18 @@ private:
     double frequencyFromY(int y, double maximumFrequency);
     int yFromFrequency(double freq, double maximumFrequency);
 
-    rpm::vector<SpecFrame> hold;
+    void advanceHold(const SpecFrame& frame);
+
+    rpm::vector<rpm::deque<double>> holdQues;
+    rpm::vector<rpm::multiset<double, std::greater<double>>> holdSets;
     int holdLength, holdIndex;
 
     std::mutex imageLock;
     QImage spectrum;
     QImage lpcIm;
-   
+  
+    int maxNfft;
+
     QPainter painter;
     int targetWidth, targetHeight;
 

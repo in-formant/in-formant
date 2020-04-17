@@ -2,6 +2,7 @@
 #define RPMALLOC_STL_H
 
 #include <deque>
+#include <set>
 #include <map>
 #include <stack>
 #include <vector>
@@ -16,6 +17,9 @@ namespace rpm {
     template<typename K, typename T, typename Comp = std::less<K>>
     using map = std::map<K, T, Comp, allocator<std::pair<const K, T>>>;
     
+    template<typename K, typename Comp = std::less<K>>
+    using multiset = std::multiset<K, Comp, allocator<K>>;
+
     template<typename T>
     using stack = std::stack<T, allocator<T>>;
     

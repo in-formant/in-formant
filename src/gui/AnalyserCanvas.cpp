@@ -67,7 +67,7 @@ void AnalyserCanvas::render() {
     }
 
     if (drawTracks) {
-        painter.drawImage(0, 0, tracks.scaled(targetWidth, targetHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        painter.drawImage(0, 0, tracks.scaled(targetWidth, targetHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     }
 
     painter.drawImage(0, 0, scaleAndCursor);
@@ -484,19 +484,19 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
 
     if (spectrogram.width() != specWidth || spectrogram.height() != specHeight) {
         imageLock.lock();
-        spectrogram = spectrogram.scaled(specWidth, specHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        spectrogram = spectrogram.scaled(specWidth, specHeight, Qt::IgnoreAspectRatio, Qt::FastTransformation);
         imageLock.unlock();
     }
 
     if (tracks.width() != trackWidth || tracks.height() != trackHeight) {
         imageLock.lock();
-        tracks = tracks.scaled(trackWidth, trackHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        tracks = tracks.scaled(trackWidth, trackHeight, Qt::IgnoreAspectRatio, Qt::FastTransformation);
         imageLock.unlock();
     }
 
     if (scaleAndCursor.width() != targetWidth || scaleAndCursor.height() != targetHeight) {
         imageLock.lock();
-        scaleAndCursor = QImage(targetWidth, targetHeight, QImage::Format_ARGB32_Premultiplied);
+        scaleAndCursor = scaleAndCursor.scaled(targetWidth, targetHeight, Qt::IgnoreAspectRatio, Qt::FastTransformation);
         imageLock.unlock();
     }
     
