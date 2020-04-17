@@ -462,8 +462,9 @@ MainWindow::MainWindow()
 #endif
         }
 
-        auto ly3 = new QHBoxLayout;
-        lyCentral->addLayout(ly3);
+        auto splitter = new QSplitter(central);
+        lyCentral->addWidget(splitter);
+        auto ly3 = new QHBoxLayout(splitter);
         { 
             ly3->addWidget(canvas, 3);
             canvas->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
