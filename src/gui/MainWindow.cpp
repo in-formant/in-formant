@@ -511,10 +511,11 @@ MainWindow::MainWindow()
         canvas->repaint();
         powerSpectrum->repaint();
     });
-    timer.setTimerType(Qt::PreciseTimer);
 #ifdef Q_OS_ANDROID
-    timer.start(1000.0 / 60.0);
+    timer.setTimerType(Qt::CoarseTimer);
+    timer.start(1000.0 / 30.0);
 #else
+    timer.setTimerType(Qt::PreciseTimer);
     timer.start(1000.0 / 60.0);
 #endif
 

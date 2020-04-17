@@ -20,6 +20,8 @@ void Analyser::analyseLp() {
         lpcFrame.a.setZero(lpOrder);
     }
 
+#ifndef Q_OS_ANDROID
     audioInterface->getNoiseFilter()->setFilter(fs, lpcFrame.a);
+#endif
 }
 

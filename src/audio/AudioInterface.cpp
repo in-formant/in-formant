@@ -107,7 +107,6 @@ void AudioInterface::openOutputDevice(const ma_device_id * id)
 
 void AudioInterface::openPlaybackDevice()
 {
-
     auto deviceConfig = ma_device_config_init(ma_device_type_playback);
     deviceConfig.playback.pDeviceID = nullptr;
     deviceConfig.playback.format = ma_format_f32;
