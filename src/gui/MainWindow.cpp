@@ -100,7 +100,11 @@ MainWindow::MainWindow()
     fieldsDock = new QDockWidget("Estimates", this);
     {
         fieldsDock->setAllowedAreas(Qt::AllDockWidgetAreas);
-        fieldsDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+        fieldsDock->setFeatures(QDockWidget::DockWidgetMovable
+#ifndef Q_OS_WASM
+                | QDockWidget::DockWidgetFloatable
+#endif
+        );
 
         auto dockWidget = new QWidget(fieldsDock);
         fieldsDock->setWidget(dockWidget);
@@ -470,7 +474,6 @@ MainWindow::MainWindow()
             connect(inputFormantAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
                     [&](const int value) { analyser->setFormantMethod(static_cast<FormantMethod>(value)); });
 
-            ly1->addRow("Display settings:", inputDisplayDialog);
             ly1->addRow("FFT size:", inputFftSize);
             ly1->addRow("Linear prediction order:", inputLpOrder);
             ly1->addRow("Maximum frequency:", inputMaxFreq);
@@ -639,7 +642,7 @@ MainWindow::MainWindow()
                 patreon->setStyleSheet("QPushButton { border-image: url(:/icons/patreon.png) 0 0 0 0 stretch stretch; border: none; }");
                 patreon->setCursor(Qt::PointingHandCursor);
 
-                connect(patreon, &QPushButton::clicked, [&]() {
+                connect(patreon, &QPushButton::clicked, [&]() {         
                             QDesktopServices::openUrl(QUrl("https://www.patreon.com/cloyunhee"));
                         });
 
