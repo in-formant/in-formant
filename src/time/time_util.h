@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QtGlobal>
 #include "datatypes.h"
 
 // sleep for msec

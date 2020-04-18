@@ -4,9 +4,14 @@ project(main)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_C_FLAGS "-fPIC -mtune=generic -Wall")
+set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
+set(CMAKE_C_FLAGS_RELEASE "-O2 -g0 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g")
+
 set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g0")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g0 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 
 add_definitions(-DVERSION_STRING=\"${VERSION_STRING}\" -DVERSION_CODE=${VERSION_CODE})
@@ -63,7 +68,7 @@ set(ANDROID_JNI_SOURCES
     jni/JniInstance.cpp
     jni/bindings.cpp)
 
-if (NOT APPLE AND NOT ANDROID)
+if (NOT APPLE AND NOT ANDROID AND NOT EMSCRIPTEN)
     find_package(Qt5 COMPONENTS Widgets REQUIRED)
 endif()
 
@@ -84,11 +89,13 @@ include_directories(
     ${FFTW_INCLUDE_DIRS}
 )
 
-if (APPLE OR ANDROID)
+if (APPLE OR ANDROID OR EMSCRIPTEN)
     if (APPLE)
         set(QT_PREFIX $ENV{OSXCROSS}/macports/pkgs/opt/local)
     elseif (ANDROID)
         set(QT_PREFIX /usr/android)
+    elseif (EMSCRIPTEN)
+        set(QT_PREFIX /em-target)
     endif()
     
     set(MOC_EXE ${QT_PREFIX}/bin/moc)
@@ -142,6 +149,8 @@ if (ANDROID)
         KEYSTORE_PASSWORD ${KEYSTORE_PASSWORD}
         DEPENDS ${libspeech_LIBRARY} ${FFTW_LIBRARIES}
     )
+elseif (EMSCRIPTEN)
+    add_executable(speech_analysis ${SOURCES})
 else()
     add_executable(speech_analysis WIN32 ${SOURCES})
 endif()
@@ -152,7 +161,54 @@ target_link_libraries(speech_analysis
     ${FFTW_LIBRARIES}
 )
 
-if(APPLE)
+if(EMSCRIPTEN)
+    set(EMSCRIPTEN_ARGS
+        "--bind"
+        "-s WASM=1"
+        "-s ASYNCIFY=1"
+        "-s TOTAL_MEMORY=512MB"
+        "-s FULL_ES2=1"
+        "-s USE_WEBGL2=1"
+        "-s NO_EXIT_RUNTIME=0"
+        "-s \"EXTRA_EXPORTED_RUNTIME_METHODS=['UTF16ToString', 'stringToUTF16']\""
+        "-s USE_PTHREADS=1"
+        "-pthread"
+        "--emrun"
+        "-mnontrapping-fptoint"
+        "-Wl,--no-check-features"
+    )
+    set(${CMAKE_C_FLAGS} "${CMAKE_C_FLAGS} ${EMSCRIPTEN_ARGS}")
+    set(${CMAKE_CXX_FLAGS} "${CMAKE_CXX_FLAGS} ${EMSCRIPTEN_ARGS}")
+    target_link_libraries(speech_analysis ${EMSCRIPTEN_ARGS})
+
+    include_directories(
+        ${QT_PREFIX}/include
+        ${QT_PREFIX}/include/QtCore
+        ${QT_PREFIX}/include/QtGui
+        ${QT_PREFIX}/include/QtWidgets
+    )
+    target_link_libraries(speech_analysis
+        -L${QT_PREFIX}/lib
+        -L${QT_PREFIX}/plugins
+        -L${QT_PREFIX}/plugins/platforms
+        -L${QT_PREFIX}/plugins/imageformats
+        qwasm
+        Qt5EventDispatcherSupport
+        Qt5FontDatabaseSupport
+        qtfreetype
+        Qt5EglSupport
+        libqgif
+        libqico
+        libqjpeg
+        Qt5Widgets
+        Qt5Gui
+        qtlibpng
+        qtharfbuzz
+        Qt5Core
+        qtpcre2
+        #pcre2-16
+    )
+elseif(APPLE)
     set(SDK_PREFIX $ENV{OSXCROSS}/SDK/MacOSX10.13.sdk)
     include_directories(
         ${SDK_PREFIX}/usr/include/c++/v1

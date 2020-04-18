@@ -49,8 +49,10 @@ int main(int argc, char * argv[])
     QApplication::setStyle(QStyleFactory::create("Fusion"));
 
     QApplication app(argc, argv);
-    
+
+#ifndef Q_OS_WASM
     simpleqtlogger::ENABLE_LOG_SINK_FILE = true;
+#endif
     simpleqtlogger::ENABLE_LOG_SINK_CONSOLE = true;
     
     simpleqtlogger::ENABLE_FUNCTION_STACK_TRACE = true;
@@ -60,9 +62,11 @@ int main(int argc, char * argv[])
 
     simpleqtlogger::SimpleQtLogger::createInstance(qApp);
     auto logger = simpleqtlogger::SimpleQtLogger::getInstance();
+#ifndef Q_OS_WASM
     logger->setLogFormat_file("<TS> [<LL>] <TEXT> (<FUNC>@<FILE>:<LINE>)", "<TS> [<LL>] <TEXT>");
     logger->setLogLevels_file(simpleqtlogger::ENABLE_LOG_LEVELS);
     logger->setLogFileName("speechanalysis.log", 10*1000*1000, 20);
+#endif
     logger->setLogLevels_console(simpleqtlogger::ENABLE_LOG_LEVELS);
 
 #ifdef Q_OS_ANDROID

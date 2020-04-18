@@ -1,0 +1,41 @@
+body, canvas {
+    font-family: 'Fira Sans', sans-serif;
+    background-color: #282a36;
+    color: #f8f8f2;
+    width: 100vw;
+    height: 100vh;
+    border: 0px none;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    outline: 0px solid transparent;
+    caret-color: transparent;
+    cursor: default;
+}
+
+a {
+    color: #f8f8f2;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #ffb86c;
+    text-decoration: underline;
+}
+
+button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: #f8f8f2;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    outline: 0px solid transparent;
+    cursor: pointer;
+}
+
+#app-info {
+    max-width: 70vw;
+}

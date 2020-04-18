@@ -25,8 +25,13 @@ void SineWave::initWaveform(int sampleRate, int numChannels)
     mGain = 0;
     mChannels = numChannels;
 
-    ma_resampler_config resConfig = ma_resampler_config_init(ma_format_f32, 1, mSampleRateIn, sampleRate, ma_resample_algorithm_speex);
+    ma_resampler_config resConfig = ma_resampler_config_init(ma_format_f32, 1, mSampleRateIn, sampleRate,
+#ifndef Q_OS_WASM
+            ma_resample_algorithm_speex);
     resConfig.speex.quality = 3;
+#else
+            ma_resample_algorithm_linear);
+#endif
 
     if (ma_resampler_init(&resConfig, &resampler)) {
         LS_FATAL("Unable to initialise sine wave resampler");

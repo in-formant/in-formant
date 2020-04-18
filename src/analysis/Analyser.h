@@ -87,7 +87,11 @@ private:
     void _initResampler();
 
     void mainLoop();
+#ifdef Q_OS_WASM
+public:
+#endif
     void update();
+private:
     void applyWindow();
     void analyseSpectrum();
     void analysePitch();
@@ -149,7 +153,7 @@ private:
     double lastOqFrame;
 
     bool lpFailed;
-    rpm::map<int, int> nbNewFrames;
+    int nbNewFrames;
 
     // Thread-related members
     std::thread thread;
@@ -159,19 +163,15 @@ private:
 public:
 
     template<typename Func1, typename Func2, typename Func3, typename Func4>
-    void callIfNewFrames(int nb, Func1 fn1, Func2 fn2, Func3 fn3, Func4 fn4)
+    void callIfNewFrames(Func1 fn1, Func2 fn2, Func3 fn3, Func4 fn4)
     {
         std::lock_guard<std::mutex> lock(mutex);
-        
-        if (nbNewFrames.find(nb) == nbNewFrames.end()) {
-            nbNewFrames[nb] = 0;
-        }
 
-        if (nbNewFrames[nb] > 0) {
+        if (nbNewFrames > 0) {
             fn1(frameCount, maximumFrequency, formantMethod, smoothedPitch, smoothedFormants);
-            fn2(frameCount, nbNewFrames[nb], maximumFrequency, spectra.cend() - 1 - nbNewFrames[nb], spectra.cend());
+            fn2(frameCount, nbNewFrames, maximumFrequency, spectra.cend() - 1 - nbNewFrames, spectra.cend());
             fn3(maximumFrequency, lpcSpectrum);
-            nbNewFrames[nb] = 0;
+            nbNewFrames = 0;
         }
 
         fn4(frameCount, maximumFrequency);

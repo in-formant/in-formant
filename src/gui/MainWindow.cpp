@@ -2,6 +2,7 @@
 // Created by rika on 06/12/2019.
 //
 
+#include <cstdio>
 #include "MainWindow.h"
 #include "ColorMaps.h"
 #include "FFT/FFT.h"
@@ -12,6 +13,9 @@
     #include <QAndroidIntent>
     #include <jni.h>
     #include "../jni/JniInstance.h"
+#endif
+#ifdef Q_OS_WASM
+    #include <emscripten/html5.h>
 #endif
 
 constexpr int maxWidthComboBox = 200;
@@ -50,9 +54,11 @@ MainWindow::MainWindow()
     ctxCfg.alsa.useVerboseDeviceEnumeration = false;
     ctxCfg.pulse.tryAutoSpawn = true;
     ctxCfg.jack.tryStartServer = true;
+#ifndef Q_OS_WASM
     ctxCfg.allocationCallbacks.onMalloc = [](size_t sz, void *) { return rpmalloc(sz); };
     ctxCfg.allocationCallbacks.onRealloc = [](void *p, size_t sz, void *) { return rprealloc(p, sz); };
     ctxCfg.allocationCallbacks.onFree = [](void *p, void *) { return rpfree(p); };
+#endif
 
     if (ma_context_init(backends.data(), backends.size(), &ctxCfg, &maCtx) != MA_SUCCESS) {
         L_FATAL("Failed to initialise miniaudio context");
@@ -157,6 +163,8 @@ MainWindow::MainWindow()
 #endif
 
     }
+
+#ifndef Q_OS_WASM
 
 #ifndef Q_OS_ANDROID
     settingsDock = new QDockWidget("Settings", this);
@@ -327,19 +335,20 @@ MainWindow::MainWindow()
                 [&](const int value) { canvas->setPitchThickness(value); });
 
         inputPitchColor = new QPushButton;
+        auto pitchColorDialog = new QColorDialog(canvas->getPitchColor(), this);
 
         connect(inputPitchColor, &QPushButton::clicked,
                 [=] () {
-                    QColor c = QColorDialog::getColor(
-                        canvas->getPitchColor(),
-                        this,
-                        QString("Select pitch color"),
-                        QColorDialog::DontUseNativeDialog
-                    );
-                    if (c.isValid()) {
-                        canvas->setPitchColor(c);
-                        updateColorButtons();
-                    }
+                    pitchColorDialog->open();
+                });
+
+        pitchColorDialog->setWindowTitle("Select pitch color");
+        pitchColorDialog->setOption(QColorDialog::NoButtons);
+
+        connect(pitchColorDialog, &QColorDialog::currentColorChanged,
+                [=] (const QColor& c) {
+                    canvas->setPitchColor(c);
+                    updateColorButtons();
                 });
 
         inputFormantThick = new QSpinBox;
@@ -351,20 +360,21 @@ MainWindow::MainWindow()
                 [&](const int value) { canvas->setFormantThickness(value); });
 
         for (int nb = 0; nb < numFormants; ++nb) {
-            auto input = new QPushButton;
-            
+            auto input = new QPushButton; 
+            auto dialog = new QColorDialog(canvas->getFormantColor(nb), this);
+
             connect(input, &QPushButton::clicked,
                     [=] () {
-                        QColor c = QColorDialog::getColor(
-                            canvas->getFormantColor(nb),
-                            this,
-                            QString("Select F%1 color").arg(nb + 1),
-                            QColorDialog::DontUseNativeDialog
-                        );
-                        if (c.isValid()) {
-                            canvas->setFormantColor(nb, c);
-                            updateColorButtons();
-                        }
+                        dialog->open(); 
+                    });
+
+            dialog->setWindowTitle(QString("Select F%1 color").arg(nb+1));
+            dialog->setOption(QColorDialog::NoButtons);
+
+            connect(dialog, &QColorDialog::currentColorChanged,
+                    [=] (const QColor &c) {
+                        canvas->setFormantColor(nb, c);
+                        updateColorButtons();
                     });
 
             inputFormantColor[nb] = input;
@@ -398,6 +408,202 @@ MainWindow::MainWindow()
         ly1->addRow("Spectrum color map:", inputColorMap);
     }
 #endif // Q_OS_ANDROID
+
+#else // Q_OS_WASM
+    settingsDock = new QDockWidget("Settings", this);
+    {
+        settingsDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+        settingsDock->setFeatures(QDockWidget::DockWidgetMovable);
+
+        auto dockScroll = new QScrollArea;
+        auto dockWidget = new QWidget(settingsDock);
+        settingsDock->setWidget(dockScroll);
+        
+        auto ly1 = new QFormLayout(dockWidget);
+        ly1->setSizeConstraint(QLayout::SetNoConstraint);
+        {
+            inputFftSize = new QComboBox;
+            inputFftSize->addItems(fftSizes);
+
+            connect(inputFftSize, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
+                    [&](const QString value) { analyser->setFftSize(value.toInt()); });
+
+            inputLpOrder = new QSpinBox;
+            inputLpOrder->setRange(5, 22);
+
+            connect(inputLpOrder, QOverload<int>::of(&QSpinBox::valueChanged),
+                    [&](const int value) { analyser->setLinearPredictionOrder(value); });
+
+            inputMaxFreq = new QSpinBox;
+            inputMaxFreq->setRange(2500, 7000);
+            inputMaxFreq->setStepType(QSpinBox::AdaptiveDecimalStepType);
+            inputMaxFreq->setSuffix(" Hz");
+
+            connect(inputMaxFreq, QOverload<int>::of(&QSpinBox::valueChanged),
+                    [&](const int value) { analyser->setMaximumFrequency(value); });
+
+            inputWindowSpan = new QDoubleSpinBox;
+            inputWindowSpan->setRange(2, 30);
+            inputWindowSpan->setSingleStep(0.5);
+            inputWindowSpan->setSuffix(" s");
+
+            connect(inputWindowSpan, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+                    [&](const double value) { analyser->setWindowSpan(std::chrono::milliseconds(int(1000 * value))); });
+
+            inputPitchAlg = new QComboBox;
+            inputPitchAlg->addItems({
+                "Wavelet",
+                "McLeod",
+                "YIN",
+                "AMDF",
+            });
+
+            connect(inputPitchAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                    [&](const int value) { analyser->setPitchAlgorithm(static_cast<PitchAlg>(value)); });
+
+            inputFormantAlg = new QComboBox;
+            inputFormantAlg->addItems({
+                "Linear prediction",
+                "Kalman filter",
+            });
+
+            connect(inputFormantAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                    [&](const int value) { analyser->setFormantMethod(static_cast<FormantMethod>(value)); });
+
+            ly1->addRow("Display settings:", inputDisplayDialog);
+            ly1->addRow("FFT size:", inputFftSize);
+            ly1->addRow("Linear prediction order:", inputLpOrder);
+            ly1->addRow("Maximum frequency:", inputMaxFreq);
+            ly1->addRow("Analysis duration:", inputWindowSpan);
+
+            ly1->addRow("Pitch algorithm:", inputPitchAlg);
+            ly1->addRow("Formant algorithm:", inputFormantAlg);
+            
+            QFrame* line = new QFrame();
+            line->setFrameShape(QFrame::HLine);
+            line->setFrameShadow(QFrame::Sunken);
+            ly1->addRow(line);
+ 
+            inputToggleSpectrum = new QCheckBox;
+
+            connect(inputToggleSpectrum, &QCheckBox::toggled,
+                    [&](const bool checked) { canvas->setDrawSpectrum(checked); });
+
+            inputToggleTracks = new QCheckBox;
+
+            connect(inputToggleTracks, &QCheckBox::toggled,
+                    [&](const bool checked) { canvas->setDrawTracks(checked); });
+
+            inputMinGain = new QSpinBox;
+            inputMinGain->setRange(-200, 60);
+            inputMinGain->setSingleStep(10);
+            inputMinGain->setSuffix(" dB");
+
+            connect(inputMinGain, QOverload<int>::of(&QSpinBox::valueChanged),
+                    [&](const int value) { canvas->setMinGainSpectrum(value);
+                                           inputMaxGain->setMinimum(value + 10); });
+
+            inputMaxGain = new QSpinBox;
+            inputMaxGain->setRange(-200, 60);
+            inputMaxGain->setSingleStep(10);
+            inputMaxGain->setSuffix(" dB");
+
+            connect(inputMaxGain, QOverload<int>::of(&QSpinBox::valueChanged),
+                    [&](const int value) { canvas->setMaxGainSpectrum(value);
+                                           inputMinGain->setMaximum(value - 10); });
+
+            inputFreqScale = new QComboBox;
+            inputFreqScale->addItems({"Linear", "Logarithmic", "Mel"});
+
+             connect(inputFreqScale, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                    [&](const int value) { canvas->setFrequencyScale(value); });
+
+            inputPitchThick = new QSpinBox;
+            inputPitchThick->setRange(1, 20);
+            inputPitchThick->setSingleStep(1);
+            inputPitchThick->setSuffix(" px");
+            
+            connect(inputPitchThick, QOverload<int>::of(&QSpinBox::valueChanged),
+                    [&](const int value) { canvas->setPitchThickness(value); });
+
+            inputPitchColor = new QPushButton;
+            auto pitchColorDialog = new QColorDialog(canvas->getPitchColor(), this);
+
+            connect(inputPitchColor, &QPushButton::clicked,
+                    [=] () {
+                        pitchColorDialog->open();
+                    });
+
+            pitchColorDialog->setWindowTitle("Select pitch color");
+            pitchColorDialog->setOption(QColorDialog::NoButtons);
+
+            connect(pitchColorDialog, &QColorDialog::currentColorChanged,
+                    [=] (const QColor& c) {
+                        canvas->setPitchColor(c);
+                        updateColorButtons();
+                    });
+
+            inputFormantThick = new QSpinBox;
+            inputFormantThick->setRange(1, 20);
+            inputFormantThick->setSingleStep(1);
+            inputFormantThick->setSuffix(" px");
+            
+            connect(inputFormantThick, QOverload<int>::of(&QSpinBox::valueChanged),
+                    [&](const int value) { canvas->setFormantThickness(value); });
+
+            for (int nb = 0; nb < numFormants; ++nb) {
+                auto input = new QPushButton; 
+                auto dialog = new QColorDialog(canvas->getFormantColor(nb), this);
+
+                connect(input, &QPushButton::clicked,
+                        [=] () {
+                            dialog->open(); 
+                        });
+
+                dialog->setWindowTitle(QString("Select F%1 color").arg(nb+1));
+                dialog->setOption(QColorDialog::NoButtons);
+
+                connect(dialog, &QColorDialog::currentColorChanged,
+                        [=] (const QColor &c) {
+                            canvas->setFormantColor(nb, c);
+                            updateColorButtons();
+                        });
+
+                inputFormantColor[nb] = input;
+            }
+
+            inputColorMap = new QComboBox;
+            for (auto & [name, map] : colorMaps) {
+                (void) map;
+
+                inputColorMap->addItem(name);
+            }
+
+            connect(inputColorMap, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
+                        [&](const QString & name) { canvas->setSpectrumColor(name); });
+
+            ly1->addRow("Show spectrum:", inputToggleSpectrum);
+            ly1->addRow("Show tracks:", inputToggleTracks);
+            ly1->addRow("Minimum gain:", inputMinGain);
+            ly1->addRow("Maximum gain:", inputMaxGain);
+            ly1->addRow("Frequency scale:", inputFreqScale);
+
+            ly1->addRow("Pitch thickness:", inputPitchThick);
+            ly1->addRow("Pitch color:", inputPitchColor);
+
+            ly1->addRow("Formant thickness:", inputFormantThick);
+            for (int nb = 0; nb < numFormants; ++nb) {
+                const QString labelStr = QString("F%1 color:").arg(nb + 1);
+                ly1->addRow(qPrintable(labelStr), inputFormantColor[nb]);
+            }
+
+            ly1->addRow("Spectrum color map:", inputColorMap);
+        }
+
+        dockScroll->setWidget(dockWidget);
+    }
+
+#endif // Q_OS_WASM
 
     auto lyCentral = new QVBoxLayout(central);
     {
@@ -443,6 +649,13 @@ MainWindow::MainWindow()
                
                 connect(inputPause, &QPushButton::clicked, [&]() { toggleAnalyser(); });
 
+                ly4->addWidget(github);
+                ly4->addSpacing(8);
+                ly4->addWidget(patreon);
+                ly4->addSpacing(8);
+                ly4->addWidget(inputPause);
+
+#ifndef Q_OS_WASM
                 inputFullscreen = new QPushButton("F");
                 inputFullscreen->setFixedSize(buttonSize, buttonSize);
                 inputFullscreen->setStyleSheet("QPushButton { padding: 0; font-weight: bold; }");
@@ -450,12 +663,8 @@ MainWindow::MainWindow()
 
                 connect(inputFullscreen, &QPushButton::clicked, [&]() { toggleFullscreen(); });
 
-                ly4->addWidget(github);
-                ly4->addSpacing(8);
-                ly4->addWidget(patreon);
-                ly4->addSpacing(8);
-                ly4->addWidget(inputPause);
                 ly4->addWidget(inputFullscreen);
+#endif
             }
 
             ly2->addWidget(w2, 0, Qt::AlignRight);
@@ -483,13 +692,13 @@ MainWindow::MainWindow()
     resize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
     window()->installEventFilter(this);
-#ifndef Q_OS_ANDROID
+#if !(defined(Q_OS_ANDROID) || defined(Q_OS_WASM))
     dialogDisplay->installEventFilter(this);
 #endif
 
     loadSettings();
 
-#ifndef Q_OS_ANDROID
+#if !(defined(Q_OS_ANDROID) || defined(Q_OS_WASM))
     updateDevices();
 #endif
 
@@ -498,20 +707,28 @@ MainWindow::MainWindow()
     connect(this, &MainWindow::newFramesSpectrum, powerSpectrum, &PowerSpectrum::renderSpectrum);
     connect(this, &MainWindow::newFramesLpc, powerSpectrum, &PowerSpectrum::renderLpc);
     connect(this, &MainWindow::newFramesUI, canvas, &AnalyserCanvas::renderScaleAndCursor);
-    
+   
     connect(&timer, &QTimer::timeout, [&]() {
         analyser->callIfNewFrames(
-                    0,
-                    [this](auto&&... ts) { emit newFramesTracks(std::forward<decltype(ts)>(ts)...); },
-                    [this](auto&&... ts) { emit newFramesSpectrum(std::forward<decltype(ts)>(ts)...); },
-                    [this](auto&&... ts) { emit newFramesLpc(std::forward<decltype(ts)>(ts)...); },
-                    [this](auto&&... ts) { emit newFramesUI(std::forward<decltype(ts)>(ts)...); }
+                    [this](auto&&... ts) {
+                        emit newFramesTracks(std::forward<decltype(ts)>(ts)...);
+                    },
+                    [this](auto&&... ts) {
+                        emit newFramesSpectrum(std::forward<decltype(ts)>(ts)...);
+                    },
+                    [this](auto&&... ts) {
+                        emit newFramesLpc(std::forward<decltype(ts)>(ts)...);
+                    },
+                    [this](auto&&... ts) {
+                        emit newFramesUI(std::forward<decltype(ts)>(ts)...);
+                    }
         );
         updateFields();
         canvas->repaint();
         powerSpectrum->repaint();
     });
-#ifdef Q_OS_ANDROID
+
+#if defined(Q_OS_ANDROID) || defined(Q_OS_WASM)
     timer.setTimerType(Qt::CoarseTimer);
     timer.start(1000.0 / 30.0);
 #else
@@ -519,9 +736,9 @@ MainWindow::MainWindow()
     timer.start(1000.0 / 60.0);
 #endif
 
-    show();
-
     analyser->startThread();
+
+    show();
 }
 
 MainWindow::~MainWindow() {
@@ -743,8 +960,10 @@ void MainWindow::loadSettings()
     callWithBlocker(inputFftSize, setCurrentIndex(fftInd));
     callWithBlocker(inputLpOrder, setValue(lpOrder));
     callWithBlocker(inputMaxFreq, setValue(maxFreq));
+#ifndef Q_OS_WASM
     callWithBlocker(inputFrameLength, setValue(frameLength));
     callWithBlocker(inputFrameSpace, setValue(frameSpace));
+#endif
     callWithBlocker(inputWindowSpan, setValue(windowSpan));
     callWithBlocker(inputPitchAlg, setCurrentIndex(static_cast<int>(pitchAlg)));
     callWithBlocker(inputFormantAlg, setCurrentIndex(static_cast<int>(formantAlg)));

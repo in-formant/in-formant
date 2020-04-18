@@ -33,14 +33,20 @@ using Eigen::dcomplex;
     DECL_PLAN(name, s_##name, plan_call) \
     DECL_EXEC(name, s_##name)
 
-DECL_FFT_IMPL(rfft, double, double, fftw_plan_r2r_1d(n, s.in, s.out, FFTW_REDFT10, FFTW_MEASURE))
-DECL_FFT_IMPL(irfft, double, double, fftw_plan_r2r_1d(n, s.in, s.out, FFTW_REDFT01, FFTW_MEASURE))
+#if defined(__ANDROID__) || defined(__EMSCRIPTEN__)
+#define FFTW_PLAN_METHOD FFTW_ESTIMATE
+#else
+#define FFTW_PLAN_METHOD FFTW_MEASURE
+#endif
 
-DECL_FFT_IMPL(rcfft, double, dcomplex, fftw_plan_dft_r2c_1d(n, s.in, (fftw_complex *) s.out, FFTW_MEASURE))
-DECL_FFT_IMPL(crfft, dcomplex, double, fftw_plan_dft_c2r_1d(n, (fftw_complex *) s.in, s.out, FFTW_MEASURE))
+DECL_FFT_IMPL(rfft, double, double, fftw_plan_r2r_1d(n, s.in, s.out, FFTW_REDFT10, FFTW_PLAN_METHOD))
+DECL_FFT_IMPL(irfft, double, double, fftw_plan_r2r_1d(n, s.in, s.out, FFTW_REDFT01, FFTW_PLAN_METHOD))
 
-DECL_FFT_IMPL(fft, dcomplex, dcomplex, fftw_plan_dft_1d(n, (fftw_complex *) s.in, (fftw_complex *) s.out, FFTW_FORWARD, FFTW_MEASURE))
-DECL_FFT_IMPL(ifft, dcomplex, dcomplex, fftw_plan_dft_1d(n, (fftw_complex *) s.in, (fftw_complex *) s.out, FFTW_BACKWARD, FFTW_MEASURE))
+DECL_FFT_IMPL(rcfft, double, dcomplex, fftw_plan_dft_r2c_1d(n, s.in, (fftw_complex *) s.out, FFTW_PLAN_METHOD))
+DECL_FFT_IMPL(crfft, dcomplex, double, fftw_plan_dft_c2r_1d(n, (fftw_complex *) s.in, s.out, FFTW_PLAN_METHOD))
+
+DECL_FFT_IMPL(fft, dcomplex, dcomplex, fftw_plan_dft_1d(n, (fftw_complex *) s.in, (fftw_complex *) s.out, FFTW_FORWARD, FFTW_PLAN_METHOD))
+DECL_FFT_IMPL(ifft, dcomplex, dcomplex, fftw_plan_dft_1d(n, (fftw_complex *) s.in, (fftw_complex *) s.out, FFTW_BACKWARD, FFTW_PLAN_METHOD))
 
 void all_fft_cleanup()
 {

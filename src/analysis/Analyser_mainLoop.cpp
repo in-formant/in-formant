@@ -25,7 +25,7 @@ void Analyser::mainLoop()
 
         uint64 t2 = NowInMs();
         uint64 dt = t2 - t1;
-
+        
         if (dt < frameSpace.count()) {
             SleepInUs(1000 * (frameSpace.count() - dt));
         }
@@ -47,10 +47,10 @@ void Analyser::update()
 
     // Param lock.
     paramLock.lock();
-    
+   
     // Read captured audio.
     audioLock.lock();
-    
+
     x.setZero(frameSamples);
     audioInterface->readBlock(x);
 
@@ -58,7 +58,7 @@ void Analyser::update()
     audioInterface->readBlock(x_fft);
     
     fs = audioInterface->getRecordSampleRate();
-   
+
     audioLock.unlock();
 
     // Remove DC by subtraction of the mean.
@@ -69,7 +69,7 @@ void Analyser::update()
     
     // Get an Oq estimate.
     analyseOq();
-    
+
     // Resample audio.
     resampleAudio();
     
@@ -116,13 +116,7 @@ void Analyser::update()
     applySmoothingFilters();
 
     // Set the has-new-frames flag.
-    for (auto & [k, v] : nbNewFrames) {
-        (void) k;
-
-        if (v < frameCount) {
-            v++;
-        }
-    }
+    nbNewFrames++;
 
     // Unlock the tracks.
     mutex.unlock();

@@ -11,7 +11,7 @@
 
 class RingBuffer {
 public:
-    explicit RingBuffer(int capacity = 0);
+    RingBuffer(int capacity = 0);
 
     void writeInto(const Eigen::ArrayXd & in);
     void readFrom(Eigen::ArrayXd & out);

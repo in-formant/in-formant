@@ -1,5 +1,6 @@
 out.*
 *.log
+web-bundle/speech_analysis.*
 
 pkg/
 external-*/

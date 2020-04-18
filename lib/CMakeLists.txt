@@ -3,9 +3,14 @@ project(libspeech)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_C_FLAGS "-fPIC -mtune=generic -Wall")
+set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
+set(CMAKE_C_FLAGS_RELEASE "-O2 -g0 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g")
+
 set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g0")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g0 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 
 set(SOURCES
@@ -70,8 +75,11 @@ set(SOURCES
     FFT/FFT.cpp
     FFT/FFT.h
     MFCC/MFCC.h
-    rpmalloc/rpmalloc.c
     rpmalloc/rpmalloc.h)
+
+if (NOT EMSCRIPTEN)
+    list(APPEND SOURCES rpmalloc/rpmalloc.c)
+endif()
 
 find_package(Eigen3 REQUIRED NO_MODULE)
 
@@ -92,17 +100,12 @@ include_directories(
     ${FFTW_INCLUDE_DIRS}
 )
 
-add_definitions(
-    -DENABLE_ASSERTS=1
-)
-
 if (ANDROID)
     add_definitions(-DENABLE_PRELOAD=1)
     add_library(speech SHARED ${SOURCES})
 else()
-    if (NOT WIN32)
-        add_definitions(-DENABLE_PRELOAD=1)
-        add_definitions(-DENABLE_OVERRIDE=1)
+    if (NOT WIN32 AND NOT EMSCRIPTEN)
+        add_definitions(-DENABLE_PRELOAD=1 -DENABLE_OVERRIDE=1)
     endif()
     add_library(speech STATIC ${SOURCES})
 endif()
@@ -112,3 +115,12 @@ target_link_libraries(speech
     ${FFTW_LIBRARIES}
 )
 
+if(EMSCRIPTEN)
+    set(EMSCRIPTEN_ARGS
+        "-s WASM=1"
+        "-mnontrapping-fptoint"
+    )
+    set(${CMAKE_C_FLAGS} "${CMAKE_C_FLAGS} ${EMSCRIPTEN_ARGS}")
+    set(${CMAKE_CXX_FLAGS} "${CMAKE_CXX_FLAGS} ${EMSCRIPTEN_ARGS}")
+    target_link_libraries(speech ${EMSCRIPTEN_ARGS})
+endif()

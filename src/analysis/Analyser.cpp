@@ -7,6 +7,11 @@
 #include "../log/simpleQtLogger.h"
 #include "../Exceptions.h"
 
+#ifdef Q_OS_WASM
+#include <emscripten/html5.h>
+#include "../NullSettings.h"
+#endif
+
 using namespace Eigen;
 
 Analyser::Analyser(AudioInterface * audioInterface)
@@ -20,6 +25,7 @@ Analyser::Analyser(AudioInterface * audioInterface)
       nfft(1),
       maximumFrequency(3700),
       lpFailed(true),
+      nbNewFrames(0),
       running(false)
 {
     _initResampler();
@@ -38,12 +44,23 @@ Analyser::~Analyser() {
 
 void Analyser::startThread() {
     running.store(true);
+#ifndef Q_OS_WASM
     thread = std::thread(&Analyser::mainLoop, this);
+#else
+    emscripten_set_timeout_loop(
+            [](double, void *p) -> EM_BOOL {
+                auto that = static_cast<Analyser *>(p);
+                that->update();
+                return that->running.load();
+            }, frameSpace.count(), this);
+#endif
 }
 
 void Analyser::stopThread() {
     running.store(false);
+#ifndef Q_OS_WASM
     thread.join();
+#endif
 }
 
 void Analyser::toggle(bool running) {
@@ -268,6 +285,7 @@ void Analyser::_updateFrameCount() {
         .spec = ArrayXd::Zero(512),
     };
 
+    lpcSpectrum = defaultSpec;
 
     if (frameCount < newFrameCount) {
         int diff = newFrameCount - frameCount;
@@ -340,8 +358,12 @@ void Analyser::_initResampler()
             1,
             audioInterface->getRecordSampleRate(),
             2 * maximumFrequency,
+#ifndef Q_OS_WASM
             ma_resample_algorithm_speex);
     config.speex.quality = 10;
+#else
+            ma_resample_algorithm_linear);
+#endif
 
     if (ma_resampler_init(&config, &resampler) != MA_SUCCESS) {
         LS_FATAL("Unable to initialise analysis resampler");
@@ -362,15 +384,30 @@ void Analyser::loadSettings()
     setLinearPredictionOrder(settings.value("lpOrder", 12).value<int>());
     frameLength = std::chrono::milliseconds(settings.value("frameLength", 35).value<int>());
     _updateCaptureDuration();
-    setFrameSpace(std::chrono::milliseconds(settings.value("frameSpace", 15).value<int>()));
-    setWindowSpan(std::chrono::milliseconds(int(1000 * settings.value("windowSpan", 5.0).value<double>())));
+
+    setFrameSpace(std::chrono::milliseconds(settings.value("frameSpace",
+#ifdef Q_OS_WASM
+                        100
+#else
+                        15
+#endif
+    ).value<int>()));
+    
+    setWindowSpan(std::chrono::milliseconds(int(1000 * settings.value("windowSpan",
+#ifdef Q_OS_WASM
+                        15.0
+#else
+                        5.0
+#endif
+    ).value<double>())));
+
     setPitchAlgorithm((PitchAlg) settings.value("pitchAlg", static_cast<int>(Wavelet)).value<int>());
     setFormantMethod((FormantMethod) settings.value("formantMethod", static_cast<int>(KARMA)).value<int>());
     setCepstralOrder(settings.value("cepOrder", 15).value<int>());
 
     settings.endGroup();
 }
-
+ 
 void Analyser::saveSettings()
 {
     QSettings settings;

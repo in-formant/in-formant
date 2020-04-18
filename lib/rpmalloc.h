@@ -7,7 +7,13 @@
 #include <stack>
 #include <vector>
 
+#ifdef __EMSCRIPTEN__
+// Emscripten doesn't support rpmalloc so we have to fallback to std::allocator.
+template<typename T>
+using allocator = std::allocator<T>;
+#else
 #include "rpmalloc/allocator.h"
+#endif
 
 namespace rpm {
 

@@ -1,21 +1,39 @@
 #include "time_util.h"
 
-#ifdef _WIN32
+#ifdef Q_OS_WINDOWS
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
 
-#else
+#elif defined(Q_OS_LINUX) || defined(Q_OS_MAC)
 #  include <time.h>
 #  include <errno.h>
 
-#  ifdef __APPLE__
+#  ifdef Q_OS_MAC
 #    include <mach/clock.h>
 #    include <mach/mach.h>
 #  endif
 #endif // _WIN32
 
+
+#ifdef Q_OS_WASM
+#include <emscripten.h>
+#include <cmath>
+
+void SleepInMs(uint32 ms) {
+    //emscripten_sleep(ms);
+}
+
+void SleepInUs(uint32 us) {
+    //emscripten_sleep(us / 1000);
+}
+
+uint64 NowInUs() {
+    return std::round<uint64>(1000.0 * emscripten_get_now());
+}
+#endif
+
 /**********************************=> unix ************************************/
-#ifndef _WIN32
+#if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
 void SleepInMs(uint32 ms) {
     struct timespec ts;
     ts.tv_sec = ms / 1000;
@@ -55,7 +73,7 @@ uint64 NowInUs() {
 /************************************ unix <=**********************************/
 
 /**********************************=> win *************************************/
-#ifdef _WIN32
+#ifdef Q_OS_WINDOWS
 void SleepInMs(uint32 ms) {
     ::Sleep(ms);
 }

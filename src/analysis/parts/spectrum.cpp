@@ -15,12 +15,17 @@ void Analyser::analyseSpectrum()
 {
     // Speech signal spectrum
     
+    static ArrayXd win;
+    if (win.size() != nfft) {
+        win = Window::createHanning(nfft);
+    }
+
     rfft_plan(nfft);
 
     Map<ArrayXd> xin(rfft_in(nfft), nfft);
     Map<ArrayXd> xout(rfft_out(nfft), nfft);
     
-    xin = x_fft.head(nfft) * Window::createHanning(nfft); 
+    xin = x_fft.head(nfft) * win;
 
     rfft(nfft);
     
@@ -57,6 +62,8 @@ void Analyser::analyseSpectrum()
 
     lpcSpectrum.fs = fs;
     lpcSpectrum.nfft = nfftLpc;
-    lpcSpectrum.spec = h;    
+    lpcSpectrum.spec = h;
+    
+    
 
 }

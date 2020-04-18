@@ -9,6 +9,10 @@
 #include "../Exceptions.h"
 #include "../log/simpleQtLogger.h"
 
+#ifdef Q_OS_WASM
+#include "../NullSettings.h"
+#endif
+
 using namespace Eigen;
 
 AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave, NoiseFilter * noiseFilter) noexcept(false)

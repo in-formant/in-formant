@@ -9,6 +9,8 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
 #elif defined(Q_OS_MACOS)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
+#elif defined(Q_OS_WASM)
+Q_IMPORT_PLUGIN(QWasmIntegrationPlugin);
 #else
 #error "Unsupported target operating system"
 #endif

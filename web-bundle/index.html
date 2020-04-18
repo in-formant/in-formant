@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Speech analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans&display=swap" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+  </head>
+  <body>
+    <figure style="overflow:visible;" id="qtspinner">
+      <center style="margin-top:1.5em; line-height:150%">
+        <div>
+            <img src="qtlogo.svg" width="240" height="220" style="display:block"></img>
+            <strong>Speech analysis app</strong>
+        </div>
+        <div id="app-info">
+          <p>
+            This is is an experimental port of the <a href="https://github.com/ichi-rika/speech-analysis">speech analysis</a> app to web browsers. Currently only Chrome-based browsers are supported.
+          </p>
+          <button id="open-app-button" onclick="init()">Open app</button>
+        </div>
+        <div id="qtstatus"></div>
+        <noscript>JavaScript is disabled. Please enable JavaScript to use this application.</noscript>
+      </center>
+    </figure>
+    <canvas id="qtcanvas" oncontextmenu="event.preventDefault()" contenteditable="true"></canvas>
+
+    <script type='text/javascript'>
+        function init() {
+          var spinner = document.querySelector('#qtspinner');
+          var canvas = document.querySelector('#qtcanvas');
+          var status = document.querySelector('#qtstatus')
+
+          var qtLoader = QtLoader({
+              canvasElements : [canvas],
+              showLoader: function(loaderStatus) {
+                  spinner.style.display = 'block';
+                  canvas.style.display = 'none';
+                  status.innerHTML = loaderStatus + "...";
+              },
+              showError: function(errorText) {
+                  status.innerHTML = errorText;
+                  spinner.style.display = 'block';
+                  canvas.style.display = 'none';
+              },
+              showExit: function() {
+                  status.innerHTML = "Application exit";
+                  if (qtLoader.exitCode !== undefined)
+                      status.innerHTML += " with code " + qtLoader.exitCode;
+                  if (qtLoader.exitText !== undefined)
+                      status.innerHTML += " (" + qtLoader.exitText + ")";
+                  spinner.style.display = 'block';
+                  canvas.style.display = 'none';
+              },
+              showCanvas: function() {
+                  spinner.style.display = 'none';
+                  canvas.style.display = 'block';
+              },
+          });
+          qtLoader.loadEmscriptenModule("speech_analysis");
+      }
+    </script>
+    <script type="text/javascript" src="qtloader.js"></script>
+  </body>
+</html>

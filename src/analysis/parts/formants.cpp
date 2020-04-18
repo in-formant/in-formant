@@ -28,27 +28,6 @@ void Analyser::analyseFormant() {
             analyseFormantEkf();
             break;
     }
-
-    // Calculate the filter for a higher sampling rate.
-
-    /*const double fsOut = 16000;
-    const int Nf = lastFormantFrame.nFormants;
-    ArrayXcd z(2 * Nf);
-
-    for (int i = 0; i < Nf; ++i) {
-
-        const double f = std::clamp(lastFormantFrame.formant.at(i).frequency, 100.0, 3800.0);
-        const double b = std::clamp(lastFormantFrame.formant.at(i).bandwidth, 80.0, 160.0);
-            
-        const double r = std::exp(-M_PI * b / fsOut);
-        const double phi = 2 * M_PI * f / fsOut;
-
-        z(2 * i) = std::polar(r, phi);
-        z(2 * i + 1) = std::polar(r, -phi);
-    }
-
-    ArrayXd p;
-    Polynomial::fromRoots(z, p);*/
 }
 
 void Analyser::analyseFormantEkf() {
