@@ -113,7 +113,7 @@ int Analyser::getFftSize() {
 
 void Analyser::setLinearPredictionOrder(int _lpOrder, bool save) {
     std::lock_guard<std::mutex> lock(paramLock);
-    lpOrder = std::clamp(_lpOrder, 5, 22);
+    lpOrder = std::clamp(_lpOrder, 4, 30);
     LS_INFO("Set LP order to " << lpOrder);
 
 #ifdef Q_OS_WASM

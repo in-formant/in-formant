@@ -19,6 +19,61 @@
 #include "../analysis/Analyser.h"
 #include "LPC/Frame/LPC_Frame.h"
 
+// PLATFORM MACROS
+
+#ifdef Q_OS_ANDROID
+#   define UI_BAR_SETTINGS
+#   define UI_BAR_FIELDS
+#else
+#   define UI_SHOW_SETTINGS
+#   define UI_SHOW_BAR
+#   define UI_BAR_LINKS
+#   define UI_BAR_PAUSE
+#endif
+
+#ifdef Q_OS_WASM
+#elif !defined(Q_OS_ANDROID)
+#   define UI_DISPLAY_SETTINGS_IN_DIALOG
+#   define UI_DOCK_FLOATABLE
+#   define UI_SHOW_DEVICE_SETTING
+#   define UI_SHOW_FRAME_SETTINGS
+#   define UI_BAR_FULLSCREEN
+#endif
+
+#if 0
+#   define UI_HAS_LEFT_BAR 1
+#else
+#   define US_HAS_LEFT_BAR 0
+#endif
+
+#if defined(UI_BAR_FIELDS)
+#   define UI_HAS_CENTER_BAR 1
+#else
+#   define UI_HAS_CENTER_BAR 0
+#endif
+
+#if defined(UI_BAR_SETTINGS) || defined(UI_BAR_LINKS) || defined(UI_BAR_PAUSE) || defined(UI_BAR_FULLSCREEN)
+#   define UI_HAS_RIGHT_BAR 1
+#else
+#   define UI_HAS_RIGHT_BAR 0
+#endif
+
+#if defined(Q_OS_WASM) || defined(Q_OS_ANDROID)
+#   define TIMER_SLOWER 1
+#else
+#   define DO_UPDATE_DEVICES 1
+#endif
+
+// SETTINGS MACROS
+
+#define a_set(attr, attr2) set##attr(analyser->get##attr2())
+#define a_set_count(attr, attr2) set##attr(analyser->get##attr2().count())
+#define a_set_enum(attr, attr2) set##attr(static_cast<int>(analyser->get##attr2()))
+
+#define c_set(attr, attr2) set##attr(canvas->get##attr2())
+
+// ---------------
+
 using DevicePair = std::pair<bool, const ma_device_id *>;
 
 Q_DECLARE_METATYPE(DevicePair);
@@ -33,13 +88,10 @@ public:
     MainWindow();
     ~MainWindow();
 
-    void loadSettings();
     void saveSettings();
 
 protected:
-#ifndef Q_OS_ANDROID
     bool eventFilter(QObject * obj, QEvent * event) override;
-#endif
     void closeEvent(QCloseEvent * event) override;
 
 signals:
@@ -50,15 +102,17 @@ signals:
 
 private:
     void updateFields();
-#ifndef Q_OS_ANDROID
-    void updateDevices();
-    void updateColorButtons();
+
+#ifdef UI_SHOW_SETTINGS
+    void updateColorButtons(); 
+#endif
+
+#ifdef UI_BAR_SETTINGS
+    void openSettings();
+#endif
 
     void toggleAnalyser();
     void toggleFullscreen();
-#else
-    void openSettings();
-#endif
     
     void cleanup();
 
@@ -75,42 +129,48 @@ private:
 
     QTimer timer;
 
-    QStringList fftSizes;
+    QStringList availableFftSizes;
+    QStringList availablePitchAlgs;
+    QStringList availableFormantAlgs;
+    QStringList availableFreqScales;
+    QStringList availableColorMaps;
 
-    QWidget * central;
+    QWidget * uiFields();
+    QDockWidget * uiFieldsDock(QWidget * fields);
 
-#ifdef Q_OS_ANDROID
-    QPushButton * inputSettings;
-#else
-    QDockWidget * fieldsDock;
-    QDockWidget * settingsDock;
+    QWidget * uiAnalysisSettings();
+    QWidget * uiDisplaySettings();
+    QDockWidget * uiSettingsDock(QWidget * analysisSettings, QWidget * displaySettings);
 
-    QComboBox * inputDevIn;
-    QPushButton * inputDevRefresh;
-    QPushButton * inputDisplayDialog;
-    QComboBox * inputFftSize;
-    QSpinBox * inputLpOrder;
-    QSpinBox * inputMaxFreq;
-    QSpinBox * inputFrameLength;
-    QSpinBox * inputFrameSpace;
-    QDoubleSpinBox * inputWindowSpan;
-    QComboBox * inputPitchAlg;
-    QComboBox * inputFormantAlg;
+    QWidget * uiBarLeft();
+    QWidget * uiBarCenter(QWidget * fields);
+    QWidget * uiBarRight();
+    QWidget * uiBar(QWidget * fields);
 
-    QWidget * dialogDisplay;
-    QCheckBox * inputToggleSpectrum;
-    QCheckBox * inputToggleTracks;
-    QSpinBox * inputMinGain;
-    QSpinBox * inputMaxGain;
-    QComboBox * inputFreqScale;
-    QSpinBox * inputPitchThick;
-    QPushButton * inputPitchColor;
-    QSpinBox * inputFormantThick;
-    std::array<QPushButton *, numFormants> inputFormantColor;
-    QComboBox * inputColorMap;
+    QWidget * uiCentral();
 
-    QPushButton * inputPause;
-    QPushButton * inputFullscreen;
+#ifdef UI_DISPLAY_SETTINGS_IN_DIALOG
+    QWidget * displaySettings;
+#endif
+
+#if DO_UPDATE_DEVICES
+    void updateDevices();
+    QComboBox * inputDevice;
+#endif
+
+    QBoxLayout * fieldsLayout;
+
+#ifdef UI_SHOW_SETTINGS
+    QPushButton * pitchColor;
+    std::array<QPushButton *, numFormants> formantColors;
+#endif
+
+#ifdef UI_BAR_PAUSE
+    QPushButton * pause;
+#endif
+
+#ifdef UI_BAR_FULLSCREEN
+    QPushButton * fullscreen;
 #endif
 
     AnalyserCanvas * canvas;

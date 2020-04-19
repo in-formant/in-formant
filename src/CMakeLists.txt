@@ -84,6 +84,7 @@ set(SOURCES
     gui/AnalyserCanvas.h
     gui/PowerSpectrum.cpp
     gui/PowerSpectrum.h
+    gui/ui_MainWindow.cpp
     gui/MainWindow.cpp
     gui/MainWindow.h
     ../resources.qrc)

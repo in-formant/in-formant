@@ -53,8 +53,6 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave, NoiseFi
         0x57C8C8,
     };
 
-    buildColorMaps();
-
     loadSettings();
 }
 
@@ -208,11 +206,7 @@ void AnalyserCanvas::renderScaleAndCursor(const int nframe, const double maximum
 
     QFont font = painter.font();
     int oldSize = font.pointSize();
-#ifdef Q_OS_ANDROID
     font.setPointSize(13);
-#else
-    font.setPointSize(11);
-#endif
     painter.setFont(font);
 
     QFontMetrics metrics(font);
