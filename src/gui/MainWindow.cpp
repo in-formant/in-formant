@@ -23,7 +23,7 @@ constexpr int maxWidthComboBox = 200;
 MainWindow::MainWindow()
     : timer(this)
 {
-    for (int nfft = 64; nfft <= 2048; ++nfft) {
+    for (int nfft = 64; nfft <= 2048; nfft *= 2) {
         fftSizes.append(QString::number(nfft));
     }
 

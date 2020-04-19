@@ -52,7 +52,7 @@ void NoiseFilter::initOutput(int sampleRate, int numChannels)
 
 void NoiseFilter::setPlaying(bool playing)
 {
-    targetGain = playing ? 0.05 : 0;
+    targetGain = playing ? 0.2 : 0;
 }
 
 void NoiseFilter::setFilter(int sampleRateIn, const ArrayXd & a)
