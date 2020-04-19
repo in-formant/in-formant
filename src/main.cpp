@@ -2,27 +2,40 @@
 #include <QStyleFactory>
 #include <QSharedPointer>
 #ifdef Q_OS_ANDROID
-    #include <QtAndroid>
+#   include <QtAndroid>
 #endif
 #include <iostream>
 #include <csignal>
 #include "gui/MainWindow.h"
 #include "log/simpleQtLogger.h"
+#ifdef Q_OS_WASM
+#   include <emscripten/html5.h>
+#   include "qwasmsettings.h"
+#endif
+
+static MainWindow * pWindow;
 
 void signalHandler(int sig)
 {
     if (sig == SIGINT) {
-        L_INFO("Received SIGINT, quitting...");
-        qApp->quit();
+        L_INFO("Received SIGINT, quitting...");;
     }
     else if (sig == SIGTERM) {
         L_INFO("Received SIGTERM, quitting...");
-        qApp->quit();
     }
     else if (sig == SIGSEGV) {
         L_INFO("Received SIGSEGV, quitting forcefully...");
-        exit(EXIT_FAILURE);
     }
+
+    pWindow->close();
+    qApp->quit();
+}
+
+void exitHandler()
+{
+#ifdef Q_OS_WINDOWS
+    rpmalloc_finalize();
+#endif
 }
 
 QString loadFont(const QString & url)
@@ -39,13 +52,12 @@ int main(int argc, char * argv[])
 {
 #ifdef Q_OS_WINDOWS
     rpmalloc_initialize();
-    atexit(rpmalloc_finalize);
 #endif
 
     QCoreApplication::setOrganizationName("Clo Yun-Hee");
     QCoreApplication::setOrganizationDomain("cloyunhee.fr");
     QCoreApplication::setApplicationName("Speech analysis");
-    
+
     QApplication::setStyle(QStyleFactory::create("Fusion"));
 
     QApplication app(argc, argv);
@@ -66,6 +78,8 @@ int main(int argc, char * argv[])
     logger->setLogFormat_file("<TS> [<LL>] <TEXT> (<FUNC>@<FILE>:<LINE>)", "<TS> [<LL>] <TEXT>");
     logger->setLogLevels_file(simpleqtlogger::ENABLE_LOG_LEVELS);
     logger->setLogFileName("speechanalysis.log", 10*1000*1000, 20);
+#else
+    logger->setLogFormat_console("<TS> [<LL>] <TEXT> (<FUNC>@<FILE>:<LINE>)", "<TS> [<LL>] <TEXT>");
 #endif
     logger->setLogLevels_console(simpleqtlogger::ENABLE_LOG_LEVELS);
 
@@ -121,9 +135,16 @@ int main(int argc, char * argv[])
 
     MainWindow mainWindow;
 
+    pWindow = &mainWindow;
+
+    atexit(&exitHandler);
     signal(SIGINT, &signalHandler);
     signal(SIGTERM, &signalHandler);
     signal(SIGSEGV, &signalHandler);
+
+#ifdef Q_OS_WASM
+    emscripten_set_beforeunload_callback(pWindow, [](int, const void *, void *p) -> const char* { emscripten_console_log("Exit"); static_cast<MainWindow *>(p)->saveSettings(); qApp->quit(); return "Exiting."; });
+#endif
 
     return app.exec();
 }

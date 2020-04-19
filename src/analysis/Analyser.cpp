@@ -2,14 +2,13 @@
 // Created by rika on 16/11/2019.
 //
 
-#include <QSettings>
+#include <QTimer>
 #include "Analyser.h"
 #include "../log/simpleQtLogger.h"
 #include "../Exceptions.h"
 
 #ifdef Q_OS_WASM
-#include <emscripten/html5.h>
-#include "../NullSettings.h"
+#   include <emscripten/html5.h>
 #endif
 
 using namespace Eigen;
@@ -29,6 +28,7 @@ Analyser::Analyser(AudioInterface * audioInterface)
       running(false)
 {
     _initResampler();
+
     loadSettings();
 
     setInputDevice(nullptr);
@@ -93,12 +93,17 @@ double Analyser::getSampleRate() {
     return audioInterface->getRecordSampleRate();
 }
 
-void Analyser::setFftSize(int _nfft) {
+void Analyser::setFftSize(int _nfft, bool save) {
     std::lock_guard<std::mutex> lock(paramLock);
     nfft = _nfft;
     LS_INFO("Set FFT size to " << nfft);
     
     _updateCaptureDuration();
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 int Analyser::getFftSize() {
@@ -106,10 +111,15 @@ int Analyser::getFftSize() {
     return nfft;
 }
 
-void Analyser::setLinearPredictionOrder(int _lpOrder) {
+void Analyser::setLinearPredictionOrder(int _lpOrder, bool save) {
     std::lock_guard<std::mutex> lock(paramLock);
     lpOrder = std::clamp(_lpOrder, 5, 22);
     LS_INFO("Set LP order to " << lpOrder);
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 int Analyser::getLinearPredictionOrder() {
@@ -117,13 +127,18 @@ int Analyser::getLinearPredictionOrder() {
     return lpOrder;
 }
 
-void Analyser::setCepstralOrder(int _cepOrder) {
+void Analyser::setCepstralOrder(int _cepOrder, bool save) {
     std::lock_guard<std::mutex> lock(paramLock);
     
     cepOrder = std::clamp(_cepOrder, 7, 25);
     LS_INFO("Set LPCC order to " << cepOrder);
 
     _initEkfState(); 
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 int Analyser::getCepstralOrder() {
@@ -131,7 +146,7 @@ int Analyser::getCepstralOrder() {
     return cepOrder;
 }
 
-void Analyser::setMaximumFrequency(double _maximumFrequency) {
+void Analyser::setMaximumFrequency(double _maximumFrequency, bool save) {
     std::lock_guard<std::mutex> lock(paramLock);
     maximumFrequency = std::clamp(_maximumFrequency, 2500.0, 7000.0);
    
@@ -141,6 +156,11 @@ void Analyser::setMaximumFrequency(double _maximumFrequency) {
         LS_FATAL("Unable to change analysis resampler output rate");
         throw AudioException("Unable to change analysis resampler output rate");
     }
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 double Analyser::getMaximumFrequency() {
@@ -148,12 +168,17 @@ double Analyser::getMaximumFrequency() {
     return maximumFrequency;
 }
 
-void Analyser::setFrameLength(const std::chrono::duration<double, std::milli> & _frameLength) {
+void Analyser::setFrameLength(const std::chrono::duration<double, std::milli> & _frameLength, bool save) {
     std::lock_guard<std::mutex> lock(paramLock);
     frameLength = _frameLength;
     LS_INFO("Set frame length to " << frameLength.count() << " ms");
     
     _updateCaptureDuration();
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 const std::chrono::duration<double, std::milli> & Analyser::getFrameLength() {
@@ -161,12 +186,17 @@ const std::chrono::duration<double, std::milli> & Analyser::getFrameLength() {
     return frameLength;
 }
 
-void Analyser::setFrameSpace(const std::chrono::duration<double, std::milli> & _frameSpace) {
+void Analyser::setFrameSpace(const std::chrono::duration<double, std::milli> & _frameSpace, bool save) {
     std::lock_guard<std::mutex> lock(paramLock);
     frameSpace = _frameSpace;
     LS_INFO("Set frame space to " << frameSpace.count() << " ms");
     
     _updateFrameCount();
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 const std::chrono::duration<double, std::milli> & Analyser::getFrameSpace() {
@@ -175,12 +205,17 @@ const std::chrono::duration<double, std::milli> & Analyser::getFrameSpace() {
     return frameSpace;
 }
 
-void Analyser::setWindowSpan(const std::chrono::duration<double> & _windowSpan) {
+void Analyser::setWindowSpan(const std::chrono::duration<double> & _windowSpan, bool save) {
     std::lock_guard<std::mutex> lock(paramLock);
     windowSpan = _windowSpan;
     LS_INFO("Set window span to " << windowSpan.count() << " s");
     
     _updateFrameCount();
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 const std::chrono::duration<double> & Analyser::getWindowSpan() {
@@ -189,7 +224,7 @@ const std::chrono::duration<double> & Analyser::getWindowSpan() {
     return windowSpan;
 }
 
-void Analyser::setPitchAlgorithm(enum PitchAlg _pitchAlg) {
+void Analyser::setPitchAlgorithm(enum PitchAlg _pitchAlg, bool save) {
     std::lock_guard<std::mutex> lock(paramLock);
     pitchAlg = _pitchAlg;
 
@@ -207,6 +242,11 @@ void Analyser::setPitchAlgorithm(enum PitchAlg _pitchAlg) {
             L_INFO("Set pitch algorithm to AMDF");
             break;
     }
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 PitchAlg Analyser::getPitchAlgorithm() {
@@ -214,7 +254,7 @@ PitchAlg Analyser::getPitchAlgorithm() {
     return pitchAlg;
 }
 
-void Analyser::setFormantMethod(enum FormantMethod _method) {
+void Analyser::setFormantMethod(enum FormantMethod _method, bool save) {
     std::lock_guard<std::mutex> lock(paramLock);
     formantMethod = _method;
 
@@ -226,6 +266,11 @@ void Analyser::setFormantMethod(enum FormantMethod _method) {
             L_INFO("Set formant algorithm to KARMA");
             break;
     }
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 FormantMethod Analyser::getFormantMethod() {
@@ -371,61 +416,65 @@ void Analyser::_initResampler()
     }
 }
 
-void Analyser::loadSettings()
+void Analyser::loadSettings(QSettings& settings)
 {
-    QSettings settings;
-
     L_INFO("Loading analysis settings...");
 
-    settings.beginGroup("analysis");
+    if (settings.status() != QSettings::NoError) {
+        QTimer::singleShot(10, [&]() { loadSettings(settings); });
+    }
+    else {
+        settings.beginGroup("analysis");
 
-    setMaximumFrequency(settings.value("maxFreq", 4700.0).value<double>());
-    nfft = settings.value("fftSize", 512).value<int>();
-    setLinearPredictionOrder(settings.value("lpOrder", 12).value<int>());
-    frameLength = std::chrono::milliseconds(settings.value("frameLength", 35).value<int>());
-    _updateCaptureDuration();
+        setMaximumFrequency(settings.value("maxFreq", 4700.0).value<double>(), false);
+        setFftSize(settings.value("fftSize", 512).value<int>(), false);
+        setLinearPredictionOrder(settings.value("lpOrder", 12).value<int>(), false);
+        setFrameLength(std::chrono::milliseconds(settings.value("frameLength", 35).value<int>()), false);
 
-    setFrameSpace(std::chrono::milliseconds(settings.value("frameSpace",
+        setFrameSpace(std::chrono::milliseconds(settings.value("frameSpace",
 #ifdef Q_OS_WASM
-                        100
+                            100
 #else
-                        15
+                            15
 #endif
-    ).value<int>()));
-    
-    setWindowSpan(std::chrono::milliseconds(int(1000 * settings.value("windowSpan",
+        ).value<int>()), false);
+        
+        setWindowSpan(std::chrono::milliseconds(int(1000 * settings.value("windowSpan",
 #ifdef Q_OS_WASM
-                        15.0
+                            15.0
 #else
-                        5.0
+                            5.0
 #endif
-    ).value<double>())));
+        ).value<double>())), false);
 
-    setPitchAlgorithm((PitchAlg) settings.value("pitchAlg", static_cast<int>(Wavelet)).value<int>());
-    setFormantMethod((FormantMethod) settings.value("formantMethod", static_cast<int>(KARMA)).value<int>());
-    setCepstralOrder(settings.value("cepOrder", 15).value<int>());
+        setPitchAlgorithm((PitchAlg) settings.value("pitchAlg", static_cast<int>(Wavelet)).value<int>(), false);
+        setFormantMethod((FormantMethod) settings.value("formantMethod", static_cast<int>(KARMA)).value<int>(), false);
+        setCepstralOrder(settings.value("cepOrder", 15).value<int>(), false);
 
-    settings.endGroup();
+        settings.endGroup();
+    }
 }
  
-void Analyser::saveSettings()
+void Analyser::saveSettings(QSettings& settings)
 {
-    QSettings settings;
-
     L_INFO("Saving analysis settings...");
 
-    settings.beginGroup("analysis");
+    if (settings.status() != QSettings::NoError) {
+        QTimer::singleShot(10, [&]() { saveSettings(settings); });
+    }
+    else {
+        settings.beginGroup("analysis");
 
-    settings.setValue("maxFreq", maximumFrequency);
-    settings.setValue("fftSize", nfft);
-    settings.setValue("lpOrder", lpOrder);
-    settings.setValue("cepOrder", cepOrder);
-    settings.setValue("frameLength", frameLength.count());
-    settings.setValue("frameSpace", frameSpace.count());
-    settings.setValue("windowSpan", windowSpan.count());
-    settings.setValue("pitchAlg", static_cast<int>(pitchAlg));
-    settings.setValue("formantMethod", static_cast<int>(formantMethod));
+        settings.setValue("maxFreq", maximumFrequency);
+        settings.setValue("fftSize", nfft);
+        settings.setValue("lpOrder", lpOrder);
+        settings.setValue("cepOrder", cepOrder);
+        settings.setValue("frameLength", frameLength.count());
+        settings.setValue("frameSpace", frameSpace.count());
+        settings.setValue("windowSpan", windowSpan.count());
+        settings.setValue("pitchAlg", static_cast<int>(pitchAlg));
+        settings.setValue("formantMethod", static_cast<int>(formantMethod));
 
-    settings.endGroup();
-
+        settings.endGroup();
+    }
 }

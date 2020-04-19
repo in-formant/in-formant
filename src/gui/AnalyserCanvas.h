@@ -7,11 +7,16 @@
 
 #include <QtWidgets>
 #include <QTimer>
+#include <QSettings>
 #include <mutex>
 #include "rpmalloc.h"
 #include "../Exceptions.h"
 #include "../analysis/Analyser.h"
 #include "../audio/SineWave.h"
+
+#ifdef Q_OS_WASM
+#   include "../qwasmsettings.h"
+#endif
 
 #define WINDOW_TITLE  "Speech analysis"
 #define WINDOW_WIDTH  1280
@@ -29,16 +34,16 @@ public:
 
     [[nodiscard]] double getSelectedFrequency() const;
 
-    void setFrequencyScale(int type);
-    void setDrawSpectrum(bool draw);
-    void setDrawTracks(bool draw);
-    void setPitchColor(const QColor & color);
-    void setFormantColor(int formantNb, const QColor & color);
-    void setPitchThickness(int thick);
-    void setFormantThickness(int thick);
-    void setSpectrumColor(const QString & name);
-    void setMinGainSpectrum(int gain);
-    void setMaxGainSpectrum(int gain);
+    void setFrequencyScale(int type, bool save = true);
+    void setDrawSpectrum(bool draw, bool save = true);
+    void setDrawTracks(bool draw, bool save = true);
+    void setPitchColor(const QColor & color, bool save = true);
+    void setFormantColor(int formantNb, const QColor & color, bool save = true);
+    void setPitchThickness(int thick, bool save = true);
+    void setFormantThickness(int thick, bool save = true);
+    void setSpectrumColor(const QString & name, bool save = true);
+    void setMinGainSpectrum(int gain, bool save = true);
+    void setMaxGainSpectrum(int gain, bool save = true);
 
     int getFrequencyScale() const;
     bool getDrawSpectrum() const;
@@ -50,6 +55,9 @@ public:
     const QString & getSpectrumColor() const;
     int getMinGainSpectrum() const;
     int getMaxGainSpectrum() const;
+
+    void loadSettings() { QSettings s; loadSettings(s); }
+    void saveSettings() { QSettings s; saveSettings(s); }
 
 protected:
     void mouseMoveEvent(QMouseEvent * event) override;
@@ -65,8 +73,8 @@ public slots:
     void renderScaleAndCursor(int nframe, double maxFreq);
 
 private:
-    void loadSettings();
-    void saveSettings();
+    void loadSettings(QSettings& settings);
+    void saveSettings(QSettings& settings);
 
     void cursorMoveEvent(QMouseEvent * event);
 

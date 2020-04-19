@@ -33,10 +33,14 @@ public:
     MainWindow();
     ~MainWindow();
 
+    void loadSettings();
+    void saveSettings();
+
 protected:
 #ifndef Q_OS_ANDROID
     bool eventFilter(QObject * obj, QEvent * event) override;
 #endif
+    void closeEvent(QCloseEvent * event) override;
 
 signals:
     void newFramesTracks(int nframe, double maxFreq, FormantMethod formantAlg, const rpm::deque<double> & pitches, const Formant::Frames & formants);
@@ -45,8 +49,6 @@ signals:
     void newFramesUI(int nframe, double maxFreq);
 
 private:
-    void loadSettings();
-
     void updateFields();
 #ifndef Q_OS_ANDROID
     void updateDevices();
@@ -57,6 +59,8 @@ private:
 #else
     void openSettings();
 #endif
+    
+    void cleanup();
 
     ma_context maCtx;
     AudioDevices * devs;
@@ -65,7 +69,7 @@ private:
     AudioInterface * audioInterface;
     Analyser * analyser;
 
-#ifdef Q_OS_MAC
+#if defined(Q_OS_MAC)
     void * audioInterfaceMem;
 #endif
 

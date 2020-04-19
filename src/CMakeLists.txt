@@ -5,14 +5,39 @@ project(main)
 set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_C_FLAGS "-fPIC -mtune=generic -Wall")
-set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_C_FLAGS_RELEASE "-O2 -g0 -DNDEBUG")
-set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g")
+set(CMAKE_C_FLAGS_DEBUG "-O0 -g4")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g3")
 
 set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic -Wall")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g0 -DNDEBUG")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g4")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g3")
+
+if(EMSCRIPTEN)
+    set(EMSCRIPTEN_ARGS
+        "--bind"
+        "-s WASM=1"
+        "-s ASYNCIFY=1"
+        "-s TOTAL_MEMORY=512MB"
+        "-s FULL_ES2=1"
+        "-s USE_WEBGL2=1"
+        "-s \"EXTRA_EXPORTED_RUNTIME_METHODS=['UTF16ToString', 'stringToUTF16']\""
+        "-s USE_PTHREADS=1"
+        "-s FORCE_FILESYSTEM=1"
+        "-s FILESYSTEM=1"
+        "-s NO_EXIT_RUNTIME=0"
+        "-Wcast-align"
+        "-Wover-aligned"
+        "-s WARN_UNALIGNED=1"
+        "-pthread"
+        "-mnontrapping-fptoint"
+        "-flto"
+        "-s DISABLE_EXCEPTION_CATCHING=1"
+    )
+    add_definitions(${EMSCRIPTEN_ARGS})
+    link_libraries(${EMSCRIPTEN_ARGS})
+endif()
 
 add_definitions(-DVERSION_STRING=\"${VERSION_STRING}\" -DVERSION_CODE=${VERSION_CODE})
 
@@ -67,6 +92,8 @@ set(ANDROID_JNI_SOURCES
     jni/JniInstance.h
     jni/JniInstance.cpp
     jni/bindings.cpp)
+
+set(EM_SOURCES qwasmsettings.h)
 
 if (NOT APPLE AND NOT ANDROID AND NOT EMSCRIPTEN)
     find_package(Qt5 COMPONENTS Widgets REQUIRED)
@@ -150,7 +177,7 @@ if (ANDROID)
         DEPENDS ${libspeech_LIBRARY} ${FFTW_LIBRARIES}
     )
 elseif (EMSCRIPTEN)
-    add_executable(speech_analysis ${SOURCES})
+    add_executable(speech_analysis ${SOURCES} ${EM_SOURCES})
 else()
     add_executable(speech_analysis WIN32 ${SOURCES})
 endif()
@@ -162,25 +189,6 @@ target_link_libraries(speech_analysis
 )
 
 if(EMSCRIPTEN)
-    set(EMSCRIPTEN_ARGS
-        "--bind"
-        "-s WASM=1"
-        "-s ASYNCIFY=1"
-        "-s TOTAL_MEMORY=512MB"
-        "-s FULL_ES2=1"
-        "-s USE_WEBGL2=1"
-        "-s NO_EXIT_RUNTIME=0"
-        "-s \"EXTRA_EXPORTED_RUNTIME_METHODS=['UTF16ToString', 'stringToUTF16']\""
-        "-s USE_PTHREADS=1"
-        "-pthread"
-        "--emrun"
-        "-mnontrapping-fptoint"
-        "-Wl,--no-check-features"
-    )
-    set(${CMAKE_C_FLAGS} "${CMAKE_C_FLAGS} ${EMSCRIPTEN_ARGS}")
-    set(${CMAKE_CXX_FLAGS} "${CMAKE_CXX_FLAGS} ${EMSCRIPTEN_ARGS}")
-    target_link_libraries(speech_analysis ${EMSCRIPTEN_ARGS})
-
     include_directories(
         ${QT_PREFIX}/include
         ${QT_PREFIX}/include/QtCore
@@ -206,7 +214,6 @@ if(EMSCRIPTEN)
         qtharfbuzz
         Qt5Core
         qtpcre2
-        #pcre2-16
     )
 elseif(APPLE)
     set(SDK_PREFIX $ENV{OSXCROSS}/SDK/MacOSX10.13.sdk)

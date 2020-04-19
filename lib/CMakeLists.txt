@@ -4,14 +4,28 @@ project(libspeech)
 set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_C_FLAGS "-fPIC -mtune=generic -Wall")
-set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_C_FLAGS_RELEASE "-O2 -g0 -DNDEBUG")
-set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g")
+set(CMAKE_C_FLAGS_DEBUG "-O0 -g4")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g3")
 
 set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic -Wall")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g0 -DNDEBUG")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g4")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g3")
+
+if(EMSCRIPTEN)
+    set(EMSCRIPTEN_ARGS
+        "-s WASM=1"
+        "-s USE_PTHREADS=1"
+        "-pthread"
+        "-Wcast-align"
+        "-Wover-aligned"
+        "-s WARN_UNALIGNED=1"
+        "-mnontrapping-fptoint"
+    )
+    add_definitions(${EMSCRIPTEN_ARGS})
+    link_libraries(${EMSCRIPTEN_ARGS})
+endif()
 
 set(SOURCES
     Formant/Formant.cpp
@@ -103,7 +117,7 @@ include_directories(
 if (ANDROID)
     add_definitions(-DENABLE_PRELOAD=1)
     add_library(speech SHARED ${SOURCES})
-else()
+else ()
     if (NOT WIN32 AND NOT EMSCRIPTEN)
         add_definitions(-DENABLE_PRELOAD=1 -DENABLE_OVERRIDE=1)
     endif()
@@ -115,12 +129,3 @@ target_link_libraries(speech
     ${FFTW_LIBRARIES}
 )
 
-if(EMSCRIPTEN)
-    set(EMSCRIPTEN_ARGS
-        "-s WASM=1"
-        "-mnontrapping-fptoint"
-    )
-    set(${CMAKE_C_FLAGS} "${CMAKE_C_FLAGS} ${EMSCRIPTEN_ARGS}")
-    set(${CMAKE_CXX_FLAGS} "${CMAKE_CXX_FLAGS} ${EMSCRIPTEN_ARGS}")
-    target_link_libraries(speech ${EMSCRIPTEN_ARGS})
-endif()

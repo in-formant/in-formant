@@ -2,6 +2,7 @@
 // Created by clo on 12/09/2019.
 //
 
+#include <QTimer>
 #include <iostream>
 #include "AnalyserCanvas.h"
 #include "ColorMaps.h"
@@ -9,18 +10,17 @@
 #include "../Exceptions.h"
 #include "../log/simpleQtLogger.h"
 
-#ifdef Q_OS_WASM
-#include "../NullSettings.h"
-#endif
-
 using namespace Eigen;
 
 AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave, NoiseFilter * noiseFilter) noexcept(false)
     : spectrogram(1, 1, QImage::Format_ARGB32_Premultiplied),
       tracks(1, 1, QImage::Format_ARGB32_Premultiplied),
       scaleAndCursor(1, 1, QImage::Format_ARGB32_Premultiplied),
-#ifdef Q_OS_ANDROID
+#if defined(Q_OS_ANDROID)
       upFactorTracks(0.6),
+      upFactorSpec(1),
+#elif defined(Q_OS_WASM)
+      upFactorTracks(1),
       upFactorSpec(1),
 #else
       upFactorTracks(0.8),
@@ -529,78 +529,128 @@ double AnalyserCanvas::getSelectedFrequency() const
     return selectedFrequency;
 }
 
-void AnalyserCanvas::setFrequencyScale(int type) {
+void AnalyserCanvas::setFrequencyScale(int type, bool save) {
     frequencyScaleType = type;
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 int AnalyserCanvas::getFrequencyScale() const {
     return frequencyScaleType;
 }
 
-void AnalyserCanvas::setDrawSpectrum(bool toggle) {
+void AnalyserCanvas::setDrawSpectrum(bool toggle, bool save) {
     drawSpectrum = toggle;
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 bool AnalyserCanvas::getDrawSpectrum() const {
     return drawSpectrum;
 }
 
-void AnalyserCanvas::setDrawTracks(bool toggle) {
+void AnalyserCanvas::setDrawTracks(bool toggle, bool save) {
     drawTracks = toggle;
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 bool AnalyserCanvas::getDrawTracks() const {
     return drawTracks;
 }
 
-void AnalyserCanvas::setPitchColor(const QColor & color) {
+void AnalyserCanvas::setPitchColor(const QColor & color, bool save) {
     pitchColor = color;
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 const QColor & AnalyserCanvas::getPitchColor() const {
     return pitchColor;
 }
 
-void AnalyserCanvas::setFormantColor(int formantNb, const QColor & color) {
+void AnalyserCanvas::setFormantColor(int formantNb, const QColor & color, bool save) {
     formantColors[formantNb] = color;
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 const QColor & AnalyserCanvas::getFormantColor(int formantNb) const {
     return formantColors.at(formantNb);
 }
 
-void AnalyserCanvas::setPitchThickness(const int thick) {
+void AnalyserCanvas::setPitchThickness(const int thick, bool save) {
     pitchThick = thick;
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 int AnalyserCanvas::getPitchThickness() const {
     return pitchThick;
 }
 
-void AnalyserCanvas::setFormantThickness(const int thick) {
+void AnalyserCanvas::setFormantThickness(const int thick, bool save) {
     formantThick = thick;
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 int AnalyserCanvas::getFormantThickness() const {
     return formantThick;
 }
 
-void AnalyserCanvas::setSpectrumColor(const QString & name) {
+void AnalyserCanvas::setSpectrumColor(const QString & name, bool save) {
     if (colorMaps.find(name) != colorMaps.end()) {
         colorMapName = name;
     }
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 const QString & AnalyserCanvas::getSpectrumColor() const {
     return colorMapName;
 }
 
-void AnalyserCanvas::setMinGainSpectrum(int gain) {
+void AnalyserCanvas::setMinGainSpectrum(int gain, bool save) {
     minGain = gain;
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
-void AnalyserCanvas::setMaxGainSpectrum(int gain) {
+void AnalyserCanvas::setMaxGainSpectrum(int gain, bool save) {
     maxGain = gain;
+
+#ifdef Q_OS_WASM
+    if (save)
+        saveSettings();
+#endif
 }
 
 int AnalyserCanvas::getMinGainSpectrum() const {
@@ -611,63 +661,69 @@ int AnalyserCanvas::getMaxGainSpectrum() const {
     return maxGain;
 }
 
-void AnalyserCanvas::loadSettings() {
-    QSettings settings;
-
+void AnalyserCanvas::loadSettings(QSettings& settings) {
     L_INFO("Loading canvas settings...");
 
-    settings.beginGroup("canvas");
-
-    setFrequencyScale(settings.value("freqScale", 2).value<int>());
-    setDrawSpectrum(settings.value("drawSpectrum", true).value<bool>());
-    setDrawTracks(settings.value("drawTracks", true).value<bool>());
-  
-    setPitchColor(settings.value("pitchColor", pitchColor).value<QColor>());
-
-    for (int i = 0; i < 4; ++i) {
-        setFormantColor(i, settings.value(QString("formantColor/%1").arg(i), formantColors[i]).value<QColor>());
+    if (settings.status() != QSettings::NoError) {
+        QTimer::singleShot(10, [&]() { loadSettings(settings); });
     }
+    else {
+        settings.beginGroup("canvas");
+
+        setFrequencyScale(settings.value("freqScale", 2).value<int>(), false);
+        setDrawSpectrum(settings.value("drawSpectrum", true).value<bool>(), false);
+        setDrawTracks(settings.value("drawTracks", true).value<bool>(), false);
+      
+        setPitchColor(settings.value("pitchColor", pitchColor).value<QColor>(), false);
+
+        for (int i = 0; i < 4; ++i) {
+            setFormantColor(i, settings.value(QString("formantColor/%1").arg(i), formantColors[i]).value<QColor>(), false);
+        }
 
 #ifdef Q_OS_ANDROID
-    setPitchThickness(settings.value("pitchThickness", 6).value<int>());
-    setFormantThickness(settings.value("formantThickness", 6).value<int>());
+        setPitchThickness(settings.value("pitchThickness", 6).value<int>(), false);
+        setFormantThickness(settings.value("formantThickness", 6).value<int>(), false);
 #else
-    setPitchThickness(settings.value("pitchThickness", 4).value<int>());
-    setFormantThickness(settings.value("formantThickness", 4).value<int>());
+        setPitchThickness(settings.value("pitchThickness", 4).value<int>(), false);
+        setFormantThickness(settings.value("formantThickness", 4).value<int>(), false);
 #endif
 
-    setSpectrumColor(settings.value("spectrumColorMap", "iZotope").value<QString>());
+        setSpectrumColor(settings.value("spectrumColorMap", "iZotope").value<QString>(), false);
 
-    setMinGainSpectrum(settings.value("minGain", -40).value<int>());
-    setMaxGainSpectrum(settings.value("maxGain", 20).value<int>());
+        setMinGainSpectrum(settings.value("minGain", -40).value<int>(), false);
+        setMaxGainSpectrum(settings.value("maxGain", 20).value<int>(), false);
 
-    settings.endGroup();
+        settings.endGroup();
+    }
 }
 
-void AnalyserCanvas::saveSettings() {
-    QSettings settings;
+void AnalyserCanvas::saveSettings(QSettings& settings) {
+    L_INFO("Saving canvas settings..."); 
 
-    L_INFO("Saving canvas settings...");
-    
-    settings.beginGroup("canvas");
-
-    settings.setValue("freqScale", frequencyScaleType);
-    settings.setValue("drawSpectrum", drawSpectrum);
-    settings.setValue("drawTracks", drawTracks);
-
-    settings.setValue("pitchColor", pitchColor);
-
-    for (int i = 0; i < 4; ++i) {
-        settings.setValue(QString("formantColor/%1").arg(i), formantColors[i]);
+    if (settings.status() != QSettings::NoError) {
+        QTimer::singleShot(10, [&]() { saveSettings(settings); });
     }
+    else {
+        settings.beginGroup("canvas");
 
-    settings.setValue("pitchThickness", pitchThick);
-    settings.setValue("formantThickness", formantThick);
+        settings.setValue("freqScale", frequencyScaleType);
+        settings.setValue("drawSpectrum", drawSpectrum);
+        settings.setValue("drawTracks", drawTracks);
 
-    settings.setValue("spectrumColorMap", colorMapName);
+        settings.setValue("pitchColor", pitchColor);
 
-    settings.setValue("minGain", minGain);
-    settings.setValue("maxGain", maxGain);
+        for (int i = 0; i < 4; ++i) {
+            settings.setValue(QString("formantColor/%1").arg(i), formantColors[i]);
+        }
 
-    settings.endGroup();
+        settings.setValue("pitchThickness", pitchThick);
+        settings.setValue("formantThickness", formantThick);
+
+        settings.setValue("spectrumColorMap", colorMapName);
+
+        settings.setValue("minGain", minGain);
+        settings.setValue("maxGain", maxGain);
+
+        settings.endGroup();
+    }
 }

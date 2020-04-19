@@ -7,6 +7,7 @@
 
 #include "../audio/miniaudio.h"
 #include <QColor>
+#include <QSettings>
 #include <Eigen/Core>
 #include <thread>
 #include <memory>
@@ -15,6 +16,10 @@
 #include "../audio/AudioDevices.h"
 #include "../lib/Formant/Formant.h"
 #include "../lib/Formant/EKF/EKF.h"
+
+#ifdef Q_OS_WASM
+#   include "../qwasmsettings.h"
+#endif
 
 struct SpecFrame {
     double fs;
@@ -47,15 +52,15 @@ public:
     void setInputDevice(const ma_device_id * id);
     void setOutputDevice(const ma_device_id * id);
 
-    void setFftSize(int);
-    void setLinearPredictionOrder(int);
-    void setMaximumFrequency(double);
-    void setCepstralOrder(int);
-    void setFrameLength(const std::chrono::duration<double, std::milli> & frameLength);
-    void setFrameSpace(const std::chrono::duration<double, std::milli> & frameSpace);
-    void setWindowSpan(const std::chrono::duration<double> & windowSpan);
-    void setPitchAlgorithm(enum PitchAlg);
-    void setFormantMethod(enum FormantMethod);
+    void setFftSize(int, bool = true);
+    void setLinearPredictionOrder(int, bool = true);
+    void setMaximumFrequency(double, bool = true);
+    void setCepstralOrder(int, bool = true);
+    void setFrameLength(const std::chrono::duration<double, std::milli> & frameLength, bool = true);
+    void setFrameSpace(const std::chrono::duration<double, std::milli> & frameSpace, bool = true);
+    void setWindowSpan(const std::chrono::duration<double> & windowSpan, bool = true);
+    void setPitchAlgorithm(enum PitchAlg, bool = true);
+    void setFormantMethod(enum FormantMethod, bool = true);
 
     [[nodiscard]] double getSampleRate();
 
@@ -77,9 +82,12 @@ public:
     [[nodiscard]] double getPitchFrame(int iframe);
     [[nodiscard]] double getOqFrame(int iframe);
 
+    void loadSettings() { QSettings s; loadSettings(s); }
+    void saveSettings() { QSettings s; saveSettings(s); }
+
 private:
-    void loadSettings();
-    void saveSettings();
+    void loadSettings(QSettings& settings);
+    void saveSettings(QSettings& settings);
 
     void _updateFrameCount();
     void _updateCaptureDuration();
@@ -87,11 +95,7 @@ private:
     void _initResampler();
 
     void mainLoop();
-#ifdef Q_OS_WASM
-public:
-#endif
     void update();
-private:
     void applyWindow();
     void analyseSpectrum();
     void analysePitch();

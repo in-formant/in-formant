@@ -21,8 +21,11 @@
 constexpr int maxWidthComboBox = 200;
 
 MainWindow::MainWindow()
-    : fftSizes{"32", "64", "128", "256", "512", "1024", "2048"}
+    : timer(this)
 {
+    for (int nfft = 64; nfft <= 2048; ++nfft) {
+        fftSizes.append(QString::number(nfft));
+    }
 
     L_INFO("Initialising miniaudio context...");
 
@@ -71,7 +74,7 @@ MainWindow::MainWindow()
     sineWave = new SineWave();
     noiseFilter = new NoiseFilter();
 
-#ifdef Q_OS_MAC
+#if defined(Q_OS_MAC)
     audioInterfaceMem = malloc(sizeof(AudioInterface));
     audioInterface = new (audioInterfaceMem) AudioInterface(&maCtx, sineWave, noiseFilter);
 #else
@@ -292,7 +295,7 @@ MainWindow::MainWindow()
         dockScroll->setWidget(dockWidget);
     }
    
-    dialogDisplay = new QWidget(window(), Qt::Tool);
+    dialogDisplay = new QWidget(this, Qt::Tool);
     {
         auto ly1 = new QFormLayout(dialogDisplay);
         
@@ -455,21 +458,21 @@ MainWindow::MainWindow()
                     [&](const double value) { analyser->setWindowSpan(std::chrono::milliseconds(int(1000 * value))); });
 
             inputPitchAlg = new QComboBox;
-            inputPitchAlg->addItems({
-                "Wavelet",
-                "McLeod",
-                "YIN",
-                "AMDF",
-            });
+            inputPitchAlg->addItems(QStringList()
+                << "Wavelet"
+                << "McLeod"
+                << "YIN"
+                << "AMDF"
+            );
 
             connect(inputPitchAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
                     [&](const int value) { analyser->setPitchAlgorithm(static_cast<PitchAlg>(value)); });
 
             inputFormantAlg = new QComboBox;
-            inputFormantAlg->addItems({
-                "Linear prediction",
-                "Kalman filter",
-            });
+            inputFormantAlg->addItems(QStringList()
+                << "Linear prediction"
+                << "Kalman filter"
+            );
 
             connect(inputFormantAlg, QOverload<int>::of(&QComboBox::currentIndexChanged),
                     [&](const int value) { analyser->setFormantMethod(static_cast<FormantMethod>(value)); });
@@ -516,9 +519,13 @@ MainWindow::MainWindow()
                                            inputMinGain->setMaximum(value - 10); });
 
             inputFreqScale = new QComboBox;
-            inputFreqScale->addItems({"Linear", "Logarithmic", "Mel"});
+            inputFreqScale->addItems(QStringList()
+                    << "Linear"
+                    << "Logarithmic"
+                    << "Mel"
+            );
 
-             connect(inputFreqScale, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            connect(inputFreqScale, QOverload<int>::of(&QComboBox::currentIndexChanged),
                     [&](const int value) { canvas->setFrequencyScale(value); });
 
             inputPitchThick = new QSpinBox;
@@ -539,6 +546,7 @@ MainWindow::MainWindow()
 
             pitchColorDialog->setWindowTitle("Select pitch color");
             pitchColorDialog->setOption(QColorDialog::NoButtons);
+            pitchColorDialog->setMinimumSize(640, 480);
 
             connect(pitchColorDialog, &QColorDialog::currentColorChanged,
                     [=] (const QColor& c) {
@@ -565,6 +573,7 @@ MainWindow::MainWindow()
 
                 dialog->setWindowTitle(QString("Select F%1 color").arg(nb+1));
                 dialog->setOption(QColorDialog::NoButtons);
+                dialog->setMinimumSize(640, 480);
 
                 connect(dialog, &QColorDialog::currentColorChanged,
                         [=] (const QColor &c) {
@@ -744,10 +753,27 @@ MainWindow::MainWindow()
     show();
 }
 
-MainWindow::~MainWindow() {
+MainWindow::~MainWindow()
+{
+    if (canvas != nullptr) {
+        cleanup();
+    }
+}
+
+void MainWindow::cleanup()
+{
+    timer.stop();
+
+    while (timer.isActive()) {
+        std::this_thread::yield();
+    }
+
+    delete canvas;
+    delete powerSpectrum;
+
     delete analyser;
 
-#ifdef Q_OS_MAC
+#if defined(Q_OS_MAC)
     audioInterface->~AudioInterface();
     free(audioInterfaceMem);
 #else
@@ -760,6 +786,8 @@ MainWindow::~MainWindow() {
     ma_context_uninit(&maCtx);
 
     all_fft_cleanup();
+
+    canvas = nullptr;
 }
 
 void MainWindow::updateFields() {
@@ -925,6 +953,12 @@ void MainWindow::openSettings()
 }
 #endif // Q_OS_ANDROID
 
+void MainWindow::closeEvent(QCloseEvent * event)
+{
+    cleanup();
+    qApp->quit();
+}
+
 void MainWindow::loadSettings()
 {
     // Assume that analysis settings have already loaded and corrected if necessary.
@@ -986,4 +1020,10 @@ void MainWindow::loadSettings()
 #endif
 
     void updateFields();
+}
+
+void MainWindow::saveSettings() 
+{
+    analyser->saveSettings();
+    canvas->saveSettings();
 }
