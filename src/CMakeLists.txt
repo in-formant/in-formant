@@ -271,6 +271,8 @@ elseif(APPLE)
         qtpcre2
         dl
         pthread
+        c++
+        $ENV{OSXCROSS}/../build/compiler-rt/compiler-rt/build/lib/darwin/libclang_rt.osx.a
     )
 elseif(ANDROID)
     set(libsuff "_${ANDROID_ABI}")
