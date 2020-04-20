@@ -336,11 +336,11 @@ void MainWindow::toggleAnalyser() {
 
     analyser->toggle(!running);
 
-#ifdef UI_BAR_PAUSE
+#if defined(UI_BAR_PAUSE_LEFT) || defined(UI_BAR_PAUSE_RIGHT)
     if (running) {
-        pause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+        pause->setStyleSheet(stylePlay);
     } else {
-        pause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+        pause->setStyleSheet(stylePause);
     }
 #endif
 }

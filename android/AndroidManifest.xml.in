@@ -85,6 +85,6 @@
 
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
-    <uses-sdk android:targetSdkVersion="26" android:minSdkVersion="21"/>
+    <uses-sdk android:targetSdkVersion="28" android:minSdkVersion="21"/>
 
 </manifest>

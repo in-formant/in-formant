@@ -22,13 +22,16 @@
 // PLATFORM MACROS
 
 #ifdef Q_OS_ANDROID
-#   define UI_BAR_SETTINGS
+#   define UI_BAR_PAUSE_LEFT
 #   define UI_BAR_FIELDS
+#   define UI_BAR_SETTINGS
+#   define UI_BAR_BUTTON_SIZE 128
 #else
 #   define UI_SHOW_SETTINGS
 #   define UI_SHOW_BAR
 #   define UI_BAR_LINKS
-#   define UI_BAR_PAUSE
+#   define UI_BAR_PAUSE_RIGHT
+#   define UI_BAR_BUTTON_SIZE 32
 #endif
 
 #ifdef Q_OS_WASM
@@ -40,7 +43,7 @@
 #   define UI_BAR_FULLSCREEN
 #endif
 
-#if 0
+#if defined(UI_BAR_PAUSE_LEFT)
 #   define UI_HAS_LEFT_BAR 1
 #else
 #   define US_HAS_LEFT_BAR 0
@@ -52,7 +55,7 @@
 #   define UI_HAS_CENTER_BAR 0
 #endif
 
-#if defined(UI_BAR_SETTINGS) || defined(UI_BAR_LINKS) || defined(UI_BAR_PAUSE) || defined(UI_BAR_FULLSCREEN)
+#if defined(UI_BAR_SETTINGS) || defined(UI_BAR_LINKS) || defined(UI_BAR_PAUSE_RIGHT) || defined(UI_BAR_FULLSCREEN)
 #   define UI_HAS_RIGHT_BAR 1
 #else
 #   define UI_HAS_RIGHT_BAR 0
@@ -165,8 +168,9 @@ private:
     std::array<QPushButton *, numFormants> formantColors;
 #endif
 
-#ifdef UI_BAR_PAUSE
+#if defined(UI_BAR_PAUSE_LEFT) || defined(UI_BAR_PAUSE_RIGHT)
     QPushButton * pause;
+    QString stylePause, stylePlay;
 #endif
 
 #ifdef UI_BAR_FULLSCREEN

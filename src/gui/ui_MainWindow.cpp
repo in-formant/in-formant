@@ -367,8 +367,9 @@ QWidget * MainWindow::uiBarLeft()
     widget->setContentsMargins(0, 0, 0, 0);
     auto layout = new QHBoxLayout(widget);
 
-    // Nothing yet.
-    (void) layout;
+#ifdef UI_BAR_PAUSE_LEFT
+    layout->addWidget(pause);
+#endif
     
     return widget;
 }
@@ -393,10 +394,8 @@ QWidget * MainWindow::uiBarRight()
     auto layout = new QHBoxLayout(widget);
 
 #ifdef UI_BAR_LINKS
-    constexpr int buttonSize = 32;
-
     auto github = new QPushButton;
-    github->setFixedSize(buttonSize, buttonSize);
+    github->setFixedSize(UI_BAR_BUTTON_SIZE, UI_BAR_BUTTON_SIZE);
     github->setStyleSheet("QPushButton { border-image: url(:/icons/github.png) 0 0 0 0 stretch stretch; border: none; }");
     github->setCursor(Qt::PointingHandCursor);
 
@@ -408,7 +407,7 @@ QWidget * MainWindow::uiBarRight()
     layout->addSpacing(8);
 
     auto patreon = new QPushButton;
-    patreon->setFixedSize(buttonSize, buttonSize);
+    patreon->setFixedSize(UI_BAR_BUTTON_SIZE, UI_BAR_BUTTON_SIZE);
     patreon->setStyleSheet("QPushButton { border-image: url(:/icons/patreon.png) 0 0 0 0 stretch stretch; border: none; }");
     patreon->setCursor(Qt::PointingHandCursor);
 
@@ -420,19 +419,13 @@ QWidget * MainWindow::uiBarRight()
     layout->addSpacing(8);
 #endif // UI_BAR_LINKS
 
-#ifdef UI_BAR_PAUSE
-    this->pause = new QPushButton;
-    pause->setFixedSize(buttonSize, buttonSize);
-    pause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
-   
-    connect(pause, &QPushButton::clicked, this, &MainWindow::toggleAnalyser);
-
+#ifdef UI_BAR_PAUSE_RIGHT
     layout->addWidget(pause);
 #endif
 
 #ifdef UI_BAR_FULLSCREEN
     this->fullscreen = new QPushButton("F");
-    fullscreen->setFixedSize(buttonSize, buttonSize);
+    fullscreen->setFixedSize(UI_BAR_BUTTON_SIZE, UI_BAR_BUTTON_SIZE);
     fullscreen->setStyleSheet("QPushButton { padding: 0; font-weight: bold; }");
     fullscreen->setCheckable(true);
 
@@ -442,12 +435,11 @@ QWidget * MainWindow::uiBarRight()
 #endif
 
 #ifdef UI_BAR_SETTINGS
-    constexpr int buttonSize = 100;
-
     auto settings = new QPushButton;
-;
-    settings->setFixedSize(buttonSize, buttonSize);
+   
+    settings->setFixedSize(UI_BAR_BUTTON_SIZE, UI_BAR_BUTTON_SIZE);
     settings->setStyleSheet("QPushButton { border-image: url(:/icons/settings.png) 0 0 0 0 stretch stretch; border: none; }");
+    settings->setCursor(Qt::PointingHandCursor);
 
     connect(settings, &QPushButton::clicked, this, &MainWindow::openSettings);
 
@@ -461,6 +453,17 @@ QWidget * MainWindow::uiBar(QWidget * fields)
 {
     auto widget = new QWidget;
     auto layout = new QHBoxLayout(widget);
+
+#if defined(UI_BAR_PAUSE_LEFT) || defined(UI_BAR_PAUSE_RIGHT)
+    this->stylePlay = QStringLiteral("QPushButton { border-image: url(:/icons/play.png) 0 0 0 0 stretch stretch; border: none; }");
+    this->stylePause = QStringLiteral("QPushButton { border-image: url(:/icons/pause.png) 0 0 0 0 stretch stretch; border: none; }");
+    this->pause = new QPushButton;
+    pause->setFixedSize(UI_BAR_BUTTON_SIZE, UI_BAR_BUTTON_SIZE);
+    pause->setStyleSheet(stylePause);
+    pause->setCursor(Qt::PointingHandCursor);
+   
+    connect(pause, &QPushButton::clicked, this, &MainWindow::toggleAnalyser);
+#endif
 
 #ifdef UI_HAS_LEFT_BAR
     layout->addWidget(uiBarLeft(), 0, Qt::AlignLeft);
