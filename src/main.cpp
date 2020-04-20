@@ -62,6 +62,8 @@ int main(int argc, char * argv[])
 
     QApplication app(argc, argv);
 
+    simpleqtlogger::ENABLE_LOG_LEVELS.logLevel_DEBUG = true;
+
 #ifndef Q_OS_WASM
     simpleqtlogger::ENABLE_LOG_SINK_FILE = true;
 #endif

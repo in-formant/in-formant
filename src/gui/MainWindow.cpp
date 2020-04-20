@@ -84,6 +84,7 @@ MainWindow::MainWindow()
     ctxCfg.allocationCallbacks.onRealloc = [](void *p, size_t sz, void *) { return rprealloc(p, sz); };
     ctxCfg.allocationCallbacks.onFree = [](void *p, void *) { return rpfree(p); };
 #endif
+    ctxCfg.logCallback = &qtLogCallback;
 
     if (ma_context_init(backends.data(), backends.size(), &ctxCfg, &maCtx) != MA_SUCCESS) {
         L_FATAL("Failed to initialise miniaudio context");

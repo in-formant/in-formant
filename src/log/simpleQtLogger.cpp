@@ -886,3 +886,27 @@ SimpleQtLoggerFunc::~SimpleQtLoggerFunc()
 #endif
 
 } // namespace simpleqtlogger
+
+void qtLogCallback(ma_context * ctx, ma_device * dev, ma_uint32 logLevel, const char * message)
+{
+    printf("qtLogCallback: %s\n", message);
+
+    switch (logLevel)
+    {
+    case MA_LOG_LEVEL_ERROR:
+        L_ERROR(message);
+        break;
+    case MA_LOG_LEVEL_WARNING:
+        L_WARN(message);
+        break;
+    case MA_LOG_LEVEL_INFO:
+        L_INFO(message);
+        break;
+    case MA_LOG_LEVEL_VERBOSE:
+        L_DEBUG(message);
+        break;
+    default:
+        L_INFO(message);
+        break;
+    }
+}

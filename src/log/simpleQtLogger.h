@@ -535,4 +535,8 @@ private:
 
 } // namespace simpleqtlogger
 
+#include "../audio/miniaudio.h"
+
+void qtLogCallback(ma_context * ctx, ma_device * dev, ma_uint32 logLevel, const char *message);
+
 #endif // _SIMPLE_QT_LOGGER_H
