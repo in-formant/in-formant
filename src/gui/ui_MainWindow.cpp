@@ -313,6 +313,7 @@ QWidget * MainWindow::uiDisplaySettings()
 
 #ifdef UI_DISPLAY_SETTINGS_IN_DIALOG
     this->displaySettings = widget;
+    displaySettings->setObjectName("DisplaySettings");
 #endif
 
     updateColorButtons();
@@ -429,7 +430,7 @@ QWidget * MainWindow::uiBarRight()
     fullscreen->setStyleSheet("QPushButton { padding: 0; font-weight: bold; }");
     fullscreen->setCheckable(true);
 
-    connect(fullscreen, &QPushButton::clicked, this, &MainWindow::toggleFullscreen);
+    connect(fullscreen, &QPushButton::clicked, this, [this]() { toggleFullscreen(nullptr, true); });
 
     layout->addWidget(fullscreen);
 #endif
@@ -462,7 +463,7 @@ QWidget * MainWindow::uiBar(QWidget * fields)
     pause->setStyleSheet(stylePause);
     pause->setCursor(Qt::PointingHandCursor);
    
-    connect(pause, &QPushButton::clicked, this, &MainWindow::toggleAnalyser);
+    connect(pause, &QPushButton::clicked, this, [this]() { toggleAnalyser(nullptr, true); });
 #endif
 
 #ifdef UI_HAS_LEFT_BAR

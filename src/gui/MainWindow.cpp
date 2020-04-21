@@ -23,6 +23,8 @@ constexpr int maxWidthComboBox = 200;
 MainWindow::MainWindow()
     : timer(this)
 {
+    setObjectName("MainWindow");
+
     buildColorMaps();
 
     for (int nfft = 64; nfft <= 2048; nfft *= 2) {
@@ -127,7 +129,6 @@ MainWindow::MainWindow()
     displaySettings->setParent(this);
     displaySettings->setWindowFlag(Qt::Tool);
     displaySettings->setVisible(false);
-    displaySettings->installEventFilter(this);
 #endif // UI_DISPLAY_SETTINGS_IN_DIALOG
 
     addDockWidget(Qt::LeftDockWidgetArea, uiSettingsDock(analysisSettings, displaySettings));
@@ -156,7 +157,22 @@ MainWindow::MainWindow()
     setWindowTitle(WINDOW_TITLE);
     resize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-    window()->installEventFilter(this);
+    // Keybind event filters
+    this->installEventFilter(&keybinds);
+    window()->installEventFilter(&keybinds);
+    canvas->installEventFilter(&keybinds);
+    powerSpectrum->installEventFilter(&keybinds);
+#ifdef UI_DISPLAY_SETTINGS_IN_DIALOG
+    displaySettings->installEventFilter(&keybinds);
+#endif
+
+    // Keybind signal connections
+    connect(&keybinds, &Keybinds::actionCursor, canvas, &AnalyserCanvas::cursorMove);
+    connect(&keybinds, &Keybinds::actionClose, this, &MainWindow::pressClose);
+    connect(&keybinds, &Keybinds::actionPause, this, &MainWindow::toggleAnalyser);
+    connect(&keybinds, &Keybinds::actionFullscreen, this, &MainWindow::toggleFullscreen);
+    connect(&keybinds, &Keybinds::actionSineWave, canvas, &AnalyserCanvas::toggleSineWave);
+    connect(&keybinds, &Keybinds::actionNoiseFilter, this, &MainWindow::toggleNoiseFilter);
 
 #if DO_UPDATE_DEVICES
     updateDevices();
@@ -332,7 +348,25 @@ void MainWindow::updateColorButtons() {
 
 #endif
 
-void MainWindow::toggleAnalyser() {
+void MainWindow::pressClose(QObject * obj, bool toggle)
+{
+    if (!toggle) return;
+
+    if (obj != displaySettings) {
+        close();
+    }
+#ifdef UI_DISPLAY_SETTINGS_IN_DIALOG
+    else {
+        displaySettings->setVisible(false);
+        window()->activateWindow();
+        window()->setFocus(Qt::ActiveWindowFocusReason);
+    }
+#endif
+}
+
+void MainWindow::toggleAnalyser(QObject *, bool toggle) {
+    if (!toggle) return;
+
     bool running = analyser->isAnalysing();
 
     analyser->toggle(!running);
@@ -346,7 +380,9 @@ void MainWindow::toggleAnalyser() {
 #endif
 }
 
-void MainWindow::toggleFullscreen() {
+void MainWindow::toggleFullscreen(QObject *, bool toggle) {
+    if (!toggle) return;
+
     bool isFullscreen = (windowState() == Qt::WindowFullScreen);
 
     if (isFullscreen) {
@@ -361,39 +397,8 @@ void MainWindow::toggleFullscreen() {
 #endif
 }
 
-bool MainWindow::eventFilter(QObject * obj, QEvent * event)
-{
-    if (event->type() == QEvent::KeyPress) {
-        const auto keyEvent = static_cast<QKeyEvent *>(event);
-        const int key = keyEvent->key();
-
-        if (obj == window()) {
-            if (key == Qt::Key_Escape) {
-                close();
-                return true;
-            }
-            else if (key == Qt::Key_P) {
-                toggleAnalyser();
-                return true;
-            }
-            else if (key == Qt::Key_F) {
-                toggleFullscreen();
-                return true;
-            }
-        }
-#ifdef UI_DISPLAY_SETTINGS_IN_DIALOG
-        else if (obj == displaySettings) {
-            if (key == Qt::Key_Escape) {
-                displaySettings->setVisible(false);
-                window()->activateWindow();
-                window()->setFocus(Qt::ActiveWindowFocusReason);
-                return true;
-            }
-        }
-#endif
-    }
-        
-    return QObject::eventFilter(obj, event);
+void MainWindow::toggleNoiseFilter(QObject *obj, bool toggle) {
+    noiseFilter->setPlaying(toggle);
 }
 
 #ifdef UI_BAR_SETTINGS
@@ -403,12 +408,6 @@ void MainWindow::openSettings()
     QtAndroid::startActivity(intent, 0);
 }
 #endif
-
-void MainWindow::closeEvent(QCloseEvent * event)
-{
-    cleanup();
-    qApp->quit();
-}
 
 void MainWindow::saveSettings() 
 {

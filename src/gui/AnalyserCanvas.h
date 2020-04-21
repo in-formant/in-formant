@@ -60,23 +60,19 @@ public:
     void saveSettings() { QSettings s; saveSettings(s); }
 
 protected:
-    void mouseMoveEvent(QMouseEvent * event) override;
-    void mousePressEvent(QMouseEvent * event) override;
-    void mouseReleaseEvent(QMouseEvent * event) override;
     void paintEvent(QPaintEvent * event) override;
 
-
-    friend class Analyser;
 public slots:
     void renderTracks(int nframe, double maxFreq, FormantMethod formantAlg, const rpm::deque<double> & pitches, const Formant::Frames & formants);
     void renderSpectrogram(int nframe, int nNew, double maxFreq, rpm::deque<SpecFrame>::const_iterator begin, rpm::deque<SpecFrame>::const_iterator end);
     void renderScaleAndCursor(int nframe, double maxFreq);
 
+    void cursorMove(QObject * obj, bool toggle);
+    void toggleSineWave(QObject * obj, bool toggle);
+
 private:
     void loadSettings(QSettings& settings);
     void saveSettings(QSettings& settings);
-
-    void cursorMoveEvent(QMouseEvent * event);
 
     void render();
     void renderPitchTrack(int nframe, double maxFreq, const rpm::deque<double> &pitches);

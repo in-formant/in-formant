@@ -16,6 +16,7 @@
 #include "../audio/NoiseFilter.h"
 #include "AnalyserCanvas.h"
 #include "PowerSpectrum.h"
+#include "Keybinds.h"
 #include "../analysis/Analyser.h"
 #include "LPC/Frame/LPC_Frame.h"
 
@@ -93,15 +94,17 @@ public:
 
     void saveSettings();
 
-protected:
-    bool eventFilter(QObject * obj, QEvent * event) override;
-    void closeEvent(QCloseEvent * event) override;
-
 signals:
     void newFramesTracks(int nframe, double maxFreq, FormantMethod formantAlg, const rpm::deque<double> & pitches, const Formant::Frames & formants);
     void newFramesSpectrum(int nframe, int nNew, double maxFreq, rpm::deque<SpecFrame>::const_iterator begin, rpm::deque<SpecFrame>::const_iterator end);
     void newFramesLpc(double maxFreq, SpecFrame lpcFrame);
     void newFramesUI(int nframe, double maxFreq);
+
+public slots:
+    void pressClose(QObject *, bool);
+    void toggleAnalyser(QObject *, bool);
+    void toggleFullscreen(QObject *, bool);
+    void toggleNoiseFilter(QObject *, bool);
 
 private:
     void updateFields();
@@ -113,9 +116,6 @@ private:
 #ifdef UI_BAR_SETTINGS
     void openSettings();
 #endif
-
-    void toggleAnalyser();
-    void toggleFullscreen();
     
     void cleanup();
 
@@ -125,6 +125,8 @@ private:
     NoiseFilter * noiseFilter;
     AudioInterface * audioInterface;
     Analyser * analyser;
+
+    Keybinds keybinds;
 
 #if defined(Q_OS_MAC)
     void * audioInterfaceMem;

@@ -80,6 +80,8 @@ set(SOURCES
     audio/implementation.cpp
     gui/ColorMaps.cpp
     gui/ColorMaps.h
+    gui/Keybinds.cpp
+    gui/Keybinds.h
     gui/AnalyserCanvas.cpp
     gui/AnalyserCanvas.h
     gui/PowerSpectrum.cpp
@@ -271,7 +273,6 @@ elseif(APPLE)
         qtpcre2
         dl
         pthread
-        c++
         $ENV{OSXCROSS}/../build/compiler-rt/compiler-rt/build/lib/darwin/libclang_rt.osx.a
     )
 elseif(ANDROID)

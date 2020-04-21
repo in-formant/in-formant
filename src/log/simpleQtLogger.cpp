@@ -889,8 +889,6 @@ SimpleQtLoggerFunc::~SimpleQtLoggerFunc()
 
 void qtLogCallback(ma_context * ctx, ma_device * dev, ma_uint32 logLevel, const char * message)
 {
-    printf("qtLogCallback: %s\n", message);
-
     switch (logLevel)
     {
     case MA_LOG_LEVEL_ERROR:

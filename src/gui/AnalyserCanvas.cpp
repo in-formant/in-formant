@@ -38,6 +38,8 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave, NoiseFi
       sineWave(sineWave),
       noiseFilter(noiseFilter)
 {
+    setObjectName("AnalyserCanvas");
+
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
 
@@ -365,59 +367,6 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
     }
 }
 
-void AnalyserCanvas::cursorMoveEvent(QMouseEvent * event) {
-    const auto p = event->localPos();
-    const double maximumFrequency = analyser->getMaximumFrequency();
-    
-    const double freq = std::clamp<double>(frequencyFromY(p.y(), maximumFrequency), 0.0, maximumFrequency);
-
-#ifndef Q_OS_ANDROID
-    if (event->buttons() & Qt::LeftButton) {
-#endif
-
-        const int nframe = analyser->getFrameCount();
-
-        const double xstep = (double) targetWidth / (double) nframe;
-        selectedFrame = p.x() / xstep;
-        selectedFrequency = freq;
-
-#ifndef Q_OS_ANDROID
-    }
-#endif
-
-#ifndef Q_OS_ANDROID
-    if (event->buttons() & Qt::RightButton) {
-        sineWave->setFrequency(freq);
-        sineWave->setPlaying(true);
-    }
-#endif
-}
-
-void AnalyserCanvas::mouseMoveEvent(QMouseEvent * event) {
-    cursorMoveEvent(event);
-}
-
-void AnalyserCanvas::mousePressEvent(QMouseEvent * event) {
-    cursorMoveEvent(event);
-
-#ifndef Q_OS_ANDROID
-    if (event->buttons() & Qt::MiddleButton) {
-        noiseFilter->setPlaying(true);
-    }
-#endif
-}
-
-void AnalyserCanvas::mouseReleaseEvent(QMouseEvent * event) {
-#ifndef Q_OS_ANDROID
-    if (~event->buttons() & Qt::RightButton) {
-        sineWave->setPlaying(false);
-    }
-    if (~event->buttons() & Qt::MiddleButton) {
-        noiseFilter->setPlaying(false);
-    }
-#endif
-}
-
 double AnalyserCanvas::yFromFrequency(const double frequency, const double maximumFrequency) {
     if (maximumFrequency != maxFreq) {
         maxFreq = maximumFrequency;
@@ -506,6 +455,44 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
     render();
 
     painter.end();
+}
+
+void AnalyserCanvas::cursorMove(QObject *obj, bool toggle)
+{
+    if (!toggle) return;
+
+    const QString& name = obj->objectName();
+
+    const auto p = this->mapFromGlobal(QCursor::pos());
+
+    const double maximumFrequency = analyser->getMaximumFrequency();
+    const double freq = std::clamp<double>(frequencyFromY(p.y(), maximumFrequency), 0.0, maximumFrequency);
+
+    const int nframe = analyser->getFrameCount();
+    const double xstep = (double) targetWidth / (double) nframe;
+    const int frame = p.x() / xstep;
+
+    if (name == "AnalyserCanvas") {
+        selectedFrame = frame;
+        selectedFrequency = freq;
+    }
+    else if (name == "PowerSpectrum") {
+        selectedFrequency = freq;
+    }
+}
+
+void AnalyserCanvas::toggleSineWave(QObject * obj, bool toggle) {
+    if (obj == this && toggle) {
+        const auto p = this->mapFromGlobal(QCursor::pos());
+        const double maximumFrequency = analyser->getMaximumFrequency();
+        const double freq = std::clamp<double>(frequencyFromY(p.y(), maximumFrequency), 0.0, maximumFrequency);
+
+        sineWave->setFrequency(freq);
+        sineWave->setPlaying(true);
+    }
+    else {
+        sineWave->setPlaying(false);
+    }
 }
 
 void AnalyserCanvas::setSelectedFrame(int frame)

@@ -9,6 +9,8 @@ PowerSpectrum::PowerSpectrum(Analyser * analyser, AnalyserCanvas * canvas)
       maxNfft(512),
       analyser(analyser), canvas(canvas)
 {
+    setObjectName("PowerSpectrum");
+
     holdLength = 25;
 
     spectrum.fill(Qt::black);
