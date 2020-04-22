@@ -371,6 +371,12 @@ QWidget * MainWindow::uiBarLeft()
 #ifdef UI_BAR_PAUSE_LEFT
     layout->addWidget(pause);
 #endif
+
+#ifdef UI_KEYBIND_SETTINGS_IN_DIALOG
+    auto openKeybindSettings = new QPushButton("Keybinds");
+    connect(openKeybindSettings, &QPushButton::clicked, keybinds, &QWidget::showNormal);
+    layout->addWidget(openKeybindSettings);
+#endif
     
     return widget;
 }

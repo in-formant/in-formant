@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QKeyEvent>
 #include <QMouseEvent>
+#include <QFormLayout>
 #include <iostream>
 #include "Keybinds.h"
 #include "../log/simpleQtLogger.h"
@@ -41,6 +42,15 @@ Keybinds::Keybinds()
     mDefaultBinds[i].button = Qt::MiddleButton;
 
     loadSettings();
+
+    setWindowFlag(Qt::Window);
+    setWindowTitle("Set bindings");
+
+    auto layout = new QFormLayout(this);
+    
+    for (int i = 0; i < bindActionCount; ++i) {
+        layout->addRow(mActionNames[i], new KeybindField(this, static_cast<BindAction>(i)));
+    }
 }
 
 Keybinds::~Keybinds()
@@ -82,6 +92,11 @@ void Keybinds::unbind(BindAction action)
     mActionMap[int(action)].type = BindType::None;
 }
 
+const BindInput& Keybinds::getBinding(BindAction action)
+{
+    return mActionMap[int(action)];
+}
+
 bool Keybinds::isKeyBound(Qt::Key key)
 {
     return mKeyBindings.contains(key);
@@ -94,43 +109,55 @@ bool Keybinds::isMouseBound(Qt::MouseButton button)
 
 bool Keybinds::eventFilter(QObject * obj, QEvent * event)
 {
-    if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) {
-        const auto keyEvent = static_cast<QKeyEvent *>(event);
-        const Qt::Key key = static_cast<Qt::Key>(keyEvent->key());
-
-        mPressedKeys.insert(key, (event->type() == QEvent::KeyPress));
-
-        if (mKeyBindings.contains(key)) {
-            emitAction(mKeyBindings.value(key), obj, mPressedKeys.value(key));
-            return true;
-        }
-    }
-
-    if (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease) {
+    if (event->type() == QEvent::MouseButtonPress) {
         const auto mouseEvent = static_cast<QMouseEvent *>(event);
-        const Qt::MouseButton button = static_cast<Qt::MouseButton>(mouseEvent->button());
-
+        const auto button = static_cast<Qt::MouseButton>(mouseEvent->button());
+        mPressedButtons.insert(button);
         if (mMouseBindings.contains(button)) {
-            emitAction(mMouseBindings.value(button), obj, (event->type() == QEvent::MouseButtonPress));
+            emitAction(mMouseBindings.value(button), obj, true);
             return true;
         }
     }
-    
-    if (event->type() == QEvent::MouseMove) {
+    else if (event->type() == QEvent::MouseButtonRelease) {
+        const auto mouseEvent = static_cast<QMouseEvent *>(event);
+        const auto button = static_cast<Qt::MouseButton>(mouseEvent->button());
+        mPressedButtons.remove(button);
+        if (mMouseBindings.contains(button)) {
+            emitAction(mMouseBindings.value(button), obj, false);
+            return true;
+        }
+    }
+    else if (event->type() == QEvent::KeyPress) {
+        const auto keyEvent = static_cast<QKeyEvent *>(event);
+        const auto key = static_cast<Qt::Key>(keyEvent->key());
+        mPressedKeys.insert(key);
+        if (mKeyBindings.contains(key)) {
+            emitAction(mKeyBindings.value(key), obj, true);
+            return true;
+        }
+    }
+    else if (event->type() == QEvent::KeyRelease) {
+        const auto keyEvent = static_cast<QKeyEvent *>(event);
+        const auto key = static_cast<Qt::Key>(keyEvent->key());
+        mPressedKeys.remove(key);
+        if (mKeyBindings.contains(key)) {
+            emitAction(mKeyBindings.value(key), obj, false);
+            return true;
+        }
+    }
+    else if (event->type() == QEvent::MouseMove) {
         bool didSomething = false;
-        
-        // Move cursor.
+
         BindInput actionCursor = mActionMap[int(BindAction::MoveCursor)];
-        if ((actionCursor.type == BindType::Key && mPressedKeys.value(actionCursor.key))
-                || (actionCursor.type == BindType::Mouse && (QApplication::mouseButtons() & actionCursor.button) != 0)) {
+        if ((actionCursor.type == BindType::Key && mPressedKeys.contains(actionCursor.key))
+                || (actionCursor.type == BindType::Mouse && mPressedButtons.contains(actionCursor.button))) {
             emitAction(BindAction::MoveCursor, obj, true);
             didSomething = true;
         }
-        
-        // Sine wave.
+
         BindInput actionSine = mActionMap[int(BindAction::SineWave)];
-        if ((actionSine.type == BindType::Key && mPressedKeys.value(actionSine.key))
-                || (actionSine.type == BindType::Mouse && (QApplication::mouseButtons() & actionSine.button) != 0)) {
+        if ((actionSine.type == BindType::Key && mPressedKeys.contains(actionSine.key))
+                || (actionSine.type == BindType::Mouse && mPressedButtons.contains(actionSine.button))) {
             emitAction(BindAction::SineWave, obj, true);
             didSomething = true;
         }
@@ -138,7 +165,7 @@ bool Keybinds::eventFilter(QObject * obj, QEvent * event)
         return didSomething;
     }
 
-    return QObject::eventFilter(obj, event);
+    return false;
 }
 
 void Keybinds::emitAction(BindAction action, QObject * source, bool flag)
@@ -264,4 +291,111 @@ BindInput inputFromString(const QString& string)
     }
 
     return input;
+}
+
+QString bindToString(const BindInput& input)
+{
+    if (input.type == BindType::None) {
+        return "None";
+    }
+    else if (input.type == BindType::Key) {
+        return keyToString(input.key);
+    }
+    else if (input.type == BindType::Mouse) {
+        return mouseButtonToString(input.button);
+    }
+    else {
+        return "Unknown";
+    }
+}
+
+QString keyToString(Qt::Key key)
+{
+    return QKeySequence(key).toString();
+}
+
+QString mouseButtonToString(Qt::MouseButton button)
+{
+    if (button == Qt::NoButton)      return "NoButton";
+    if (button == Qt::LeftButton)    return "LeftButton";
+    if (button == Qt::RightButton)   return "RightButton";
+    if (button == Qt::MiddleButton)  return "MiddleButton";
+    if (button == Qt::BackButton)    return "BackButton";
+    if (button == Qt::ForwardButton) return "ForwardButton";
+    if (button == Qt::TaskButton)    return "TaskButton";
+    if (button == Qt::ExtraButton4)  return "ExtraButton4";
+    if (button == Qt::ExtraButton5)  return "ExtraButton5";
+    if (button == Qt::ExtraButton6)  return "ExtraButton6";
+    if (button == Qt::ExtraButton7)  return "ExtraButton7";
+    if (button == Qt::ExtraButton8)  return "ExtraButton8";
+    if (button == Qt::ExtraButton9)  return "ExtraButton9";
+    if (button == Qt::ExtraButton10) return "ExtraButton10";
+    if (button == Qt::ExtraButton11) return "ExtraButton11";
+    if (button == Qt::ExtraButton12) return "ExtraButton12";
+    if (button == Qt::ExtraButton13) return "ExtraButton13";
+    if (button == Qt::ExtraButton14) return "ExtraButton14";
+    if (button == Qt::ExtraButton15) return "ExtraButton15";
+    if (button == Qt::ExtraButton16) return "ExtraButton16";
+    if (button == Qt::ExtraButton17) return "ExtraButton17";
+    if (button == Qt::ExtraButton18) return "ExtraButton18";
+    if (button == Qt::ExtraButton19) return "ExtraButton19";
+    if (button == Qt::ExtraButton20) return "ExtraButton20";
+    if (button == Qt::ExtraButton21) return "ExtraButton21";
+    if (button == Qt::ExtraButton22) return "ExtraButton22";
+    if (button == Qt::ExtraButton23) return "ExtraButton23";
+    if (button == Qt::ExtraButton24) return "ExtraButton24";
+    return "NoButton";
+}
+
+KeybindField::KeybindField(Keybinds *keybinds, BindAction action)
+    : mKeybinds(keybinds), mAction(action), mSelected(false)
+{
+    setContextMenuPolicy(Qt::PreventContextMenu);
+    setReadOnly(true);
+    updateText();
+}
+
+void KeybindField::mousePressEvent(QMouseEvent *e)
+{
+    e->accept();
+
+    if (!mSelected) {
+        mSelected = true;
+        
+        grabMouse();
+        grabKeyboard();
+    }
+    else {
+        mKeybinds->unbind(mAction);
+        mKeybinds->bindMouse(e->button(), mAction);
+
+        releaseMouse();
+        releaseKeyboard();
+
+        updateText();
+
+        mSelected = false;
+    }
+}
+
+void KeybindField::keyPressEvent(QKeyEvent *e)
+{
+    e->accept();
+
+    if (mSelected) { 
+        mKeybinds->unbind(mAction);
+        mKeybinds->bindKey(static_cast<Qt::Key>(e->key()), mAction);
+
+        releaseMouse();
+        releaseKeyboard();
+
+        updateText();
+        
+        mSelected = false;
+    }
+}
+
+void KeybindField::updateText()
+{
+    setText(bindToString(mKeybinds->getBinding(mAction)));
 }

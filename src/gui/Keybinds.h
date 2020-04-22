@@ -2,11 +2,17 @@
 #define KEYBINDS_H
 
 #include <Qt>
-#include <QObject>
+#include <QWidget>
+#include <QLineEdit>
 #include <QSettings>
 #include <QTimer>
 #include <QSet>
 #include <QMap>
+#include <array>
+
+#ifdef Q_OS_WASM
+#   include "../qwasmsettings.h"
+#endif
 
 enum class BindType { None = 0, Key, Mouse, Invalid };
 
@@ -21,6 +27,10 @@ struct BindInput {
 QString stringFromInput(const BindInput& input);
 BindInput inputFromString(const QString& string);
 
+QString bindToString(const BindInput& input);
+QString keyToString(Qt::Key key);
+QString mouseButtonToString(Qt::MouseButton button);
+
 enum class BindAction {
     MoveCursor = 0,
     Close,
@@ -33,7 +43,7 @@ enum class BindAction {
 
 constexpr int bindActionCount = static_cast<int>(BindAction::LastBindAction);
 
-class Keybinds : public QObject {
+class Keybinds : public QWidget {
     Q_OBJECT
 public:
     Keybinds();
@@ -42,7 +52,9 @@ public:
     void bindKey(Qt::Key key, BindAction action);
     void bindMouse(Qt::MouseButton button, BindAction action);
     void unbind(BindAction action);
-    
+   
+    const BindInput& getBinding(BindAction);
+
     bool isKeyBound(Qt::Key key);
     bool isMouseBound(Qt::MouseButton button);
 
@@ -76,7 +88,25 @@ private:
     std::array<QString, bindActionCount> mActionNames;
     std::array<BindInput, bindActionCount> mDefaultBinds;
 
-    QMap<Qt::Key, bool> mPressedKeys;
+    QSet<Qt::Key> mPressedKeys;
+    QSet<Qt::MouseButton> mPressedButtons;
+};
+
+class KeybindField : public QLineEdit {
+    Q_OBJECT
+public:
+    KeybindField(Keybinds *, BindAction); 
+
+protected:
+    void mousePressEvent(QMouseEvent *e) override;
+    void keyPressEvent(QKeyEvent *e) override;
+
+private:
+    void updateText();
+
+    Keybinds *mKeybinds;
+    BindAction mAction;
+    bool mSelected;
 };
 
 #endif // KEYBINDS_H

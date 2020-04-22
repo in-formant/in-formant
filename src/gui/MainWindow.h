@@ -37,6 +37,7 @@
 
 #ifdef Q_OS_WASM
 #elif !defined(Q_OS_ANDROID)
+#   define UI_KEYBIND_SETTINGS_IN_DIALOG
 #   define UI_DISPLAY_SETTINGS_IN_DIALOG
 #   define UI_DOCK_FLOATABLE
 #   define UI_SHOW_DEVICE_SETTING
@@ -44,7 +45,7 @@
 #   define UI_BAR_FULLSCREEN
 #endif
 
-#if defined(UI_BAR_PAUSE_LEFT)
+#if defined(UI_BAR_PAUSE_LEFT) || defined(UI_KEYBIND_SETTINGS_IN_DIALOG)
 #   define UI_HAS_LEFT_BAR 1
 #else
 #   define US_HAS_LEFT_BAR 0
@@ -126,7 +127,7 @@ private:
     AudioInterface * audioInterface;
     Analyser * analyser;
 
-    Keybinds keybinds;
+    Keybinds * keybinds;
 
 #if defined(Q_OS_MAC)
     void * audioInterfaceMem;
@@ -156,6 +157,7 @@ private:
 
 #ifdef UI_DISPLAY_SETTINGS_IN_DIALOG
     QWidget * displaySettings;
+    QWidget * bindingsMenu;
 #endif
 
 #if DO_UPDATE_DEVICES

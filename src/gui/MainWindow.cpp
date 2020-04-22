@@ -110,6 +110,7 @@ MainWindow::MainWindow()
 
     canvas = new AnalyserCanvas(analyser, sineWave, noiseFilter);
     powerSpectrum = new PowerSpectrum(analyser, canvas);
+    keybinds = new Keybinds();
 
 #ifdef Q_OS_ANDROID
     JniInstance::createInstance(analyser, canvas, powerSpectrum);
@@ -158,21 +159,21 @@ MainWindow::MainWindow()
     resize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
     // Keybind event filters
-    this->installEventFilter(&keybinds);
-    window()->installEventFilter(&keybinds);
-    canvas->installEventFilter(&keybinds);
-    powerSpectrum->installEventFilter(&keybinds);
+    this->installEventFilter(keybinds);
+    window()->installEventFilter(keybinds);
+    canvas->installEventFilter(keybinds);
+    powerSpectrum->installEventFilter(keybinds);
 #ifdef UI_DISPLAY_SETTINGS_IN_DIALOG
-    displaySettings->installEventFilter(&keybinds);
+    displaySettings->installEventFilter(keybinds);
 #endif
 
     // Keybind signal connections
-    connect(&keybinds, &Keybinds::actionCursor, canvas, &AnalyserCanvas::cursorMove);
-    connect(&keybinds, &Keybinds::actionClose, this, &MainWindow::pressClose);
-    connect(&keybinds, &Keybinds::actionPause, this, &MainWindow::toggleAnalyser);
-    connect(&keybinds, &Keybinds::actionFullscreen, this, &MainWindow::toggleFullscreen);
-    connect(&keybinds, &Keybinds::actionSineWave, canvas, &AnalyserCanvas::toggleSineWave);
-    connect(&keybinds, &Keybinds::actionNoiseFilter, this, &MainWindow::toggleNoiseFilter);
+    connect(keybinds, &Keybinds::actionCursor, canvas, &AnalyserCanvas::cursorMove);
+    connect(keybinds, &Keybinds::actionClose, this, &MainWindow::pressClose);
+    connect(keybinds, &Keybinds::actionPause, this, &MainWindow::toggleAnalyser);
+    connect(keybinds, &Keybinds::actionFullscreen, this, &MainWindow::toggleFullscreen);
+    connect(keybinds, &Keybinds::actionSineWave, canvas, &AnalyserCanvas::toggleSineWave);
+    connect(keybinds, &Keybinds::actionNoiseFilter, this, &MainWindow::toggleNoiseFilter);
 
 #if DO_UPDATE_DEVICES
     updateDevices();
@@ -237,6 +238,8 @@ void MainWindow::cleanup()
 #endif
 
     delete sineWave;
+
+    delete keybinds;
 
     delete devs;
     ma_context_uninit(&maCtx);
@@ -352,15 +355,21 @@ void MainWindow::pressClose(QObject * obj, bool toggle)
 {
     if (!toggle) return;
 
+#ifdef UI_KEYBIND_SETTINGS_IN_DIALOG
+        keybinds->close();
+#endif
+
+#ifdef UI_DISPLAY_SETTINGS_IN_DIALOG
     if (obj != displaySettings) {
         close();
     }
-#ifdef UI_DISPLAY_SETTINGS_IN_DIALOG
     else {
         displaySettings->setVisible(false);
         window()->activateWindow();
         window()->setFocus(Qt::ActiveWindowFocusReason);
     }
+#else
+    close();
 #endif
 }
 
