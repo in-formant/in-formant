@@ -1,6 +1,7 @@
 out.*
 *.log
 web-bundle/speech_analysis.*
+android-libspeech/
 
 pkg/
 external-*/
