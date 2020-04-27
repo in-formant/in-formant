@@ -47,7 +47,10 @@ MainWindow::MainWindow()
     availableFormantAlgs
         << "LP"
         << "KARMA"
-        << "DeepFormants";
+#ifdef HAS_ML_FORMANTS
+        << "DeepFormants"
+#endif
+        ;
 
     availableFreqScales
         << "Linear"

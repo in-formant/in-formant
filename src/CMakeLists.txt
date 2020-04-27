@@ -117,6 +117,7 @@ if (NOT EMSCRIPTEN AND NOT ANDROID)
     add_definitions(-DHAS_ML_FORMANTS)
     find_package(Torch REQUIRED)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+    set(TORCH_LIBRARIES "${TORCH_LIBRARIES} -fopenmp")
 endif()
 
 include_directories(
@@ -200,7 +201,6 @@ target_link_libraries(speech_analysis
     Eigen3::Eigen
     ${FFTW_LIBRARIES}
     "${TORCH_LIBRARIES}"
-    "-fopenmp"
 )
 
 if(EMSCRIPTEN)
@@ -217,7 +217,7 @@ if(EMSCRIPTEN)
         -L${QT_PREFIX}/plugins/imageformats
         qwasm
         Qt5EventDispatcherSupport
-        linkQt5FontDatabaseSupport
+        Qt5FontDatabaseSupport
         qtfreetype
         Qt5EglSupport
         libqgif
