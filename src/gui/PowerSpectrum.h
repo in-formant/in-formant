@@ -21,9 +21,6 @@ public slots:
     void renderLpc(double maxFreq, SpecFrame lpcSpectrum);
 
 private:
-    double frequencyFromY(int y, double maximumFrequency);
-    int yFromFrequency(double freq, double maximumFrequency);
-
     void advanceHold(const SpecFrame& frame);
 
     rpm::vector<rpm::deque<double>> holdQues;
@@ -31,8 +28,8 @@ private:
     int holdLength, holdIndex;
 
     std::mutex imageLock;
-    QImage spectrum;
-    QImage lpcIm;
+    QPicture spectrum;
+    QPicture lpcIm;
   
     int maxNfft;
 

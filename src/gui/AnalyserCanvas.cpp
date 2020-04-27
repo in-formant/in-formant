@@ -13,19 +13,9 @@
 using namespace Eigen;
 
 AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave, NoiseFilter * noiseFilter) noexcept(false)
-    : spectrogram(1, 1, QImage::Format_ARGB32_Premultiplied),
-      tracks(1, 1, QImage::Format_ARGB32_Premultiplied),
-      scaleAndCursor(1, 1, QImage::Format_ARGB32_Premultiplied),
-#if defined(Q_OS_ANDROID)
-      upFactorTracks(0.6),
-      upFactorSpec(1),
-#elif defined(Q_OS_WASM)
+    : spectrogram(1, 1),
       upFactorTracks(1),
       upFactorSpec(1),
-#else
-      upFactorTracks(0.8),
-      upFactorSpec(1),
-#endif
       maxFreq(0),
       minGain(-60),
       maxGain(0),
@@ -44,7 +34,6 @@ AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave, NoiseFi
     setMouseTracking(true);
 
     spectrogram.fill(Qt::black);
-    tracks.fill(Qt::black);
 
     pitchColor = Qt::cyan;
     
@@ -67,14 +56,15 @@ void AnalyserCanvas::render() {
     imageLock.lock();
 
     if (drawSpectrum) {
-        painter.drawImage(0, 0, spectrogram.scaled(targetWidth, targetHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+        painter.drawPixmap(0, 0, spectrogram.scaled(targetWidth, targetHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     }
 
     if (drawTracks) {
-        painter.drawImage(0, 0, tracks.scaled(targetWidth, targetHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+        painter.drawPicture(0, 0, formantTracks);
+        painter.drawPicture(0, 0, pitchTrack);
     }
 
-    painter.drawImage(0, 0, scaleAndCursor);
+    painter.drawPicture(0, 0, scaleAndCursor);
 
     imageLock.unlock();
 
@@ -83,7 +73,6 @@ void AnalyserCanvas::render() {
 void AnalyserCanvas::renderTracks(const int nframe, const double maximumFrequency, FormantMethod formantAlg, const rpm::deque<double> &pitches, const Formant::Frames &formants) {
     std::lock_guard<std::mutex> guard(imageLock);
 
-    tracks.fill(Qt::transparent);
     renderFormantTrack(nframe, maximumFrequency, formantAlg, pitches, formants);
     renderPitchTrack(nframe, maximumFrequency, pitches);
 }
@@ -92,7 +81,10 @@ void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFr
 
     const double xstep = upFactorTracks * (double) targetWidth / (double) nframe;
 
-    QPainter tPainter(&tracks);
+    QPainter tPainter(&formantTracks);
+
+    tPainter.setPen(Qt::transparent);
+    tPainter.setBrush(Qt::transparent);
 
     std::array<QPainterPath, 4> paths;
     std::array<bool, 4> startPath;
@@ -152,10 +144,9 @@ void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFr
 
     }
 
-    tPainter.setBrush(Qt::transparent);
-
     for (int nb = 0; nb < signed(paths.size()); ++nb) {
         tPainter.setPen(QPen(formantColors[nb], upFactorTracks * formantThick, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        tPainter.setBrush(Qt::transparent);
         tPainter.drawPath(paths[nb]);
     }
 }
@@ -163,7 +154,7 @@ void AnalyserCanvas::renderFormantTrack(const int nframe, const double maximumFr
 void AnalyserCanvas::renderPitchTrack(const int nframe, const double maximumFrequency, const rpm::deque<double> &pitches) {
     const double xstep = upFactorTracks * (double) targetWidth / (double) nframe;
     
-    QPainter tPainter(&tracks);
+    QPainter tPainter(&pitchTrack);
 
     QPainterPath path;
     bool beginTrack = true;
@@ -200,8 +191,6 @@ void AnalyserCanvas::renderScaleAndCursor(const int nframe, const double maximum
 
     constexpr int ruleSmall = 4;
     constexpr int ruleBig = 8;
-
-    scaleAndCursor.fill(Qt::transparent);
 
     QPainter painter(&scaleAndCursor);
     painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
@@ -269,10 +258,8 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
 
     const double xstep = upFactorSpec;
 
-    QImage spectrogramSnapshot = spectrogram.copy();
-    spectrogram.fill(Qt::transparent);
     QPainter scrollPainter(&spectrogram);
-    scrollPainter.drawImage(QPointF{-nNew * xstep, 0}, spectrogramSnapshot);
+    scrollPainter.drawPixmap(QPointF{-nNew * xstep, 0}, spectrogram);
     scrollPainter.end();
    
     QPainter sPainter(&spectrogram);
@@ -421,10 +408,7 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
 {
     targetWidth = width();
     targetHeight = height();
-
-    const int trackWidth = upFactorTracks * targetWidth; 
-    const int trackHeight = upFactorTracks * targetHeight; 
-   
+  
     const int nframe = analyser->getFrameCount();
     const int specWidth = upFactorSpec * nframe;
     const int specHeight = upFactorSpec * targetHeight;
@@ -435,18 +419,6 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
         imageLock.unlock();
     }
 
-    if (tracks.width() != trackWidth || tracks.height() != trackHeight) {
-        imageLock.lock();
-        tracks = tracks.scaled(trackWidth, trackHeight, Qt::IgnoreAspectRatio, Qt::FastTransformation);
-        imageLock.unlock();
-    }
-
-    if (scaleAndCursor.width() != targetWidth || scaleAndCursor.height() != targetHeight) {
-        imageLock.lock();
-        scaleAndCursor = scaleAndCursor.scaled(targetWidth, targetHeight, Qt::IgnoreAspectRatio, Qt::FastTransformation);
-        imageLock.unlock();
-    }
-    
     painter.begin(this);
     
     painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);

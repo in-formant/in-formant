@@ -56,6 +56,9 @@ public:
     int getMinGainSpectrum() const;
     int getMaxGainSpectrum() const;
 
+    double yFromFrequency(double frequency, double maxFreq);
+    double frequencyFromY(int y, double maxFreq);
+
     void loadSettings() { QSettings s; loadSettings(s); }
     void saveSettings() { QSettings s; saveSettings(s); }
 
@@ -78,16 +81,14 @@ private:
     void renderPitchTrack(int nframe, double maxFreq, const rpm::deque<double> &pitches);
     void renderFormantTrack(int nframe, double maxFreq, FormantMethod formantAlg, const rpm::deque<double> &pitches, const Formant::Frames &formants);
 
-    double yFromFrequency(double frequency, double maxFreq);
-    double frequencyFromY(int y, double maxFreq);
-
     // Graphics-related members
     QPainter painter;
 
     std::mutex imageLock;
-    QImage spectrogram;
-    QImage tracks;
-    QImage scaleAndCursor;
+    QPixmap spectrogram;
+    QPicture formantTracks;
+    QPicture pitchTrack;
+    QPicture scaleAndCursor;
     double upFactorTracks;
     double upFactorSpec;
 
