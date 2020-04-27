@@ -60,6 +60,7 @@ set(SOURCES
     analysis/parts/lpc.cpp
     analysis/parts/smooth.cpp
     analysis/parts/pitch.cpp
+    analysis/parts/deepformants.cpp
     analysis/parts/openquotient.cpp
     analysis/parts/preprocess.cpp
     analysis/parts/resample.cpp
@@ -112,11 +113,18 @@ endif()
 
 find_package(FFTW REQUIRED COMPONENTS DOUBLE_LIB)
 
+if (NOT EMSCRIPTEN AND NOT ANDROID)
+    add_definitions(-DHAS_ML_FORMANTS)
+    find_package(Torch REQUIRED)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+endif()
+
 include_directories(
 	${libspeech_INCLUDE_DIR}
     ${Qt5Widgets_INCLUDE_DIRS}
     ${EIGEN_INCLUDE_DIRS}
     ${FFTW_INCLUDE_DIRS}
+    ${TORCH_INCLUDE_DIRS}
 )
 
 if (APPLE OR ANDROID OR EMSCRIPTEN)
@@ -185,10 +193,14 @@ else()
     add_executable(speech_analysis WIN32 ${SOURCES})
 endif()
 
+message(STATUS "${TORCH_LIBRARIES}")
+
 target_link_libraries(speech_analysis
     ${libspeech_LIBRARY}
     Eigen3::Eigen
     ${FFTW_LIBRARIES}
+    "${TORCH_LIBRARIES}"
+    "-fopenmp"
 )
 
 if(EMSCRIPTEN)
@@ -205,7 +217,7 @@ if(EMSCRIPTEN)
         -L${QT_PREFIX}/plugins/imageformats
         qwasm
         Qt5EventDispatcherSupport
-        Qt5FontDatabaseSupport
+        linkQt5FontDatabaseSupport
         qtfreetype
         Qt5EglSupport
         libqgif

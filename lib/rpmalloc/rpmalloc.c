@@ -1,3 +1,5 @@
+#ifndef __EMSCRIPTEN__
+
 /* rpmalloc.c  -  Memory allocator  -  Public Domain  -  2016 Mattias Jansson
  *
  * This library provides a cross-platform lock free thread caching malloc implementation in C11.
@@ -2509,3 +2511,5 @@ rpmalloc_dump_statistics(void* file) {
 #include "malloc.c"
 
 #endif
+
+#endif // __EMSCRIPTEN__

@@ -2,6 +2,12 @@
 // Created by rika on 06/12/2019.
 //
 
+#ifdef HAS_ML_FORMANTS
+#   include "DeepFormants/df.h"
+#   include <QByteArray>
+#   include <QFile>
+#endif
+
 #include <cstdio>
 #include "MainWindow.h"
 #include "ColorMaps.h"
@@ -9,13 +15,13 @@
 #include "../log/simpleQtLogger.h"
 #include "rpmalloc.h"
 #ifdef Q_OS_ANDROID
-    #include <QtAndroid>
-    #include <QAndroidIntent>
-    #include <jni.h>
-    #include "../jni/JniInstance.h"
+#   include <QtAndroid>
+#   include <QAndroidIntent>
+#   include <jni.h>
+#   include "../jni/JniInstance.h"
 #endif
 #ifdef Q_OS_WASM
-    #include <emscripten/html5.h>
+#   include <emscripten/html5.h>
 #endif
 
 constexpr int maxWidthComboBox = 200;
@@ -36,10 +42,12 @@ MainWindow::MainWindow()
         << "McLeod"
         << "YIN"
         << "AMDF";
+        //<< "CREPE";
 
     availableFormantAlgs
         << "LP"
-        << "KARMA";
+        << "KARMA"
+        << "DeepFormants";
 
     availableFreqScales
         << "Linear"
@@ -50,6 +58,16 @@ MainWindow::MainWindow()
         (void) map;
         availableColorMaps << name;
     }
+
+#ifdef HAS_ML_FORMANTS
+    L_INFO("Loading pretrained neural network...");
+
+    QFile file(":/lib/DeepFormants/model.pt");
+    file.open(QIODevice::ReadOnly);
+    QByteArray bytes = file.readAll();
+    loadModuleFromBuffer(bytes.data(), bytes.size());
+    file.close();
+#endif
 
     L_INFO("Initialising miniaudio context...");
 

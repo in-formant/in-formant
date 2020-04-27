@@ -46,24 +46,15 @@ void Analyser::analyseSpectrum()
     ArrayXd h;
 
     yin.setZero();
-    yin(0) = 0.5;
-
-    rfft(nfftLpc);
-
-    h = yout;
-
-    yin.setZero();
     yin(0) = 1.0;
     yin.segment(1, p) = lpcFrame.a;
 
     rfft(nfftLpc);
 
-    h /= yout;
+    h = 0.5 / yout;
 
     lpcSpectrum.fs = fs;
     lpcSpectrum.nfft = nfftLpc;
     lpcSpectrum.spec = h;
     
-    
-
 }

@@ -23,6 +23,8 @@ namespace Pitch {
 
     void estimate_YIN(const Eigen::ArrayXd & x, double fs, Pitch::Estimation & result, double threshold);
 
+    void estimate_CREPE(const Eigen::ArrayXd & x, double fs, Pitch::Estimation & result);
+
 }
 
 #endif //SPEECH_ANALYSIS_PITCH_H

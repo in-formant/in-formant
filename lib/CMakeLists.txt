@@ -37,6 +37,9 @@ set(SOURCES
     Formant/EKF/genLPCC.cpp
     Formant/EKF/init.cpp
     Formant/EKF/step.cpp
+    DeepFormants/df.h
+    DeepFormants/torch.cpp
+    DeepFormants/features.cpp
     LPC/Frame/LPC_Frame.cpp
     LPC/Frame/LPC_Frame.h
     LPC/Frame/LPC_Frame_auto.cpp
@@ -65,10 +68,19 @@ set(SOURCES
     Pitch/Yin/difference.cpp
     Pitch/Yin/cmnd.cpp
     Pitch/Yin/threshold.cpp
+    #Pitch/CREPE/crepe.h
+    #Pitch/CREPE/crepe.cpp
+    #Pitch/CREPE/models.h
+    #Pitch/CREPE/model-tiny.cpp
+    #Pitch/CREPE/model-small.cpp
+    #Pitch/CREPE/model-medium.cpp
+    #Pitch/CREPE/model-large.cpp
+    #Pitch/CREPE/model-full.cpp
     Pitch/Pitch_AMDF.cpp
     Pitch/Pitch_MPM.cpp
     Pitch/Pitch_DynWav.cpp
     Pitch/Pitch_YIN.cpp
+    #Pitch/Pitch_CREPE.cpp
     Pitch/Pitch.h
     GCOI/GCOI.h
     GCOI/findpeaks.cpp
@@ -89,11 +101,9 @@ set(SOURCES
     FFT/FFT.cpp
     FFT/FFT.h
     MFCC/MFCC.h
-    rpmalloc/rpmalloc.h)
-
-if (NOT EMSCRIPTEN)
-    list(APPEND SOURCES rpmalloc/rpmalloc.c)
-endif()
+    rpmalloc/rpmalloc.c
+    rpmalloc/rpmalloc.h
+    rpmalloc.h)
 
 find_package(Eigen3 REQUIRED NO_MODULE)
 
@@ -105,6 +115,12 @@ endif()
 
 find_package(FFTW REQUIRED COMPONENTS DOUBLE_LIB)
 
+if (NOT EMSCRIPTEN AND NOT ANDROID)
+    add_definitions(-DHAS_ML_FORMANTS)
+    find_package(Torch REQUIRED)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+endif()
+
 if (APPLE)
     include_directories($ENV{OSXCROSS}/SDK/MacOSX10.13.sdk/usr/include/c++/v1)
 endif()
@@ -112,6 +128,7 @@ endif()
 include_directories(
     ${EIGEN_INCLUDE_DIRS}
     ${FFTW_INCLUDE_DIRS}
+    ${TORCH_INCLUDE_DIRS}
 )
 
 if (ANDROID)
@@ -130,5 +147,6 @@ endif()
 target_link_libraries(speech
     Eigen3::Eigen
     ${FFTW_LIBRARIES}
+    "${TORCH_LIBRARIES}"
 )
 

@@ -50,10 +50,15 @@ void Filter::preEmphasis(ArrayXd & x, double samplingFrequency, double preEmphas
     if (preEmphasisFrequency >= 0.5 * samplingFrequency)
         return;
 
-    const double preEmphasis = exp(-2.0 * M_PI * preEmphasisFrequency / samplingFrequency);
+    const double preEmphasis = 1.0 / (2.0 * M_PI * preEmphasisFrequency / samplingFrequency + 1.0);
 
-    for (int i = x.size() - 1; i >= 1; --i) {
-        x(i) -= preEmphasis * x(i - 1);
+    ArrayXd y(x.size());
+
+    y(0) = x(0);
+    for (int i = 1; i < x.size(); ++i) {
+        y(i) = preEmphasis * (y(i - 1) + x(i) - x(i - 1));
     }
+
+    x = std::move(y);
 }
 

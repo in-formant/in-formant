@@ -66,6 +66,8 @@ DECL_FFT(rcfft, double, Eigen::dcomplex)
 DECL_FFT(crfft, Eigen::dcomplex, double)
 DECL_FFT(fft, Eigen::dcomplex, Eigen::dcomplex)
 DECL_FFT(ifft, Eigen::dcomplex, Eigen::dcomplex)
+DECL_FFT(dct, double, double)
+DECL_FFT(idct, double, double)
 
 void all_fft_cleanup();
 

@@ -65,6 +65,7 @@ set(CMAKE_ARGS
     -DANDROID_PLATFORM=${ANDROID_PLATFORM}
     -DEigen3_DIR=${Eigen3_DIR}
     -DFFTW_ROOT=${FFTW_ROOT}
+    -DTorch_DIR=${Torch_DIR}
 )
 
 ExternalProject_Add(libspeech

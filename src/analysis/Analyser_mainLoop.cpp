@@ -66,7 +66,11 @@ void Analyser::update()
 
     // Get a pitch estimate.
     analysePitch();
-    
+   
+    if (formantMethod == DeepFormants) {
+        analyseDeepFormants();
+    }
+
     // Get an Oq estimate.
     analyseOq();
 
@@ -85,8 +89,10 @@ void Analyser::update()
     // Analyse spectrum.
     analyseSpectrum();
 
-    // Perform formant analysis.
-    analyseFormant();
+    // Perform formant analysis. 
+    if (formantMethod != DeepFormants) {
+        analyseFormant();
+    }
 
     // Lock the tracks to prevent data race conditions.
     mutex.lock();

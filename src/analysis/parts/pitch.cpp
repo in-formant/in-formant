@@ -12,6 +12,9 @@ void Analyser::analysePitch()
     Pitch::Estimation est{};
 
     switch (pitchAlg) {
+        /*case CREPE:
+            Pitch::estimate_CREPE(x_fft.head(1024), fs, est);
+            break;*/
         case Wavelet:
             Pitch::estimate_DynWav(x, fs, est, 6, 3000, 12, 0.35, lastPitchFrame);
             break;

@@ -241,6 +241,9 @@ void Analyser::setPitchAlgorithm(enum PitchAlg _pitchAlg, bool save) {
         case AMDF:
             L_INFO("Set pitch algorithm to AMDF");
             break;
+        /*case CREPE:
+            L_INFO("Set pitch algorithm to CREPE");
+            break;*/
     }
 
 #ifdef Q_OS_WASM
@@ -264,6 +267,9 @@ void Analyser::setFormantMethod(enum FormantMethod _method, bool save) {
             break;
         case KARMA:
             L_INFO("Set formant algorithm to KARMA");
+            break;
+        case DeepFormants:
+            L_INFO("Set formant algorithm to DeepFormants");
             break;
     }
 
@@ -367,7 +373,8 @@ void Analyser::_updateCaptureDuration()
     double fs = audioInterface->getRecordSampleRate();
 
     // Account for resampling.
-    fftSamples = nfft; //(fs * nfft) / refs;
+    // 1024 for crepe pitch algorithm
+    fftSamples = std::max(1024, nfft); //(fs * nfft) / refs;
     frameSamples = frameLength.count() / 1000.0 * fs;
 
     int nsamples = std::max(fftSamples, frameSamples);

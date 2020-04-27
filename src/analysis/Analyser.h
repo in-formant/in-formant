@@ -32,11 +32,13 @@ enum PitchAlg {
     McLeod,
     YIN,
     AMDF,
+    //CREPE,
 };
 
 enum FormantMethod {
     LP = 0,
     KARMA,
+    DeepFormants,
 };
 
 class Analyser {
@@ -99,6 +101,7 @@ private:
     void applyWindow();
     void analyseSpectrum();
     void analysePitch();
+    void analyseDeepFormants();
     void analyseOq();
     void resampleAudio();
     void applyPreEmphasis();
