@@ -6,6 +6,6 @@
         <file>icons/play.png</file>
         <file>icons/pause.png</file>
         <file>icons/settings.png</file>
-        <file>lib/DeepFormants/model.pt</file>
+        <!--<file>lib/DeepFormants/model.pt</file>-->
     </qresource>
 </RCC>

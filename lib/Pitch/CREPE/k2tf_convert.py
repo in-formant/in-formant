@@ -57,7 +57,7 @@ def convertGraph( modelPath, outdir, numoutputs, prefix, name):
 
     capacity_multiplier = {
         'tiny': 4, 'small': 8, 'medium': 16, 'large': 24, 'full': 32
-    }['full']
+    }['tiny']
 
     layers = [1, 2, 3, 4, 5, 6]
     filters = [n * capacity_multiplier for n in [32, 4, 4, 4, 8, 16]]

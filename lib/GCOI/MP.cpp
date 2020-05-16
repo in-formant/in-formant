@@ -44,7 +44,7 @@ rpm::vector<GCOI::GIPair> GCOI::estimate_MultiProduct(const ArrayXd & _x, double
         int t1 = 0.8 * gcis[k] + 0.2 * gcis[k + 1];
         int t2 = gcis[k + 1];
         
-        p(seq(t1, t2)).maxCoeff(&pair.goi);
+        p.segment(t1, t2 - t1 + 1).maxCoeff(&pair.goi);
         pair.goi += pair.gci;
 
         pairs.push_back(std::move(pair));

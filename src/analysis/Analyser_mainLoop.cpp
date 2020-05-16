@@ -72,7 +72,10 @@ void Analyser::update()
     }
 
     // Get an Oq estimate.
-    analyseOq();
+    //analyseOq();
+    
+    // Do inverse filtering and export signals.
+    applyInverseFilter();
 
     // Resample audio.
     resampleAudio();
@@ -122,7 +125,9 @@ void Analyser::update()
     applySmoothingFilters();
 
     // Set the has-new-frames flag.
-    nbNewFrames++;
+    if (nbNewFrames < frameCount - 1) {
+        nbNewFrames++;
+    }
 
     // Unlock the tracks.
     mutex.unlock();

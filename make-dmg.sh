@@ -7,7 +7,7 @@ FILE="$(pwd)"/out.OSX.dmg
 
 rm -f "$FILE"
 
-dd if=/dev/zero of="$FILE" bs=1M count=7 status=progress
+dd if=/dev/zero of="$FILE" bs=1M count=16 status=progress
 
 mkfs.hfsplus -v Install "$FILE"
 

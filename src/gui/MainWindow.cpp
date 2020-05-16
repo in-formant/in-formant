@@ -133,6 +133,10 @@ MainWindow::MainWindow()
     powerSpectrum = new PowerSpectrum(analyser, canvas);
     keybinds = new Keybinds();
 
+#ifdef UI_OSCILLOSCOPE
+    oscilloscope = new Oscilloscope;
+#endif
+
 #ifdef Q_OS_ANDROID
     JniInstance::createInstance(analyser, canvas, powerSpectrum);
 #endif 
@@ -162,18 +166,31 @@ MainWindow::MainWindow()
     {
         layout->addWidget(uiBar(fields));
 
-        auto splitter = new QSplitter;
-        splitter->setHandleWidth(12);
-       
-        auto splitterLayout = new QHBoxLayout(splitter);
-        { 
-            splitterLayout->addWidget(canvas, 4);
-            canvas->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        auto vSplitter = new QSplitter(Qt::Vertical);
+        vSplitter->setHandleWidth(12);
 
-            splitterLayout->addWidget(powerSpectrum, 1);
-            powerSpectrum->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        auto vSplitterLayout = new QVBoxLayout(vSplitter);
+        {
+            auto hSplitter = new QSplitter(Qt::Horizontal);
+            hSplitter->setHandleWidth(12);
+           
+            auto hSplitterLayout = new QHBoxLayout(hSplitter);
+            {
+                hSplitterLayout->addWidget(canvas, 4);
+                canvas->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+                hSplitterLayout->addWidget(powerSpectrum, 1);
+                powerSpectrum->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+            }
+            vSplitterLayout->addWidget(hSplitter, 4);
+
+#ifdef UI_OSCILLOSCOPE
+            vSplitterLayout->addWidget(oscilloscope, 1);
+            oscilloscope->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+#endif
         }
-        layout->addWidget(splitter);
+
+        layout->addWidget(vSplitter);
     }
 
     setWindowTitle(WINDOW_TITLE);
@@ -201,21 +218,26 @@ MainWindow::MainWindow()
 #endif
 
     connect(this, &MainWindow::newFramesTracks, canvas, &AnalyserCanvas::renderTracks);
-    connect(this, &MainWindow::newFramesSpectrum, canvas, &AnalyserCanvas::renderSpectrogram);
+    connect(this, &MainWindow::newFramesSpectrum, canvas, &AnalyserCanvas::renderSpectrogram); 
+    connect(this, &MainWindow::newFramesUI, canvas, &AnalyserCanvas::renderScaleAndCursor);
+   
     connect(this, &MainWindow::newFramesSpectrum, powerSpectrum, &PowerSpectrum::renderSpectrum);
     connect(this, &MainWindow::newFramesLpc, powerSpectrum, &PowerSpectrum::renderLpc);
-    connect(this, &MainWindow::newFramesUI, canvas, &AnalyserCanvas::renderScaleAndCursor);
+  
+#ifdef UI_OSCILLOSCOPE 
+    connect(this, &MainWindow::newFramesWaves, oscilloscope, &Oscilloscope::renderWaves);
+#endif
    
     connect(&timer, &QTimer::timeout, [&]() {
         analyser->callIfNewFrames(
                     [this](auto&&... ts) { emit newFramesTracks(std::forward<decltype(ts)>(ts)...); },
                     [this](auto&&... ts) { emit newFramesSpectrum(std::forward<decltype(ts)>(ts)...); },
                     [this](auto&&... ts) { emit newFramesLpc(std::forward<decltype(ts)>(ts)...); },
-                    [this](auto&&... ts) { emit newFramesUI(std::forward<decltype(ts)>(ts)...); }
+                    [this](auto&&... ts) { emit newFramesUI(std::forward<decltype(ts)>(ts)...); },
+                    [this](auto&&... ts) { emit newFramesWaves(std::forward<decltype(ts)>(ts)...); }
         );
         updateFields();
-        canvas->repaint();
-        powerSpectrum->repaint();
+        repaint();
     });
 
 #if TIMER_SLOWER
@@ -248,6 +270,7 @@ void MainWindow::cleanup()
 
     delete canvas;
     delete powerSpectrum;
+    delete oscilloscope;
 
     delete analyser;
 
@@ -280,7 +303,7 @@ void MainWindow::updateFields() {
 
     QPalette palette = this->palette();
 
-    fieldOq->setText(QString("Oq = %1").arg(Oq));
+    //fieldOq->setText(QString("Oq = %1").arg(Oq));
 
     for (int i = 0; i < numFormants; ++i) {
         if (i < formants.nFormants) {

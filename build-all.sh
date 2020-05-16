@@ -51,13 +51,13 @@ trap "kill \$p1; kill \$p2; kill \$p3; exit" SIGINT
 
 echo -e "\n\e[33mCompressing binaries...\n\e[39m"
 
-upx --lzma -qq out.Linux
+upx --best -qq out.Linux
 echo -e "\e[92m Linux binary compressed.\e[39m"
 
-upx --lzma -qq out.Windows.exe
+upx --best -qq out.Windows.exe
 echo -e "\e[92m Windows binary compressed.\e[39m"
 
-upx --lzma -qq out.OSX
+upx --best -qq out.OSX
 echo -e "\e[92m OS X binary compressed.\e[39m"
 
 echo -e "\n\e[33m Creating DMG image for OS X...\n\e[39m"

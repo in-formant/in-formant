@@ -337,6 +337,8 @@ void Analyser::_updateFrameCount() {
     };
 
     lpcSpectrum = defaultSpec;
+    speechSignal.setZero(frameSamples);
+    sourceSignal.setZero(frameSamples);
 
     if (frameCount < newFrameCount) {
         int diff = newFrameCount - frameCount;

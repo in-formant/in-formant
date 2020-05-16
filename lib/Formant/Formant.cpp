@@ -32,7 +32,8 @@ void Formant::frameFromRoots(
     rpm::vector<root> peakMergers;
     rpm::vector<dcomplex> finalRoots;
 
-    for (const auto & v : r) {
+    for (int i = 0; i < r.size(); ++i) {
+        const auto & v = r(i);
         if (v.imag() < 0) {
             continue;
         }

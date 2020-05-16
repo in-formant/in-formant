@@ -19,16 +19,18 @@ void RingBuffer::writeInto(const ArrayXd & in)
     const int toWrite = in.size();
     const int tailCount = capacity - writeCursor;
 
-    auto dataIt = data.begin() + writeCursor;
-
     if (toWrite <= tailCount) {
-        std::copy_n(in.begin(), toWrite, dataIt);
+        for (int i = 0; i < toWrite; ++i) {
+            data[writeCursor + i] = in(i);
+        }
     }
     else {
-        auto inputIt = in.begin() + tailCount;
-
-        std::copy_n(in.begin(), tailCount, dataIt);
-        std::copy_n(inputIt, toWrite - tailCount, data.begin());
+        for (int i = 0; i < tailCount; ++i) {
+            data[writeCursor + i] = in(i);
+        }
+        for (int i = 0; i < toWrite - tailCount; ++i) {
+            data[i] = in(tailCount + i);
+        }
     }
 
     writeCursor = (writeCursor + toWrite) % capacity;
@@ -44,16 +46,18 @@ void RingBuffer::readFrom(ArrayXd & out)
     const int readCursor = (toReadRoundedUp + writeCursor - toRead) % capacity;
     const int tailCount = capacity - readCursor;
 
-    auto dataIt = data.begin() + readCursor;
-
     if (toRead <= tailCount) {
-        std::copy_n(dataIt, toRead, out.begin());
+        for (int i = 0; i < toRead; ++i) {
+            out(i) = data[readCursor + i];
+        }
     }
     else {
-        auto outputIt = out.begin() + tailCount;
-
-        std::copy_n(dataIt, tailCount, out.begin());
-        std::copy_n(data.begin(), toRead - tailCount, outputIt);
+        for (int i = 0; i < tailCount; ++i) {
+            out(i) = data[readCursor + i];
+        }
+        for (int i = 0; i < toRead - tailCount; ++i) {
+            out(tailCount + i) = data[i];
+        }
     }
 }
 

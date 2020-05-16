@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 3.0)
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.12)
-project(main)
+project(speech_analysis)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_C_FLAGS "-fPIC -mtune=generic -Wall")
-set(CMAKE_C_FLAGS_DEBUG "-O0 -g4")
+set(CMAKE_C_FLAGS "-fPIC -mtune=generic -Wall -pthread")
+set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g3")
 
-set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic -Wall")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g4")
+set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic -Wall -pthread")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g3")
 
@@ -30,7 +30,6 @@ if(EMSCRIPTEN)
         "-Wcast-align"
         "-Wover-aligned"
         "-s WARN_UNALIGNED=1"
-        "-pthread"
         "-mnontrapping-fptoint"
         "-flto"
         "-s DISABLE_EXCEPTION_CATCHING=1"
@@ -45,7 +44,6 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 set(SOURCES
-    qt_plugin.cpp
     main.cpp
     Exceptions.cpp
     Exceptions.h
@@ -62,6 +60,7 @@ set(SOURCES
     analysis/parts/pitch.cpp
     analysis/parts/deepformants.cpp
     analysis/parts/openquotient.cpp
+    analysis/parts/inversefilter.cpp
     analysis/parts/preprocess.cpp
     analysis/parts/resample.cpp
     analysis/parts/spectrum.cpp
@@ -87,6 +86,8 @@ set(SOURCES
     gui/AnalyserCanvas.h
     gui/PowerSpectrum.cpp
     gui/PowerSpectrum.h
+    gui/Oscilloscope.cpp
+    gui/Oscilloscope.h
     gui/ui_MainWindow.cpp
     gui/MainWindow.cpp
     gui/MainWindow.h
@@ -113,19 +114,11 @@ endif()
 
 find_package(FFTW REQUIRED COMPONENTS DOUBLE_LIB)
 
-if (FALSE) #NOT EMSCRIPTEN AND NOT ANDROID)
-    add_definitions(-DHAS_ML_FORMANTS)
-    find_package(Torch REQUIRED)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
-    set(TORCH_LIBRARIES "${TORCH_LIBRARIES} -fopenmp")
-endif()
-
 include_directories(
-	${libspeech_INCLUDE_DIR}
+    ${libspeech_INCLUDE_DIR}
     ${Qt5Widgets_INCLUDE_DIRS}
     ${EIGEN_INCLUDE_DIRS}
     ${FFTW_INCLUDE_DIRS}
-    ${TORCH_INCLUDE_DIRS}
 )
 
 if (APPLE OR ANDROID OR EMSCRIPTEN)
@@ -156,7 +149,7 @@ if (APPLE OR ANDROID OR EMSCRIPTEN)
                 string(FIND "${content}" "${macro_name}" match_res)
                 if (NOT ${match_res} EQUAL -1)
                     set(outfile "${CMAKE_BINARY_DIR}/moc_${name}.cpp")
-                    execute_process(COMMAND ${MOC_EXE} ${src} -o ${outfile} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+                    execute_process(COMMAND ${MOC_EXE} ${COMPILE_DEFINITIONS} ${src} -o ${outfile} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
                     list(APPEND SOURCES ${outfile})
                 endif()
             endforeach()
@@ -194,14 +187,18 @@ else()
     add_executable(speech_analysis WIN32 ${SOURCES})
 endif()
 
-message(STATUS "${TORCH_LIBRARIES}")
-
 target_link_libraries(speech_analysis
     ${libspeech_LIBRARY}
     Eigen3::Eigen
     ${FFTW_LIBRARIES}
-    "${TORCH_LIBRARIES}"
+    ${Qt5Widgets_LIBRARIES}
+    ${Qt5Widgets_PLUGINS}
 )
+
+if (UNIX)
+    target_link_libraries(speech_analysis dl m
+    )
+endif()
 
 if(EMSCRIPTEN)
     include_directories(
@@ -333,119 +330,6 @@ elseif(ANDROID)
         android
         jnigraphics
         dl
-    )
-elseif(UNIX)
-    target_link_libraries(speech_analysis
-        /usr/plugins/platforms/libqminimal.a
-        Qt5EventDispatcherSupport
-        /usr/plugins/platforms/libqxcb.a
-        /usr/plugins/xcbglintegrations/libqxcb-glx-integration.a
-        Qt5XcbQpa
-        Qt5ServiceSupport
-        Qt5ThemeSupport
-        Qt5FontDatabaseSupport
-        qtfreetype
-        Qt5XkbCommonSupport
-        Qt5GlxSupport
-        Qt5EdidSupport
-        Qt5DBus
-        xcb-glx
-        X11-xcb
-        xcb
-        Xext
-        X11
-        xcb-static
-        xkbcommon-x11
-        xkbcommon
-        /usr/plugins/imageformats/libqgif.a
-        /usr/plugins/imageformats/libqico.a
-        /usr/plugins/imageformats/libqjpeg.a
-        Qt5Widgets
-        Qt5Gui
-        qtlibpng
-        qtharfbuzz
-        Qt5Core
-        m
-        qtpcre2
-        dl
-        gthread-2.0
-        glib-2.0
-        GL
-        GLX
-        EGL
-        pthread
-    )
-elseif (WIN32)
-    target_link_libraries(speech_analysis
-        -L/usr/mxe/usr/i686-w64-mingw32.static/lib
-        -L/usr/mxe/usr/i686-w64-mingw32.static/qt5/lib
-        /usr/mxe/usr/i686-w64-mingw32.static/qt5/plugins/platforms/libqminimal.a
-        /usr/mxe/usr/i686-w64-mingw32.static/qt5/plugins/platforms/libqwindows.a 
-        winspool
-        wtsapi32
-        Qt5EventDispatcherSupport
-        Qt5FontDatabaseSupport
-        dwrite
-        d2d1
-        Qt5ThemeSupport
-        Qt5AccessibilitySupport
-        Qt5WindowsUIAutomationSupport
-        /usr/mxe/usr/i686-w64-mingw32.static/qt5/plugins/imageformats/libqgif.a
-        /usr/mxe/usr/i686-w64-mingw32.static/qt5/plugins/imageformats/libqico.a
-        /usr/mxe/usr/i686-w64-mingw32.static/qt5/plugins/imageformats/libqjpeg.a
-        jpeg
-        Qt5Widgets
-        uxtheme
-        dwmapi
-        Qt5Gui
-        d3d11
-        dxgi
-        dxguid
-        harfbuzz
-        cairo
-        gobject-2.0
-        fontconfig
-        freetype
-        m
-        usp10
-        msimg32
-        pixman-1
-        ffi
-        expat
-        bz2
-        png16
-        harfbuzz_too
-        freetype_too
-        glib-2.0
-        shlwapi 
-        pcre
-        intl
-        iconv
-        gdi32
-        comdlg32
-        oleaut32
-        imm32
-        opengl32
-        Qt5Core
-        mpr
-        userenv
-        version
-        z
-        pcre2-16
-        zstd
-        netapi32
-        ws2_32
-        advapi32
-        kernel32
-        ole32
-        shell32
-        uuid
-        user32
-        winmm
-        opengl32
-        mingw32
-        qtmain
-        shell32    
     )
 else()
     message("Target system not supported")

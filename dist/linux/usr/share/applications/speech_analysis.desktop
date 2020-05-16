@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Terminal=false
+Exec=speech_analysis
+Name=Speech analysis
+Comment=Real-time voice analysis software
+Icon=speech_analysis
+Categories=Utility;Audio;Science;

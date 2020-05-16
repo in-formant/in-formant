@@ -92,6 +92,7 @@ private:
     double upFactorTracks;
     double upFactorSpec;
 
+    int nframe;
     int actualWidth, targetWidth, targetHeight;
     double maxFreq, maxFreqLog, maxFreqMel;
 

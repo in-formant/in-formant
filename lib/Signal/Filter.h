@@ -18,7 +18,7 @@ namespace Filter {
     template<typename D1, typename D2, typename D3>
     void apply(const Eigen::DenseBase<D1> & b, const Eigen::DenseBase<D2> & x, Eigen::DenseBase<D3> & y)
     {
-        y.resize(x.size());
+        y.derived().resize(x.size());
         for (int n = 0; n < x.size(); ++n) {
             y(n) = 0.0;
             for (int i = 0; i < b.size() && n - i >= 0 && n - i < x.size(); ++i) {
@@ -30,7 +30,7 @@ namespace Filter {
     template<typename D1, typename D2, typename D3, typename D4>
     void apply(const Eigen::DenseBase<D1> & b, const Eigen::DenseBase<D2> & a, const Eigen::DenseBase<D3> & x, Eigen::DenseBase<D4> & y)
     {
-        y.resize(x.size());
+        y.derived().resize(x.size());
         for (int n = 0; n < x.size(); ++n) {
             y(n) = 0.0;
             for (int i = 0; i < b.size() && n - i >= 0 && n - i < x.size(); ++i) {

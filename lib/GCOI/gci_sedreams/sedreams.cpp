@@ -36,7 +36,7 @@ std::pair<rpm::vector<int>, rpm::vector<int>> Sedreams::gci_sedreams(const Array
     Filter::apply(blackwin, signal, unshiftedMeanBasedSignal);
 
     ArrayXd meanBasedSignal(N);
-    meanBasedSignal(seq(halfL, last - halfL)) = unshiftedMeanBasedSignal(seq(2 * halfL, last));
+    meanBasedSignal.segment(halfL, N - 2 * halfL) = unshiftedMeanBasedSignal.segment(2 * halfL, N - 2 * halfL);
     meanBasedSignal.head(halfL).setZero();
     meanBasedSignal.tail(halfL).setZero();
 

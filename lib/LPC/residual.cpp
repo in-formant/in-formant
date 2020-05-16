@@ -8,12 +8,11 @@ using namespace Eigen;
 ArrayXd LPC::residual(const ArrayXd & x, int L, int shift, int order)
 {
     const int len(x.size());
-    int start, stop;
+    int start;
    
     ArrayXd win = Window::createHanning(L);
   
     start = 0;
-    stop = start + L - 1;
 
     ArrayXd res(len);
     res.setZero();
@@ -23,17 +22,16 @@ ArrayXd LPC::residual(const ArrayXd & x, int L, int shift, int order)
     LPC::Frame frame;
     frame.nCoefficients = order;
 
-    while (stop < len) {
-        segment = x(seq(start, stop)) * win;
+    while (start + L < len) {
+        segment = x.segment(start, L) * win;
         
         LPC::frame_auto(segment, frame);
         Filter::apply(frame.a, segment, inv);
         inv *= std::sqrt(segment.square().sum() / inv.square().sum());
 
-        res(seq(start, stop)) += inv;
+        res.segment(start, L) += inv;
 
         start += shift;
-        stop += shift;
     }
 
     res /= res.abs().maxCoeff();

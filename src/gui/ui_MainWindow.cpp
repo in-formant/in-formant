@@ -8,9 +8,9 @@ QWidget * MainWindow::uiFields()
     auto widget = new QWidget(container);
     auto layout = this->fieldsLayout = new QBoxLayout(QBoxLayout::LeftToRight, widget);
 
-    fieldOq = new QLineEdit;
+    /*fieldOq = new QLineEdit;
     fieldOq->setReadOnly(true);
-    layout->addWidget(fieldOq, 0, Qt::AlignCenter);
+    layout->addWidget(fieldOq, 0, Qt::AlignCenter);*/
 
     for (int i = 0; i < numFormants; ++i) {
         auto field = new QLineEdit;
@@ -111,7 +111,7 @@ QWidget * MainWindow::uiAnalysisSettings()
     }
     fftSize->setCurrentIndex(fftInd);
 
-    connect(fftSize, QOverload<int>::of(&QComboBox::currentIndexChanged),
+    connect(fftSize, qOverload<int>(&QComboBox::currentIndexChanged),
             [this](int index) { analyser->setFftSize(availableFftSizes[index].toInt()); });
 
     layout->addRow("FFT size:", fftSize);

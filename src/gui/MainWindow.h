@@ -16,6 +16,7 @@
 #include "../audio/NoiseFilter.h"
 #include "AnalyserCanvas.h"
 #include "PowerSpectrum.h"
+#include "Oscilloscope.h"
 #include "Keybinds.h"
 #include "../analysis/Analyser.h"
 #include "LPC/Frame/LPC_Frame.h"
@@ -36,10 +37,12 @@
 #endif
 
 #ifdef Q_OS_WASM
+#   define UI_OSCILLOSCOPE 0
 #elif !defined(Q_OS_ANDROID)
+#   define UI_OSCILLOSCOPE 1
 #   define UI_KEYBIND_SETTINGS_IN_DIALOG
 #   define UI_DISPLAY_SETTINGS_IN_DIALOG
-#   define UI_DOCK_FLOATABLE
+#   define UI_DOCK_FLOATteABLE
 #   define UI_SHOW_DEVICE_SETTING
 #   define UI_SHOW_FRAME_SETTINGS
 #   define UI_BAR_FULLSCREEN
@@ -100,6 +103,7 @@ signals:
     void newFramesSpectrum(int nframe, int nNew, double maxFreq, rpm::deque<SpecFrame>::const_iterator begin, rpm::deque<SpecFrame>::const_iterator end);
     void newFramesLpc(double maxFreq, SpecFrame lpcFrame);
     void newFramesUI(int nframe, double maxFreq);
+    void newFramesWaves(const Eigen::ArrayXd& x, const Eigen::ArrayXd& g);
 
 public slots:
     void pressClose(QObject *, bool);
@@ -183,6 +187,10 @@ private:
 
     AnalyserCanvas * canvas;
     PowerSpectrum * powerSpectrum;
+
+#ifdef UI_OSCILLOSCOPE
+    Oscilloscope * oscilloscope;
+#endif
 
     QLineEdit * fieldPitch;
     rpm::vector<QLineEdit *> fieldFormant;

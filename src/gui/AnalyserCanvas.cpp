@@ -14,6 +14,7 @@ using namespace Eigen;
 
 AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave, NoiseFilter * noiseFilter) noexcept(false)
     : spectrogram(1, 1),
+      nframe(1),
       upFactorTracks(1),
       upFactorSpec(1),
       maxFreq(0),
@@ -72,6 +73,8 @@ void AnalyserCanvas::render() {
 
 void AnalyserCanvas::renderTracks(const int nframe, const double maximumFrequency, FormantMethod formantAlg, const rpm::deque<double> &pitches, const Formant::Frames &formants) {
     std::lock_guard<std::mutex> guard(imageLock);
+
+    this->nframe = nframe;
 
     renderFormantTrack(nframe, maximumFrequency, formantAlg, pitches, formants);
     renderPitchTrack(nframe, maximumFrequency, pitches);
@@ -189,6 +192,8 @@ void AnalyserCanvas::renderPitchTrack(const int nframe, const double maximumFreq
 void AnalyserCanvas::renderScaleAndCursor(const int nframe, const double maximumFrequency) {
     std::lock_guard<std::mutex> guard(imageLock);
 
+    this->nframe = nframe;
+    
     constexpr int ruleSmall = 4;
     constexpr int ruleBig = 8;
 
@@ -253,6 +258,8 @@ void AnalyserCanvas::renderScaleAndCursor(const int nframe, const double maximum
 void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const double maximumFrequency, rpm::deque<SpecFrame>::const_iterator begin, rpm::deque<SpecFrame>::const_iterator end)
 {
     std::lock_guard<std::mutex> guard(imageLock);
+    
+    this->nframe = nframe;
     
     struct Tile { int r, g, b; double y, y2; };
 
@@ -409,7 +416,6 @@ void AnalyserCanvas::paintEvent(QPaintEvent * event)
     targetWidth = width();
     targetHeight = height();
   
-    const int nframe = analyser->getFrameCount();
     const int specWidth = upFactorSpec * nframe;
     const int specHeight = upFactorSpec * targetHeight;
 

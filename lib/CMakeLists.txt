@@ -4,12 +4,12 @@ project(libspeech)
 set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_C_FLAGS "-fPIC -mtune=generic -Wall")
-set(CMAKE_C_FLAGS_DEBUG "-O0 -g4")
+set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g3")
 
 set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic -Wall")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g4")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g3")
 
@@ -37,22 +37,20 @@ set(SOURCES
     Formant/EKF/genLPCC.cpp
     Formant/EKF/init.cpp
     Formant/EKF/step.cpp
-    DeepFormants/df.h
-    DeepFormants/torch.cpp
-    DeepFormants/features.cpp
+    #DeepFormants/df.h
+    #DeepFormants/torch.cpp
+    #DeepFormants/features.cpp
     LPC/Frame/LPC_Frame.cpp
     LPC/Frame/LPC_Frame.h
     LPC/Frame/LPC_Frame_auto.cpp
     LPC/Frame/LPC_Frame_burg.cpp
     LPC/Frame/LPC_Frame_covar.cpp
-    LPC/Frame/LPC_Frame_huber.cpp
     LPC/LPC.cpp
     LPC/LPC.h
     LPC/LPC_filter.cpp
-    LPC/LPC_huber.cpp
-    LPC/LPC_huber.h
-    LPC/LPC_huber_stat.cpp
     LPC/residual.cpp
+    IAIF/IAIF.h
+    IAIF/IAIF.cpp
     Math/Bairstow.cpp
     Math/Bairstow.h
     Math/Polynomial.cpp
@@ -115,12 +113,6 @@ endif()
 
 find_package(FFTW REQUIRED COMPONENTS DOUBLE_LIB)
 
-if (FALSE) #NOT EMSCRIPTEN AND NOT ANDROID)
-    add_definitions(-DHAS_ML_FORMANTS)
-    find_package(Torch REQUIRED)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
-endif()
-
 if (APPLE)
     include_directories($ENV{OSXCROSS}/SDK/MacOSX10.13.sdk/usr/include/c++/v1)
 endif()
@@ -128,12 +120,10 @@ endif()
 include_directories(
     ${EIGEN_INCLUDE_DIRS}
     ${FFTW_INCLUDE_DIRS}
-    ${TORCH_INCLUDE_DIRS}
 )
 
 if (ANDROID)
     add_definitions(-DENABLE_PRELOAD=1)
-    add_library(speech SHARED ${SOURCES})
 else ()
     if (NOT WIN32 AND NOT EMSCRIPTEN)
         add_definitions(-DENABLE_PRELOAD=1)
@@ -141,12 +131,12 @@ else ()
             add_definitions(-DENABLE_OVERRIDE=1)
         endif()
     endif()
-    add_library(speech STATIC ${SOURCES})
 endif()
+
+add_library(speech SHARED ${SOURCES})
 
 target_link_libraries(speech
     Eigen3::Eigen
     ${FFTW_LIBRARIES}
-    "${TORCH_LIBRARIES}"
 )
 

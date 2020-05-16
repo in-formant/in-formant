@@ -6,7 +6,8 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 // Plugin is linked dynamically.
 //Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin);
 #elif defined(Q_OS_LINUX)
-Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
+//Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
+//Q_IMPORT_PLUGIN(QXcbGlxIntegrationPlugin);
 #elif defined(Q_OS_MACOS)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #elif defined(Q_OS_WASM)
