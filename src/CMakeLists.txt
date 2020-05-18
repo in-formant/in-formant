@@ -40,9 +40,6 @@ endif()
 
 add_definitions(-DVERSION_STRING=\"${VERSION_STRING}\" -DVERSION_CODE=${VERSION_CODE})
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-
 set(SOURCES
     main.cpp
     Exceptions.cpp
@@ -100,7 +97,17 @@ set(ANDROID_JNI_SOURCES
 
 set(EM_SOURCES qwasmsettings.h)
 
-if (NOT APPLE AND NOT ANDROID AND NOT EMSCRIPTEN)
+if (APPLE)
+    set(QT_PREFIX "$ENV{OSXCROSS}/macports/pkgs/opt/local/libexec/qt5")
+    set(PKG_CONFIG_EXECUTABLE "$ENV{OSXCROSS}/bin/$ENV{CROSS}pkg-config")
+    unset(ENV{PKG_CONFIG_LIBDIR})
+    unset(ENV{PKG_CONFIG_SYSROOT_DIR})
+    set(ENV{OSXCROSS_PKG_CONFIG_LIBDIR} "${QT_PREFIX}/lib/pkgconfig")
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(Qt5Widgets REQUIRED Qt5Widgets)
+elseif (NOT ANDROID AND NOT EMSCRIPTEN)
+    set(CMAKE_AUTOMOC ON)
+    set(CMAKE_AUTORCC ON)
     find_package(Qt5 COMPONENTS Widgets REQUIRED)
 endif()
 
@@ -123,15 +130,18 @@ include_directories(
 
 if (APPLE OR ANDROID OR EMSCRIPTEN)
     if (APPLE)
-        set(QT_PREFIX $ENV{OSXCROSS}/macports/pkgs/opt/local)
-    elseif (ANDROID)
-        set(QT_PREFIX /usr/android)
-    elseif (EMSCRIPTEN)
-        set(QT_PREFIX /em-target)
+        set(MOC_EXE moc)
+        set(RCC_EXE rcc)
+    else()
+        if (ANDROID)
+            set(QT_PREFIX /usr/android)
+        elseif (EMSCRIPTEN)
+            set(QT_PREFIX /em-target)
+        endif()
+        
+        set(MOC_EXE ${QT_PREFIX}/bin/moc)
+        set(RCC_EXE ${QT_PREFIX}/bin/rcc)
     endif()
-    
-    set(MOC_EXE ${QT_PREFIX}/bin/moc)
-    set(RCC_EXE ${QT_PREFIX}/bin/rcc)
 
     foreach (src ${SOURCES})
 
@@ -168,9 +178,6 @@ if (ANDROID)
     set(ANDROID_STL c++_shared)
     include(/usr/qt-android-cmake/AddQtAndroidApk.cmake)
 
-    message(STATUS "Version string: ${VERSION_STRING}")
-    message(STATUS "Version code: ${VERSION_CODE}")
-
     file(READ ${CMAKE_SOURCE_DIR}/../android/keystore.password KEYSTORE_PASSWORD)
     add_qt_android_apk(apk speech_analysis
         NAME "Speech analysis"
@@ -195,9 +202,17 @@ target_link_libraries(speech_analysis
     ${Qt5Widgets_PLUGINS}
 )
 
-if (UNIX)
-    target_link_libraries(speech_analysis dl m
+if (APPLE)
+    target_link_libraries(speech_analysis
+        -F${QT_PREFIX}/lib
+        "-framework QtWidgets"
+        "-framework QtGui"
+        "-framework QtCore"
+        "-rpath @executable_path/."
+        ${QT_PREFIX}/plugins/platforms/libqcocoa.dylib
     )
+elseif (UNIX)
+    target_link_libraries(speech_analysis dl m)
 endif()
 
 if(EMSCRIPTEN)
@@ -226,63 +241,6 @@ if(EMSCRIPTEN)
         qtharfbuzz
         Qt5Core
         qtpcre2
-    )
-elseif(APPLE)
-    set(SDK_PREFIX $ENV{OSXCROSS}/SDK/MacOSX10.13.sdk)
-    include_directories(
-        ${SDK_PREFIX}/usr/include/c++/v1
-        ${QT_PREFIX}/include
-        ${QT_PREFIX}/include/QtCore
-        ${QT_PREFIX}/include/QtGui
-        ${QT_PREFIX}/include/QtWidgets
-    )
-    target_link_libraries(speech_analysis
-        -L${QT_PREFIX}/lib
-        -L${QT_PREFIX}/plugins
-        -L${QT_PREFIX}/plugins/platforms
-        -L${QT_PREFIX}/plugins/imageformats
-        -F${SDK_PREFIX}/System/Library/Frameworks
-        "-framework ApplicationServices"
-        "-framework AppKit"
-        "-framework Carbon"
-        "-framework CoreFoundation"
-        "-framework CoreGraphics"
-        "-framework CoreText"
-        "-framework CoreServices"
-        "-framework CoreVideo"
-        "-framework Foundation"
-        "-framework ImageIO"
-        "-framework IOKit"
-        "-framework IOSurface"
-        "-framework Metal"
-        "-framework OpenGL"
-        "-framework QuartzCore"
-        "-framework Security"
-        "-framework System"
-        qminimal
-        Qt5AccessibilitySupport
-        Qt5ClipboardSupport
-        Qt5ThemeSupport
-        Qt5FontDatabaseSupport
-        Qt5GraphicsSupport
-        Qt5PrintSupport
-        cups
-        qcocoa
-        qtfreetype
-        Qt5DBus
-        qgif
-        qico
-        qjpeg
-        Qt5Widgets
-        Qt5Gui
-        qtlibpng
-        qtharfbuzz
-        Qt5Core
-        m
-        qtpcre2
-        dl
-        pthread
-        $ENV{OSXCROSS}/../build/compiler-rt/compiler-rt/build/lib/darwin/libclang_rt.osx.a
     )
 elseif(ANDROID)
     set(libsuff "_${ANDROID_ABI}")

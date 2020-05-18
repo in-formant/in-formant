@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-cmake_policy(SET CMP0048 NEW)
-project(speech_analysis VERSION 1.5.7)
+project(speech_analysis VERSION 1.6.0)
 
 include(ExternalProject)
 
@@ -55,6 +54,9 @@ leftpadzeroes(VERSION_PATCH_PAD ${VERSION_PATCH})
 set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}${VERSION_ABI_SEP}${ANDROID_ABI})
 set(VERSION_CODE ${VERSION_ABI}${VERSION_MAJOR_PAD}${VERSION_MINOR_PAD}${VERSION_PATCH_PAD})
 
+message(STATUS "Version string: ${VERSION_STRING}")
+message(STATUS "Version code: ${VERSION_CODE}")
+
 set(libspeech_LIBRARY ${CMAKE_BINARY_DIR}/libspeech/src/libspeech-build/${libspeech_PREFIX}speech${libspeech_SUFFIX})
 set(sa_EXECUTABLE ${CMAKE_BINARY_DIR}/speech_analysis/src/speech_analysis-build/speech_analysis${sa_SUFFIX})
 
@@ -97,7 +99,89 @@ ExternalProject_Add(speech_analysis
 
 add_dependencies(speech_analysis libspeech)
 
-if (UNIX AND NOT ANDROID AND NOT APPLE)
+if (APPLE)
+    set(OTOOL_EXE $ENV{OSXCROSS}/bin/$ENV{CROSS}otool)
+    set(INT_EXE $ENV{OSXCROSS}/bin/$ENV{CROSS}install_name_tool)
+    install(CODE "
+        cmake_policy(SET CMP0007 NEW)
+
+        set(OUT_LIST \"${sa_EXECUTABLE}\")
+        set(length 1)
+
+        set(POST_LIST)
+
+        while (length GREATER 0)
+            list(POP_FRONT OUT_LIST current)
+
+            list(FIND POST_LIST \"\${current}\" index)
+            if (NOT \${index} EQUAL -1)
+                continue()
+            endif()
+
+            if (\"\${current}\" MATCHES \"^$\")
+                break()
+            endif()
+
+            execute_process(
+                COMMAND ${OTOOL_EXE} -L \"\${current}\"
+                OUTPUT_VARIABLE LOCAL_OUT
+            )
+
+            string(REGEX REPLACE \".*:\\n\" \"\" LOCAL_OUT \"\${LOCAL_OUT}\")
+            string(REGEX REPLACE \"\\t([^\\t]+) \\\\(compatibility version ([0-9]+.[0-9]+.[0-9]+), current version ([0-9]+.[0-9]+.[0-9]+)\\\\)\\n\" \"\\\\1;\" LOCAL_OUT_LIST \"\${LOCAL_OUT}\")
+            list(FILTER LOCAL_OUT_LIST EXCLUDE REGEX \"^/usr/lib|^/System|^@rpath\")
+
+            set(LOCAL_OUT_LIST_BAK \"\${LOCAL_OUT_LIST}\")
+
+            list(TRANSFORM LOCAL_OUT_LIST PREPEND \"$ENV{OSXCROSS}/macports/pkgs/\" REGEX \"^/opt\")
+            list(TRANSFORM LOCAL_OUT_LIST PREPEND \"$ENV{OSXCROSS}/macports/pkgs/opt/local/libexec/qt5/plugins/platforms/\" REGEX \"^libqcocoa.dylib$\")
+
+            get_filename_component(curname \"\${current}\" NAME)
+
+            if (\"\${current}\" MATCHES \"${sa_EXECUTABLE}\")
+                file(INSTALL \"\${current}\" DESTINATION /Contents/MacOS USE_SOURCE_PERMISSIONS)
+            elseif (\"\${current}\" MATCHES \"\\\\.framework\")
+                string(REGEX REPLACE \".*\\\\.framework/\" \"\" subpath \"\${current}\")
+                string(REGEX REPLACE \"\\\\.framework(.*)\" \".framework\" framework \"\${current}\")
+
+                file(INSTALL \"\${framework}\" DESTINATION /Contents/Frameworks)
+
+                get_filename_component(framework_name \"\${framework}\" NAME)
+                set(link_src \"../Frameworks/\${framework_name}/\${subpath}\")
+                set(link_dst \"/target/Contents/MacOS/\${curname}\")
+
+                message(STATUS \"Installing: \${link_src} -> \${link_dst}\")
+
+                execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink \"\${link_src}\" \"\${link_dst}\")
+            elseif (\"\${current}\" MATCHES \"libqcocoa.dylib$\")
+                file(INSTALL \"\${current}\" DESTINATION /Contents/MacOS/platforms)
+                set(curname \"platforms/\${curname}\")
+            else()
+                file(INSTALL \"\${current}\" DESTINATION /Contents/MacOS FOLLOW_SYMLINK_CHAIN)
+            endif()
+
+            foreach(filepath \${LOCAL_OUT_LIST_BAK})
+                get_filename_component(filename \"\${filepath}\" NAME)
+                if (\"\${filename}\" MATCHES \"^libqcocoa.dylib$\")
+                    set(filename \"platforms/\${filename}\")
+                endif()
+                execute_process(
+                    COMMAND ${INT_EXE} -change \${filepath} @rpath/\${filename} \"/target/Contents/MacOS/\${curname}\"
+                )
+            endforeach()
+
+            execute_process(
+                COMMAND ${INT_EXE} -id @rpath/\${curname} /target/Contents/MacOS/\${curname}
+            )
+
+            list(APPEND POST_LIST \"\${current}\")
+
+            list(APPEND OUT_LIST \${LOCAL_OUT_LIST})
+            list(REMOVE_DUPLICATES OUT_LIST)
+            list(LENGTH OUT_LIST length)
+        endwhile()
+    ")
+elseif (UNIX)
     install(FILES ${libspeech_LIBRARY} DESTINATION lib)
     install(PROGRAMS ${sa_EXECUTABLE} DESTINATION bin)
     install(CODE "
@@ -108,9 +192,7 @@ if (UNIX AND NOT ANDROID AND NOT APPLE)
         )
         file(INSTALL \${LIB_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib FOLLOW_SYMLINK_CHAIN)
     ")
-endif()
-
-if (WIN32)
+elseif (WIN32)
     install(FILES ${libspeech_LIBRARY} DESTINATION .)
     install(PROGRAMS ${sa_EXECUTABLE} DESTINATION .)
     install(CODE "
@@ -124,3 +206,4 @@ if (WIN32)
         )
     ")
 endif()
+

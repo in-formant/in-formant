@@ -31,13 +31,6 @@ void signalHandler(int sig)
     qApp->quit();
 }
 
-void exitHandler()
-{
-#ifdef Q_OS_WINDOWS
-    rpmalloc_finalize();
-#endif
-}
-
 QString loadFont(const QString & url)
 {
     int id = QFontDatabase::addApplicationFont(url);
@@ -50,10 +43,6 @@ QFont * appFont;
 
 int main(int argc, char * argv[])
 {
-#ifdef Q_OS_WINDOWS
-    rpmalloc_initialize();
-#endif
-
     QCoreApplication::setOrganizationName("Clo Yun-Hee");
     QCoreApplication::setOrganizationDomain("cloyunhee.fr");
     QCoreApplication::setApplicationName("Speech analysis");
@@ -139,7 +128,6 @@ int main(int argc, char * argv[])
 
     pWindow = &mainWindow;
 
-    atexit(&exitHandler);
     signal(SIGINT, &signalHandler);
     signal(SIGTERM, &signalHandler);
     signal(SIGSEGV, &signalHandler);

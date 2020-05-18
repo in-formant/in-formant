@@ -4,6 +4,7 @@ BUILD_DIR=/tmp/speech-analysis/windows
 TARGET=$(pwd)/dist/windows/speech_analysis
 
 mkdir -p $BUILD_DIR
+sudo rm -rf $TARGET
 mkdir -p $TARGET
 
 [[ -t 1 ]] && it_param=-it

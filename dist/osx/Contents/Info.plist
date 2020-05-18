@@ -11,12 +11,12 @@
         <key>CFBundleVersion</key>
         <string>1</string>
         <key>CFBundleShortVersionString</key>
-        <string>1.5.5</string>
+        <string>1.6.0</string>
         <key>CFBundlePackageType</key>
         <string>APPL</string>
         <key>CFBundleSignature</key>
         <string>sply</string>
         <key>CFBundleExecutable</key>
-        <string>SpeechAnalysis</string>
+        <string>speech_analysis</string>
     </dict>
 </plist>

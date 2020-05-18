@@ -103,6 +103,11 @@ set(SOURCES
     rpmalloc/rpmalloc.h
     rpmalloc.h)
 
+if (APPLE)
+    set(ENV{OSXCROSS_PKG_CONFIG_USE_NATIVE_VARIABLES} 1)
+    set(PKG_CONFIG_EXECUTABLE "$ENV{OSXCROSS}/bin/$ENV{CROSS}pkg-config")
+endif()
+
 find_package(Eigen3 REQUIRED NO_MODULE)
 
 if (FFTW_ROOT)
@@ -123,14 +128,14 @@ include_directories(
 )
 
 if (ANDROID)
-    add_definitions(-DENABLE_PRELOAD=1)
+    #add_definitions(-DENABLE_PRELOAD=1)
 else ()
-    if (NOT WIN32 AND NOT EMSCRIPTEN)
-        add_definitions(-DENABLE_PRELOAD=1)
-        if (NOT APPLE)
-            add_definitions(-DENABLE_OVERRIDE=1)
-        endif()
-    endif()
+    #if (NOT WIN32 AND NOT EMSCRIPTEN)
+    #    add_definitions(-DENABLE_PRELOAD=1)
+    #    if (NOT APPLE)
+    #        add_definitions(-DENABLE_OVERRIDE=1)
+    #    endif()
+    #endif()
 endif()
 
 add_library(speech SHARED ${SOURCES})

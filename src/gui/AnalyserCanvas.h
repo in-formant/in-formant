@@ -8,6 +8,7 @@
 #include <QtWidgets>
 #include <QTimer>
 #include <QSettings>
+#include <array>
 #include <mutex>
 #include "rpmalloc.h"
 #include "../Exceptions.h"
