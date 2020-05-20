@@ -3,8 +3,8 @@
 #include "speex/ma_speex_resampler.h"
 
 #ifndef __EMSCRIPTEN__
-#include "rpmalloc/rpmalloc.h"
-#define USE_RPMALLOC
+//#include "rpmalloc/rpmalloc.h"
+//#define USE_RPMALLOC
 #endif
 
 #define MA_LOG_LEVEL MA_LOG_LEVEL_VERBOSE

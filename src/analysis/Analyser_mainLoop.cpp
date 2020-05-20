@@ -5,7 +5,6 @@
 #include <chrono>
 #include "Analyser.h"
 #include "../time/time_util.h"
-#include "rpmalloc/rpmalloc.h"
 #include "Pitch/Pitch.h"
 #include "Signal/Filter.h"
 #include "Signal/Window.h"
@@ -14,10 +13,6 @@ using namespace Eigen;
 
 void Analyser::mainLoop()
 {
-#ifdef Q_OS_WINDOWS
-    rpmalloc_thread_initialize();
-#endif
-
     uint64 t1 = NowInMs();
 
     while (running) {
@@ -33,10 +28,6 @@ void Analyser::mainLoop()
             t1 = t2;
         }
     }
-    
-#ifdef Q_OS_WINDOWS
-    rpmalloc_thread_finalize();
-#endif
 }
 
 void Analyser::update()
@@ -70,22 +61,24 @@ void Analyser::update()
     if (formantMethod == DeepFormants) {
         analyseDeepFormants();
     }
+  
+    // Apply pre-emphasis.
+    applyPreEmphasis();
 
     // Get an Oq estimate.
     //analyseOq();
     
     // Do inverse filtering and export signals.
+    mutex.lock();
     applyInverseFilter();
+    mutex.unlock();
 
     // Resample audio.
-    resampleAudio();
+    resampleAudio(); 
     
-    // Apply windowing.
+    // Apply windowing. 
     applyWindow();
-  
-    // Apply pre-emphasis.
-    applyPreEmphasis();
- 
+
     // Perform LP analysis.
     analyseLp();
 

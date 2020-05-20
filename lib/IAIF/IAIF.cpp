@@ -31,7 +31,7 @@ static ArrayXd conv(const ArrayXd& a, const ArrayXd& b)
 ArrayXd IAIF::processFrame(const ArrayXd& s_gvl, int nv, int ng, double d)
 {
     int ns = s_gvl.size();
-    int lpf = 2 * nv + 1;
+    int lpf = nv + 1;
     LPC::Frame lpc;
 
     ArrayXd one(1);
@@ -101,3 +101,5 @@ ArrayXd IAIF::processFrame(const ArrayXd& s_gvl, int nv, int ng, double d)
     Filter::apply(av, x_gv, gf);
     return gf.tail(ns);
 }
+
+

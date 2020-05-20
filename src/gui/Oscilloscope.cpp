@@ -8,11 +8,11 @@ Oscilloscope::Oscilloscope()
     setObjectName("Oscilloscope");
     setFocusPolicy(Qt::StrongFocus);
 
-    speechColor = Qt::black;
+    speechColor = Qt::lightGray;
     speechThick = 1;
 
     sourceColor = 0xffa500;
-    sourceThick = 1;
+    sourceThick = 2;
 
     loadSettings();
 }
@@ -30,7 +30,7 @@ void Oscilloscope::paintEvent(QPaintEvent *event)
     painter.begin(this);
 
     painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
-    painter.fillRect(0, 0, targetWidth, targetHeight, Qt::white);
+    painter.fillRect(0, 0, targetWidth, targetHeight, Qt::black);
     
     renderUI();
 
@@ -58,11 +58,14 @@ void Oscilloscope::renderWaves(const ArrayXd& s, const ArrayXd& g)
     int yZero = targetHeight / 2;
     int yOne = 0;
 
+    double sMax = s.abs().maxCoeff();
+    double gMax = g.abs().maxCoeff();
+
     for (int i = 0; i < length; ++i) {
         int x = (i * targetWidth) / length;
 
-        int ySpeech = 0.5 * targetHeight * (1.0 - s(i));
-        int ySource = 0.5 * targetHeight * (1.0 - g(i));
+        int ySpeech = 0.5 * targetHeight * (1.0 - s(i) / sMax);
+        int ySource = 0.5 * targetHeight * (1.0 - g(i) / gMax);
 
         if (i == 0) {
             pathSpeech.moveTo(x, ySpeech);

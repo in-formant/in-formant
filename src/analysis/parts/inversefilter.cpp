@@ -6,5 +6,5 @@ using namespace Eigen;
 void Analyser::applyInverseFilter()
 {
     speechSignal = x;
-    sourceSignal = IAIF::processFrame(x, 20, 3, 0.98);
+    sourceSignal = IAIF::processFrame(x, 22, 3, 0.99);
 }

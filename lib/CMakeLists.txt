@@ -99,8 +99,8 @@ set(SOURCES
     FFT/FFT.cpp
     FFT/FFT.h
     MFCC/MFCC.h
-    rpmalloc/rpmalloc.c
-    rpmalloc/rpmalloc.h
+    #rpmalloc/rpmalloc.c
+    #rpmalloc/rpmalloc.h
     rpmalloc.h)
 
 if (APPLE)
