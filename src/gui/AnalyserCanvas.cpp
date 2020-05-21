@@ -14,9 +14,11 @@ using namespace Eigen;
 
 AnalyserCanvas::AnalyserCanvas(Analyser * analyser, SineWave * sineWave, NoiseFilter * noiseFilter) noexcept(false)
     : spectrogram(1, 1),
-      nframe(1),
       upFactorTracks(1),
       upFactorSpec(1),
+      nframe(166),
+      targetWidth(1),
+      targetHeight(1),
       maxFreq(0),
       minGain(-60),
       maxGain(0),
@@ -279,7 +281,7 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
 
     int iframe = nframe - 1 - nNew;
 
-    while (it != end) {
+    while (it != end && iframe < nframe) {
         rpm::vector<Tile> rects;
 
         const double x = iframe * xstep;
@@ -288,8 +290,8 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
         const double delta = sframe.fs / (2 * sframe.nfft);
 
         for (int i = 0; i < sframe.nfft; ++i) {
-            const double y = upFactorSpec * yFromFrequency(i * delta, maximumFrequency);
-            const double y2 = upFactorSpec * yFromFrequency((i + 1) * delta, maximumFrequency);
+            const double y = upFactorSpec * yFromFrequency((i - 0.5) * delta, maximumFrequency);
+            const double y2 = upFactorSpec * yFromFrequency((i + 0.5) * delta, maximumFrequency);
 
             if (y < 0 || y2 >= upFactorSpec * targetHeight)
                 continue;
@@ -325,7 +327,7 @@ void AnalyserCanvas::renderSpectrogram(const int nframe, const int nNew, const d
         }
        
         Tile prevRect = {
-            0, 0, 0
+            0, 0, 0, 0, 0
         };
 
         for (const auto & rect : rects) {

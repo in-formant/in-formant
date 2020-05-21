@@ -28,19 +28,21 @@ bool AudioDevices::refreshList()
     for (int i = 0; i < signed(playbackCount); ++i) {
         ma_device_info info = playback[i];
         
-        outputs.push_back({
-            .id = info.id,
-            .name = info.name,
-        });
+        AudioDevice dev;
+        dev.id = info.id;
+        dev.name = info.name;
+
+        outputs.push_back(std::move(dev));
     }
 
     for (int i = 0; i < signed(captureCount); ++i) {
         ma_device_info info = capture[i];
         
-        inputs.push_back({
-            .id = info.id,
-            .name = info.name,
-        });
+        AudioDevice dev;
+        dev.id = info.id;
+        dev.name = info.name;
+
+        inputs.push_back(std::move(dev));
     }
 
     if (inputs.empty()) {

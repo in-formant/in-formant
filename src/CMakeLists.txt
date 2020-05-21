@@ -4,12 +4,12 @@ project(speech_analysis)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_C_FLAGS "-fPIC -mtune=generic -Wall -pthread")
+set(CMAKE_C_FLAGS "-fPIC -mtune=generic -Wall -pedantic -pthread")
 set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g3")
 
-set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic -Wall -pthread")
+set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic -Wall -pedantic -pthread")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g3")

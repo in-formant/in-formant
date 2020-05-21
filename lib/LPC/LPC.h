@@ -45,6 +45,6 @@ namespace LPC {
 
     Eigen::ArrayXd residual(const Eigen::ArrayXd & x, int L, int shift, int order);
 
-};
+}
 
 #endif //SPEECH_ANALYSIS_LPC_H

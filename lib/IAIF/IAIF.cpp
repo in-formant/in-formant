@@ -56,7 +56,7 @@ ArrayXd IAIF::processFrame(const ArrayXd& s_gvl, int nv, int ng, double d)
 
     // Gross glottis estimation.
     lpc.nCoefficients = 1;
-    LPC::frame_auto(s_gv * win, lpc);
+    LPC::frame_burg(s_gv * win, lpc);
 
     ArrayXd ag1 = lpc.a;
 
@@ -65,7 +65,7 @@ ArrayXd IAIF::processFrame(const ArrayXd& s_gvl, int nv, int ng, double d)
         Filter::apply(lpc.a, x_gv, x_v1x);
         ArrayXd s_v1x = x_v1x.tail(ns);
 
-        LPC::frame_auto(s_v1x * win, lpc);
+        LPC::frame_burg(s_v1x * win, lpc);
 
         ag1 = conv(ag1, lpc.a);
     }

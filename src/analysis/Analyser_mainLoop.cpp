@@ -67,7 +67,7 @@ void Analyser::update()
 
     // Get an Oq estimate.
     //analyseOq();
-    
+
     // Do inverse filtering and export signals.
     mutex.lock();
     applyInverseFilter();
@@ -91,7 +91,7 @@ void Analyser::update()
     }
 
     // Lock the tracks to prevent data race conditions.
-    mutex.lock();
+    mutex.lock(); 
     
     // Update the raw tracks.
     pitchTrack.pop_front();

@@ -9,11 +9,10 @@
 using namespace Eigen;
 
 void Analyser::analyseFormant() {
-    static const Formant::Frame defaultFrame = {
-        .nFormants = 5,
-        .formant = {{550, 60}, {1650, 60}, {2750, 60}, {3850, 60}, {4950, 60}},
-        .intensity = 1.0,
-    };
+    static Formant::Frame defaultFrame;
+    defaultFrame.nFormants = 5;
+    defaultFrame.formant = {{550, 60}, {1650, 60}, {2750, 60}, {3850, 60}, {4950, 60}};
+    defaultFrame.intensity = 1.0;
 
     if (lpFailed) {
         lastFormantFrame = defaultFrame;
@@ -26,6 +25,8 @@ void Analyser::analyseFormant() {
             break;
         case KARMA:
             analyseFormantEkf();
+            break;
+        case DeepFormants:
             break;
     }
 }

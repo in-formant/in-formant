@@ -4,7 +4,6 @@
 using namespace Eigen;
 
 rpm::vector<GCOI::GIPair> GCOI::estimate_Sedreams(const ArrayXd & x, const double fs, const double meanF0) {
-    
     const double meanT0 = 1.0 / meanF0;
 
     const auto & [ gci, goi ] = Sedreams::gci_sedreams(x, fs, meanT0);

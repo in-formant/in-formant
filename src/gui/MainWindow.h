@@ -84,7 +84,7 @@
 
 using DevicePair = std::pair<bool, const ma_device_id *>;
 
-Q_DECLARE_METATYPE(DevicePair);
+Q_DECLARE_METATYPE(DevicePair)
 
 constexpr int numFormants = 4;
 

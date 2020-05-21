@@ -5,6 +5,8 @@
 
 PowerSpectrum::PowerSpectrum(Analyser * analyser, AnalyserCanvas * canvas)
     : maxNfft(512),
+      targetWidth(1),
+      targetHeight(1),
       analyser(analyser), canvas(canvas)
 {
     setObjectName("PowerSpectrum");

@@ -181,15 +181,14 @@ bool Viterbi::viterbiMulti(
 
     assert(jcomb == ncomb);
 
-    parm2 parm = {
-        .ntrack = ntrack,
-        .ncomb = ncomb,
-        .indices = indices,
-        .getLocalCost = getLocalCost,
-        .getTransitionCost = getTransitionCost,
-        .putResult = putResult,
-        .closure = closure
-    };
+    parm2 parm;
+    parm.ntrack = ntrack;
+    parm.ncomb = ncomb;
+    parm.indices = indices;
+    parm.getLocalCost = getLocalCost;
+    parm.getTransitionCost = getTransitionCost;
+    parm.putResult = putResult;
+    parm.closure = closure;
 
     return Viterbi::viterbi(
             nframe, ncomb,

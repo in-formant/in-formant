@@ -4,12 +4,14 @@
 using namespace Eigen;
 
 Oscilloscope::Oscilloscope()
+    : targetWidth(1),
+      targetHeight(1)
 {
     setObjectName("Oscilloscope");
     setFocusPolicy(Qt::StrongFocus);
 
     speechColor = Qt::lightGray;
-    speechThick = 1;
+    speechThick = 1.5;
 
     sourceColor = 0xffa500;
     sourceThick = 2;

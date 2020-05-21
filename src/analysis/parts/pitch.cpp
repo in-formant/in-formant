@@ -29,6 +29,7 @@ void Analyser::analysePitch()
             break;
         default:
             est.isVoiced = false;
+            est.pitch = 0;
     }
 
     lastPitchFrame = est.isVoiced ? est.pitch : 0;

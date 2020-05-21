@@ -324,17 +324,15 @@ void Analyser::_updateFrameCount() {
 
     const int newFrameCount = (1000 * windowSpan.count()) / frameSpace.count();
 
-    static const Formant::Frame defaultFrame = {
-        .nFormants = 5,
-        .formant = {{550, 60}, {1650, 60}, {2750, 60}, {3850, 60}, {4950, 60}},
-        .intensity = 1.0,
-    };
+    static Formant::Frame defaultFrame;
+    defaultFrame.nFormants = 5;
+    defaultFrame.formant = {{550, 60}, {1650, 60}, {2750, 60}, {3850, 60}, {4950, 60}};
+    defaultFrame.intensity = 1.0;
 
-    static const SpecFrame defaultSpec = {
-        .fs = 16000,
-        .nfft = 512,
-        .spec = ArrayXd::Zero(512),
-    };
+    static SpecFrame defaultSpec;
+    defaultSpec.fs = 16000;
+    defaultSpec.nfft = 512;
+    defaultSpec.spec.setZero(512);
 
     lpcSpectrum = defaultSpec;
     speechSignal.setZero(frameSamples);

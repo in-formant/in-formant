@@ -3,12 +3,12 @@ project(libspeech)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_C_FLAGS "-fPIC -mtune=generic -Wall")
+set(CMAKE_C_FLAGS "-fPIC -mtune=generic -Wall -pedantic")
 set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g3")
 
-set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic -Wall")
+set(CMAKE_CXX_FLAGS "-fPIC -mtune=generic -Wall -pedantic")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g0 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g3")

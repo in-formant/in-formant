@@ -77,8 +77,12 @@ bool Formant::track(
     int nframe = frms.size();
     rpm::deque<Frame> outFrms;
     for (int i = 0; i < nframe; ++i) {
+        Formant frm;
+        frm.frequency = 0;
+        frm.bandwidth = 0;
+
         Frame frame;
-        frame.formant.resize(ntrack, {.frequency = 0, .bandwidth = 0});
+        frame.formant.resize(ntrack, frm);
         frame.nFormants = ntrack;
         frame.intensity = frms.at(i).intensity;
         outFrms.push_back(std::move(frame));
