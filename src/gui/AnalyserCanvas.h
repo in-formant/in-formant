@@ -19,7 +19,7 @@
 #   include "../qwasmsettings.h"
 #endif
 
-#define WINDOW_TITLE  "Speech analysis"
+#define WINDOW_TITLE  ("Speech analysis (version " VERSION_STRING ")")
 #define WINDOW_WIDTH  1280
 #define WINDOW_HEIGHT 720
 
