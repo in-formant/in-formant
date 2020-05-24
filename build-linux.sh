@@ -16,4 +16,7 @@ set -e
 docker run --name extract-linux -v "$(pwd)":/src -v $BUILD_DIR:/build -v $TARGET:/target -e "CMAKE_BUILD_TYPE=$1" -e "VERBOSE=$VERBOSE" $it_param clorika/linux:latest
 docker rm -f extract-linux
 
+mkdir -p $(pwd)/tests
+cp $(pwd)/dist/linux/usr/lib/libspeech.so $(pwd)/tests
+
 cd $(pwd)/dist && appimagetool linux speech_analysis-lin64.AppImage

@@ -193,16 +193,23 @@ elseif (UNIX)
         file(INSTALL \${LIB_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib FOLLOW_SYMLINK_CHAIN)
     ")
 elseif (WIN32)
+    string(LENGTH "$ENV{CROSS}" CROSS_LEN)
+    math(EXPR XTARGET_LEN "${CROSS_LEN} - 1")
+    string(SUBSTRING "$ENV{CROSS}" 0 ${XTARGET_LEN} XTARGET)
     install(FILES ${libspeech_LIBRARY} DESTINATION .)
     install(PROGRAMS ${sa_EXECUTABLE} DESTINATION .)
     install(CODE "
         execute_process(COMMAND
             /usr/mxe/tools/copydlldeps.sh
-            --infile ${sa_EXECUTABLE}
-            --infile ${libspeech_LIBRARY}
-            --destdir \$ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}
-            --recursivesrcdir /usr/mxe/usr/$ENV{CROSS::-1}
-            --copy --objdump /usr/mxe/usr/bin/$ENV{CROSS}objdump
+                --infile ${sa_EXECUTABLE}
+                --infile ${libspeech_LIBRARY}
+                --destdir \$ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}
+                --recursivesrcdir /usr/mxe/usr/${XTARGET}
+                --copy --objdump /usr/mxe/usr/bin/$ENV{CROSS}objdump
+        )
+        file(
+            INSTALL \"/usr/mxe/usr/${XTARGET}/qt5/plugins/platforms/qwindows.dll\"
+            DESTINATION \"/platforms\"
         )
     ")
 endif()

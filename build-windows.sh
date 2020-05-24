@@ -15,4 +15,4 @@ set -e
 docker run --name extract-win -v "$(pwd)":/src -v $BUILD_DIR:/build -v $TARGET:/target -e "CMAKE_BUILD_TYPE=$1" $it_param clorika/windows:latest
 docker rm -f extract-win
 
-cd $(pwd)/dist && zip -r speech_analysis-win32.zip $TARGET
+cd $(pwd)/dist && rm speech_analysis-win32.zip && cd windows && zip -r ../speech_analysis-win32.zip speech_analysis

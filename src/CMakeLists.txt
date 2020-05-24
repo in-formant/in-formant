@@ -289,6 +289,6 @@ elseif(ANDROID)
         jnigraphics
         dl
     )
-else()
-    message("Target system not supported")
+elseif (NOT (WIN32 OR UNIX OR APPLE))
+    message(FATAL_ERROR "Target system not supported")
 endif()
