@@ -1,31 +1,7 @@
 #ifndef AUDIO_RESAMPLER_H
 #define AUDIO_RESAMPLER_H
 
-#define FLOATING_POINT
-#ifdef __SSE__
-#   define USE_SSE
-#endif
-#ifdef __ARM_NEON
-#   define USE_NEON
-#endif
-
-#define RANDOM_PREFIX sa_speex
-#define OUTSIDE_SPEEX
-#include "speex_resampler/speex_resampler.h"
-
-#ifdef __cplusplus
-#   include <cstdint>
-extern "C" {
-#else
-#   include <stdint.h>
-#endif 
-int speex_resampler_get_required_input_frame_count(SpeexResamplerState* st, uint64_t out_len, uint64_t* in_len);
-int speex_resampler_get_expected_output_frame_count(SpeexResamplerState* st, uint64_t in_len, uint64_t* out_len);
-#ifdef __cplusplus
-}
-#endif
-
-#ifdef __cplusplus
+#include <soxr.h>
 
 namespace Module::Audio {
 
@@ -33,7 +9,7 @@ namespace Module::Audio {
     public:
         static constexpr int chMono = 1;
 
-        Resampler(int inRate, int outRate, int quality);
+        Resampler(int inRate, int outRate);
         ~Resampler();
 
         constexpr int getNumChannels() const { return chMono; }
@@ -50,20 +26,24 @@ namespace Module::Audio {
 
         int getRequiredInLength(int outLength);
         int getExpectedOutLength(int inLength);
-
-        void process(const float *pIn, uint32_t inLength, float *pOut, uint32_t outLength);
+    
+        void clear();
+        void process(const float *pIn, int inLength, float *pOut, int outLength);
         
     private:
-        SpeexResamplerState *mState;
-        int mInRate, mOutRate;
-        int mQuality;
+        void createResampler();
 
-        int err;
+        soxr_io_spec_t mSoxrIoSpec;
+        soxr_quality_spec_t mSoxrQualitySpec;
+        soxr_runtime_spec_t mSoxrRuntimeSpec;
+        soxr_t mSoxr;
+
+        int mInRate, mOutRate;
+
+        soxr_error_t err;
         void checkError();
     };
 
 }
-
-#endif // __cplusplus
 
 #endif // AUDIO_RESAMPLER_H

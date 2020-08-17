@@ -27,8 +27,8 @@ constexpr int testToneFrequency = 200;
 constexpr int analysisDuration = 25;
 constexpr int analysisSampleRate = 11025;
 
-constexpr int fftMaxFrequency = 8000;
-constexpr int fftLength = 1024;
+constexpr int fftMaxFrequency = 4000;
+constexpr int fftLength = 8192;
 
 static std::atomic_bool signalCaught(false);
 static std::atomic_int signalStatus;
@@ -88,8 +88,8 @@ int main(int argc, char **argv)
     target->create();
     target->show();
 
-    //audio.reset(new Audio::Pulse);
-    audio.reset(new Audio::Alsa);
+    audio.reset(new Audio::Pulse);
+    //audio.reset(new Audio::Alsa);
     //audio.reset(new Audio::PortAudio);
     audio->initialize();
     audio->refreshDevices();
@@ -194,7 +194,7 @@ int main(int argc, char **argv)
         renderer->begin();
         renderer->clear();
 
-        if (true) {
+        if (false) {
             auto& audio = outResamplerAudio;
 
             int length = (analysisDuration * analysisSampleRate) / 1000;
@@ -208,13 +208,13 @@ int main(int argc, char **argv)
             renderer->renderGraph(times.get(), values.get(), length);
         }
 
-        if (false) {
+        if (true) {
             const auto& slice = spectrogram.back();
             auto freqs = std::make_unique<float[]>(slice.size());
             auto gains = std::make_unique<float[]>(slice.size());
             for (int i = 0; i < slice.size(); ++i) {
                 freqs[i] = slice[i][0];
-                gains[i] = slice[i][1];
+                gains[i] = slice[i][1] * 0.5f - 9.8f;
             }
             renderer->renderGraph(freqs.get(), gains.get(), slice.size());
         }

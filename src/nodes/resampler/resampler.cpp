@@ -9,7 +9,7 @@ Resampler::Resampler(int initialInSampleRate, int outSampleRate)
             .outputCount = 1,
             .outputs = &kNodeIoTypeAudioTime,
         }),
-      mResampler(initialInSampleRate, outSampleRate, 2)
+      mResampler(initialInSampleRate, outSampleRate)
 {
 }
 
@@ -38,6 +38,7 @@ void Resampler::process(const NodeIO *inputs, NodeIO *outputs)
     out->setLength(outLength);
     out->setSampleRate(mResampler.getOutputRate());
 
+    mResampler.clear();
     mResampler.process(in->getConstData(), inLength, out->getData(), outLength);
 }
 

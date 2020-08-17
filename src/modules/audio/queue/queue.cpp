@@ -8,7 +8,7 @@ Queue::Queue(int minInDurationInMs, int maxInDurationInMs, int avgDurationInMs, 
     : mMinInLength((inSampleRate * minInDurationInMs) / 1000),
       mMaxInLength((inSampleRate * maxInDurationInMs) / 1000),
       mAvgLength((inSampleRate * avgDurationInMs) / 1000),
-      mResampler(inSampleRate, 8000, 7),
+      mResampler(inSampleRate, 8000),
       mCallback(callback)
 {
 }
