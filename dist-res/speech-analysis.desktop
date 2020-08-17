@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Terminal=false
+Exec=speech-analysis
+Name=Speech analysis
+Comment=Real-time formant tracking and voice analysis software
+Icon=speech-analysis
+Categories=Utility;Audio;Science;

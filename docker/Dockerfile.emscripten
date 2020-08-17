@@ -1,0 +1,101 @@
+FROM ubuntu:focal AS build
+ENV container docker
+
+SHELL ["/bin/bash", "-c"]
+
+# Install build tools.
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get -y update && \
+        apt-get install -y \
+            build-essential cmake git wget \
+            python3 python-is-python3 openjdk-11-jre-headless
+
+# Install emsdk.
+RUN git clone https://github.com/emscripten-core/emsdk.git
+RUN cd /emsdk && \
+        ./emsdk install latest && \
+        ./emsdk activate latest
+
+# Build pkgconfig.
+ENV ver=0.29.2
+RUN wget https://pkg-config.freedesktop.org/releases/pkg-config-$ver.tar.gz && \
+        tar xf pkg-config-$ver.tar.gz
+RUN mkdir -p pkg-config-$ver/build && \
+        cd pkg-config-$ver/build && \
+        ../configure --disable-host-tool --with-internal-glib --prefix=/emusr && \
+        make install -j$(nproc)
+
+ENV PKG_CONFIG=/emusr/bin/pkg-config PKG_CONFIG_PATH=/emusr:/emusr/lib/pkgconfig:/emusr/share/pkgconfig
+
+# Build eigen3.
+ENV ver=3.3.7
+RUN wget https://gitlab.com/libeigen/eigen/-/archive/$ver/eigen-$ver.tar.gz && \
+        tar xf eigen-$ver.tar.gz
+RUN mkdir -p eigen-$ver/build && \
+        cd eigen-$ver/build && \
+        . /emsdk/emsdk_env.sh && \
+        emcmake cmake .. -DCMAKE_INSTALL_PREFIX=/emusr && \
+        emmake make install -j$(nproc)
+
+# Build fftw3.
+ENV ver=3.3.8
+RUN wget http://www.fftw.org/fftw-$ver.tar.gz && \
+        tar xf fftw-$ver.tar.gz
+RUN mkdir -p fftw-$ver/build && \
+        cd fftw-$ver/build && \
+        . /emsdk/emsdk_env.sh && \
+        emconfigure ../configure --enable-static --disable-shared CFLAGS="-fPIC" --prefix=/emusr && \
+        emmake make install -j$(nproc)
+
+# Build SDL2.
+RUN git clone --depth=1 --branch version_22 https://github.com/emscripten-ports/SDL2.git
+RUN mkdir -p SDL2/build && \
+        cd SDL2/build && \
+        . /emsdk/emsdk_env.sh && \
+        emconfigure ../configure --host=wasm32-unknown-emscripten --enable-static --disable-shared --prefix=/emusr --disable-assembly --disable-threads --disable-cpuinfo && \
+        emmake make install -j$(nproc)
+
+# Build Freetype2
+ENV ver=2.10.2
+RUN wget https://download.savannah.gnu.org/releases/freetype/freetype-$ver.tar.gz && \
+        tar xf freetype-$ver.tar.gz
+RUN cd freetype-$ver && \
+        mkdir build && \
+        cd build && \
+        . /emsdk/emsdk_env.sh && \
+        emcmake cmake .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/emusr && \
+        emmake make install -j$(nproc)
+COPY emscripten-freetype-config /emusr/bin/freetype-config
+
+# Build SDL2_ttf
+ENV ver=2.0.15
+RUN wget https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-$ver.tar.gz && \
+        tar xf SDL2_ttf-$ver.tar.gz
+RUN cd SDL2_ttf-$ver && \
+        mkdir build && \
+        cd build && \
+        . /emsdk/emsdk_env.sh && \
+        emconfigure ../configure --enable-static --disable-shared --disable-freetypetest --with-sdl-prefix=/emusr FT2_CFLAGS="`$PKG_CONFIG freetype2 --cflags`" FT2_LIBS="`$PKG_CONFIG freetype2 --libs`" --prefix=/emusr && \
+        emmake make install -j$(nproc)
+
+# Build SDL2_gfx
+ENV ver=1.0.4
+RUN wget http://www.ferzkopp.net/Software/SDL2_gfx/SDL2_gfx-$ver.tar.gz && \
+        tar xf SDL2_gfx-$ver.tar.gz
+RUN cd SDL2_gfx-$ver && \
+        mkdir build && \
+        cd build && \
+        . /emsdk/emsdk_env.sh && \
+        emconfigure ../configure --enable-static --disable-shared --disable-mmx --with-sdl-prefix=/emusr --prefix=/emusr && \
+        emmake make install -j$(nproc)
+
+CMD cd /build && \
+        . /emsdk/emsdk_env.sh && \
+        emcmake cmake \
+            -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+            -DPKG_CONFIG_EXECUTABLE=$PKG_CONFIG \
+            -DCMAKE_PREFIX_PATH=/emusr \
+            /src && \
+        emmake make -j$(nproc) && \
+        deploy-emscripten.sh 
+
