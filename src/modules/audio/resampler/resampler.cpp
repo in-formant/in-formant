@@ -1,49 +1,49 @@
 #include "resampler.h"
 #include <string>
+#include <cmath>
+#include <cstring>
 #include <stdexcept>
+#include <iostream>
+#include <mutex>
+#include <vector>
 
 using namespace Module::Audio;
 
-Resampler::Resampler(int inRate, int outRate, int quality)
-    : mInRate(inRate),
-      mOutRate(outRate),
-      mQuality(quality)
+Resampler::Resampler(int inRate, int outRate)
+    : mSoxrIoSpec(soxr_io_spec(SOXR_FLOAT32_I, SOXR_FLOAT32_I)),
+      mSoxrQualitySpec(soxr_quality_spec(SOXR_VHQ, 0)),
+      mSoxrRuntimeSpec(soxr_runtime_spec(1)),
+      mInRate(inRate),
+      mOutRate(outRate)
 {
-    mState = speex_resampler_init(chMono, inRate, outRate, quality, &err);
+    createResampler();
 }
 
 Resampler::~Resampler()
 {
-    speex_resampler_destroy(mState);
+    soxr_delete(mSoxr);
 }
 
 void Resampler::setInputRate(int newInRate)
 {
-    err = speex_resampler_set_rate(mState, newInRate, mOutRate);
+    soxr_delete(mSoxr);
     mInRate = newInRate;
-    checkError();
+    createResampler();
 }
 
 void Resampler::setOutputRate(int newOutRate)
 {
-    err = speex_resampler_set_rate(mState, mInRate, newOutRate);
+    soxr_delete(mSoxr);
     mOutRate = newOutRate;
-    checkError();
+    createResampler();
 }
 
 void Resampler::setRate(int newInRate, int newOutRate)
 {
-    err = speex_resampler_set_rate(mState, newInRate, newOutRate);
+    soxr_delete(mSoxr);
     mInRate = newInRate;
     mOutRate = newOutRate;
-    checkError();
-}
-
-void Resampler::setQuality(int newQuality)
-{
-    err = speex_resampler_set_quality(mState, newQuality);
-    mQuality = newQuality;
-    checkError();
+    createResampler();
 }
 
 int Resampler::getInputRate() const
@@ -62,63 +62,121 @@ void Resampler::getRate(int *pInRate, int *pOutRate) const
     *pOutRate = mOutRate;
 }
 
-int Resampler::getQuality() const
-{
-    return mQuality;
-}
-
 int Resampler::getRequiredInLength(int outLength)
 {
-    uint64_t inLength;
-    err = speex_resampler_get_required_input_frame_count(mState, (uint64_t) outLength, &inLength);
-    checkError();
-    return (int) inLength;
+    if (outLength == 0) {
+        return 0;
+    }
+
+    static std::mutex garbageMut;
+    static std::vector<float> garbageIn, garbageOut;
+
+    static soxr_io_spec_t ioSpec = soxr_io_spec(SOXR_FLOAT32_I, SOXR_FLOAT32_I);
+    static soxr_quality_spec_t qSpec = soxr_quality_spec(SOXR_QQ, 0);
+    static soxr_runtime_spec_t rSpec = soxr_runtime_spec(1);
+    
+    int firstEstimate = (outLength * mInRate) / mOutRate + 100;
+    size_t inLength;
+
+    garbageMut.lock();
+
+    garbageIn.resize(firstEstimate, 0.0f);
+    garbageOut.resize(outLength);
+    
+    soxr_oneshot(
+            mInRate, mOutRate, 1,
+            garbageIn.data(), firstEstimate, &inLength,
+            garbageOut.data(), outLength, nullptr,
+            &ioSpec, &qSpec, &rSpec);
+
+    garbageMut.unlock();
+
+    return inLength;
 }
 
 int Resampler::getExpectedOutLength(int inLength)
 {
-    uint64_t outLength;
-    err = speex_resampler_get_expected_output_frame_count(mState, (uint64_t) inLength, &outLength);
-    checkError();
-    return (int) outLength;
+    if (inLength == 0) {
+        return 0;
+    }
+
+    static std::mutex garbageMut;
+    static std::vector<float> garbageIn, garbageOut;
+
+    static soxr_io_spec_t ioSpec = soxr_io_spec(SOXR_FLOAT32_I, SOXR_FLOAT32_I);
+    static soxr_quality_spec_t qSpec = soxr_quality_spec(SOXR_QQ, 0);
+    static soxr_runtime_spec_t rSpec = soxr_runtime_spec(1);
+    
+    int firstEstimate = (inLength * mOutRate) / mInRate + soxr_delay(mSoxr) + 100;
+    size_t outLength;
+
+    garbageMut.lock();
+
+    garbageIn.resize(inLength, 0.0f);
+    garbageOut.resize(firstEstimate);
+    
+    soxr_oneshot(
+            mInRate, mOutRate, 1,
+            garbageIn.data(), inLength, nullptr,
+            garbageOut.data(), firstEstimate, &outLength,
+            &ioSpec, &qSpec, &rSpec);
+
+    garbageMut.unlock();
+
+    return outLength;
 }
 
-void Resampler::process(const float *pIn, uint32_t inLength, float *pOut, uint32_t outLength)
+void Resampler::clear()
 {
-    constexpr uint32_t framesPerIteration = UINT32_MAX;
-    uint32_t framesProcessedOut = 0;
-    uint32_t framesProcessedIn = 0;
-    
-    while (framesProcessedOut < outLength && framesProcessedIn < inLength) {
-        uint32_t frameCountInLocal;
-        uint32_t frameCountOutLocal;
-        const float *pInLocal;
-        float *pOutLocal;
+    soxr_clear(mSoxr);
+}
 
-        frameCountInLocal = framesPerIteration;
-        if (frameCountInLocal > (inLength - framesProcessedIn)) {
-            frameCountInLocal = (inLength - framesProcessedIn);
-        }
+void Resampler::process(const float *pIn, int inLength, float *pOut, int outLength)
+{
+    size_t inDone = 0;
+    size_t outDone = 0;
+    int inRemaining = inLength;
+    int outRemaining = outLength;
 
-        frameCountOutLocal = framesPerIteration;
-        if (frameCountOutLocal > (outLength - framesProcessedOut)) {
-            frameCountOutLocal = (outLength - framesProcessedOut);
-        }
+    while (inRemaining > 0 && outRemaining > 0) {
+        size_t localInDone;
+        size_t localOutDone;
 
-        pInLocal = pIn + framesProcessedIn * sizeof(float);
-        pOutLocal = pOut + framesProcessedOut * sizeof(float);
-
-        err = speex_resampler_process_interleaved_float(mState, pInLocal, &frameCountInLocal, pOutLocal, &frameCountOutLocal);
+        err = soxr_process(mSoxr,
+                        std::next(pIn, inDone), inRemaining, &localInDone,
+                        std::next(pOut, outDone), outRemaining, &localOutDone);
         checkError();
-
-        framesProcessedIn += frameCountInLocal;
-        framesProcessedOut += frameCountOutLocal;
+        
+        inDone += localInDone;
+        outDone += localOutDone;
+        inRemaining -= localInDone;
+        outRemaining -= localOutDone;
     }
+
+    /*while (outRemaining > 0) {
+        size_t localOutDone;
+
+        err = soxr_process(mSoxr,
+                        pIn, 0, nullptr,
+                        std::next(pOut, outDone), outRemaining, &localOutDone);
+        checkError();
+       
+        outDone += localOutDone;
+        outRemaining -= localOutDone;
+    }*/
+}
+
+void Resampler::createResampler()
+{
+    mSoxr = soxr_create(mInRate, mOutRate, 1, &err, &mSoxrIoSpec, &mSoxrQualitySpec, &mSoxrRuntimeSpec);
+    checkError();
+    
+    std::cout << "Audio::Resampler] Using engine " << soxr_engine(mSoxr) << std::endl;
 }
 
 void Resampler::checkError()
 {
-    if (err > 0) {
-        throw std::runtime_error(std::string("Audio::Resampler] ") + speex_resampler_strerror(err));
+    if (err) {
+        throw std::runtime_error(std::string("Audio::Resampler] ") + soxr_strerror(err));
     }
 }

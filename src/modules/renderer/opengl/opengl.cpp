@@ -252,7 +252,7 @@ void OpenGL::renderGraph(float *x, float *y, size_t count)
 void OpenGL::renderSpectrogram(float ***spectrogram, size_t *lengths, size_t count)
 {
     float minFrequency = 0.0f;
-    float maxFrequency = 8000.0f;
+    float maxFrequency = 4000.0f;
 
     float xfuzz = 0.008f;
     float yfuzz = 0.002f;

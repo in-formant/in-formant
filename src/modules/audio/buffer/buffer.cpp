@@ -20,7 +20,7 @@ void Buffer::setSampleRate(int newSampleRate)
         return;
     }
 
-    Resampler rsx(mSampleRate, newSampleRate, 1);
+    Resampler rsx(mSampleRate, newSampleRate);
    
     int newLength = rsx.getExpectedOutLength(mLength);
     auto newArray = std::make_unique<float[]>(newLength);

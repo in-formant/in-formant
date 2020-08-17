@@ -28,7 +28,6 @@ set(SOURCES
     src/modules/audio/buffer/buffer.h
     src/modules/audio/queue/queue.cpp
     src/modules/audio/queue/queue.h
-    src/modules/audio/resampler/resample_impl.c
     src/modules/audio/resampler/resampler.cpp
     src/modules/audio/resampler/resampler.h
     src/modules/audio/audio.h
@@ -82,8 +81,19 @@ check_low_level_exit(
 )
 
 include(ExternalProject)
-ExternalProject_Add(soxr
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/external/soxr)
+ExternalProject_Add(
+    soxr
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/external/soxr
+    CMAKE_COMMAND $ENV{cross}cmake
+    CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/soxr
+        -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=OFF -DWITH_OPENMP=OFF -DWITH_LSR_BINDINGS=OFF
+        -DWITH_VR32=OFF -DWITH_CR32=ON -DWITH_CR64=OFF -DWITH_CR32S=ON
+        -DWITH_PFFFT=OFF -DWITH_AVFFT=OFF
+        -DWITH_DEV_TRACE=OFF -Wno-dev
+)
+set(SOXR_INCLUDE_DIR ${CMAKE_BINARY_DIR}/soxr/include)
+set(SOXR_LIBRARIES -L${CMAKE_BINARY_DIR}/soxr/lib -lsoxr)
 
 ### SEARCH AUDIO MODULES 
 
@@ -190,9 +200,10 @@ else()
     add_executable(speech-analysis ${SOURCES})
 endif()
 
-target_include_directories(speech-analysis PUBLIC ${IMGUI})
-target_include_directories(speech-analysis SYSTEM PUBLIC ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS})
-target_link_libraries(speech-analysis PUBLIC ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS})
+add_dependencies(speech-analysis soxr)
+
+target_include_directories(speech-analysis SYSTEM PUBLIC ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${SOXR_INCLUDE_DIR})
+target_link_libraries(speech-analysis PUBLIC ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} ${SOXR_LIBRARIES})
 
 if(LL_EXIT_FUNC)
     target_compile_definitions(speech-analysis PUBLIC -D__sa_llexit=${LL_EXIT_FUNC})
