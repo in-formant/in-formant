@@ -1,0 +1,73 @@
+# syntax=docker/dockerfile:experimental
+FROM ubuntu:focal
+ENV container docker
+RUN chmod 1777 /tmp
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies.
+RUN apt-get -y update && apt-get -y install \
+        autoconf \
+        automake \
+        autopoint \
+        bash \
+        bison \
+        bzip2 \
+        flex \
+        g++ \
+        g++-multilib \
+        gettext \
+        git \
+        gperf \
+        intltool \
+        libc6-dev-i386 \
+        libgdk-pixbuf2.0-dev \
+        libltdl-dev \
+        libssl-dev \
+        libtool-bin \
+        libxml-parser-perl \
+        lzip \
+        make \
+        openssl \
+        p7zip-full \
+        patch \
+        perl \
+        python \
+        ruby \
+        sed \
+        unzip \
+        wget \
+        xz-utils
+
+RUN git clone https://github.com/mxe/mxe.git
+RUN cd /mxe && make JOBS=$(nproc) STRIP_LIB=true MXE_TARGETS='i686-w64-mingw32.shared x86_64-w64-mingw32.shared' MXE_PLUGIN_DIRS='plugins/gcc10' cc
+RUN cd /mxe && make JOBS=$(nproc) STRIP_LIB=true MXE_TARGETS='i686-w64-mingw32.shared x86_64-w64-mingw32.shared' MXE_PLUGIN_DIRS='plugins/gcc10' fftw eigen pthreads
+RUN cd /mxe && make JOBS=$(nproc) STRIP_LIB=true MXE_TARGETS='i686-w64-mingw32.shared x86_64-w64-mingw32.shared' MXE_PLUGIN_DIRS='plugins/gcc10' sdl2 portaudio
+RUN cd /mxe && make clean-junk
+
+# Build vulkan.
+ENV PATH=/mxe/usr/bin:$PATH
+ENV vkver=1.2.148.0
+
+RUN wget https://sdk.lunarg.com/sdk/download/$vkver/windows/VulkanSDK-$vkver-Installer.exe?Human=true 
+RUN dpkg --add-architecture i386 && apt-get -y update && apt-get -y install libgcc-s1:i386 && apt-get -y install xvfb wine32 libgl1-mesa-glx:i386
+RUN mv "VulkanSDK-$vkver-Installer.exe?Human=true" vulkan.exe && \
+        (Xvfb :99 &) && \
+        DISPLAY=:99 wine vulkan.exe /S && \
+        mv $HOME/.wine/drive_c/VulkanSDK /VulkanSDK
+RUN apt-get -y autoremove --purge xvfb wine32 *:i386 && dpkg --remove-architecture i386 && rm vulkan.exe
+
+# Install shaderc
+COPY shaderc /usr/local/
+
+COPY deploy-windows.sh /usr/local/bin
+ENV MXE=/mxe PATH=/mxe/usr/bin:$PATH
+CMD cd /build && \
+        if [ $target = win32 ]; then export cross=i686-w64-mingw32.shared- ; fi && \
+        if [ $target = win64 ]; then export cross=x86_64-w64-mingw32.shared- ; fi && \
+        export VULKAN_SDK=/VulkanSDK/$vkver && \
+        ${cross}cmake \
+            -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+            /src && \
+        make -j$(nproc) && \
+        deploy-windows.sh $target

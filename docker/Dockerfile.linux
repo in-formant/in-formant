@@ -1,0 +1,223 @@
+FROM centos:6 AS build
+ENV container docker
+
+# Install git, wget, and gcc 4
+RUN yum -y install git wget gcc gcc-c++
+
+# Download and build newer gcc
+ENV ver=10.1.0
+RUN wget http://ftpmirror.gnu.org/gcc/gcc-$ver/gcc-$ver.tar.gz && \
+	tar xf gcc-$ver.tar.gz
+WORKDIR /gcc-$ver
+RUN contrib/download_prerequisites
+RUN mkdir build && cd build && \
+	../configure \
+	    --prefix=/usr/local \
+	    --disable-multilib \
+            --enable-languages=c,c++,fortran && \
+	make -j$(nproc) && \
+	make install
+
+WORKDIR /
+ENV CC=/usr/local/bin/gcc \
+    CXX=/usr/local/bin/g++ \
+    PKG_CONFIG_PATH=/usr/lib64/pkgconfig:/usr/share/pkgconfig:/usr/local/pkgconfig:/usr/local/lib64/pkgconfig:/usr/local/share/pkgconfig
+
+RUN yum -y install epel-release && \
+        yum -y install xz gmp-devel libmpc-devel mpfr-devel 
+
+# Build ISL
+ENV ver=0.22
+RUN wget http://isl.gforge.inria.fr/isl-$ver.tar.xz && \
+        tar xf isl-$ver.tar.xz
+RUN mkdir -p isl-$ver/build && \
+        cd isl-$ver/build && \
+        ../configure --with-gmp=system && \
+        make install -j$(nproc)
+
+# Build newer binutils
+ENV ver=2.35
+RUN wget https://ftpmirror.gnu.org/binutils/binutils-$ver.tar.xz && \
+        tar xf binutils-$ver.tar.xz
+RUN mkdir -p binutils-$ver && \
+        cd binutils-$ver && \
+        ./configure --enable-ld=default --with-isl=/usr/local CXXFLAGS="-static-libstdc++" && \
+        make -j$(nproc) && \
+        make install
+
+ENV AR=/usr/local/bin/ar \
+    AS=/usr/local/bin/as \
+    LD=/usr/local/bin/ld \
+    RANLIB=/usr/local/bin/ranlib
+
+# Install AppImageKit.
+RUN wget https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage
+RUN cp appimagetool-x86_64.AppImage /usr/local/bin/appimagetool && \
+        chmod +x /usr/local/bin/appimagetool
+
+# Build pkgconfig
+ENV ver=0.29.2
+RUN wget https://pkg-config.freedesktop.org/releases/pkg-config-$ver.tar.gz && \
+        tar xf pkg-config-$ver.tar.gz
+RUN cd pkg-config-$ver && \
+        mkdir build && \
+        cd build && \
+        ../configure --with-internal-glib --prefix=/usr/local && \
+        make install -j$(nproc)
+
+# Build cmake
+ENV ver=3.18.1
+RUN wget https://github.com/Kitware/CMake/releases/download/v$ver/cmake-$ver-Linux-x86_64.tar.gz && \
+        tar xf cmake-$ver-Linux-x86_64.tar.gz && \
+        cp -r cmake-$ver-Linux-x86_64/* /usr/local
+
+# Dependencies for SDL2.
+RUN yum -y install libX11-devel libXext-devel libXrandr-devel alsa-lib-devel pulseaudio-libs-devel jack-audio-connection-kit-devel libsamplerate-devel esound-devel arts-devel nas-devel dbus-devel ibus-devel mesa-libgbm-devel bzip2-devel harfbuzz-devel
+
+# Include OpenSSL
+ENV ver=1.1.1g
+RUN wget https://www.openssl.org/source/openssl-$ver.tar.gz && \
+        tar xf openssl-$ver.tar.gz
+RUN mkdir -p openssl-$ver/build && \
+        cd openssl-$ver/build && \
+        ../config --prefix=/usr/local/ssl && \
+        make -j$(nproc) && \
+        make install
+
+# Install Python 3.8
+ENV ver=3.8.5
+RUN wget https://www.python.org/ftp/python/$ver/Python-$ver.tar.xz && \
+        tar xf Python-$ver.tar.xz
+RUN mkdir -p Python-$ver/build && \
+        cd Python-$ver/build && \
+        ../configure --enable-optimizations --with-lto=no --with-openssl=/usr/local/ssl LDFLAGS="-Wl,-rpath /usr/local/ssl/lib" && \
+        make -j$(nproc) && \
+        make install
+
+RUN pip3 install --upgrade pip
+
+# Build vulkan.
+ENV vkver=1.2.148
+
+RUN git clone https://github.com/KhronosGroup/Vulkan-Headers --depth 1 --branch v$vkver
+RUN mkdir -p Vulkan-Headers/build && \
+        cd Vulkan-Headers/build && \
+        cmake .. -Wno-dev -DCMAKE_INSTALL_PREFIX=/usr/local && \
+        make install -j$(nproc)
+
+RUN git clone https://github.com/KhronosGroup/Vulkan-Loader --depth 1 --branch v$vkver
+RUN mkdir -p Vulkan-Loader/build && \
+        cd Vulkan-Loader/build && \
+        cmake .. -Wno-dev -DCMAKE_INSTALL_PREFIX=/usr/local -DVULKAN_HEADERS_INSTALL_DIR=/usr/local -DBUILD_WSI_WAYLAND_SUPPORT=OFF .. && \
+        make install -j$(nproc)
+
+# Build portaudio
+RUN wget http://www.portaudio.com/archives/pa_stable_v190600_20161030.tgz && \
+        tar xf pa_stable_v190600_20161030.tgz
+RUN cd portaudio && \
+        mkdir objs && \
+        cd objs && \
+        ../configure --enable-shared --disable-static --prefix=/usr/local && \
+        make install -j$(nproc)
+
+# Build eigen3
+ENV ver=3.3.7
+RUN wget https://gitlab.com/libeigen/eigen/-/archive/$ver/eigen-$ver.tar.gz && \
+        tar xf eigen-$ver.tar.gz
+RUN cd eigen-$ver && \
+        mkdir build && \
+        cd build && \
+        cmake -DCMAKE_INSTALL_PREFIX=/usr/local .. && \
+        make install -j$(nproc)
+
+# Build fftw3
+ENV ver=3.3.8
+RUN wget http://www.fftw.org/fftw-$ver.tar.gz && \
+        tar xf fftw-$ver.tar.gz
+RUN cd fftw-$ver && \
+        mkdir build && \
+        cd build && \
+        ../configure --enable-shared --disable-static --prefix=/usr/local && \
+        make install -j$(nproc)
+
+# Build SDL2
+ENV ver=2.0.12
+RUN wget https://www.libsdl.org/release/SDL2-$ver.tar.gz && \
+        tar xf SDL2-$ver.tar.gz
+RUN cd SDL2-$ver && \
+        mkdir build && \
+        cd build && \
+        ../configure --enable-shared --disable-static --prefix=/usr/local \
+                JACK_CFLAGS="`/usr/bin/pkg-config jack --cflags`" \
+                JACK_LIBS="`/usr/bin/pkg-config jack --libs`" \
+           && \
+        make install -j$(nproc)
+
+# Build Libpng.
+ENV ver=1.2.59
+RUN wget ftp://ftp-osl.osuosl.org/pub/libpng/src/libpng12/libpng-$ver.tar.xz && \
+        tar xf libpng-$ver.tar.xz
+RUN cd libpng-$ver && \
+        mkdir build && \
+        cd build && \
+        ../configure --enable-shared --disable-static --prefix=/usr/local && \
+        make install -j$(nproc)
+
+# Build Freetype2
+ENV ver=2.10.2
+RUN wget https://download.savannah.gnu.org/releases/freetype/freetype-$ver.tar.gz && \
+        tar xf freetype-$ver.tar.gz
+RUN cd freetype-$ver && \
+        mkdir build && \
+        cd build && \
+        ../configure --enable-shared --disable-static --enable-freetype-config --prefix=/usr/local && \
+        make install -j$(nproc)
+
+# Build recent glibc in order for glslc to run.
+ENV ver=2.14
+RUN wget http://ftpmirror.gnu.org/glibc/glibc-$ver.tar.xz && \
+        tar xf glibc-$ver.tar.xz
+RUN cd glibc-$ver && \
+        sed -i 's/\(struct obstack \*_obstack_compat\);/\1 __attribute__ ((nocommon));/g' malloc/obstack.c && \
+        mkdir build && \
+        cd build && \
+        ../configure --prefix=/opt/glibc CC=/usr/bin/gcc CXX=/usr/bin/g++ && \
+        make all -j$(nproc) && \
+        make install
+
+# Install recent GL headers
+ENV ver=2.1.0
+RUN wget "https://downloads.sourceforge.net/project/glew/glew/$ver/glew-$ver.tgz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fglew%2Ffiles%2Fglew%2F$ver%2Fglew-$ver.tgz%2Fdownload&ts=1597098028" -O glew.tgz && \
+        tar xf glew.tgz
+RUN cd glew-$ver && \
+        mkdir -p /usr/local/include && cp -r include/* /usr/local/include && \
+        mkdir -p /usr/local/src && cp src/glew.c /usr/local/src
+
+ENV ver=0.9.9.8
+RUN wget https://github.com/g-truc/glm/archive/$ver.tar.gz -O glm.tgz && \
+        tar xf glm.tgz
+RUN cd glm-$ver && cp -r glm /usr/local/include 
+
+FROM centos:6
+COPY --from=build /usr/local /usr/local
+COPY --from=build /opt/glibc /opt/glibc
+
+# Install shaderc
+COPY shaderc /usr/local/
+
+RUN yum -y install epel-release
+RUN yum -y install glibc-devel
+RUN yum -y install alsa-lib-devel jack-audio-connection-kit-devel pulseaudio-libs-devel
+RUN yum -y install mesa-libGL-devel libglvnd-devel
+
+COPY deploy-linux.sh /usr/local/bin
+CMD cd /build && \
+        export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64 && \
+        export PKG_CONFIG_PATH=/usr/lib64/pkgconfig:/usr/share/pkgconfig:/usr/local/pkgconfig:/usr/local/lib64/pkgconfig:/usr/local/share/pkgconfig && \
+        export GLSLC_GLIBC_DIR=/opt/glibc && \
+        export GLEW_SOURCE_FILE=/usr/local/src/glew.c && \
+        cmake \
+            -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+            /src && \
+        make -j$(nproc) && \
+        deploy-linux.sh
