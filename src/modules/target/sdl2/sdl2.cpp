@@ -4,11 +4,11 @@
 using namespace Module::Target;
 
 SDL2::SDL2(Type rendererType)
-    : AbstractBase { Type::OpenGL, Type::Vulkan },
+    : AbstractBase { Type::OpenGL, Type::GLES, Type::Vulkan },
       mRendererType(rendererType),
       mWindow(nullptr)
 {
-#ifdef RENDERER_USE_OPENGL
+#if RENDERER_USE_OPENGL || RENDERER_USE_GLES
     setOpenGLProvider(new SDL2_OpenGL(&mWindow));
 #endif
 
@@ -26,16 +26,28 @@ void SDL2::initialize()
     err = SDL_Init(SDL_INIT_VIDEO);
     checkError(err < 0);
 
+#ifdef RENDERER_USE_OPENGL
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+#elif RENDERER_USE_GLES
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+#endif
 
+#if RENDERER_USE_OPENGL || RENDERER_USE_GLES
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+#endif
+
+#ifdef __ANDROID__
+    prepareAssets();
+#endif
 }
 
 void SDL2::terminate()
@@ -64,7 +76,7 @@ void SDL2::setSize(int width, int height)
 
 void SDL2::getSizeForRenderer(int *pWidth, int *pHeight)
 {
-    if (mRendererType == Type::OpenGL) {
+    if (mRendererType == Type::OpenGL || mRendererType == Type::GLES) {
         SDL_GL_GetDrawableSize(mWindow, pWidth, pHeight);
     }
     else if (mRendererType == Type::Vulkan) {
@@ -83,6 +95,7 @@ void SDL2::create()
 
     switch (mRendererType) {
     case Type::OpenGL:
+    case Type::GLES:
         backendFlag = SDL_WINDOW_OPENGL; 
         break;
     case Type::Vulkan:

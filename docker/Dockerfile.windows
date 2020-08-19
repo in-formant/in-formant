@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:experimental
 FROM ubuntu:focal
 ENV container docker
 RUN chmod 1777 /tmp
@@ -57,6 +56,25 @@ RUN mv "VulkanSDK-$vkver-Installer.exe?Human=true" vulkan.exe && \
         mv $HOME/.wine/drive_c/VulkanSDK /VulkanSDK
 RUN apt-get -y autoremove --purge xvfb wine32 *:i386 && dpkg --remove-architecture i386 && rm vulkan.exe
 
+# Install recent GL headers
+ENV ver=2.1.0
+RUN wget "https://downloads.sourceforge.net/project/glew/glew/$ver/glew-$ver.tgz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fglew%2Ffiles%2Fglew%2F$ver%2Fglew-$ver.tgz%2Fdownload&ts=1597098028" -O glew.tgz && \
+        tar xf glew.tgz
+RUN cd glew-$ver && \
+        mkdir -p /usr/local/include && \
+        for dir in i686-w64-mingw32.shared x86_64-w64-mingw32.shared; do \
+            cp -r include/* /mxe/usr/$dir/include; \
+        done && \
+        mkdir -p /mxe/usr/src && cp src/glew.c /mxe/usr/src
+
+ENV ver=0.9.9.8
+RUN wget https://github.com/g-truc/glm/archive/$ver.tar.gz -O glm.tgz && \
+        tar xf glm.tgz
+RUN cd glm-$ver && \
+        for dir in i686-w64-mingw32.shared x86_64-w64-mingw32.shared; do \
+            cp -r glm /mxe/usr/$dir/include; \
+        done
+
 # Install shaderc
 COPY shaderc /usr/local/
 
@@ -66,6 +84,7 @@ CMD cd /build && \
         if [ $target = win32 ]; then export cross=i686-w64-mingw32.shared- ; fi && \
         if [ $target = win64 ]; then export cross=x86_64-w64-mingw32.shared- ; fi && \
         export VULKAN_SDK=/VulkanSDK/$vkver && \
+        export GLEW_SOURCE_FILE=/mxe/usr/src/glew.c && \
         ${cross}cmake \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
             /src && \

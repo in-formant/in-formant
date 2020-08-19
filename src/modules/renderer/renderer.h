@@ -7,6 +7,10 @@
 #   include "opengl/opengl.h"
 #endif
 
+#ifdef RENDERER_USE_GLES
+#   include "gles/gles.h"
+#endif
+
 #ifdef RENDERER_USE_VULKAN
 #   include "vulkan/vulkan.h"
 #endif

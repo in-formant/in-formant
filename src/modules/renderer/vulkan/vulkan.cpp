@@ -32,7 +32,8 @@ static std::vector<char> readFile(const std::string& filename)
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {
-        throw std::runtime_error(std::string("Renderer::Vulkan] Error creating shader module: Could not open file \"") + filename + "\"");
+        throw std::runtime_error(std::string("Renderer::Vulkan] Error reading shader file \"") + filename + "\"");
+
     }
 
     constexpr size_t codeVectorIncrSize = 4096;
@@ -599,8 +600,8 @@ void Vulkan::createDescriptorSetLayout()
 
 void Vulkan::createGraphicsPipeline()
 {
-    auto vertShaderCode = readFile("shaders/vulkan/shader.vert.spv");
-    auto fragShaderCode = readFile("shaders/vulkan/shader.frag.spv");
+    auto vertShaderCode = readFile("shaders/vulkan/graph.vert.spv");
+    auto fragShaderCode = readFile("shaders/vulkan/graph.frag.spv");
 
     VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
     VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);

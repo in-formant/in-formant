@@ -43,11 +43,18 @@ namespace Module::Audio {
 #endif
     };
 
+    struct dev_oboe_t {
+#ifdef AUDIO_USE_OBOE
+        // Nothing.
+#endif
+    };
+
     enum class Backend {
         Dummy,
         ALSA,
         Pulse,
-        PortAudio
+        PortAudio,
+        Oboe,
     };
 
     struct Device {
@@ -79,6 +86,9 @@ namespace Module::Audio {
             case Backend::PortAudio:
                 portaudio = o.portaudio;
                 break;
+            case Backend::Oboe:
+                oboe = o.oboe;
+                break;
             }
         }
 
@@ -89,6 +99,7 @@ namespace Module::Audio {
             dev_alsa_t alsa;
             dev_pulse_t pulse;
             dev_portaudio_t portaudio;
+            dev_oboe_t oboe;
         };
     };
 

@@ -1,4 +1,4 @@
-#include "opengl.h"
+#include "gles.h"
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
@@ -12,7 +12,7 @@ static std::vector<char> readFile(const std::string& filename)
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {
-        throw std::runtime_error(std::string("Renderer::OpenGL] Error reading shader file \"") + filename + "\"");
+        throw std::runtime_error(std::string("Renderer::GLES] Error reading shader file \"") + filename + "\"");
     }
 
     constexpr size_t codeVectorIncrSize = 4096;
@@ -37,53 +37,33 @@ static std::vector<char> readFile(const std::string& filename)
     return code;
 }
 
-OpenGL::OpenGL()
-    : AbstractBase(Type::OpenGL),
+GLES::GLES()
+    : AbstractBase(Type::GLES),
       mProvider(nullptr)
 {
 }
 
-OpenGL::~OpenGL()
+GLES::~GLES()
 {
 }
 
-void OpenGL::setProvider(void *provider)
+void GLES::setProvider(void *provider)
 {
     mProvider = static_cast<OpenGLProvider *>(provider);
 }
 
-void OpenGL::initialize()
+void GLES::initialize()
 {
     mProvider->createContext();
 
-    GLenum err = glewInit();
-    if (err != GLEW_OK) {
-        throw std::runtime_error(std::string("Renderer::OpenGL] Error initializing GLEW: ") + (const char *) glewGetErrorString(err));
-    }
-
-    if (!GLEW_VERSION_3_2) {
-        throw std::runtime_error(std::string("Renderer::OpenGL] Required OpenGL 3.2 or higher could not be found"));
-    }
-
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback(OpenGL::debugCallback, nullptr);
+    glDebugMessageCallback(GLES::debugCallback, nullptr);
 
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD); 
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
-
-    // Create FBO and RBO.
-    glGenFramebuffers(1, &mFBO);
-    glGenRenderbuffers(1, &mRBO);
     
-    // Init multisampling.
-    glEnable(GL_MULTISAMPLE);
-    glGenTextures(1, &mMsTexture);
-    glCreateTextures(GL_TEXTURE_2D_MULTISAMPLE, 1, &mMsTexture);
-    mMsCount = 4;
-    initMultisampling();
-
     // Create VAO.
     glGenVertexArrays(1, &mVAO);
     glBindVertexArray(mVAO);
@@ -92,23 +72,21 @@ void OpenGL::initialize()
     glGenBuffers(1, &mVBO);
 
     // Create graph program.
-    mGraphProgram = createProgram("shaders/opengl/graph.vert.spv", "shaders/opengl/graph.frag.spv");
+    mGraphProgram = createProgram("shaders/gles/graph.vert", "shaders/gles/graph.frag");
     mLocPosition = glGetAttribLocation(mGraphProgram, "coord2d");
     mLocOffsetX = glGetUniformLocation(mGraphProgram, "offset_x");
     mLocScaleX = glGetUniformLocation(mGraphProgram, "scale_x");
 
     // Create spectrogram program.
-    mSpectrogramProgram = createProgram("shaders/opengl/spectrogram.vert.spv", "shaders/opengl/spectrogram.frag.spv");
+    mSpectrogramProgram = createProgram("shaders/gles/spectrogram.vert", "shaders/gles/spectrogram.frag");
     mLocPoint = glGetAttribLocation(mSpectrogramProgram, "point");
     mLocMinFreq = glGetUniformLocation(mSpectrogramProgram, "minFreq");
     mLocMaxFreq = glGetUniformLocation(mSpectrogramProgram, "maxFreq");
-    mLocMinGain = glGetUniformLocation(mSpectrogramProgram, "minGain");
-    mLocMaxGain = glGetUniformLocation(mSpectrogramProgram, "maxGain");
     mLocScaleType = glGetUniformLocation(mSpectrogramProgram, "scaleType");
 
-    // Init and map VBO buffer.
+    // Fill VBO data.
     glBindBuffer(GL_ARRAY_BUFFER, mVBO);
-    glBufferData(GL_ARRAY_BUFFER, 32768, nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 16000 * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
 
     mUniforms = {
         .offset_x = 0.0f,
@@ -116,62 +94,44 @@ void OpenGL::initialize()
     };
 }
 
-void OpenGL::terminate()
+void GLES::terminate()
 {
     glDeleteVertexArrays(1, &mVAO);
     glDeleteBuffers(1, &mVBO);
-    glDeleteFramebuffers(1, &mFBO);
-    glDeleteRenderbuffers(1, &mRBO);
     glDeleteProgram(mGraphProgram);
     glDeleteProgram(mSpectrogramProgram);
     
     mProvider->deleteContext();
 }
 
-void OpenGL::begin()
+void GLES::begin()
 {
     mProvider->makeCurrent();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
-    glBindRenderbuffer(GL_RENDERBUFFER, mRBO);
-
-    if (hasDrawableSizeChanged()) {
-        resetDrawableSizeChanged();
-        glDeleteTextures(1, &mMsTexture);
-        initMultisampling();
-    }
-
+    
     int width, height;
     getDrawableSize(&width, &height);
     glViewport(0, 0, width, height);
 }
 
-void OpenGL::end()
+void GLES::end()
 {
-    int width, height;
-    getDrawableSize(&width, &height);
-    
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, mFBO);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
     mProvider->swapTarget();
 }
 
-void OpenGL::clear()
+void GLES::clear()
 {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void OpenGL::test()
+void GLES::test()
 {
     glUseProgram(mGraphProgram);
 
     glUniform1f(mLocOffsetX, mUniforms.offset_x);
     glUniform1f(mLocScaleX, mUniforms.scale_x);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 
     glEnableVertexAttribArray(mLocPosition);
     glVertexAttribPointer(
@@ -186,23 +146,24 @@ void OpenGL::test()
     glDrawArrays(GL_LINE_STRIP, 0, 2000);
 
     glDisableVertexAttribArray(mLocPosition);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void OpenGL::renderGraph(float *x, float *y, size_t count)
+void GLES::renderGraph(float *x, float *y, size_t count)
 {
     glUseProgram(mGraphProgram);
 
     glUniform1f(mLocOffsetX, mUniforms.offset_x);
     glUniform1f(mLocScaleX, mUniforms.scale_x);
-
-    glBindBuffer(GL_ARRAY_BUFFER, mVBO);
     
-    auto graph = (Vertex *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+    glBindBuffer(GL_ARRAY_BUFFER, mVBO);
+
+    auto graph = std::make_unique<Vertex[]>(count);
     for (int i = 0; i < count; ++i) {
         graph[i].x = 0.9f * (2.0f * (x[i] - x[0]) / (x[count - 1] - x[0]) - 1.0f);
         graph[i].y = y[i] / 10.0f;
     }
-    glUnmapBuffer(GL_ARRAY_BUFFER);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(Vertex), graph.get());
 
     glEnableVertexAttribArray(mLocPosition);
     glVertexAttribPointer(
@@ -217,26 +178,21 @@ void OpenGL::renderGraph(float *x, float *y, size_t count)
     glDrawArrays(GL_LINE_STRIP, 0, count);
 
     glDisableVertexAttribArray(mLocPosition);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void OpenGL::renderSpectrogram(float ***spectrogram, size_t *lengths, size_t count)
+void GLES::renderSpectrogram(float ***spectrogram, size_t *lengths, size_t count)
 {
     glUseProgram(mSpectrogramProgram);
 
-    glUniform1f(mLocMinFreq, 50.0f);
-    glUniform1f(mLocMaxFreq, 8000.0f);
-    glUniform1f(mLocMinGain, -40.0f);
-    glUniform1f(mLocMaxGain, 20.0f);
+    glUniform1f(mLocMinFreq, 0.0f);
+    glUniform1f(mLocMaxFreq, 4000.0f);
     glUniform1ui(mLocScaleType, 2);
 
+    float xfuzz = 0.008f;
+    float yfuzz = 0.002f;
+
     float width = 2.0f / (float) count;
-
-    int tWidth, tHeight;
-    getDrawableSize(&tWidth, &tHeight);
-
-    glLineWidth(tWidth / (float) count);
-
-    std::vector<glm::vec3> vertices;
 
     for (int xi = 0; xi < count; ++xi) {
         float **slice = spectrogram[xi];
@@ -244,20 +200,17 @@ void OpenGL::renderSpectrogram(float ***spectrogram, size_t *lengths, size_t cou
 
         float x = (2.0f * xi) / (float) count - 1.0f;
 
-        vertices.resize(length);
-       
-        glBindBuffer(GL_ARRAY_BUFFER, mVBO);
+        auto sliceVertices = std::make_unique<glm::vec3[]>(length);
 
         for (int yi = 0; yi < length; ++yi) {
-            float frequency = slice[yi][0];
-            float intensity = slice[yi][1];
-
-            float gain = intensity > 1e-10f ? 20.0f * log10(intensity) : -1e6f;
-
-            vertices[yi] = { x, frequency, gain };
+            sliceVertices[yi][0] = x;
+            sliceVertices[yi][1] = slice[yi][0];
+            sliceVertices[yi][2] = slice[yi][1];
         }
-       
-        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(glm::vec3), vertices.data()); 
+    
+        glBindBuffer(GL_ARRAY_BUFFER, mVBO);
+
+        glBufferSubData(GL_ARRAY_BUFFER, 0, length * sizeof(glm::vec3), sliceVertices.get());
 
         glEnableVertexAttribArray(mLocPoint);
         glVertexAttribPointer(
@@ -272,37 +225,11 @@ void OpenGL::renderSpectrogram(float ***spectrogram, size_t *lengths, size_t cou
         glDrawArrays(GL_LINE_STRIP, 0, length);
 
         glDisableVertexAttribArray(mLocPoint);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
-
 }
 
-void OpenGL::initMultisampling()
-{
-    int width, height;
-    getDrawableSize(&width, &height);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
-
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, mMsTexture);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, mMsCount, GL_RGB, width, height, GL_TRUE);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
-    
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, mMsTexture, 0); 
-
-    glBindRenderbuffer(GL_RENDERBUFFER, mRBO);
-
-    glRenderbufferStorageMultisample(GL_RENDERBUFFER, mMsCount, GL_DEPTH24_STENCIL8, width, height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, mRBO);
-    
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        throw std::runtime_error(std::string("Renderer::OpenGL] Framebuffer is not complete"));
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-}
-
-GLuint OpenGL::createProgram(const std::string& vertexShaderFilename,
+GLuint GLES::createProgram(const std::string& vertexShaderFilename,
                            const std::string& fragmentShaderFilename)
 {
     GLuint program = glCreateProgram();
@@ -328,7 +255,7 @@ GLuint OpenGL::createProgram(const std::string& vertexShaderFilename,
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
 
-        throw std::runtime_error(std::string("Renderer::OpenGL] Error creating program: ") + (const char *) infoLog.data());
+        throw std::runtime_error(std::string("Renderer::GLES] Error creating program: ") + (const char *) infoLog.data());
     }
 
     glDetachShader(program, vertexShader);
@@ -340,13 +267,16 @@ GLuint OpenGL::createProgram(const std::string& vertexShaderFilename,
     return program;
 }
 
-GLuint OpenGL::loadShader(GLenum shaderType, const std::vector<char>& code)
+GLuint GLES::loadShader(GLenum shaderType, const std::vector<char>& code)
 {
     GLuint shaderId = glCreateShader(shaderType);
 
-    glShaderBinary(1, &shaderId, GL_SHADER_BINARY_FORMAT_SPIR_V, code.data(), code.size());
+    const GLchar *string = code.data();
+    const GLint length = code.size();
 
-    glSpecializeShader(shaderId, "main", 0, nullptr, nullptr);
+    glShaderSource(shaderId, 1, &string, &length);
+
+    glCompileShader(shaderId);
 
     GLint isCompiled = GL_FALSE;
     glGetShaderiv(shaderId, GL_COMPILE_STATUS, &isCompiled);
@@ -359,13 +289,13 @@ GLuint OpenGL::loadShader(GLenum shaderType, const std::vector<char>& code)
 
         glDeleteShader(shaderId);
         
-        throw std::runtime_error(std::string("Renderer::OpenGL] Error loading shader: ") + (const char *) infoLog.data());
+        throw std::runtime_error(std::string("Renderer::GLES] Error loading shader: ") + (const char *) infoLog.data());
     }
 
     return shaderId;
 }
 
-GLEWAPIENTRY void OpenGL::debugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *msg, const void *)
+GL_APIENTRY void GLES::debugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *msg, const void *)
 {
-    std::cout << "OpenGL debug: \033[36m" << msg << "\033[0m" << std::endl;
+    std::cout << "GLES debug: \033[36m" << msg << "\033[0m" << std::endl;
 }

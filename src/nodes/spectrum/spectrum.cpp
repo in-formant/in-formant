@@ -1,4 +1,5 @@
 #include "spectrum.h"
+#include "../../modules/math/constants.h"
 
 using namespace Nodes;
 
@@ -33,9 +34,21 @@ void Spectrum::process(const NodeIO *inputs, NodeIO *outputs)
     int nfft = mFFT->getInputLength();
     int outLength = mFFT->getOutputLength();
 
+    constexpr float a0 = 0.21557895;
+    constexpr float a1 = 0.41663158;
+    constexpr float a2 = 0.277263158;
+    constexpr float a3 = 0.083578947;
+    constexpr float a4 = 0.006947368;
+
+    const int N = nfft - 1;
+
     for (int i = 0; i < nfft; ++i) {
         float sample = (i < inLength) ? in->getConstData()[i] : 0.0f;
-        float window = 0.5f * (1.0f - cos((2.0f * M_PI * i) / (nfft - 1.0f)));
+        float window = a0
+                        - a1 * cos((2.0f * M_PI * i) / (nfft - 1))
+                        + a2 * cos((4.0f * M_PI * i) / (nfft - 1))
+                        - a3 * cos((6.0f * M_PI * i) / (nfft - 1))
+                        + a4 * cos((8.0f * M_PI * i) / (nfft - 1));
 
         mFFT->input(i) = sample * window;
     }

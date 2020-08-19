@@ -13,11 +13,12 @@ namespace Module::Renderer {
 
     enum class Type {
         OpenGL,
+        GLES,
         Vulkan,
     };
 
     class OpenGLProvider {
-#ifdef RENDERER_USE_OPENGL
+#if RENDERER_USE_OPENGL || RENDERER_USE_GLES
     public:
         virtual ~OpenGLProvider() {}
 

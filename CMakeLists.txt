@@ -22,6 +22,8 @@ include(${CMAKE_SUPPORT_DIR}/CheckLowLevelExit.cmake)
 
 set(SOURCES
     src/main.cpp
+    src/backtrace/backtrace.h
+    src/android_redirect_log.cpp
     src/modules/audio/base/base.cpp
     src/modules/audio/base/base.h
     src/modules/audio/buffer/buffer.cpp
@@ -59,13 +61,22 @@ set(SOURCES
 )
 
 set(GL_SHADER_SOURCES
-    src/modules/renderer/opengl/shaders/shader.frag
-    src/modules/renderer/opengl/shaders/shader.vert
+    src/modules/renderer/opengl/shaders/graph.frag
+    src/modules/renderer/opengl/shaders/graph.vert
+    src/modules/renderer/opengl/shaders/spectrogram.frag
+    src/modules/renderer/opengl/shaders/spectrogram.vert
+)
+
+set(GLES_SHADER_SOURCES
+    src/modules/renderer/gles/shaders/graph.frag
+    src/modules/renderer/gles/shaders/graph.vert
+    src/modules/renderer/gles/shaders/spectrogram.frag
+    src/modules/renderer/gles/shaders/spectrogram.vert
 )
 
 set(VK_SHADER_SOURCES
-    src/modules/renderer/vulkan/shaders/shader.frag
-    src/modules/renderer/vulkan/shaders/shader.vert
+    src/modules/renderer/vulkan/shaders/graph.frag
+    src/modules/renderer/vulkan/shaders/graph.vert
 )
 
 ### REQUIRED MODULES
@@ -139,6 +150,7 @@ endif()
 if(ANDROID)
     message(STATUS "Including audio module: oboe")
     set(OBOE_DIR ${PROJECT_SOURCE_DIR}/external/oboe)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
     add_subdirectory(${OBOE_DIR} ${PROJECT_BINARY_DIR}/oboe)
     set(AUDIO_USE_OBOE TRUE)
     list(APPEND SOURCES
@@ -161,12 +173,30 @@ endif()
 
 ### SEARCH RENDERER MODULES 
 
-if(TRUE)
+set(OpenGL_GL_PREFERENCE GLVND)
+find_package(OpenGL QUIET)
+if(OpenGL_FOUND)
     message(STATUS "Including renderer module: opengl")
     set(RENDERER_USE_OPENGL TRUE)
     list(APPEND SOURCES
         src/modules/renderer/opengl/opengl.cpp
         src/modules/renderer/opengl/opengl.h
+    )
+    if(TARGET_USE_SDL2)
+        list(APPEND SOURCES
+            src/modules/target/sdl2/sdl2_opengl.cpp
+        )
+    endif()
+    include(${CMAKE_SUPPORT_DIR}/ShaderTarget.cmake)
+endif()
+
+find_package(OpenGLES QUIET)
+if(OpenGLES_FOUND)
+    message(STATUS "Including renderer module: gles")
+    set(RENDERER_USE_GLES TRUE)
+    list(APPEND SOURCES
+        src/modules/renderer/gles/gles.cpp
+        src/modules/renderer/gles/gles.h
     )
     if(TARGET_USE_SDL2)
         list(APPEND SOURCES
@@ -214,6 +244,9 @@ if(RENDERER_USE_OPENGL OR RENDERER_USE_VULKAN)
     if(RENDERER_USE_OPENGL)
         add_shader_dependencies(TARGET speech-analysis SEMANTICS OpenGL SOURCES ${GL_SHADER_SOURCES})
     endif()
+    if(RENDERER_USE_GLES)
+        add_shader_dependencies(TARGET speech-analysis SEMANTICS GLES SOURCES ${GLES_SHADER_SOURCES})
+    endif()
     if(RENDERER_USE_VULKAN)
         add_shader_dependencies(TARGET speech-analysis SEMANTICS Vulkan SOURCES ${VK_SHADER_SOURCES})
     endif()
@@ -254,12 +287,16 @@ if(TARGET_USE_SDL2)
 endif()
 
 if(RENDERER_USE_OPENGL)
-    set(OpenGL_GL_PREFERENCE GLVND)
-    find_package(OpenGL REQUIRED)
     target_sources(speech-analysis PUBLIC $ENV{GLEW_SOURCE_FILE})
     target_include_directories(speech-analysis SYSTEM PUBLIC ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS})
     target_link_libraries(speech-analysis PUBLIC ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
     target_compile_definitions(speech-analysis PUBLIC -DRENDERER_USE_OPENGL=1 -DGLEW_STATIC -DGLEW_NO_GLU)
+endif()
+
+if(RENDERER_USE_GLES)
+    target_include_directories(speech-analysis SYSTEM PUBLIC ${OpenGLES_INCLUDE_DIRS})
+    target_link_libraries(speech-analysis PUBLIC ${OpenGLES_LIBRARIES})
+    target_compile_definitions(speech-analysis PUBLIC -DRENDERER_USE_GLES=1)
 endif()
 
 if(RENDERER_USE_VULKAN)
@@ -267,6 +304,10 @@ if(RENDERER_USE_VULKAN)
     target_link_libraries(speech-analysis PUBLIC ${Vulkan_LIBRARIES})
     target_compile_definitions(speech-analysis PUBLIC -DRENDERER_USE_VULKAN=1)
 endif()
+
+## PLATFORM SPECIFIC CODE
+
+set(RESAMPLER_QUALITY SOXR_HQ)
 
 if(EMSCRIPTEN)
     pkg_check_modules(FT2 REQUIRED freetype2)
@@ -278,7 +319,18 @@ if(EMSCRIPTEN)
     target_link_libraries(speech-analysis PUBLIC ${FT2_LDFLAGS})
 endif()
 
+if(ANDROID)
+    if(TARGET_USE_SDL2)
+        target_sources(speech-analysis PUBLIC src/modules/target/sdl2/sdl2_android.cpp)
+    endif()
+    target_link_libraries(speech-analysis PUBLIC android)
+    set(RESAMPLER_QUALITY SOXR_QQ)
+endif()
+
 if(UNIX AND NOT APPLE)
+    target_sources(speech-analysis PUBLIC src/backtrace/unix.cpp)
+    target_link_libraries(speech-analysis PUBLIC dl)
     set_target_properties(speech-analysis PROPERTIES LINK_FLAGS "-pthread -static-libstdc++")
 endif()
 
+target_compile_definitions(speech-analysis PUBLIC -DRESAMPLER_QUALITY=${RESAMPLER_QUALITY})
