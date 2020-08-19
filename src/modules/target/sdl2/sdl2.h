@@ -33,6 +33,10 @@ namespace Module::Target {
         bool sizeChanged() override;
 
     private:
+#ifdef __ANDROID__
+        void prepareAssets(); 
+#endif
+
         Type mRendererType;
 
         std::string mTitle;
@@ -48,7 +52,7 @@ namespace Module::Target {
         void checkError(bool cond);
     };
 
-#ifdef RENDERER_USE_OPENGL
+#if RENDERER_USE_OPENGL || RENDERER_USE_GLES
     class SDL2_OpenGL : public OpenGLProvider {
     public:
         SDL2_OpenGL(SDL_Window **ptrWindow);

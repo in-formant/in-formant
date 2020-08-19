@@ -11,7 +11,7 @@ using namespace Module::Audio;
 
 Resampler::Resampler(int inRate, int outRate)
     : mSoxrIoSpec(soxr_io_spec(SOXR_FLOAT32_I, SOXR_FLOAT32_I)),
-      mSoxrQualitySpec(soxr_quality_spec(SOXR_VHQ, 0)),
+      mSoxrQualitySpec(soxr_quality_spec(RESAMPLER_QUALITY, 0)),
       mSoxrRuntimeSpec(soxr_runtime_spec(1)),
       mInRate(inRate),
       mOutRate(outRate)

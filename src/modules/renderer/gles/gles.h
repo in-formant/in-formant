@@ -1,15 +1,19 @@
-#ifndef RENDERER_OPENGL_H
-#define RENDERER_OPENGL_H
+#ifndef RENDERER_GLES_H
+#define RENDERER_GLES_H
 
 #include "../base/base.h"
-#include <GL/glew.h>
+
+#define GL_ES_VERSION 
+#include <GLES3/gl32.h>
+#define GL_GLEXT_PROTOTYPES
+#include <GLES2/gl2ext.h>
 
 namespace Module::Renderer {
 
-    class OpenGL : public AbstractBase {
+    class GLES : public AbstractBase {
     public:
-        OpenGL();
-        ~OpenGL();
+        GLES();
+        ~GLES();
 
         void setProvider(void *provider) override; 
 
@@ -27,14 +31,12 @@ namespace Module::Renderer {
         void renderSpectrogram(float ***spectrogram, size_t *lengths, size_t count) override;
 
     private:
-        void initMultisampling();
-
         GLuint createProgram(const std::string& vertexShaderFilename,
                              const std::string& fragmentShaderFilename);
 
         GLuint loadShader(GLenum shaderType, const std::vector<char>& code);
 
-        static GLEWAPIENTRY void debugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *, const void *);
+        static GL_APIENTRY void debugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *, const void *);
 
         OpenGLProvider *mProvider;
 
@@ -50,21 +52,12 @@ namespace Module::Renderer {
         GLint mLocPoint;
         GLint mLocMinFreq;
         GLint mLocMaxFreq;
-        GLint mLocMinGain;
-        GLint mLocMaxGain;
         GLint mLocScaleType;
 
         GLuint mVBO;
         GLuint mVAO;
-
-        void *mBufferData;
-
-        GLuint mRBO;
-        GLuint mFBO;
-        int mMsCount;
-        GLuint mMsTexture;
     };
 
 }
 
-#endif // RENDERER_OPENGL_H
+#endif // RENDERER_GLES_H

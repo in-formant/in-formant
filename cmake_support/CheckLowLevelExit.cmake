@@ -10,18 +10,18 @@ function(check_low_level_exit OUT_VAR)
         set(var_symbol   ${var}_symbol)
         set(var_function ${var}_function)
        
-        message(CHECK_START "Looking for ${function_name}")
+        message(STATUS "Looking for ${function_name}")
 
         set(CMAKE_REQUIRED_QUIET TRUE)
         check_symbol_exists(${function_name} "${FUNCTION_INCLUDES}" ${var_symbol})
         check_function_exists(${function_name} ${var_function})
 
         if(${var_symbol} OR ${var_function})
-            message(CHECK_PASS "found")
+            message(STATUS "Looking for ${function_name} - found")
             set(found_function_name ${function_name})
             break()
         else()
-            message(CHECK_FAIL "not found")
+            message(STATUS "Looking for ${function_name} - not found")
         endif()
     endforeach()
 

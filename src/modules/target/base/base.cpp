@@ -11,7 +11,7 @@ AbstractBase::AbstractBase(std::initializer_list<Type> supportedRenderers)
 
 AbstractBase::~AbstractBase()
 {
-    if (supportsRenderer(Type::OpenGL)) {
+    if (supportsRenderer(Type::OpenGL) || supportsRenderer(Type::GLES)) {
         delete mOpenGLProvider;
     }
     if (supportsRenderer(Type::Vulkan)) {
@@ -24,6 +24,9 @@ bool AbstractBase::supportsRenderer(Type rendererType)
 #ifndef RENDERER_USE_OPENGL
     if (rendererType == Type::OpenGL) return false;
 #endif
+#ifndef RENDERER_USE_GLES
+    if (rendererType == Type::GLES) return false;
+#endif
 #ifndef RENDERER_USE_VULKAN
     if (rendererType == Type::Vulkan) return false;
 #endif
@@ -34,7 +37,7 @@ bool AbstractBase::supportsRenderer(Type rendererType)
 
 OpenGLProvider *AbstractBase::getOpenGLProvider()
 {
-    if (!supportsRenderer(Type::OpenGL)) {
+    if (!supportsRenderer(Type::OpenGL) && !supportsRenderer(Type::GLES)) {
         throw std::runtime_error("Target::AbstractBase] OpenGL renderer not supported");
     }
     return mOpenGLProvider;
@@ -42,7 +45,7 @@ OpenGLProvider *AbstractBase::getOpenGLProvider()
 
 void AbstractBase::setOpenGLProvider(OpenGLProvider *provider)
 {
-    if (!supportsRenderer(Type::OpenGL)) {
+    if (!supportsRenderer(Type::OpenGL) && !supportsRenderer(Type::GLES)) {
         throw std::runtime_error("Target::AbstractBase] OpenGL renderer not supported");
     }
     mOpenGLProvider = provider;

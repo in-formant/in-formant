@@ -1,5 +1,6 @@
 #include "modules/modules.h"
 #include "nodes/nodes.h"
+#include "backtrace/backtrace.h"
 #include <iostream>
 #include <atomic>
 #include <memory>
@@ -11,8 +12,7 @@ using namespace Module;
 using namespace std::literals::chrono_literals;
 using Clock = std::chrono::steady_clock;
 
-const auto testLoopDuration = 3s;
-const auto testLoopInterval = 20ms;
+const auto testLoopInterval = 25ms;
 
 constexpr int captureSampleRate = 48000;
 constexpr int captureDuration = 200;
@@ -27,8 +27,8 @@ constexpr int testToneFrequency = 200;
 constexpr int analysisDuration = 25;
 constexpr int analysisSampleRate = 11025;
 
-constexpr int fftMaxFrequency = 4000;
-constexpr int fftLength = 8192;
+constexpr int fftMaxFrequency = 8000;
+constexpr int fftLength = 2048;
 
 static std::atomic_bool signalCaught(false);
 static std::atomic_int signalStatus;
@@ -38,21 +38,15 @@ static void signalHandler(int signal) {
     signalStatus = signal;
 
     switch (signal) {
-#define DEFSIG(name) case name: std::cout << std::endl << "Caught signal " #name << std::endl; break;
-        DEFSIG(SIGTERM)
-        DEFSIG(SIGSEGV)
-        DEFSIG(SIGINT)
-        DEFSIG(SIGILL)
-        DEFSIG(SIGABRT)
-        DEFSIG(SIGFPE)
+    case SIGTERM:
+        std::cout << "Caught signal SIGTERM" << std::endl;
+        break;
+    case SIGINT:
+        std::cout << "Caught signal SIGINT" << std::endl;
+        break;
     }
 
-    if (signal == SIGSEGV || signal == SIGILL || signal == SIGABRT || signal == SIGFPE) {
-        __sa_llexit(EXIT_FAILURE);
-    }
-    else if (signal == SIGTERM || signal == SIGINT) {
-        exit(EXIT_SUCCESS);
-    }
+    exit(EXIT_SUCCESS);
 }
 
 static void playbackCallback(float *out, int len, void *data) {
@@ -65,16 +59,17 @@ static void playbackCallback(float *out, int len, void *data) {
     }
 }
 
+int start_logger(const char *app_name);
+
 int main(int argc, char **argv)
 {
-    std::signal(SIGTERM, signalHandler);
-    std::signal(SIGSEGV, signalHandler);
-    std::signal(SIGINT, signalHandler);
-    std::signal(SIGILL, signalHandler);
-    std::signal(SIGABRT, signalHandler);
-    std::signal(SIGFPE, signalHandler);
+    start_logger("SpeechAnalysis");
 
-    auto type = Renderer::Type::OpenGL;
+    std::signal(SIGTERM, signalHandler);
+    std::signal(SIGINT, signalHandler);
+    registerCrashHandler();
+    
+    constexpr auto type = Renderer::Type::OpenGL;
     
     std::shared_ptr<Target::AbstractBase> target(nullptr);
     std::shared_ptr<Audio::AbstractBase> audio(nullptr);
@@ -88,9 +83,10 @@ int main(int argc, char **argv)
     target->create();
     target->show();
 
-    audio.reset(new Audio::Pulse);
+    //audio.reset(new Audio::Pulse);
     //audio.reset(new Audio::Alsa);
-    //audio.reset(new Audio::PortAudio);
+    audio.reset(new Audio::PortAudio);
+    //audio.reset(new Audio::Oboe);
     audio->initialize();
     audio->refreshDevices();
 
@@ -111,26 +107,42 @@ int main(int argc, char **argv)
     audio->openCaptureStream(nullptr);
     audio->startCaptureStream();
 
-#ifdef RENDERER_USE_OPENGL
+    std::cout << "Opened playback stream: " << playbackQueue->getOutSampleRate() << std::endl;
+    std::cout << "Opened capture stream: " << captureBuffer->getSampleRate() << std::endl;
+
     if (type == Renderer::Type::OpenGL) {
+#ifdef RENDERER_USE_OPENGL
         renderer.reset(new Renderer::OpenGL);
         renderer->setProvider(target->getOpenGLProvider());
-    }
+#else
+        throw std::runtime_error("Main] Requested OpenGL renderer but wasn't compiled with OpenGL or OpenGL ES support.");
 #endif
+    }
 
-#ifdef RENDERER_USE_VULKAN
+    if (type == Renderer::Type::GLES) {
+#ifdef RENDERER_USE_GLES
+        renderer.reset(new Renderer::GLES);
+        renderer->setProvider(target->getOpenGLProvider());
+#else
+        throw std::runtime_error("Main] Requested GLES renderer but wasn't compiled with GLES support.");
+#endif
+    }
+
     if (type == Renderer::Type::Vulkan) {
+#ifdef RENDERER_USE_VULKAN
         renderer.reset(new Renderer::Vulkan);
         renderer->setProvider(target->getVulkanProvider());
-    }
+#else
+        throw std::runtime_error("Main] Requested Vulkan renderer but wasn't compiled with Vulkan support.");
 #endif
+    }
 
     int renderWidth, renderHeight;
     target->getSizeForRenderer(&renderWidth, &renderHeight);
     renderer->setDrawableSize(renderWidth, renderHeight);
 
     renderer->initialize();
- 
+
     int sineTime = 0;
 
     Nodes::Prereqs nodePrereqs(captureBuffer.get(), analysisDuration, 0);
@@ -146,8 +158,10 @@ int main(int argc, char **argv)
     int spectrogramCount = 200;
     std::deque<std::vector<std::array<float, 2>>> spectrogram(spectrogramCount);
     auto spectrogramView = std::make_unique<float **[]>(spectrogramCount);
-
+             
     while (!target->shouldQuit()) {
+        auto tLoopStart = Clock::now();
+
         target->processEvents();
         
         if (target->sizeChanged()) {
@@ -166,14 +180,14 @@ int main(int argc, char **argv)
                 nodeSpectrumResampler.getRequiredInputLength(
                     nodeSpectrum.getFFTLength()));
 
-        auto start = Clock::now();
+        auto tProcessingStart = Clock::now();
 
         nodePrereqs.process(nullptr, outPrereqs.get());
         nodeSpectrumResampler.process(outPrereqs.get(), outSpectrumResampler.get());
         nodeSpectrum.process(outSpectrumResampler.get(), outSpectrum.get());
         nodeResampler.process(outPrereqs.get(), outResampler.get());
 
-        std::cout << "One analysis cycle took " << (std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - start).count() / 1000.0f) << " ms" << std::endl;;
+        std::cout << "    Analysis took  " << (std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - tProcessingStart).count() / 1000.0f) << " ms" << std::endl;;
 
         auto outPrereqsAudio = outPrereqs->as<Nodes::IO::AudioTime>();
         auto outResamplerAudio = outResampler->as<Nodes::IO::AudioTime>();
@@ -191,13 +205,17 @@ int main(int argc, char **argv)
         spectrogram.push_back(specSlice);
 
         // Send render data to the renderer.
+        
+        auto tRenderingStart = Clock::now();
+
         renderer->begin();
         renderer->clear();
 
         if (false) {
+            //auto& audio = outPrereqsAudio;
             auto& audio = outResamplerAudio;
 
-            int length = (analysisDuration * analysisSampleRate) / 1000;
+            int length = (analysisDuration * audio->getSampleRate()) / 1000;
 
             auto times = std::make_unique<float[]>(length);
             auto values = std::make_unique<float[]>(length);
@@ -208,7 +226,7 @@ int main(int argc, char **argv)
             renderer->renderGraph(times.get(), values.get(), length);
         }
 
-        if (true) {
+        if (false) {
             const auto& slice = spectrogram.back();
             auto freqs = std::make_unique<float[]>(slice.size());
             auto gains = std::make_unique<float[]>(slice.size());
@@ -219,24 +237,48 @@ int main(int argc, char **argv)
             renderer->renderGraph(freqs.get(), gains.get(), slice.size());
         }
 
-        if (false) {
-            auto spectrogramView = std::make_unique<float **[]>(spectrogramCount);
-            auto lengths = std::make_unique<size_t[]>(spectrogramCount);
+        if (true) {
+            std::vector<std::vector<std::array<float, 2>>> spectrogramView(spectrogramCount);
+            std::vector<size_t> lengths(spectrogramCount);
+
             for (int i = 0; i < spectrogramCount; ++i) {
                 lengths[i] = spectrogram[i].size();
-                spectrogramView[i] = new float *[lengths[i]];
+                spectrogramView[i].resize(lengths[i]);
                 for (int j = 0; j < lengths[i]; ++j) {
-                    spectrogramView[i][j] = new float[2];
-                    spectrogramView[i][j][0] = spectrogram[i][j][0];
-                    spectrogramView[i][j][1] = spectrogram[i][j][1];
+                    spectrogramView[i][j] = spectrogram[i][j];
                 }
             }
-            renderer->renderSpectrogram(spectrogramView.get(), lengths.get(), spectrogramCount);
+
+            auto view = std::make_unique<float **[]>(spectrogramCount);
+            std::vector<std::unique_ptr<float *[]>> viewSlices;
+
+            for (int i = 0; i < spectrogramCount; ++i) {
+                auto viewSlice = std::make_unique<float *[]>(lengths[i]);
+
+                for (int j = 0; j < lengths[i]; ++j) {
+                    viewSlice[j] = spectrogramView[i][j].data();
+                }
+
+                view[i] = viewSlice.get();
+                viewSlices.push_back(std::move(viewSlice));
+            }
+
+            renderer->renderSpectrogram(view.get(), lengths.data(), spectrogramCount);
         }
 
         renderer->end();
 
-        std::this_thread::sleep_for(testLoopInterval);
+        std::cout << "    Rendering took " << (std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - tRenderingStart).count() / 1000.0f) << " ms" << std::endl;;
+
+        auto durLoop = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - tLoopStart);
+
+        std::cout << "  Loop cycle took  " << (durLoop.count() / 1000.0f) << " ms" << std::endl;
+
+        if (testLoopInterval - durLoop > 0us) {
+            std::this_thread::sleep_for(testLoopInterval - durLoop);
+        } else {
+            std::cout << "!!Loop cycle took too long (must be less than " << testLoopInterval.count() << " ms)" << std::endl;
+        }
 
         if (signalCaught.load()) {
             break;

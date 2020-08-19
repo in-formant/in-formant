@@ -22,4 +22,8 @@
 #   include "portaudio/portaudio.h"
 #endif
 
+#ifdef AUDIO_USE_OBOE
+#   include "oboe/oboe.h"
+#endif
+
 #endif // MODULES_AUDIO_H

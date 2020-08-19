@@ -12,6 +12,7 @@ $MXE/tools/copydlldeps.sh \
         --infile /build/speech-analysis.exe \
         --destdir $tmp \
         --recursivesrcdir $MXE/usr/${cross::-1} \
+        --recursivesrcdir /build/soxr \
         --objdump $MXE/usr/bin/${cross}objdump \
         --copy
 cp -v /src/Montserrat.ttf $tmp
