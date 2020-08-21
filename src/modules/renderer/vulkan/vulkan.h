@@ -47,6 +47,8 @@ namespace Module::Renderer {
  
         void renderGraph(float *x, float *y, size_t count) override;
         void renderSpectrogram(float ***spectrogram, size_t *lengths, size_t count) override;
+        void renderFrequencyTrack(float *track, size_t count) override;
+        void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, float r, float g, float b) override;
 
     private:
         void createInstance();
@@ -105,7 +107,6 @@ namespace Module::Renderer {
         int mMaxFramesInFlight;
 
         std::vector<Vertex> mVertices;
-        UniformBuffer mUniforms;
 
         VulkanProvider *mProvider;
 

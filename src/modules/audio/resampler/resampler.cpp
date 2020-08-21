@@ -68,30 +68,9 @@ int Resampler::getRequiredInLength(int outLength)
         return 0;
     }
 
-    static std::mutex garbageMut;
-    static std::vector<float> garbageIn, garbageOut;
+    float ioRatio = (float) mInRate / (float) mOutRate;
 
-    static soxr_io_spec_t ioSpec = soxr_io_spec(SOXR_FLOAT32_I, SOXR_FLOAT32_I);
-    static soxr_quality_spec_t qSpec = soxr_quality_spec(SOXR_QQ, 0);
-    static soxr_runtime_spec_t rSpec = soxr_runtime_spec(1);
-    
-    int firstEstimate = (outLength * mInRate) / mOutRate + 100;
-    size_t inLength;
-
-    garbageMut.lock();
-
-    garbageIn.resize(firstEstimate, 0.0f);
-    garbageOut.resize(outLength);
-    
-    soxr_oneshot(
-            mInRate, mOutRate, 1,
-            garbageIn.data(), firstEstimate, &inLength,
-            garbageOut.data(), outLength, nullptr,
-            &ioSpec, &qSpec, &rSpec);
-
-    garbageMut.unlock();
-
-    return inLength;
+    return ceil((float) outLength * ioRatio);
 }
 
 int Resampler::getExpectedOutLength(int inLength)
@@ -99,31 +78,15 @@ int Resampler::getExpectedOutLength(int inLength)
     if (inLength == 0) {
         return 0;
     }
-
-    static std::mutex garbageMut;
-    static std::vector<float> garbageIn, garbageOut;
-
-    static soxr_io_spec_t ioSpec = soxr_io_spec(SOXR_FLOAT32_I, SOXR_FLOAT32_I);
-    static soxr_quality_spec_t qSpec = soxr_quality_spec(SOXR_QQ, 0);
-    static soxr_runtime_spec_t rSpec = soxr_runtime_spec(1);
     
-    int firstEstimate = (inLength * mOutRate) / mInRate + soxr_delay(mSoxr) + 100;
-    size_t outLength;
+    float ioRatio = (float) mInRate / (float) mOutRate;
 
-    garbageMut.lock();
+    return ceil((float) inLength / ioRatio);
+}
 
-    garbageIn.resize(inLength, 0.0f);
-    garbageOut.resize(firstEstimate);
-    
-    soxr_oneshot(
-            mInRate, mOutRate, 1,
-            garbageIn.data(), inLength, nullptr,
-            garbageOut.data(), firstEstimate, &outLength,
-            &ioSpec, &qSpec, &rSpec);
-
-    garbageMut.unlock();
-
-    return outLength;
+int Resampler::getDelay() const
+{
+    return soxr_delay(mSoxr);
 }
 
 void Resampler::clear()
@@ -152,18 +115,6 @@ void Resampler::process(const float *pIn, int inLength, float *pOut, int outLeng
         inRemaining -= localInDone;
         outRemaining -= localOutDone;
     }
-
-    /*while (outRemaining > 0) {
-        size_t localOutDone;
-
-        err = soxr_process(mSoxr,
-                        pIn, 0, nullptr,
-                        std::next(pOut, outDone), outRemaining, &localOutDone);
-        checkError();
-       
-        outDone += localOutDone;
-        outRemaining -= localOutDone;
-    }*/
 }
 
 void Resampler::createResampler()

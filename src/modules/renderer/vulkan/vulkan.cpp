@@ -29,11 +29,10 @@ static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
 
 static std::vector<char> readFile(const std::string& filename)
 {
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+    std::ifstream file(filename, std::ios::binary);
 
     if (!file.is_open()) {
         throw std::runtime_error(std::string("Renderer::Vulkan] Error reading shader file \"") + filename + "\"");
-
     }
 
     constexpr size_t codeVectorIncrSize = 4096;
@@ -270,16 +269,19 @@ void Vulkan::renderSpectrogram(float ***spectrogram, size_t *lengths, size_t cou
 {
 }
 
+void Vulkan::renderFrequencyTrack(float *track, size_t count)
+{
+}
+
+void Vulkan::renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, float r, float g, float b)
+{
+}
+
 void Vulkan::updateUniformBuffers()
 {
-    mUniforms = {
-        .offset_x = 0.0f,
-        .scale_x = 1.0f,
-    };
-
     void *data;
-    vkMapMemory(mDevice, mUniformBuffersMemory[mImageIndex], 0, sizeof(mUniforms), 0, &data);
-    memcpy(data, &mUniforms, sizeof(mUniforms));
+    vkMapMemory(mDevice, mUniformBuffersMemory[mImageIndex], 0, sizeof(Parameters), 0, &data);
+    memcpy(data, getParameters(), sizeof(Parameters));
     vkUnmapMemory(mDevice, mUniformBuffersMemory[mImageIndex]);
 }
 
@@ -833,7 +835,7 @@ void Vulkan::createVertexBuffer()
 
 void Vulkan::createUniformBuffers()
 {
-    VkDeviceSize bufferSize = sizeof(UniformBuffer);
+    VkDeviceSize bufferSize = sizeof(Parameters);
 
     mUniformBuffers.resize(mSwapChainImages.size());
     mUniformBuffersMemory.resize(mSwapChainImages.size());
@@ -885,7 +887,7 @@ void Vulkan::createDescriptorSets()
         VkDescriptorBufferInfo bufferInfo {
             .buffer = mUniformBuffers[i],
             .offset = 0,
-            .range = sizeof(UniformBuffer),
+            .range = sizeof(Parameters),
         };
 
         VkWriteDescriptorSet descriptorWrite {

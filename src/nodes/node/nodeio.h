@@ -11,22 +11,14 @@ namespace Nodes {
 
         // Audio data in the frequency domain.
         NODE_IO_TYPE_AUDIO_SPEC,
+
+        // List of frequencies. (pitch; formants)
+        NODE_IO_TYPE_FREQUENCIES,
     };
 
-    static const NodeIOType kNodeIoTypeAudioTime = NODE_IO_TYPE_AUDIO_TIME;
-    static const NodeIOType kNodeIoTypeAudioSpec = NODE_IO_TYPE_AUDIO_SPEC;
-
-    namespace IO {
-        struct AudioTimeDescriptor {
-            int sampleRate;
-            int length;
-        };
-
-        struct AudioSpecDescriptor {
-            int sampleRate;
-            int length;
-        };
-    }
+    static constexpr NodeIOType kNodeIoTypeAudioTime = NODE_IO_TYPE_AUDIO_TIME;
+    static constexpr NodeIOType kNodeIoTypeAudioSpec = NODE_IO_TYPE_AUDIO_SPEC;
+    static constexpr NodeIOType kNodeIoTypeFrequencies = NODE_IO_TYPE_FREQUENCIES;
 
     class NodeIO {
     public:

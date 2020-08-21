@@ -37,6 +37,7 @@ set(SOURCES
     src/modules/target/base/base.h
     src/modules/target/target.h
     src/modules/renderer/base/base.cpp
+    src/modules/renderer/base/parameters.h
     src/modules/renderer/base/base.h
     src/modules/renderer/renderer.h
     src/modules/modules.h
@@ -44,6 +45,8 @@ set(SOURCES
     src/nodes/node/nodeio_audiotime.h
     src/nodes/node/nodeio_audiospec.cpp
     src/nodes/node/nodeio_audiospec.h
+    src/nodes/node/nodeio_frequencies.cpp
+    src/nodes/node/nodeio_frequencies.h
     src/nodes/node/nodeio.cpp
     src/nodes/node/nodeio.h
     src/nodes/node/node.cpp
@@ -54,9 +57,17 @@ set(SOURCES
     src/nodes/resampler/resampler.h
     src/nodes/spectrum/spectrum.cpp
     src/nodes/spectrum/spectrum.h
+    src/nodes/tail/tail.cpp
+    src/nodes/tail/tail.h
+    src/nodes/pitchtracker/pitchtracker.cpp
+    src/nodes/pitchtracker/pitchtracker.h
     src/nodes/nodes.h
     src/analysis/fft/realfft.cpp
     src/analysis/fft/fft.h
+    src/analysis/pitch/amdf_m.cpp
+    src/analysis/pitch/pitch.h
+    src/analysis/util/find_peaks.cpp
+    src/analysis/util/util.h
     src/analysis/analysis.h
 )
 
@@ -65,6 +76,8 @@ set(GL_SHADER_SOURCES
     src/modules/renderer/opengl/shaders/graph.vert
     src/modules/renderer/opengl/shaders/spectrogram.frag
     src/modules/renderer/opengl/shaders/spectrogram.vert
+    src/modules/renderer/opengl/shaders/text.frag
+    src/modules/renderer/opengl/shaders/text.vert
 )
 
 set(GLES_SHADER_SOURCES
@@ -180,6 +193,8 @@ if(OpenGL_FOUND)
     set(RENDERER_USE_OPENGL TRUE)
     list(APPEND SOURCES
         src/modules/renderer/opengl/opengl.cpp
+        src/modules/renderer/opengl/shaderprogram.cpp
+        src/modules/renderer/opengl/fontattachment.cpp
         src/modules/renderer/opengl/opengl.h
     )
     if(TARGET_USE_SDL2)
@@ -220,6 +235,21 @@ if(Vulkan_FOUND)
         )
     endif()
     include(${CMAKE_SUPPORT_DIR}/ShaderTarget.cmake)
+endif()
+
+### FREETYPE MODULE
+
+if(TRUE)
+    message(STATUS "Including font module: freetype")
+    set(FREETYPE_DIR ${PROJECT_SOURCE_DIR}/external/freetype)
+    add_subdirectory(${FREETYPE_DIR} ${PROJECT_BINARY_DIR}/freetype)
+    target_compile_definitions(freetype PUBLIC -DFT_CONFIG_OPTION_ERROR_STRINGS)
+    set(FONT_USE_FREETYPE TRUE)
+    list(APPEND SOURCES
+        src/modules/freetype/instance.cpp
+        src/modules/freetype/font.cpp
+        src/modules/freetype/freetype.h
+    )
 endif()
 
 ### CREATE CMAKE TARGET
@@ -305,6 +335,12 @@ if(RENDERER_USE_VULKAN)
     target_compile_definitions(speech-analysis PUBLIC -DRENDERER_USE_VULKAN=1)
 endif()
 
+if(FONT_USE_FREETYPE)
+    target_include_directories(speech-analysis SYSTEM PUBLIC ${FREETYPE_DIR}/include)
+    target_link_libraries(speech-analysis PUBLIC freetype)
+    target_compile_definitions(speech-analysis PUBLIC -DFONT_USE_FREETYPE=1)
+endif()
+
 ## PLATFORM SPECIFIC CODE
 
 set(RESAMPLER_QUALITY SOXR_HQ)
@@ -331,6 +367,11 @@ if(UNIX AND NOT APPLE)
     target_sources(speech-analysis PUBLIC src/backtrace/unix.cpp)
     target_link_libraries(speech-analysis PUBLIC dl)
     set_target_properties(speech-analysis PROPERTIES LINK_FLAGS "-pthread -static-libstdc++")
+endif()
+
+if(WIN32)
+    target_sources(speech-analysis PUBLIC src/backtrace/windows.cpp)
+    target_link_libraries(speech-analysis PUBLIC ntdll dbghelp)
 endif()
 
 target_compile_definitions(speech-analysis PUBLIC -DRESAMPLER_QUALITY=${RESAMPLER_QUALITY})

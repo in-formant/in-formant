@@ -9,7 +9,7 @@ using namespace Module::Renderer;
 
 static std::vector<char> readFile(const std::string& filename)
 {
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+    std::ifstream file(filename, std::ios::binary);
 
     if (!file.is_open()) {
         throw std::runtime_error(std::string("Renderer::GLES] Error reading shader file \"") + filename + "\"");

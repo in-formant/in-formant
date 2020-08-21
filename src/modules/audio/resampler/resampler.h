@@ -27,6 +27,8 @@ namespace Module::Audio {
         int getRequiredInLength(int outLength);
         int getExpectedOutLength(int inLength);
     
+        int getDelay() const;
+
         void clear();
         void process(const float *pIn, int inLength, float *pOut, int outLength);
         
