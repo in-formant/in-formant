@@ -6,12 +6,14 @@ AbstractBase::AbstractBase(Type type)
     : mType(type),
       mDrawableWidth(1280),
       mDrawableHeight(720),
-      mDrawableSizeChanged(false)
+      mDrawableSizeChanged(false),
+      mParameters(new Parameters)
 {
 }
 
 AbstractBase::~AbstractBase()
 {
+    delete mParameters;
 }
 
 void AbstractBase::setDrawableSize(int width, int height)
@@ -35,4 +37,9 @@ bool AbstractBase::hasDrawableSizeChanged() const
 void AbstractBase::resetDrawableSizeChanged()
 {
     mDrawableSizeChanged = false;
+}
+
+Parameters *AbstractBase::getParameters()
+{
+    return mParameters;
 }

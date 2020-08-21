@@ -1,4 +1,6 @@
 #include "resampler.h"
+#include <memory>
+#include <cstring>
 
 using namespace Nodes;
 
@@ -35,10 +37,15 @@ void Resampler::process(const NodeIO *inputs, NodeIO *outputs)
     int inLength = in->getLength();
     int outLength = mResampler.getExpectedOutLength(inLength);
 
-    out->setLength(outLength);
-    out->setSampleRate(mResampler.getOutputRate());
+    auto array = std::make_unique<float[]>(outLength);
+    mResampler.process(in->getConstData(), inLength, array.get(), outLength);
+    
+    int delay = mResampler.getDelay();
+    int actualOutLength = outLength - delay;
 
-    mResampler.clear();
-    mResampler.process(in->getConstData(), inLength, out->getData(), outLength);
+    out->setSampleRate(mResampler.getOutputRate());
+    out->setLength(actualOutLength);
+
+    memcpy(out->getData(), std::next(array.get(), delay), actualOutLength * sizeof(float));
 }
 

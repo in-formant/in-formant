@@ -6,3 +6,7 @@
 	path = external/oboe
 	url = https://github.com/google/oboe
 	branch = 1.4.3
+[submodule "freetype"]
+	path = external/freetype
+	url = https://git.sv.nongnu.org/r/freetype/freetype2.git
+	branch = VER-2-10-2

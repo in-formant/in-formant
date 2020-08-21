@@ -37,8 +37,8 @@ namespace Nodes {
 
 }
 
-#include "nodeio.h"
 #include "nodeio_audiotime.h"
 #include "nodeio_audiospec.h"
+#include "nodeio_frequencies.h"
 
 #endif // NODES_NODE_H

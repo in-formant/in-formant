@@ -34,6 +34,7 @@ cp -v /src/dist-res/AppRun $tmp/AppRun
 ln -sfv usr/share/applications/speech-analysis.desktop $tmp/speech-analysis.desktop
 ln -sfv usr/share/icons/hicolor/256x256/speech-analysis.png $tmp/speech-analysis.png
 cp -v /src/Montserrat.ttf $tmp/usr/Montserrat.ttf
+cp -v /src/Montserrat.otf $tmp/usr/Montserrat.otf
 
 cd /dist && appimagetool --appimage-extract-and-run /AppDir speech-analysis.AppImage
 

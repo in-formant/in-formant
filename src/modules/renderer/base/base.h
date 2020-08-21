@@ -1,6 +1,8 @@
 #ifndef RENDERER_BASE_H
 #define RENDERER_BASE_H
 
+#include "../../freetype/freetype.h"
+
 #include <glm/glm.hpp>
 
 #ifdef RENDERER_USE_VULKAN
@@ -41,12 +43,8 @@ namespace Module::Renderer {
     };
 
     using Vertex = glm::vec2;
-
-    struct UniformBuffer {
-        float offset_x;
-        float scale_x;
-    };
-
+    class Parameters;
+    
     class AbstractBase {
     public:
         AbstractBase(Type type);
@@ -69,8 +67,13 @@ namespace Module::Renderer {
         // lengths: [ slice_length ]
         virtual void renderSpectrogram(float ***spectrogram, size_t *lengths, size_t count) = 0;
 
+        virtual void renderFrequencyTrack(float *track, size_t count) = 0;
+
+        virtual void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, float r, float g, float b) = 0;
+
         void setDrawableSize(int width, int height);
 
+        Parameters *getParameters();
         constexpr Type getType() { return mType; }
     
     protected:
@@ -85,10 +88,12 @@ namespace Module::Renderer {
         int mDrawableWidth;
         int mDrawableHeight;
         bool mDrawableSizeChanged;
-    };
 
+        Parameters *mParameters;
+    };
 }
 
 #include "../../target/base/base.h"
+#include "parameters.h"
 
 #endif // RENDERER_BASE_H

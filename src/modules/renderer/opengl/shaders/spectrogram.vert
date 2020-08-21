@@ -10,9 +10,14 @@ layout (location = 3) uniform float minGain;
 layout (location = 4) uniform float maxGain;
 layout (location = 5) uniform uint scaleType;
 
+const float invlog10 = 0.434294481903251827651128;
+
+float log10(float x) {
+    return log(x) * invlog10;
+}
+
 float mel(float f) {
-    const float invlog10 = 0.434294481903251827651128;
-    return 2595.0 * log(1.0 + f / 700.0) * invlog10;
+    return 2595.0 * log10(1.0 + f / 700.0);
 }
 
 float linearToCoord(float x, float min, float max) {
@@ -24,7 +29,7 @@ float frequencyToCoordLinear(float f) {
 }
 
 float frequencyToCoordLog(float f) {
-    return linearToCoord(log(f), log(minFreq), log(maxFreq));
+    return linearToCoord(log10(10.0 + f), log10(10.0 + minFreq), log10(10.0 + maxFreq));
 }
 
 float frequencyToCoordMel(float f) {
