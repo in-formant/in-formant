@@ -25,10 +25,10 @@ int Spectrum::getFFTLength() const
     return mFFT->getInputLength();
 }
 
-void Spectrum::process(const NodeIO *inputs, NodeIO *outputs)
+void Spectrum::process(const NodeIO *inputs[], NodeIO *outputs[])
 {
-    auto in = inputs[0].as<IO::AudioTime>();
-    auto out = outputs[0].as<IO::AudioSpec>();
+    auto in = inputs[0]->as<IO::AudioTime>();
+    auto out = outputs[0]->as<IO::AudioSpec>();
 
     int inLength = in->getLength();
     int nfft = mFFT->getInputLength();
@@ -45,10 +45,10 @@ void Spectrum::process(const NodeIO *inputs, NodeIO *outputs)
     for (int i = 0; i < nfft; ++i) {
         float sample = (i < inLength) ? in->getConstData()[i] : 0.0f;
         float window = a0
-                        - a1 * cos((2.0f * M_PI * i) / (nfft - 1))
-                        + a2 * cos((4.0f * M_PI * i) / (nfft - 1))
-                        - a3 * cos((6.0f * M_PI * i) / (nfft - 1))
-                        + a4 * cos((8.0f * M_PI * i) / (nfft - 1));
+                        - a1 * cos((2.0f * M_PI * i) / N)
+                        + a2 * cos((4.0f * M_PI * i) / N)
+                        - a3 * cos((6.0f * M_PI * i) / N)
+                        + a4 * cos((8.0f * M_PI * i) / N);
 
         mFFT->input(i) = sample * window;
     }

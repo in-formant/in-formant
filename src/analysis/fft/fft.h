@@ -29,6 +29,7 @@ namespace Analysis
 
         double input(int index) const;
         double& input(int index);
+
         std::dcomplex output(int index) const;
         std::dcomplex& output(int index);
 
@@ -46,6 +47,30 @@ namespace Analysis
 
         double *mIn;
         fftw_complex *mOut;
+    };
+
+    class ComplexFFT
+    {
+    public:
+        ComplexFFT(size_t n);
+        ~ComplexFFT();
+
+        std::dcomplex data(int index) const;
+        std::dcomplex& data(int index);
+        
+        void computeForward();
+        void computeBackward();
+
+        size_t getLength() const;
+
+    private:
+        void checkIndex(int index) const;
+
+        size_t mSize;
+        fftw_plan mPlanForward;
+        fftw_plan mPlanBackward;
+
+        fftw_complex *mData;
     };
 }
 

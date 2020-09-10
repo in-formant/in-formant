@@ -17,16 +17,18 @@ do
     cp -v /build/$target/soxr/lib/libsoxr.so $tmp/app/libs/$android_abi
     cp -vL /usr/$target/lib/libhidapi.so $tmp/app/libs/$android_abi
     cp -vL /usr/$target/lib/libSDL2.so $tmp/app/libs/$android_abi
-    cp -vL /usr/$target/lib/libSDL2_ttf.so $tmp/app/libs/$android_abi
-    cp -vL /usr/$target/lib/libSDL2_gfx.so $tmp/app/libs/$android_abi
     cp -vL /usr/$target/lib/libfftw3.so $tmp/app/libs/$android_abi
 done
 
 mkdir -p $tmp/app/src/main/assets
 
-cp -v /src/Montserrat.ttf $tmp/app/src/main/assets
-cp -rv /build/android-arm/shaders $tmp/app/src/main/assets
+cp -v /src/Montserrat.otf $tmp/app/src/main/assets
 
-cd $tmp && gradle --no-daemon assembleRelease
-cp app/build/outputs/apk/release/app-release.apk /dist/speech-analysis.apk
+if [ "x$1" == "xDebug" ]; then
+    cd $tmp && gradle --no-daemon assembleDebug
+    cp app/build/outputs/apk/debug/app-debug.apk /dist/speech-analysis.apk
+else
+    cd $tmp && gradle --no-daemon assembleRelease
+    cp app/build/outputs/apk/release/app-release.apk /dist/speech-analysis.apk
+fi
 

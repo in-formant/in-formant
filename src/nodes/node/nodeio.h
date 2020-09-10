@@ -2,10 +2,11 @@
 #define NODES_NODEIO_H
 
 #include <memory>
+#include <vector>
 
 namespace Nodes {
 
-    enum NodeIOType {
+    enum NodeIOType : unsigned int {
         // Audio data in the time domain.
         NODE_IO_TYPE_AUDIO_TIME,
 
@@ -14,11 +15,15 @@ namespace Nodes {
 
         // List of frequencies. (pitch; formants)
         NODE_IO_TYPE_FREQUENCIES,
+
+        // IIR filter.
+        NODE_IO_TYPE_IIR_FILTER,
     };
 
-    static constexpr NodeIOType kNodeIoTypeAudioTime = NODE_IO_TYPE_AUDIO_TIME;
-    static constexpr NodeIOType kNodeIoTypeAudioSpec = NODE_IO_TYPE_AUDIO_SPEC;
+    static constexpr NodeIOType kNodeIoTypeAudioTime   = NODE_IO_TYPE_AUDIO_TIME;
+    static constexpr NodeIOType kNodeIoTypeAudioSpec   = NODE_IO_TYPE_AUDIO_SPEC;
     static constexpr NodeIOType kNodeIoTypeFrequencies = NODE_IO_TYPE_FREQUENCIES;
+    static constexpr NodeIOType kNodeIoTypeIIRFilter   = NODE_IO_TYPE_IIR_FILTER;
 
     class NodeIO {
     public:
@@ -36,6 +41,9 @@ namespace Nodes {
     };
 
     std::unique_ptr<NodeIO> makeNodeIO(NodeIOType type);
+    std::vector<std::unique_ptr<NodeIO>> makeNodeIO(int count, ...);
+
+    NodeIO **unpack(std::vector<std::unique_ptr<NodeIO>>& v, NodeIO ***ios);
 
 };
 

@@ -25,10 +25,10 @@ int Resampler::getRequiredInputLength(int outLength)
     return mResampler.getRequiredInLength(outLength);
 }
 
-void Resampler::process(const NodeIO *inputs, NodeIO *outputs)
+void Resampler::process(const NodeIO *inputs[], NodeIO *outputs[])
 {
-    auto in = inputs[0].as<IO::AudioTime>();
-    auto out = outputs[0].as<IO::AudioTime>();
+    auto in = inputs[0]->as<IO::AudioTime>();
+    auto out = outputs[0]->as<IO::AudioTime>();
 
     if (mResampler.getInputRate() != in->getSampleRate()) {
         mResampler.setInputRate(in->getSampleRate());

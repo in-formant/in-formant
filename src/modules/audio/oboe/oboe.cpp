@@ -1,6 +1,9 @@
 #include "oboe.h"
 #include <iostream>
 
+#include <SDL2/SDL.h>
+#include <jni.h>
+
 using namespace Module::Audio;
 
 Oboe::Oboe()
@@ -15,6 +18,13 @@ Oboe::~Oboe()
 
 void Oboe::initialize()
 {
+    JNIEnv *env = (JNIEnv *) SDL_AndroidGetJNIEnv();
+    jobject activity = (jobject) SDL_AndroidGetActivity();
+
+    jclass clazz = env->GetObjectClass(activity);
+    jmethodID methodId = env->GetMethodID(clazz, "requestAudioPermission", "()V");
+
+    env->CallVoidMethod(activity, methodId);
 }
 
 void Oboe::terminate()
@@ -181,5 +191,4 @@ void Oboe::checkError(oboe::Result result)
         throw std::runtime_error(std::string("Audio::Oboe] ") + oboe::convertToText(result));
     }
 }
-
 

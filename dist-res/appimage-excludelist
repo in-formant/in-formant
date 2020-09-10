@@ -19,3 +19,4 @@ libresolv.so.2
 libSM.so.6
 libuuid.so.1
 libz.so.1
+libvulkan.so.1

@@ -5,53 +5,47 @@
 
 using namespace Module::Freetype;
 
-Font::Font(FTInstance& library, const std::string& filename, int pixelSize)
-    : mSize(pixelSize),
-      mAttachment(nullptr)
+Font::Font(FT_Library library,
+            const FT_Byte *fileData,
+            int fileDataSize,
+            int pointSize, int hdpi, int vdpi)
+    : mAttachment(nullptr)
 {
-    const auto& fileData = library.getFileData(filename);
-
     FT_Error err;
 
-    err = FT_New_Memory_Face(library, fileData.data(), fileData.size(), 0, &mFace);
+    FT_Open_Args openArgs {
+        .flags = FT_OPEN_MEMORY,
+        .memory_base = fileData,
+        .memory_size = fileDataSize,
+    };
+
+    err = FT_Open_Face(library, &openArgs, 0, &mFace);
     checkError(err);
 
     err = FT_Select_Charmap(mFace, FT_ENCODING_UNICODE);
     checkError(err);
 
-    err = FT_Set_Pixel_Sizes(mFace, 0, pixelSize);
+    err = FT_Set_Char_Size(mFace, 0, pointSize * 64, hdpi, vdpi);
     checkError(err);
 
     for (unsigned char uch = 0; uch < UCHAR_MAX; ++uch) {
-        mGlyphsData[uch] = prepareCharRender((char) uch);
-    }
-}
+        char character = (char) uch;
 
-Font::~Font()
-{
-    FT_Done_Face(mFace);
-}
-
-GlyphRenderData Font::prepareCharRender(char character)
-{
-    unsigned char uch = (unsigned char) character;
-
-    FT_UInt glyphIndex = FT_Get_Char_Index(mFace, character);
-    if (glyphIndex == 0) {
-        return GlyphRenderData {
-            .character = character,
-            .glyphIndex = 0,
-            .left = 0,
-            .top = 0,
-            .width = 0,
-            .height = 0,
-            .advanceX = 0,
-            .advanceY = 0,
-            .buffer = {},
-        };
-    }
-    else {
-        FT_Error err;
+        FT_UInt glyphIndex = FT_Get_Char_Index(mFace, character);
+        if (glyphIndex == 0) {
+            mGlyphsData[uch] = GlyphRenderData {
+                .character = character,
+                .glyphIndex = 0,
+                .left = 0,
+                .top = 0,
+                .width = 0,
+                .height = 0,
+                .advanceX = 0,
+                .advanceY = 0,
+                .buffer = {},
+            }; 
+            continue;
+        }
 
         err = FT_Load_Glyph(mFace, glyphIndex, FT_LOAD_DEFAULT);
         checkError(err);
@@ -71,7 +65,7 @@ GlyphRenderData Font::prepareCharRender(char character)
             }
         }
 
-        return GlyphRenderData {
+        mGlyphsData[uch] = GlyphRenderData {
             .character = character,
             .glyphIndex = mFace->glyph->glyph_index, 
             .left = mFace->glyph->bitmap_left,
@@ -83,6 +77,16 @@ GlyphRenderData Font::prepareCharRender(char character)
             .buffer = std::move(buffer),
         };
     }
+}
+
+Font::~Font()
+{
+    FT_Done_Face(mFace);
+}
+
+GlyphRenderData Font::prepareCharRender(char character)
+{
+    return mGlyphsData[(unsigned char) character];
 }
 
 TextRenderData Font::prepareTextRender(const std::string& text)

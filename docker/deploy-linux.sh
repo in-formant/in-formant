@@ -10,7 +10,6 @@ mkdir -p $tmp/usr/share/applications
 mkdir -p $tmp/usr/share/icons/hicolor/256x256
 
 cp -v /build/speech-analysis $tmp/usr/bin/speech-analysis
-cp -rv /build/shaders $tmp/usr/shaders
 
 for lib in $(ldd /build/speech-analysis | grep -o '\W/[^ ]*'); do
     skip=false
@@ -33,7 +32,6 @@ cp -v /src/dist-res/speech-analysis.png $tmp/usr/share/icons/hicolor/256x256
 cp -v /src/dist-res/AppRun $tmp/AppRun
 ln -sfv usr/share/applications/speech-analysis.desktop $tmp/speech-analysis.desktop
 ln -sfv usr/share/icons/hicolor/256x256/speech-analysis.png $tmp/speech-analysis.png
-cp -v /src/Montserrat.ttf $tmp/usr/Montserrat.ttf
 cp -v /src/Montserrat.otf $tmp/usr/Montserrat.otf
 
 cd /dist && appimagetool --appimage-extract-and-run /AppDir speech-analysis.AppImage

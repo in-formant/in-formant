@@ -23,9 +23,9 @@ std::vector<const char *> SDL2_Vulkan::getRequiredExtensions()
     return extensions;
 }
 
-void SDL2_Vulkan::createSurface(VkInstance instance, VkSurfaceKHR *ptrSurface)
+void SDL2_Vulkan::createSurface(VkInstance instance, VkSurfaceKHR *surface)
 {
-    if (!SDL_Vulkan_CreateSurface(*mPtrWindow, instance, ptrSurface)) {
+    if (!SDL_Vulkan_CreateSurface(*mPtrWindow, instance, surface)) {
         throw std::runtime_error("Target::SDL2_Vulkan] Error creating Vulkan surface");
     }
 }

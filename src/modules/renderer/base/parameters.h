@@ -3,7 +3,7 @@
 
 namespace Module::Renderer {
 
-    enum class FrequencyScale {
+    enum class FrequencyScale : unsigned int {
         Linear      = 0,
         Logarithmic = 1,
         Mel         = 2,

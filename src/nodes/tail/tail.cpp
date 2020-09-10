@@ -19,10 +19,10 @@ void Tail::setOutputDuration(int outDuration)
     mOutDuration = outDuration;
 }
 
-void Tail::process(const NodeIO *inputs, NodeIO *outputs)
+void Tail::process(const NodeIO *inputs[], NodeIO *outputs[])
 {
-    auto in = inputs[0].as<IO::AudioTime>();
-    auto out = outputs[0].as<IO::AudioTime>();
+    auto in = inputs[0]->as<IO::AudioTime>();
+    auto out = outputs[0]->as<IO::AudioTime>();
 
     int sampleRate = in->getSampleRate();
 

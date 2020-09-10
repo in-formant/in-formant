@@ -13,7 +13,7 @@ namespace Nodes
         void setOutputDuration(int outDuration);
         void setMinimumOutputLength(int minOutLength);
 
-        void process(const NodeIO *inputs, NodeIO *outputs) override;
+        void process(const NodeIO *inputs[], NodeIO *outputs[]) override;
 
     private:
         Module::Audio::Buffer *mBuffer;

@@ -1,4 +1,4 @@
-#ifdef __ANDROID__
+#if defined(ANDROID) || defined(__ANDROID__)
 
 #include <unistd.h>
 #include <pthread.h>
@@ -7,12 +7,12 @@
 
 static int pfd[2];
 static pthread_t thr;
-static const char *tag = "myapp";
+static const char *tag = "SpeechAnalysis";
 
 static void *thread_func(void*)
 {
     ssize_t rdsz;
-    char buf[128];
+    char buf[256];
     while((rdsz = read(pfd[0], buf, sizeof buf - 1)) > 0) {
         if(buf[rdsz - 1] == '\n') --rdsz;
         buf[rdsz] = 0;  /* add null-terminator */

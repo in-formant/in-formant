@@ -13,10 +13,10 @@ PitchTracker::PitchTracker(Analysis::PitchSolver *solver)
 {
 }
 
-void PitchTracker::process(const NodeIO *inputs, NodeIO *outputs)
+void PitchTracker::process(const NodeIO *inputs[], NodeIO *outputs[])
 {
-    auto in = inputs[0].as<IO::AudioTime>();
-    auto out = outputs[0].as<IO::Frequencies>();
+    auto in = inputs[0]->as<IO::AudioTime>();
+    auto out = outputs[0]->as<IO::Frequencies>();
    
     Analysis::PitchResult result = mSolver->solve(in->getConstData(), in->getLength(), in->getSampleRate());
 

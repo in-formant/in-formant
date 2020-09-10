@@ -13,7 +13,7 @@ namespace Nodes
         void setFFTLength(int nfft);
         int getFFTLength() const;
 
-        void process(const NodeIO *inputs, NodeIO *outputs) override;
+        void process(const NodeIO *inputs[], NodeIO *outputs[]) override;
 
     private:
         Analysis::RealFFT *mFFT;

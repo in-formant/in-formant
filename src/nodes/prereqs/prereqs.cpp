@@ -31,9 +31,9 @@ void Prereqs::setMinimumOutputLength(int minOutLength)
     mMinOutLength = minOutLength;
 }
 
-void Prereqs::process(const NodeIO *inputs, NodeIO *outputs)
+void Prereqs::process(const NodeIO *inputs[], NodeIO *outputs[])
 {
-    auto out = outputs[0].as<IO::AudioTime>();
+    auto out = outputs[0]->as<IO::AudioTime>();
 
     int sampleRate = mBuffer->getSampleRate();
     int bufferLength = mBuffer->getLength();

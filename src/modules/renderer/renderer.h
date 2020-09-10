@@ -15,4 +15,12 @@
 #   include "vulkan/vulkan.h"
 #endif
 
+#ifdef RENDERER_USE_SDL2
+#   include "sdl2/sdl2.h"
+#endif
+
+#ifdef RENDERER_USE_NVG
+#   include "nanovg/nanovg.h"
+#endif
+
 #endif // MODULES_RENDERER_H

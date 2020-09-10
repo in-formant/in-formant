@@ -1,6 +1,6 @@
 #include "freetype.h"
-#include <fstream>
-#include <memory>
+#include "../target/base/base.h"
+#include <stdexcept>
 
 using namespace Module::Freetype;
 
@@ -11,56 +11,34 @@ void Module::Freetype::checkError(FT_Error error)
     }
 }
 
-FTInstance::FTInstance()
+FTInstance::FTInstance(Module::Target::AbstractBase *target)
 {
     FT_Init_FreeType(&mLibrary);
+   
+    float hdpi, vdpi; 
+    target->getDisplayDPI(&hdpi, &vdpi, nullptr);
+
+    mHorizontalDPI = std::round(hdpi);
+    mVerticalDPI = std::round(vdpi);
 }
 
 FTInstance::~FTInstance()
 {
+    for (auto& [fnam, fontfile] : mFontFiles) {
+        delete fontfile;
+    }
+
     FT_Done_FreeType(mLibrary);
 }
 
-FTInstance::operator FT_Library()
+FontFile& FTInstance::font(const std::string& filename)
 {
-    return mLibrary;
-}
-
-const std::vector<FT_Byte>& FTInstance::getFileData(const std::string& filename)
-{
-    auto it = mFilesData.find(filename);
-    if (it != mFilesData.end()) {
-        return it->second;
+    auto it = mFontFiles.find(filename);
+    if (it != mFontFiles.end()) {
+        return * it->second;
     }
 
-    std::ifstream file(filename, std::ios::binary);
-
-    if (!file.is_open()) {
-        throw std::runtime_error(std::string("Font::Freetype] Error reading font file \"") + filename + "\"");
-    }
-
-    constexpr size_t dataVectorIncrSize = 4096;
-    constexpr size_t readBufferSize = 1024;
+    mFontFiles.emplace(filename, new FontFile(mLibrary, filename, mHorizontalDPI, mVerticalDPI));
     
-    auto buffer = std::make_unique<char[]>(readBufferSize);
-    
-    std::vector<FT_Byte> data;
-
-    file.seekg(0);
-    do {
-        file.read(buffer.get(), readBufferSize);
-        size_t bytesRead = file.gcount();
-        if (data.size() + bytesRead > data.capacity()) {
-            data.reserve(data.capacity() + dataVectorIncrSize);
-        }
-        data.insert(data.end(),
-                reinterpret_cast<FT_Byte *>(buffer.get()),
-                reinterpret_cast<FT_Byte *>(std::next(buffer.get(), bytesRead)));
-    } while (file);
-    
-    data.shrink_to_fit();
-
-    mFilesData.emplace(filename, std::move(data));
-
-    return mFilesData.find(filename)->second;
+    return * mFontFiles.find(filename)->second;
 }

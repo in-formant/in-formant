@@ -44,18 +44,6 @@ RUN cd /mxe && make JOBS=$(nproc) STRIP_LIB=true MXE_TARGETS='i686-w64-mingw32.s
 RUN cd /mxe && make JOBS=$(nproc) STRIP_LIB=true MXE_TARGETS='i686-w64-mingw32.shared x86_64-w64-mingw32.shared' MXE_PLUGIN_DIRS='plugins/gcc10' sdl2 portaudio
 RUN cd /mxe && make clean-junk
 
-# Build vulkan.
-ENV PATH=/mxe/usr/bin:$PATH
-ENV vkver=1.2.148.0
-
-RUN wget https://sdk.lunarg.com/sdk/download/$vkver/windows/VulkanSDK-$vkver-Installer.exe?Human=true 
-RUN dpkg --add-architecture i386 && apt-get -y update && apt-get -y install libgcc-s1:i386 && apt-get -y install xvfb wine32 libgl1-mesa-glx:i386
-RUN mv "VulkanSDK-$vkver-Installer.exe?Human=true" vulkan.exe && \
-        (Xvfb :99 &) && \
-        DISPLAY=:99 wine vulkan.exe /S && \
-        mv $HOME/.wine/drive_c/VulkanSDK /VulkanSDK
-RUN apt-get -y autoremove --purge xvfb wine32 *:i386 && dpkg --remove-architecture i386 && rm vulkan.exe
-
 # Install recent GL headers
 ENV ver=2.1.0
 RUN wget "https://downloads.sourceforge.net/project/glew/glew/$ver/glew-$ver.tgz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fglew%2Ffiles%2Fglew%2F$ver%2Fglew-$ver.tgz%2Fdownload&ts=1597098028" -O glew.tgz && \
@@ -74,9 +62,6 @@ RUN cd glm-$ver && \
         for dir in i686-w64-mingw32.shared x86_64-w64-mingw32.shared; do \
             cp -r glm /mxe/usr/$dir/include; \
         done
-
-# Install shaderc
-COPY shaderc /usr/local/
 
 COPY deploy-windows.sh /usr/local/bin
 ENV MXE=/mxe PATH=/mxe/usr/bin:$PATH

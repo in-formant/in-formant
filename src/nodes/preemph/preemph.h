@@ -7,7 +7,14 @@ namespace Nodes
 {
     class PreEmphasis : public Node {
     public:
-        PreEmphasis();
+        PreEmphasis(float frequency);
+        
+        void setFrequency(float frequency);
+
+        void process(const NodeIO *inputs[], NodeIO *outputs[]) override;
+
+    private:
+        float mFrequency;
     };
 }
 

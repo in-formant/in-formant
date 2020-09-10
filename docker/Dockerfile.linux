@@ -84,33 +84,6 @@ RUN mkdir -p openssl-$ver/build && \
         make -j$(nproc) && \
         make install
 
-# Install Python 3.8
-ENV ver=3.8.5
-RUN wget https://www.python.org/ftp/python/$ver/Python-$ver.tar.xz && \
-        tar xf Python-$ver.tar.xz
-RUN mkdir -p Python-$ver/build && \
-        cd Python-$ver/build && \
-        ../configure --enable-optimizations --with-lto=no --with-openssl=/usr/local/ssl LDFLAGS="-Wl,-rpath /usr/local/ssl/lib" && \
-        make -j$(nproc) && \
-        make install
-
-RUN pip3 install --upgrade pip
-
-# Build vulkan.
-ENV vkver=1.2.148
-
-RUN git clone https://github.com/KhronosGroup/Vulkan-Headers --depth 1 --branch v$vkver
-RUN mkdir -p Vulkan-Headers/build && \
-        cd Vulkan-Headers/build && \
-        cmake .. -Wno-dev -DCMAKE_INSTALL_PREFIX=/usr/local && \
-        make install -j$(nproc)
-
-RUN git clone https://github.com/KhronosGroup/Vulkan-Loader --depth 1 --branch v$vkver
-RUN mkdir -p Vulkan-Loader/build && \
-        cd Vulkan-Loader/build && \
-        cmake .. -Wno-dev -DCMAKE_INSTALL_PREFIX=/usr/local -DVULKAN_HEADERS_INSTALL_DIR=/usr/local -DBUILD_WSI_WAYLAND_SUPPORT=OFF .. && \
-        make install -j$(nproc)
-
 # Build portaudio
 RUN wget http://www.portaudio.com/archives/pa_stable_v190600_20161030.tgz && \
         tar xf pa_stable_v190600_20161030.tgz
@@ -173,18 +146,6 @@ RUN cd freetype-$ver && \
         ../configure --enable-shared --disable-static --enable-freetype-config --prefix=/usr/local && \
         make install -j$(nproc)
 
-# Build recent glibc in order for glslc to run.
-ENV ver=2.14
-RUN wget http://ftpmirror.gnu.org/glibc/glibc-$ver.tar.xz && \
-        tar xf glibc-$ver.tar.xz
-RUN cd glibc-$ver && \
-        sed -i 's/\(struct obstack \*_obstack_compat\);/\1 __attribute__ ((nocommon));/g' malloc/obstack.c && \
-        mkdir build && \
-        cd build && \
-        ../configure --prefix=/opt/glibc CC=/usr/bin/gcc CXX=/usr/bin/g++ && \
-        make all -j$(nproc) && \
-        make install
-
 # Install recent GL headers
 ENV ver=2.1.0
 RUN wget "https://downloads.sourceforge.net/project/glew/glew/$ver/glew-$ver.tgz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fglew%2Ffiles%2Fglew%2F$ver%2Fglew-$ver.tgz%2Fdownload&ts=1597098028" -O glew.tgz && \
@@ -200,10 +161,6 @@ RUN cd glm-$ver && cp -r glm /usr/local/include
 
 FROM centos:6
 COPY --from=build /usr/local /usr/local
-COPY --from=build /opt/glibc /opt/glibc
-
-# Install shaderc
-COPY shaderc /usr/local/
 
 RUN yum -y install epel-release
 RUN yum -y install glibc-devel
@@ -214,7 +171,6 @@ COPY deploy-linux.sh /usr/local/bin
 CMD cd /build && \
         export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64 && \
         export PKG_CONFIG_PATH=/usr/lib64/pkgconfig:/usr/share/pkgconfig:/usr/local/pkgconfig:/usr/local/lib64/pkgconfig:/usr/local/share/pkgconfig && \
-        export GLSLC_GLIBC_DIR=/opt/glibc && \
         export GLEW_SOURCE_FILE=/usr/local/src/glew.c && \
         cmake \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \

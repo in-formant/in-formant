@@ -17,6 +17,12 @@ AbstractBase::~AbstractBase()
     if (supportsRenderer(Type::Vulkan)) {
         delete mVulkanProvider;
     }
+    if (supportsRenderer(Type::SDL2)) {
+        delete mSDL2Provider;
+    }
+    if (supportsRenderer(Type::NanoVG)) {
+        delete mNvgProvider;
+    }
 }
 
 bool AbstractBase::supportsRenderer(Type rendererType)
@@ -29,6 +35,12 @@ bool AbstractBase::supportsRenderer(Type rendererType)
 #endif
 #ifndef RENDERER_USE_VULKAN
     if (rendererType == Type::Vulkan) return false;
+#endif
+#ifndef RENDERER_USE_SDL2
+    if (rendererType == Type::SDL2) return false;
+#endif
+#ifndef RENDERER_USE_NVG
+    if (rendererType == Type::NanoVG) return false;
 #endif
 
     auto it = std::find(mSupportedRenderers.begin(), mSupportedRenderers.end(), rendererType);
@@ -65,4 +77,36 @@ void AbstractBase::setVulkanProvider(VulkanProvider *provider)
         throw std::runtime_error("Target::AbstractBase] Vulkan renderer not supported");
     }
     mVulkanProvider = provider;
+}
+
+SDL2Provider *AbstractBase::getSDL2Provider()
+{
+    if (!supportsRenderer(Type::SDL2)) {
+        throw std::runtime_error("Target::AbstractBase] SDL2 renderer not supported");
+    }
+    return mSDL2Provider;
+}
+
+void AbstractBase::setSDL2Provider(SDL2Provider *provider)
+{
+    if (!supportsRenderer(Type::SDL2)) {
+        throw std::runtime_error("Target::AbstractBase] SDL2 renderer not supported");
+    }
+    mSDL2Provider = provider;
+}
+
+NvgProvider *AbstractBase::getNvgProvider()
+{
+    if (!supportsRenderer(Type::NanoVG)) {
+        throw std::runtime_error("Target::AbstractBase] NanoVG renderer not supported");
+    }
+    return mNvgProvider;
+}
+
+void AbstractBase::setNvgProvider(NvgProvider *provider)
+{
+    if (!supportsRenderer(Type::NanoVG)) {
+        throw std::runtime_error("Target::AbstractBase] NanoVG renderer not supported");
+    }
+    mNvgProvider = provider;
 }

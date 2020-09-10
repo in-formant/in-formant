@@ -1,10 +1,12 @@
 #include "sdl2.h"
+
 #include <stdexcept>
+#include <iostream>
 
 using namespace Module::Target;
 
 SDL2::SDL2(Type rendererType)
-    : AbstractBase { Type::OpenGL, Type::GLES, Type::Vulkan },
+    : AbstractBase { Type::OpenGL, Type::GLES, Type::Vulkan, Type::SDL2, Type::NanoVG },
       mRendererType(rendererType),
       mWindow(nullptr)
 {
@@ -14,6 +16,14 @@ SDL2::SDL2(Type rendererType)
 
 #ifdef RENDERER_USE_VULKAN
     setVulkanProvider(new SDL2_Vulkan(&mWindow));
+#endif
+
+#ifdef RENDERER_USE_SDL2
+    setSDL2Provider(new SDL2_Renderer(&mWindow));
+#endif
+
+#ifdef RENDERER_USE_NVG
+    setNvgProvider(new SDL2_NanoVG(&mWindow));
 #endif
 }
 
@@ -26,23 +36,37 @@ void SDL2::initialize()
     err = SDL_Init(SDL_INIT_VIDEO);
     checkError(err < 0);
 
-#ifdef RENDERER_USE_OPENGL
+#if RENDERER_USE_GLES
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-#elif RENDERER_USE_GLES
+#elif RENDERER_USE_OPENGL
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 #endif
 
-#if RENDERER_USE_OPENGL || RENDERER_USE_GLES
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+#if RENDERER_USE_NVG
+#   if defined(NANOVG_DX11)
+        SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "direct3d11", SDL_HINT_OVERRIDE);
+#   elif defined(NANOVG_METAL)
+        SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "metal", SDL_HINT_OVERRIDE);
+#   elif defined(NANOVG_GLES2)
+        SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "opengles2", SDL_HINT_OVERRIDE);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#   elif defined(NANOVG_GLES3)
+        SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "opengles3", SDL_HINT_OVERRIDE);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#   elif defined(NANOVG_GL3)
+        SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "opengl", SDL_HINT_OVERRIDE);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+#   endif
 #endif
 
 #ifdef __ANDROID__
@@ -74,6 +98,11 @@ void SDL2::setSize(int width, int height)
     }
 }
 
+void SDL2::getSize(int *pWidth, int *pHeight)
+{
+    SDL_GetWindowSize(mWindow, pWidth, pHeight);
+}
+
 void SDL2::getSizeForRenderer(int *pWidth, int *pHeight)
 {
     if (mRendererType == Type::OpenGL || mRendererType == Type::GLES) {
@@ -89,6 +118,23 @@ void SDL2::getSizeForRenderer(int *pWidth, int *pHeight)
     }
 }
 
+void SDL2::getDisplayDPI(float *hdpi, float *vdpi, float *ddpi)
+{
+    int display = SDL_GetWindowDisplayIndex(mWindow);
+    if (display < 0) {
+        throw std::runtime_error(std::string("Target::SDL2] Could not retrieve window display index: ") + SDL_GetError());
+    }
+
+    if (SDL_GetDisplayDPI(display, ddpi, hdpi, vdpi) < 0) {
+        std::cout << "Target::SDL2] Could not retrieve display DPI: " << SDL_GetError() << std::endl;
+
+        constexpr int dpi = 96;
+
+        *hdpi = *vdpi = dpi;
+        *ddpi = sqrt(2 * dpi * dpi);
+    }
+}
+
 void SDL2::create()
 {
     SDL_WindowFlags backendFlag;
@@ -96,6 +142,8 @@ void SDL2::create()
     switch (mRendererType) {
     case Type::OpenGL:
     case Type::GLES:
+    case Type::SDL2:
+    case Type::NanoVG:
         backendFlag = SDL_WINDOW_OPENGL; 
         break;
     case Type::Vulkan:

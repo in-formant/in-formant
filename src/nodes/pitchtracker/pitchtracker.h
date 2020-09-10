@@ -10,7 +10,7 @@ namespace Nodes
     public:
         PitchTracker(Analysis::PitchSolver *solver);
 
-        void process(const NodeIO *inputs, NodeIO *outputs) override;
+        void process(const NodeIO *inputs[], NodeIO *outputs[]) override;
 
     private:
         Analysis::PitchSolver *mSolver;

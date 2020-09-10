@@ -3,6 +3,9 @@
 
 #include <vector>
 #include <cstdint>
+#include <memory>
+
+#include "../fft/fft.h"
 
 namespace Analysis {
 
@@ -28,6 +31,18 @@ namespace Analysis {
             std::vector<float> mAMDF;
             std::vector<uint32_t> m1bAMDF;
             std::vector<float> m1bACF;
+        };
+
+        class Yin : public PitchSolver {
+        public:
+            Yin(float threshold);
+            PitchResult solve(const float *data, int length, int sampleRate) override;
+        private:
+            float mThreshold;
+            std::shared_ptr<ComplexFFT> mFFT;
+            std::vector<double> mAutocorrelation;
+            std::vector<double> mDifference;
+            std::vector<double> mCMND;
         };
     }
 

@@ -34,10 +34,10 @@ NodePassthru::NodePassthru()
 {
 }
 
-void NodePassthru::process(const NodeIO *inputs, NodeIO *outputs)
+void NodePassthru::process(const NodeIO *inputs[], NodeIO *outputs[])
 {
-    auto in = inputs[0].as<IO::AudioTime>();
-    auto out = outputs[0].as<IO::AudioTime>();
+    auto in = inputs[0]->as<IO::AudioTime>();
+    auto out = outputs[0]->as<IO::AudioTime>();
 
     out->setSampleRate(in->getSampleRate());
     out->setLength(in->getLength());
