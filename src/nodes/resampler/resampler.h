@@ -14,7 +14,7 @@ namespace Nodes
 
         int getRequiredInputLength(int outLength);
 
-        void process(const NodeIO *inputs, NodeIO *outputs) override;
+        void process(const NodeIO *inputs[], NodeIO *outputs[]) override;
 
     private:
         Module::Audio::Resampler mResampler;

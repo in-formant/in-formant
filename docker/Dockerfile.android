@@ -126,16 +126,11 @@ RUN mkdir -p fftw-$ver/build-$arch && \
         ../configure --enable-shared --disable-static $configure_flags && \
         make install -j$(nproc)
 
-# Build SDL2 and SDL2_ttf
+# Build SDL2
 ENV SDL2_ver=2.0.12
 RUN wget https://www.libsdl.org/release/SDL2-$SDL2_ver.tar.gz && \
         tar xf SDL2-$SDL2_ver.tar.gz && \
         ln -s SDL2-$SDL2_ver SDL2
-
-ENV ver=2.0.15
-RUN wget https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-$ver.tar.gz && \
-        tar xf SDL2_ttf-$ver.tar.gz && \
-        ln -s SDL2_ttf-$ver SDL2_ttf
 
 RUN cd /SDL2/build-scripts && ./androidbuild.sh org.libsdl /dev/null
 RUN cd /SDL2/build/org.libsdl/app && \
@@ -152,13 +147,11 @@ RUN cd /SDL2/build/org.libsdl/app && \
         cp libs/$android_abi/* $ins_prefix/lib && \
         mkdir -p $ins_prefix/include/SDL2 && \
         cp jni/SDL/include/* $ins_prefix/include/SDL2 && \
-        cp jni/*/SDL*.h $ins_prefix/include/SDL2 && \
         mkdir -p $ins_prefix/lib/pkgconfig && \
-        cp /android-sdl2/{sdl2,SDL2_ttf}.pc $ins_prefix/lib/pkgconfig && \
+        cp /android-sdl2/sdl2.pc $ins_prefix/lib/pkgconfig && \
         mkdir -p $ins_prefix/bin && \
         cp /android-sdl2/sdl2-config $ins_prefix/bin && \
         sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" $ins_prefix/lib/pkgconfig/sdl2.pc && \
-        sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" $ins_prefix/lib/pkgconfig/SDL2_ttf.pc && \
         sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" -e "s/@SDL_VERSION@/${SDL2_ver}/g" $ins_prefix/bin/sdl2-config
 
 ENV arch=arm64
@@ -168,13 +161,11 @@ RUN cd /SDL2/build/org.libsdl/app && \
         cp libs/$android_abi/* $ins_prefix/lib && \
         mkdir -p $ins_prefix/include/SDL2 && \
         cp jni/SDL/include/* $ins_prefix/include/SDL2 && \
-        cp jni/*/SDL*.h $ins_prefix/include/SDL2 && \
         mkdir -p $ins_prefix/lib/pkgconfig && \
-        cp /android-sdl2/{sdl2,SDL2_ttf}.pc $ins_prefix/lib/pkgconfig && \
+        cp /android-sdl2/sdl2.pc $ins_prefix/lib/pkgconfig && \
         mkdir -p $ins_prefix/bin && \
         cp /android-sdl2/sdl2-config $ins_prefix/bin && \
         sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" $ins_prefix/lib/pkgconfig/sdl2.pc && \
-        sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" $ins_prefix/lib/pkgconfig/SDL2_ttf.pc && \
         sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" -e "s/@SDL_VERSION@/${SDL2_ver}/g" $ins_prefix/bin/sdl2-config
 
 ENV arch=x86
@@ -184,13 +175,11 @@ RUN cd /SDL2/build/org.libsdl/app && \
         cp libs/$android_abi/* $ins_prefix/lib && \
         mkdir -p $ins_prefix/include/SDL2 && \
         cp jni/SDL/include/* $ins_prefix/include/SDL2 && \
-        cp jni/*/SDL*.h $ins_prefix/include/SDL2 && \
         mkdir -p $ins_prefix/lib/pkgconfig && \
-        cp /android-sdl2/{sdl2,SDL2_ttf}.pc $ins_prefix/lib/pkgconfig && \
+        cp /android-sdl2/sdl2.pc $ins_prefix/lib/pkgconfig && \
         mkdir -p $ins_prefix/bin && \
         cp /android-sdl2/sdl2-config $ins_prefix/bin && \
         sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" $ins_prefix/lib/pkgconfig/sdl2.pc && \
-        sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" $ins_prefix/lib/pkgconfig/SDL2_ttf.pc && \
         sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" -e "s/@SDL_VERSION@/${SDL2_ver}/g" $ins_prefix/bin/sdl2-config
 
 ENV arch=x86_64
@@ -200,50 +189,12 @@ RUN cd /SDL2/build/org.libsdl/app && \
         cp libs/$android_abi/* $ins_prefix/lib && \
         mkdir -p $ins_prefix/include/SDL2 && \
         cp jni/SDL/include/* $ins_prefix/include/SDL2 && \
-        cp jni/*/SDL*.h $ins_prefix/include/SDL2 && \
         mkdir -p $ins_prefix/lib/pkgconfig && \
-        cp /android-sdl2/{sdl2,SDL2_ttf}.pc $ins_prefix/lib/pkgconfig && \
+        cp /android-sdl2/sdl2.pc $ins_prefix/lib/pkgconfig && \
         mkdir -p $ins_prefix/bin && \
         cp /android-sdl2/sdl2-config $ins_prefix/bin && \
         sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" $ins_prefix/lib/pkgconfig/sdl2.pc && \
-        sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" $ins_prefix/lib/pkgconfig/SDL2_ttf.pc && \
         sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" -e "s/@SDL_VERSION@/${SDL2_ver}/g" $ins_prefix/bin/sdl2-config
-
-# Build SDL2_gfx
-ENV ver=1.0.4
-RUN wget http://www.ferzkopp.net/Software/SDL2_gfx/SDL2_gfx-$ver.tar.gz && \
-        tar xf SDL2_gfx-$ver.tar.gz
-
-# Use newer config.guess and config.sub
-RUN cp /SDL2/build-scripts/{config.guess,config.sub} SDL2_gfx-$ver
-
-ENV arch=arm
-RUN mkdir -p SDL2_gfx-$ver/build-$arch && \
-        cd SDL2_gfx-$ver/build-$arch && \
-        . env-android.sh android-$arch && \
-        ../configure --enable-shared --disable-static --disable-mmx $configure_flags && \
-        make install -j$(nproc)
-
-ENV arch=arm64
-RUN mkdir -p SDL2_gfx-$ver/build-$arch && \
-        cd SDL2_gfx-$ver/build-$arch && \
-        . env-android.sh android-$arch && \
-        ../configure --enable-shared --disable-static --disable-mmx $configure_flags && \
-        make install -j$(nproc)
-
-ENV arch=x86
-RUN mkdir -p SDL2_gfx-$ver/build-$arch && \
-        cd SDL2_gfx-$ver/build-$arch && \
-        . env-android.sh android-$arch && \
-        ../configure --enable-shared --disable-static --disable-mmx $configure_flags && \
-        make install -j$(nproc)
-
-ENV arch=x86_64
-RUN mkdir -p SDL2_gfx-$ver/build-$arch && \
-        cd SDL2_gfx-$ver/build-$arch && \
-        . env-android.sh android-$arch && \
-        ../configure --enable-shared --disable-static --disable-mmx $configure_flags && \
-        make install -j$(nproc)
 
 ENV gver=4.10.2
 RUN wget https://downloads.gradle-dn.com/distributions/gradle-$gver-bin.zip && \
@@ -253,11 +204,11 @@ RUN wget https://downloads.gradle-dn.com/distributions/gradle-$gver-bin.zip && \
 # Install recent GLES headers
 RUN mkdir gles-headers && \
         cd gles-headers && \
-        wget https://www.khronos.org/registry/OpenGL/api/GLES3/gl32.h && \
+        wget https://www.khronos.org/registry/OpenGL/api/GLES3/gl3.h && \
         wget https://www.khronos.org/registry/OpenGL/api/GLES2/gl2ext.h && \
         for arch in arm arm64 x86 x86_64; do \
             mkdir -p /usr/android-$arch/include/GLES3; \
-            cp gl32.h /usr/android-$arch/include/GLES3 ; \
+            cp gl3.h /usr/android-$arch/include/GLES3 ; \
             mkdir -p /usr/android-$arch/include/GLES2; \
             cp gl2ext.h /usr/android-$arch/include/GLES2 ; \
         done
@@ -289,7 +240,6 @@ RUN apt-get -y update && \
 ENV android_api=30 ndk_ver=21.3.6528147
 ENV ANDROID_HOME=/android-sdk ANDROID_PLATFORM=android-$android_api ANDROID_NDK_HOME=/android-sdk/ndk/$ndk_ver
 
-COPY shaderc /usr/local/
 COPY env-android.sh /usr/local/bin
 COPY deploy-android.sh /usr/local/bin
 
@@ -323,4 +273,4 @@ CMD . env-android.sh android-arm && \
         cd $target && \
         cmake -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE $cmake_flags /src && \
         make -j$(nproc) && \
-    deploy-android.sh
+    deploy-android.sh $debug

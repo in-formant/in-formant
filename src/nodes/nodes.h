@@ -7,6 +7,8 @@
 #include "spectrum/spectrum.h"
 #include "tail/tail.h"
 #include "preemph/preemph.h"
+#include "linpred/linpred.h"
 #include "pitchtracker/pitchtracker.h"
+#include "formants/formants.h"
 
 #endif // NODES_H

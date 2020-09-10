@@ -4,6 +4,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <array>
 #include <map>
 #include <cstdint>
 #include <climits>
@@ -11,27 +12,16 @@
 #include <vector>
 #include <optional>
 
+namespace Module::Target {
+    class AbstractBase;
+}
+
 namespace Module::Freetype {
 
     constexpr int maxTextLen = 128;
 
     void checkError(FT_Error error);
 
-    class FTInstance {
-    public:
-        FTInstance();
-        ~FTInstance();
-    
-        operator FT_Library();
-
-        const std::vector<FT_Byte>& getFileData(const std::string& filename);
-
-    private:
-        FT_Library mLibrary;
-
-        std::map<std::string, std::vector<FT_Byte>> mFilesData;
-    };
-    
     struct GlyphRenderData {
         char character;
         unsigned int glyphIndex;
@@ -46,9 +36,47 @@ namespace Module::Freetype {
         std::vector<GlyphRenderData> glyphs;
     };
 
+    class FontFile;
+    class Font;
+
+    class FTInstance {
+    public:
+        FTInstance(Module::Target::AbstractBase *target);
+        ~FTInstance();
+        
+        FontFile& font(const std::string& filename);
+
+    private:
+        FT_Library mLibrary;
+        int mHorizontalDPI;
+        int mVerticalDPI;
+
+        std::map<std::string, FontFile *> mFontFiles;
+    };
+
+    class FontFile {
+    public:
+        FontFile(FT_Library library, const std::string& filename, int hdpi, int vdpi);
+        ~FontFile();
+
+        Font& with(int pointSize);
+
+    private:
+        FT_Library mLibrary;
+        int mHorizontalDPI;
+        int mVerticalDPI;
+        
+        FT_Byte *mData;
+        int mDataSize;
+
+        std::map<int, Font *> mFonts;
+    };
+
     class Font {
     public:
-        Font(FTInstance& library, const std::string& filename, int pixelSize);
+        Font(FT_Library library,
+                const FT_Byte *fileData, int fileDataSize,
+                int pointSize, int hdpi, int vdpi);
         ~Font();
 
         GlyphRenderData prepareCharRender(char character);
@@ -71,7 +99,6 @@ namespace Module::Freetype {
 
     private:
         FT_Face mFace;
-        int mSize;
 
         std::array<GlyphRenderData, UCHAR_MAX> mGlyphsData;
 

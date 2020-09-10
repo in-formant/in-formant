@@ -21,7 +21,9 @@ namespace Module::Target {
         void setTitle(const std::string& title) override;
         void setSize(int width, int height) override;
 
+        void getSize(int *pWidth, int *pHeight) override;
         void getSizeForRenderer(int *pWidth, int *pHeight) override;
+        void getDisplayDPI(float *hdpi, float *vdpi, float *ddpi) override;
 
         void create() override;
         void show() override;
@@ -57,11 +59,11 @@ namespace Module::Target {
     public:
         SDL2_OpenGL(SDL_Window **ptrWindow);
 
-        virtual void createContext();
-        virtual void deleteContext();
+        void createContext() override;
+        void deleteContext() override;
 
-        virtual void makeCurrent();
-        virtual void swapTarget();
+        void makeCurrent() override;
+        void swapTarget() override;
 
     private:
         SDL_Window **mPtrWindow;
@@ -74,11 +76,52 @@ namespace Module::Target {
     public:
         SDL2_Vulkan(SDL_Window **ptrWindow);
     
-        virtual std::vector<const char*> getRequiredExtensions();
-        virtual void createSurface(VkInstance instance, VkSurfaceKHR *ptrSurface);
+        std::vector<const char*> getRequiredExtensions() override;
+        void createSurface(VkInstance instance, VkSurfaceKHR *surface) override;
 
     private:
         SDL_Window **mPtrWindow;
+    };
+#endif
+
+#ifdef RENDERER_USE_SDL2
+    class SDL2_Renderer : public SDL2Provider {
+    public:
+        SDL2_Renderer(SDL_Window **ptrWindow);
+
+        SDL_Renderer *createRenderer(uint32_t flags) override;
+
+    private:
+        SDL_Window **mPtrWindow;
+    };
+#endif
+
+#ifdef RENDERER_USE_NVG
+    class SDL2_NanoVG : public NvgProvider {
+    public:
+        SDL2_NanoVG(SDL_Window **ptrWindow);
+
+        NVGcontext *createContext(int flags) override;
+        void deleteContext(NVGcontext *ctx) override;
+       
+        void beforeBeginFrame() override; 
+        void afterEndFrame() override;
+    
+        void *createFramebuffer(NVGcontext *ctx, int width, int height, int imageFlags) override;
+        void bindFramebuffer(void *framebuffer) override;
+        void deleteFramebuffer(void *framebuffer) override;
+        int framebufferImage(void *framebuffer) override;
+
+    private:
+        SDL_Window **mPtrWindow;
+
+        void createRenderer();
+        void destroyRenderer();
+        SDL_Renderer *mRenderer;
+        
+        void createGLContext();
+        void destroyGLContext();
+        SDL_GLContext mGlContext;
     };
 #endif
 

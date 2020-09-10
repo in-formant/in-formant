@@ -6,17 +6,42 @@
 #include <glm/glm.hpp>
 
 #ifdef RENDERER_USE_VULKAN
-#   include <vulkan/vulkan.h>
+#   define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+#   define VULKAN_HPP_TYPESAFE_CONVERSION 1
+#   include <vulkan/vulkan.hpp>
+#endif
+
+#ifdef RENDERER_USE_SDL2
+#   include <SDL2/SDL.h>
+#endif
+
+#ifdef RENDERER_USE_NVG
+#  include <nanovg.h>
+#  if defined(__WIN32)
+//#    include <nanovg_dx11.h>
+//#    define NANOVG_DX11
+#    include "../nanovg/nvg_gl.h"
+#  elif defined(__APPLE__)
+#    include <nanovg_mtl.h>
+#    define NANOVG_METAL
+#  else
+#    include "../nanovg/nvg_gl.h"
+#  endif
 #endif
 
 #include <vector>
+#include <map>
 
 namespace Module::Renderer {
+
+    constexpr uint64_t deviceMemory = 1024ULL * 1024ULL * 128ULL;
 
     enum class Type {
         OpenGL,
         GLES,
         Vulkan,
+        SDL2,
+        NanoVG,
     };
 
     class OpenGLProvider {
@@ -38,14 +63,54 @@ namespace Module::Renderer {
         virtual ~VulkanProvider() {}
 
         virtual std::vector<const char *> getRequiredExtensions() = 0;
-        virtual void createSurface(VkInstance instance, VkSurfaceKHR *ptrSurface) = 0;
+        virtual void createSurface(VkInstance instance, VkSurfaceKHR *surface) = 0;
+#endif
+    };
+
+    class SDL2Provider {
+#ifdef RENDERER_USE_SDL2
+    public:
+        virtual ~SDL2Provider() {}
+        
+        virtual SDL_Renderer *createRenderer(uint32_t flags) = 0;
+#endif
+    };
+    
+    class NvgProvider {
+#ifdef RENDERER_USE_NVG
+    public:
+        virtual ~NvgProvider() {}
+        virtual NVGcontext *createContext(int flags) = 0;
+        virtual void deleteContext(NVGcontext *ctx) = 0;
+        
+        virtual void beforeBeginFrame() = 0;
+        virtual void afterEndFrame() = 0;
+
+        virtual void *createFramebuffer(NVGcontext *ctx, int width, int height, int imageFlags) = 0;
+        virtual void bindFramebuffer(void *framebuffer) = 0;
+        virtual void deleteFramebuffer(void *framebuffer) = 0;
+        virtual int framebufferImage(void *framebuffer) = 0;
 #endif
     };
 
     using Vertex = glm::vec2;
     class Parameters;
-    
-    class AbstractBase {
+
+    struct GraphRenderDataPoint {
+        float x;
+        float y;
+    };
+    using GraphRenderData = std::vector<GraphRenderDataPoint>;
+
+    struct SpectrogramRenderDataPoint {
+        float frequency;
+        float intensity;
+    };
+    using SpectrogramRenderData = std::vector<SpectrogramRenderDataPoint>;
+
+    using FrequencyTrackRenderData = std::vector<std::optional<float>>;
+
+    class AbstractBase { 
     public:
         AbstractBase(Type type);
         virtual ~AbstractBase();
@@ -57,30 +122,34 @@ namespace Module::Renderer {
         virtual void begin() = 0;
         virtual void end() = 0;
 
-        virtual void clear() = 0;
-
         virtual void test() = 0;
 
-        virtual void renderGraph(float *x, float *y, size_t count) = 0;
+        virtual void renderGraph(const GraphRenderData& data) = 0;
         
-        // spectrogram: [ [ [ freq, gain ] ] ]
-        // lengths: [ slice_length ]
-        virtual void renderSpectrogram(float ***spectrogram, size_t *lengths, size_t count) = 0;
+        virtual void renderSpectrogram(const SpectrogramRenderData& data, int count) = 0;
 
-        virtual void renderFrequencyTrack(float *track, size_t count) = 0;
+        virtual void renderFrequencyTrack(const FrequencyTrackRenderData& data, float thick, float r, float g, float b) = 0;
 
         virtual void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, float r, float g, float b) = 0;
 
         void setDrawableSize(int width, int height);
+        void setWindowSize(int width, int height);
 
         Parameters *getParameters();
         constexpr Type getType() { return mType; }
-    
+
     protected:
         void getDrawableSize(int *pWidth, int *pHeight) const;
+        void getWindowSize(int *pWidth, int *pHeight) const;
 
         bool hasDrawableSizeChanged() const;
         void resetDrawableSizeChanged();
+
+        bool hasWindowSizeChanged() const;
+        void resetWindowSizeChanged();
+
+        float frequencyToCoordinate(float frequency) const;
+        void gainToColor(float gain, float *r, float *g, float *b) const;
 
     private:
         Type mType;
@@ -89,11 +158,21 @@ namespace Module::Renderer {
         int mDrawableHeight;
         bool mDrawableSizeChanged;
 
+        int mWindowWidth;
+        int mWindowHeight;
+        bool mWindowSizeChanged;
+
         Parameters *mParameters;
     };
 }
 
 #include "../../target/base/base.h"
 #include "parameters.h"
+
+template<typename Tx, typename Tlo, typename Thi>
+Tx clamp(const Tx& val, const Tlo& lo, const Thi& hi) {
+    return Tx(val < lo ? lo : (val > hi ? hi : val));
+}
+
 
 #endif // RENDERER_BASE_H

@@ -11,7 +11,7 @@ namespace Nodes
 
         void setOutputDuration(int outDuration);
 
-        void process(const NodeIO *inputs, NodeIO *outputs) override;
+        void process(const NodeIO *inputs[], NodeIO *outputs[]) override;
 
     private:
         int mOutDuration;

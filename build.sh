@@ -26,6 +26,9 @@ case $target in
         ;;
     android)
         tag=android
+        if [ "$build_type" == "Debug" ]; then
+            extra_args="-e debug=Debug"
+        fi
         ;;
     emscripten)
         tag=emscripten

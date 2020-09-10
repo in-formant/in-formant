@@ -1,6 +1,6 @@
 #include "modules/modules.h"
 #include "nodes/nodes.h"
-#include "analysis/pitch/pitch.h"
+#include "analysis/analysis.h"
 #include "backtrace/backtrace.h"
 #include <iostream>
 #include <atomic>
@@ -13,7 +13,7 @@ using namespace Module;
 using namespace std::literals::chrono_literals;
 using Clock = std::chrono::steady_clock;
 
-const auto testLoopInterval = 25ms;
+const auto testLoopInterval = 12ms;
 
 constexpr int captureSampleRate = 48000;
 constexpr int captureDuration = 200;
@@ -26,10 +26,20 @@ constexpr int playbackSampleRate = 96000;
 constexpr int testToneFrequency = 200;
 
 constexpr int analysisDuration = 25;
-constexpr int analysisSampleRate = 11025;
+constexpr int analysisSampleRate = 2 * 3700;
 
 constexpr int fftMaxFrequency = 8000;
-constexpr int fftLength = 1024;
+constexpr int fftLength = 2048;
+
+constexpr float preEmphasisFrequency = 2000.0f;
+constexpr int linPredOrder = 6;
+
+constexpr int numFormantsRender = 3;
+constexpr float formantColors[numFormantsRender][3] = {
+    {0.0f,  1.0f,  0.0f},
+    {0.86f, 0.78f, 0.24f},
+    {1.0f,  0.71f, 0.76f},
+};
 
 static std::atomic_bool signalCaught(false);
 static std::atomic_int signalStatus;
@@ -70,13 +80,15 @@ int main(int argc, char **argv)
     std::signal(SIGINT, signalHandler);
     registerCrashHandler();
     
-    constexpr auto type = Renderer::Type::OpenGL;
+    constexpr auto type = Renderer::Type::NanoVG;
     
     std::shared_ptr<Target::AbstractBase> target(nullptr);
     std::shared_ptr<Audio::AbstractBase> audio(nullptr);
     std::shared_ptr<Renderer::AbstractBase> renderer(nullptr);
 
     std::shared_ptr<Analysis::PitchSolver> pitchSolver(nullptr);
+    std::shared_ptr<Analysis::LinpredSolver> linpredSolver(nullptr);
+    std::shared_ptr<Analysis::FormantSolver> formantSolver(nullptr);
 
     target.reset(new Target::SDL2(type));
     target->initialize();
@@ -86,10 +98,14 @@ int main(int argc, char **argv)
     target->create();
     target->show();
 
-    audio.reset(new Audio::Pulse);
-    //audio.reset(new Audio::Alsa);
-    //audio.reset(new Audio::PortAudio);
-    //audio.reset(new Audio::Oboe);
+    //audio.reset(new Audio::Pulse);
+#if defined(ANDROID) || defined(__ANDROID__)
+    audio.reset(new Audio::Oboe);
+#elif defined(__linux__)
+    audio.reset(new Audio::Alsa);
+#elif defined(_WIN32) || defined(__APPLE__)
+    audio.reset(new Audio::PortAudio);
+#endif
     audio->initialize();
     audio->refreshDevices();
 
@@ -140,25 +156,52 @@ int main(int argc, char **argv)
 #endif
     }
 
+    if (type == Renderer::Type::SDL2) {
+#ifdef RENDERER_USE_SDL2
+        renderer.reset(new Renderer::SDL2);
+        renderer->setProvider(target->getSDL2Provider());
+#else
+        throw std::runtime_error("Main] Requested SDL2 renderer but wasn't compiled with SDL2 support.");
+#endif
+    }
+
+    if (type == Renderer::Type::NanoVG) {
+#ifdef RENDERER_USE_NVG
+        renderer.reset(new Renderer::NanoVG);
+        renderer->setProvider(target->getNvgProvider());
+#else
+        throw std::runtime_error("Main] Requested NanoVG renderer but wasn't compiled with NanoVG support.");
+#endif
+    }
+
     int renderWidth, renderHeight;
     target->getSizeForRenderer(&renderWidth, &renderHeight);
     renderer->setDrawableSize(renderWidth, renderHeight);
+
+    int targetWidth, targetHeight;
+    target->getSize(&targetWidth, &targetHeight);
+    renderer->setWindowSize(targetWidth, targetHeight);
 
     renderer->initialize();
 
     auto renderPar = renderer->getParameters();
     renderPar->setMinFrequency(0.0f);
     renderPar->setMaxFrequency(fftMaxFrequency);
-    renderPar->setMinGain(-40.0f);
+    renderPar->setMinGain(-45.0f);
     renderPar->setMaxGain(10.0f);
     renderPar->setFrequencyScale(Renderer::FrequencyScale::Mel);
 
-    Freetype::FTInstance ftInstance;
-    Freetype::Font font(ftInstance, "Montserrat.otf", 18);
+    Freetype::FTInstance ft(target.get());
+    auto& font = ft.font("Montserrat.otf");
 
     int sineTime = 0;
 
-    pitchSolver.reset(new Analysis::Pitch::AMDF_M(60.0f, 2000.0f, 0.4f));
+    //pitchSolver.reset(new Analysis::Pitch::AMDF_M(60.0f, 2000.0f, 0.4f));
+    pitchSolver.reset(new Analysis::Pitch::Yin(0.35f));
+
+    linpredSolver.reset(new Analysis::LP::Burg);
+
+    formantSolver.reset(new Analysis::Formant::SimpleLP);
 
     Nodes::Prereqs nodePrereqs(captureBuffer.get(), analysisDuration, 0);
     Nodes::Resampler nodeSpectrumResampler(captureBuffer->getSampleRate(), 2 * fftMaxFrequency);
@@ -166,20 +209,29 @@ int main(int argc, char **argv)
     Nodes::Resampler nodeResampler(captureBuffer->getSampleRate(), analysisSampleRate);
     Nodes::Tail nodeTail(analysisDuration);
     Nodes::PitchTracker nodePitch(pitchSolver.get());
+    Nodes::PreEmphasis nodePreemph(preEmphasisFrequency);
+    Nodes::LinPred nodeLinpred(linpredSolver.get(), linPredOrder);
+    Nodes::FormantTracker nodeFormants(formantSolver.get());
 
-    auto outPrereqs = Nodes::makeNodeIO(Nodes::kNodeIoTypeAudioTime);
-    auto outSpectrumResampler = Nodes::makeNodeIO(Nodes::kNodeIoTypeAudioTime);
-    auto outSpectrum = Nodes::makeNodeIO(Nodes::kNodeIoTypeAudioSpec);
-    auto outResampler = Nodes::makeNodeIO(Nodes::kNodeIoTypeAudioTime);
-    auto outTail = Nodes::makeNodeIO(Nodes::kNodeIoTypeAudioTime);
-    auto outPitch = Nodes::makeNodeIO(Nodes::kNodeIoTypeFrequencies);
+    auto ioPrereqs = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
+    auto ioSpectrumResampler = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
+    auto ioSpectrum = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioSpec);
+    auto ioResampler = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
+    auto ioTailBeforeResampler = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
+    auto ioTailAfterResampler = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
+    auto ioPitch = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeFrequencies);
+    auto ioPreemph = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
+    auto ioLinpred = Nodes::makeNodeIO(2, Nodes::kNodeIoTypeIIRFilter, Nodes::kNodeIoTypeAudioSpec);
+    auto ioFormants = Nodes::makeNodeIO(2, Nodes::kNodeIoTypeFrequencies, Nodes::kNodeIoTypeFrequencies);
 
-    int spectrogramCount = 300;
-    std::deque<std::vector<std::array<float, 2>>> spectrogram(spectrogramCount);
-    auto spectrogramView = std::make_unique<float **[]>(spectrogramCount);
+    Nodes::NodeIO **ndi = nullptr;
+    Nodes::NodeIO **ndo = nullptr;
 
-    std::deque<float> pitchTrack(spectrogramCount);
-             
+    int spectrogramCount = 600;
+    std::deque<std::vector<std::array<float, 2>>>  spectrogramTrack(spectrogramCount);
+    std::deque<float>                              pitchTrack(spectrogramCount);
+    std::deque<std::vector<Analysis::FormantData>> formantTrack(spectrogramCount);
+     
     while (!target->shouldQuit()) {
         auto tLoopStart = Clock::now();
 
@@ -188,6 +240,9 @@ int main(int argc, char **argv)
         if (target->sizeChanged()) {
             target->getSizeForRenderer(&renderWidth, &renderHeight);
             renderer->setDrawableSize(renderWidth, renderHeight);
+
+            target->getSize(&targetWidth, &targetHeight);
+            renderer->setWindowSize(targetWidth, targetHeight);
         }
 
         //playbackQueue->pushIfNeeded(&sineTime);
@@ -202,21 +257,31 @@ int main(int argc, char **argv)
 
         auto tProcessingStart = Clock::now();
 
-        nodePrereqs.process(nullptr, outPrereqs.get());
-        nodeSpectrumResampler.process(outPrereqs.get(), outSpectrumResampler.get());
-        nodeSpectrum.process(outSpectrumResampler.get(), outSpectrum.get());
-        nodeResampler.process(outPrereqs.get(), outResampler.get());
-        nodeTail.process(outResampler.get(), outTail.get());
-        nodePitch.process(outTail.get(), outPitch.get());
+#define in(x) (const_cast<const Nodes::NodeIO **>(Nodes::unpack((x), &ndi)))
+#define out(x) (Nodes::unpack((x), &ndo))
+
+        nodePrereqs.process(nullptr, out(ioPrereqs));
+        nodeSpectrumResampler.process(in(ioPrereqs), out(ioSpectrumResampler));
+        nodeSpectrum.process(in(ioSpectrumResampler), out(ioSpectrum));
+        nodeResampler.process(in(ioPrereqs), out(ioResampler));
+        nodeTail.process(in(ioPrereqs), out(ioTailBeforeResampler));
+        nodePitch.process(in(ioTailBeforeResampler), out(ioPitch));
+        nodeTail.process(in(ioResampler), out(ioTailAfterResampler));
+        nodePreemph.process(in(ioTailAfterResampler), out(ioPreemph));
+        nodeLinpred.process(in(ioPreemph), out(ioLinpred));
+        nodeFormants.process(in(ioLinpred), out(ioFormants));
 
         //std::cout << "    Analysis took  " << (std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - tProcessingStart).count() / 1000.0f) << " ms" << std::endl;;
 
-        auto outPrereqsAudio = outPrereqs->as<Nodes::IO::AudioTime>();
-        auto outResamplerAudio = outResampler->as<Nodes::IO::AudioTime>();
-        auto outSpectrumResamplerAudio = outSpectrumResampler->as<Nodes::IO::AudioTime>();
-        auto outSpectrumAudio = outSpectrum->as<Nodes::IO::AudioSpec>();
-        auto outTailAudio = outTail->as<Nodes::IO::AudioTime>();
-        auto outPitchFreq = outPitch->as<Nodes::IO::Frequencies>();
+        auto outSpectrumAudio = ioSpectrum[0]->as<Nodes::IO::AudioSpec>();
+        //auto outSpectrumAudio = ioLinpred[1]->as<Nodes::IO::AudioSpec>();
+        auto outTailAudio = ioTailBeforeResampler[0]->as<Nodes::IO::AudioTime>();
+        auto outPitchFreq = ioPitch[0]->as<Nodes::IO::Frequencies>();
+        auto outLinpredFilter = ioLinpred[0]->as<Nodes::IO::IIRFilter>();
+        auto outFormantFreqs = ioFormants[0]->as<Nodes::IO::Frequencies>();
+        auto outFormantBands = ioFormants[1]->as<Nodes::IO::Frequencies>();
+
+        float lpGain = outLinpredFilter->getFBConstData()[0];
 
         // Calculate FFT.
         int spectrumOutLength = outSpectrumAudio->getLength();
@@ -225,89 +290,119 @@ int main(int argc, char **argv)
             specSlice[i][0] = (outSpectrumAudio->getSampleRate() * i) / (2.0f * spectrumOutLength);
             specSlice[i][1] = outSpectrumAudio->getConstData()[i];
         }
-        spectrogram.pop_front();
-        spectrogram.push_back(specSlice);
 
+        float pitch = -1.0f;
+        std::vector<Analysis::FormantData> formantsData;
+
+        if (lpGain > .5e-4f) {
+            if (outPitchFreq->getLength() > 0)
+                pitch = outPitchFreq->get(0);
+
+            for (int i = 0; i < outFormantFreqs->getLength(); ++i) {
+                formantsData.push_back({
+                    .frequency = outFormantFreqs->get(i),
+                    .bandwidth = outFormantBands->get(i),
+                });
+            }
+        }
+
+        spectrogramTrack.pop_front();
+        spectrogramTrack.push_back(specSlice);
+        
         pitchTrack.pop_front();
-        pitchTrack.push_back(outPitchFreq->getLength() > 0 ? outPitchFreq->get(0) : -1);
+        pitchTrack.push_back(pitch);
+
+        formantTrack.pop_front();
+        formantTrack.push_back(formantsData);
 
         // Send render data to the renderer.
         
         auto tRenderingStart = Clock::now();
 
         renderer->begin();
-        renderer->clear();
 
         if (false) {
-            //auto& audio = outPrereqsAudio;
-            auto& audio = outResamplerAudio;
-            //auto& audio = outTailAudio;
+            auto& audio = outTailAudio;
+            int length = audio->getLength();
 
-            int length = audio->getLength(); //(analysisDuration * audio->getSampleRate()) / 1000;
-
-            auto times = std::make_unique<float[]>(length);
-            auto values = std::make_unique<float[]>(length);
+            Module::Renderer::GraphRenderData graph(length);
             for (int i = 0; i < length; ++i) {
-                times[i] = (float) i / (float) audio->getSampleRate();
-                values[i] = audio->getConstData()[i] * 20.0f;
+                graph[i] = {
+                    .x = (float) i / (float) audio->getSampleRate(),
+                    .y = audio->getConstData()[i] * 20.0f,
+                };
             }
-            renderer->renderGraph(times.get(), values.get(), length);
+            renderer->renderGraph(graph);
         }
 
         if (false) {
-            const auto& slice = spectrogram.back();
-            auto freqs = std::make_unique<float[]>(slice.size());
-            auto gains = std::make_unique<float[]>(slice.size());
-            for (int i = 0; i < slice.size(); ++i) {
-                freqs[i] = slice[i][0];
-                gains[i] = slice[i][1] * 0.5f - 9.8f;
+            Module::Renderer::GraphRenderData graph(specSlice.size());
+            for (int i = 0; i < specSlice.size(); ++i) {
+                graph[i] = {
+                   .x = specSlice[i][0],
+                   .y = specSlice[i][1] * 15.0f - 9.8f,
+                };
             }
-            renderer->renderGraph(freqs.get(), gains.get(), slice.size());
+            renderer->renderGraph(graph);
         }
 
         if (true) {
-            std::vector<std::vector<std::array<float, 2>>> spectrogramView(spectrogramCount);
-            std::vector<size_t> lengths(spectrogramCount);
+            Module::Renderer::SpectrogramRenderData specRender;
+            for (const auto& point : specSlice) {
+                specRender.push_back({
+                        .frequency = point[0],
+                        .intensity = point[1],
+                    });
+            }
+            renderer->renderSpectrogram(specRender, spectrogramCount);
 
-            for (int i = 0; i < spectrogramCount; ++i) {
-                lengths[i] = spectrogram[i].size();
-                spectrogramView[i].resize(lengths[i]);
-                for (int j = 0; j < lengths[i]; ++j) {
-                    spectrogramView[i][j] = spectrogram[i][j];
+            Module::Renderer::FrequencyTrackRenderData pitchTrackRender;
+            for (const auto& x : pitchTrack) {
+                if (x > 0) {
+                    pitchTrackRender.push_back(std::make_optional<float>(x));
+                }
+                else {
+                    pitchTrackRender.emplace_back(std::nullopt);
+                }
+            }
+            renderer->renderFrequencyTrack(pitchTrackRender, 4.0f, 0.0f, 1.0f, 1.0f);
+
+            std::array<Module::Renderer::FrequencyTrackRenderData, numFormantsRender> formantTrackRender;
+           
+            for (const auto& formants : formantTrack) {
+                int i = 0;
+                for (const auto& formant : formants) {
+                    formantTrackRender[i].push_back(std::make_optional<float>(formant.frequency));
+                    i++;
+                    if (i >= numFormantsRender) break;
+                }
+                for (int j = i; j < numFormantsRender; ++j) {
+                    formantTrackRender[j].emplace_back(std::nullopt);
                 }
             }
 
-            auto view = std::make_unique<float **[]>(spectrogramCount);
-            std::vector<std::unique_ptr<float *[]>> viewSlices;
-
-            for (int i = 0; i < spectrogramCount; ++i) {
-                auto viewSlice = std::make_unique<float *[]>(lengths[i]);
-
-                for (int j = 0; j < lengths[i]; ++j) {
-                    viewSlice[j] = spectrogramView[i][j].data();
-                }
-
-                view[i] = viewSlice.get();
-                viewSlices.push_back(std::move(viewSlice));
+            for (int i = 0; i < numFormantsRender; ++i) {
+                const auto [r, g, b] = formantColors[i];
+                renderer->renderFrequencyTrack(formantTrackRender[i], 6.0f, r, g, b);
             }
-
-            renderer->renderSpectrogram(view.get(), lengths.data(), spectrogramCount);
-
-            /*std::vector<float> pitchTrackView(pitchTrack.begin(), pitchTrack.end());
-            renderer->renderFrequencyTrack(pitchTrackView.data(), spectrogramCount);*/
         }
 
         auto durLoop = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - tLoopStart);
         std::stringstream ss;
         ss << "Loop cycle took " << (durLoop.count() / 1000.0f) << " ms";
         ss.flush(); 
-        renderer->renderText(font, ss.str(), 20, renderHeight - 20, 1.0f, 1.0f, 1.0f);
-        
+        renderer->renderText(
+                font.with(18),
+                ss.str(),
+                20,
+                20,
+                1.0f, 0.5f, 1.0f);
+       
         renderer->end();
 
         //std::cout << "    Rendering took " << (std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - tRenderingStart).count() / 1000.0f) << " ms" << std::endl;;
         
-        std::cout << "  Loop cycle took  " << (durLoop.count() / 1000.0f) << " ms" << std::endl;
+        //std::cout << "  Loop cycle took  " << (durLoop.count() / 1000.0f) << " ms" << std::endl;
 
         if (testLoopInterval - durLoop > 0us) {
             std::this_thread::sleep_for(testLoopInterval - durLoop);
@@ -319,6 +414,9 @@ int main(int argc, char **argv)
             break;
         }
     }
+
+    delete[] ndi;
+    delete[] ndo;
     
     renderer->terminate();
 

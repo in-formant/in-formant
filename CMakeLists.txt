@@ -11,9 +11,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize")
 set(CMAKE_CXX_FLAGS_DEBUG           "-O0 -g")
-set(CMAKE_CXX_FLAGS_RELEASE         "-O2 -g0")
+set(CMAKE_CXX_FLAGS_RELEASE         "-O2 -g0 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g")
-set(CMAKE_CXX_FLAGS_MINSIZEREL      "-Os -g0")
+set(CMAKE_CXX_FLAGS_MINSIZEREL      "-Os -g0 -DNDEBUG")
 
 set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -47,6 +47,8 @@ set(SOURCES
     src/nodes/node/nodeio_audiospec.h
     src/nodes/node/nodeio_frequencies.cpp
     src/nodes/node/nodeio_frequencies.h
+    src/nodes/node/nodeio_iirfilter.cpp
+    src/nodes/node/nodeio_iirfilter.h
     src/nodes/node/nodeio.cpp
     src/nodes/node/nodeio.h
     src/nodes/node/node.cpp
@@ -61,12 +63,29 @@ set(SOURCES
     src/nodes/tail/tail.h
     src/nodes/pitchtracker/pitchtracker.cpp
     src/nodes/pitchtracker/pitchtracker.h
+    src/nodes/preemph/preemph.cpp
+    src/nodes/preemph/preemph.h
+    src/nodes/linpred/linpred.cpp
+    src/nodes/linpred/linpred.h
+    src/nodes/formants/formants.cpp
+    src/nodes/formants/formants.h
     src/nodes/nodes.h
     src/analysis/fft/realfft.cpp
+    src/analysis/fft/complexfft.cpp
     src/analysis/fft/fft.h
     src/analysis/pitch/amdf_m.cpp
+    src/analysis/pitch/yin.cpp
     src/analysis/pitch/pitch.h
+    src/analysis/linpred/autocorr.cpp
+    src/analysis/linpred/burg.cpp
+    src/analysis/linpred/linpred.h
+    src/analysis/formant/simplelp.cpp
+    src/analysis/formant/filteredlp.cpp
+    src/analysis/formant/formant.h
     src/analysis/util/find_peaks.cpp
+    src/analysis/util/find_roots.cpp
+    src/analysis/util/calc_formant.cpp
+    src/analysis/util/sort_formants.cpp
     src/analysis/util/util.h
     src/analysis/analysis.h
 )
@@ -90,6 +109,8 @@ set(GLES_SHADER_SOURCES
 set(VK_SHADER_SOURCES
     src/modules/renderer/vulkan/shaders/graph.frag
     src/modules/renderer/vulkan/shaders/graph.vert
+    src/modules/renderer/vulkan/shaders/spectrogram.frag
+    src/modules/renderer/vulkan/shaders/spectrogram.vert
 )
 
 ### REQUIRED MODULES
@@ -107,17 +128,17 @@ check_low_level_exit(
 include(ExternalProject)
 ExternalProject_Add(
     soxr
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/external/soxr
+    SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/soxr
     CMAKE_COMMAND $ENV{cross}cmake
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/soxr
+        -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/soxr
         -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=OFF -DWITH_OPENMP=OFF -DWITH_LSR_BINDINGS=OFF
         -DWITH_VR32=OFF -DWITH_CR32=ON -DWITH_CR64=OFF -DWITH_CR32S=ON
         -DWITH_PFFFT=OFF -DWITH_AVFFT=OFF
         -DWITH_DEV_TRACE=OFF -Wno-dev
 )
-set(SOXR_INCLUDE_DIR ${CMAKE_BINARY_DIR}/soxr/include)
-set(SOXR_LIBRARIES -L${CMAKE_BINARY_DIR}/soxr/lib -lsoxr)
+set(SOXR_INCLUDE_DIR ${PROJECT_BINARY_DIR}/soxr/include)
+set(SOXR_LIBRARIES -L${PROJECT_BINARY_DIR}/soxr/lib -lsoxr)
 
 ### SEARCH AUDIO MODULES 
 
@@ -186,6 +207,8 @@ endif()
 
 ### SEARCH RENDERER MODULES 
 
+#[[
+
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL QUIET)
 if(OpenGL_FOUND)
@@ -228,6 +251,8 @@ if(Vulkan_FOUND)
     list(APPEND SOURCES
         src/modules/renderer/vulkan/vulkan.cpp
         src/modules/renderer/vulkan/vulkan.h
+        src/modules/renderer/vulkan/utils.cpp
+        src/modules/renderer/vulkan/utils.hpp
     )
     if(TARGET_USE_SDL2)
         list(APPEND SOURCES
@@ -235,6 +260,50 @@ if(Vulkan_FOUND)
         )
     endif()
     include(${CMAKE_SUPPORT_DIR}/ShaderTarget.cmake)
+endif()
+
+if(sdl2_FOUND)
+    message(STATUS "Including renderer module: sdl2")
+    set(RENDERER_USE_SDL2 TRUE)
+    ExternalProject_Add(
+        SDL2_gfx
+        SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/SDL2_gfx
+        CMAKE_COMMAND $ENV{cross}cmake
+        CMAKE_ARGS
+            -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/SDL2_gfx
+    )
+    set(SDL2_gfx_INCLUDE_DIR ${PROJECT_BINARY_DIR}/SDL2_gfx/include)
+    set(SDL2_gfx_LIBRARIES -L${PROJECT_BINARY_DIR}/SDL2_gfx/lib -lSDL2_gfx)
+    list(APPEND SOURCES
+        src/modules/renderer/sdl2/sdl2.cpp
+        src/modules/renderer/sdl2/sdl2.h
+        src/modules/renderer/sdl2/fontattachment.cpp
+    )
+    if(TARGET_USE_SDL2)
+        list(APPEND SOURCES
+            src/modules/target/sdl2/sdl2_renderer.cpp
+        )
+    endif()
+endif()
+
+]]
+
+if(TRUE)
+    message(STATUS "Including renderer module: nanovg")
+    set(NVG_DIR ${PROJECT_SOURCE_DIR}/external/nanovg)
+    add_subdirectory(${NVG_DIR} ${PROJECT_BINARY_DIR}/nanovg)
+    set(RENDERER_USE_NVG TRUE)
+    list(APPEND SOURCES
+        src/modules/renderer/nanovg/nanovg.cpp
+        src/modules/renderer/nanovg/nanovg.h
+        src/modules/renderer/nanovg/fontattachment.cpp
+        src/modules/renderer/nanovg/nvg_gl.c
+        src/modules/renderer/nanovg/nvg_gl.h)
+    if(TARGET_USE_SDL2)
+        list(APPEND SOURCES
+            src/modules/target/sdl2/sdl2_nanovg.cpp
+        )
+    endif()
 endif()
 
 ### FREETYPE MODULE
@@ -247,6 +316,7 @@ if(TRUE)
     set(FONT_USE_FREETYPE TRUE)
     list(APPEND SOURCES
         src/modules/freetype/instance.cpp
+        src/modules/freetype/fontfile.cpp
         src/modules/freetype/font.cpp
         src/modules/freetype/freetype.h
     )
@@ -270,7 +340,6 @@ if(LL_EXIT_FUNC)
 endif()
 
 if(RENDERER_USE_OPENGL OR RENDERER_USE_VULKAN)
-    find_file(GLM_INCLUDE_DIR REQUIRED NAMES "glm/glm.hpp")
     if(RENDERER_USE_OPENGL)
         add_shader_dependencies(TARGET speech-analysis SEMANTICS OpenGL SOURCES ${GL_SHADER_SOURCES})
     endif()
@@ -333,6 +402,36 @@ if(RENDERER_USE_VULKAN)
     target_include_directories(speech-analysis SYSTEM PUBLIC ${Vulkan_INCLUDE_DIRS})
     target_link_libraries(speech-analysis PUBLIC ${Vulkan_LIBRARIES})
     target_compile_definitions(speech-analysis PUBLIC -DRENDERER_USE_VULKAN=1)
+endif()
+
+if(RENDERER_USE_SDL2)
+    add_dependencies(speech-analysis SDL2_gfx)
+    target_include_directories(speech-analysis SYSTEM PUBLIC ${sdl2_INCLUDE_DIRS} ${SDL2_gfx_INCLUDE_DIR})
+    target_link_libraries(speech-analysis PUBLIC ${sdl2_LDFLAGS} ${SDL2_gfx_LIBRARIES})
+    target_compile_definitions(speech-analysis PUBLIC -DRENDERER_USE_SDL2=1)
+endif()
+
+if(RENDERER_USE_NVG)
+    target_include_directories(speech-analysis SYSTEM PUBLIC ${NVG_DIR}/src)
+    target_link_libraries(speech-analysis PUBLIC nanovg)
+    target_compile_definitions(speech-analysis PUBLIC -DRENDERER_USE_NVG=1)
+    if(ANDROID)
+        find_package(OpenGLES2 QUIET)
+        target_include_directories(speech-analysis SYSTEM PUBLIC ${OpenGLES2_INCLUDE_DIRS})
+        target_link_libraries(speech-analysis PUBLIC ${OpenGLES2_LIBRARIES})
+    elseif(EMSCRIPTEN)
+        find_package(OpenGLES2 QUIET)
+        target_include_directories(speech-analysis SYSTEM PUBLIC ${OpenGLES2_INCLUDE_DIRS})
+        target_link_libraries(speech-analysis PUBLIC ${OpenGLES2_LIBRARIES})
+    elseif(UNIX OR WIN32)
+        set(OpenGL_GL_PREFERENCE GLVND)
+        find_package(OpenGL QUIET)
+        target_include_directories(speech-analysis SYSTEM PUBLIC ${OPENGL_INCLUDE_DIRS})
+        target_link_libraries(speech-analysis PUBLIC ${OPENGL_LIBRARIES})
+
+        target_sources(speech-analysis PUBLIC $ENV{GLEW_SOURCE_FILE})
+        target_compile_definitions(speech-analysis PUBLIC -DGLEW_STATIC -DGLEW_NO_GLU)
+    endif()
 endif()
 
 if(FONT_USE_FREETYPE)

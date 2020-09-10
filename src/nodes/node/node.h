@@ -18,7 +18,7 @@ namespace Nodes {
         Node(NodeDescriptor descriptor);
         virtual ~Node();
 
-        virtual void process(const NodeIO *inputs, NodeIO *outputs) = 0;
+        virtual void process(const NodeIO *inputs[], NodeIO *outputs[]) = 0;
 
         const std::vector<NodeIOType> getInputTypes() const;
         const std::vector<NodeIOType> getOutputTypes() const;
@@ -32,7 +32,7 @@ namespace Nodes {
     public:
         NodePassthru();
 
-        void process(const NodeIO *inputs, NodeIO *outputs) override;
+        void process(const NodeIO *inputs[], NodeIO *outputs[]) override;
     };
 
 }
@@ -40,5 +40,6 @@ namespace Nodes {
 #include "nodeio_audiotime.h"
 #include "nodeio_audiospec.h"
 #include "nodeio_frequencies.h"
+#include "nodeio_iirfilter.h"
 
 #endif // NODES_NODE_H
