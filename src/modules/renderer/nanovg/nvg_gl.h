@@ -6,8 +6,8 @@
 #    include <GLES2/gl2.h>
 #    define NANOVG_GLES2
 #  elif defined(ANDROID) || defined(__ANDROID__)
-#    include <GLES2/gl2.h>
-#    define NANOVG_GLES2
+#    include <GLES3/gl3.h>
+#    define NANOVG_GLES3
 #  else
 #    include <GL/glew.h>
 #    define NANOVG_GL3

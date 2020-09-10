@@ -36,7 +36,7 @@ public class SpeechAnalysis extends SDLActivity {
             Thread.yield();
         }
 
-        if (hasPermission == 1) {
+        if (hasPermission != 1) {
             finish();
         }
     }

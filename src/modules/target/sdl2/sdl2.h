@@ -114,11 +114,11 @@ namespace Module::Target {
 
     private:
         SDL_Window **mPtrWindow;
-
+        
         void createRenderer();
         void destroyRenderer();
         SDL_Renderer *mRenderer;
-        
+
         void createGLContext();
         void destroyGLContext();
         SDL_GLContext mGlContext;

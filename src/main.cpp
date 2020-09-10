@@ -13,7 +13,7 @@ using namespace Module;
 using namespace std::literals::chrono_literals;
 using Clock = std::chrono::steady_clock;
 
-const auto testLoopInterval = 12ms;
+const auto testLoopInterval = 33ms;
 
 constexpr int captureSampleRate = 48000;
 constexpr int captureDuration = 200;
@@ -34,12 +34,20 @@ constexpr int fftLength = 2048;
 constexpr float preEmphasisFrequency = 2000.0f;
 constexpr int linPredOrder = 6;
 
+constexpr int spectrogramCount = 400;
+
 constexpr int numFormantsRender = 3;
 constexpr float formantColors[numFormantsRender][3] = {
     {0.0f,  1.0f,  0.0f},
     {0.86f, 0.78f, 0.24f},
     {1.0f,  0.71f, 0.76f},
 };
+
+#if defined(ANDROID) || defined(__ANDROID__)
+constexpr int uiFontSize = 10;
+#else
+constexpr int uiFontSize = 16;
+#endif
 
 static std::atomic_bool signalCaught(false);
 static std::atomic_int signalStatus;
@@ -92,11 +100,10 @@ int main(int argc, char **argv)
 
     target.reset(new Target::SDL2(type));
     target->initialize();
-    target->setTitle(std::string("Speech analysis - ") + (type == Renderer::Type::Vulkan ? "Vulkan" : "OpenGL"));
-    target->setSize(500, 500);
+    target->setTitle("Speech analysis");
+    target->setSize(854, 480);
 
     target->create();
-    target->show();
 
     //audio.reset(new Audio::Pulse);
 #if defined(ANDROID) || defined(__ANDROID__)
@@ -227,7 +234,6 @@ int main(int argc, char **argv)
     Nodes::NodeIO **ndi = nullptr;
     Nodes::NodeIO **ndo = nullptr;
 
-    int spectrogramCount = 600;
     std::deque<std::vector<std::array<float, 2>>>  spectrogramTrack(spectrogramCount);
     std::deque<float>                              pitchTrack(spectrogramCount);
     std::deque<std::vector<Analysis::FormantData>> formantTrack(spectrogramCount);
@@ -392,7 +398,7 @@ int main(int argc, char **argv)
         ss << "Loop cycle took " << (durLoop.count() / 1000.0f) << " ms";
         ss.flush(); 
         renderer->renderText(
-                font.with(18),
+                font.with(uiFontSize),
                 ss.str(),
                 20,
                 20,
@@ -417,7 +423,7 @@ int main(int argc, char **argv)
 
     delete[] ndi;
     delete[] ndo;
-    
+
     renderer->terminate();
 
     audio->stopPlaybackStream();

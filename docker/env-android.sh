@@ -45,6 +45,7 @@ if [ -z "$2" ]; then
     export STRIP=$toolchain/bin/$host2-stript
 
     export configure_flags="--prefix=$ins_prefix --host=$host"
+    export host=$host
 else
     export configure_flags="--prefix=$ins_prefix"
 fi

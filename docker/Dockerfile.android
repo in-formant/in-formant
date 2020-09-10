@@ -4,7 +4,7 @@ RUN chmod 1777 /tmp
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -y update && \
-        apt-get -y install wget unzip openjdk-11-jre cmake
+        apt-get -y install wget unzip openjdk-11-jre cmake libglib2.0-dev git
 
 # Install Android SDK.
 ENV ver=6609375_latest
@@ -20,8 +20,6 @@ ENV ANDROID_PLATFORM=android-$android_api ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$nd
 RUN yes | sdkmanager --install "platforms;$ANDROID_PLATFORM"
 RUN yes | sdkmanager --install "ndk;$ndk_ver"
 RUN yes | sdkmanager --install "build-tools;$buildtools_ver"
-
-RUN apt-get -y install libglib2.0-dev
 
 COPY env-android.sh /usr/local/bin/env-android.sh
 
@@ -201,6 +199,17 @@ RUN wget https://downloads.gradle-dn.com/distributions/gradle-$gver-bin.zip && \
         unzip gradle-$gver-bin.zip && \
         mv gradle-$gver gradle
 
+# Install ffmpeg
+RUN git clone https://github.com/Javernaut/ffmpeg-android-maker
+RUN apt-get -y install curl
+RUN cd ffmpeg-android-maker && ANDROID_SDK_HOME=/android-sdk ./ffmpeg-android-maker.sh
+RUN cd ffmpeg-android-maker && \
+        for arch in arm arm64 x86 x86_64; do \
+            . env-android.sh android-$arch; \
+            cp -r output/include/$android_abi/* /usr/android-$arch/include; \
+            cp -r output/lib/$android_abi/*     /usr/android-$arch/lib; \
+        done
+
 # Install recent GLES headers
 RUN mkdir gles-headers && \
         cd gles-headers && \
@@ -237,16 +246,16 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -y update && \
         apt-get -y install cmake openjdk-11-jre libglib2.0-dev
 
+ENV PATH=/gradle/bin:$PATH
+RUN mkdir -p /tmp/gradle
+COPY android-project/build.gradle /tmp/gradle
+RUN cd /tmp/gradle && gradle --no-daemon
+
 ENV android_api=30 ndk_ver=21.3.6528147
 ENV ANDROID_HOME=/android-sdk ANDROID_PLATFORM=android-$android_api ANDROID_NDK_HOME=/android-sdk/ndk/$ndk_ver
 
 COPY env-android.sh /usr/local/bin
 COPY deploy-android.sh /usr/local/bin
-
-ENV PATH=/gradle/bin:$PATH
-RUN mkdir -p /tmp/gradle
-COPY android-project/build.gradle /tmp/gradle
-RUN cd /tmp/gradle && gradle --no-daemon
 
 SHELL ["/bin/bash", "-c"]
 CMD . env-android.sh android-arm && \

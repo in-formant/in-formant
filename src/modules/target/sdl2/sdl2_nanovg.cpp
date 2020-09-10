@@ -22,15 +22,12 @@ NVGcontext *SDL2_NanoVG::createContext(int flags)
     return nvgCreateMTL(layer, flags);
 #elif defined(NANOVG_GLES2)
     createGLContext();
-    createRenderer();
     return nvgCreateGLES2(flags);
 #elif defined(NANOVG_GLES3)
     createGLContext();
-    createRenderer();
     return nvgCreateGLES3(flags);
 #elif defined(NANOVG_GL3)
     createGLContext();
-    createRenderer();
     
     glewExperimental = true;
     GLenum err = glewInit();
@@ -52,36 +49,20 @@ void SDL2_NanoVG::deleteContext(NVGcontext *ctx)
     destroyRenderer();
 #elif defined(NANOVG_GLES2)
     nvgDeleteGLES2(ctx);
-    destroyRenderer();
     destroyGLContext();
 #elif defined(NANOVG_GLES3)
     nvgDeleteGLES3(ctx);
-    destroyRenderer();
     destroyGLContext();
 #elif defined(NANOVG_GL3)
     nvgDeleteGL3(ctx);
-    destroyRenderer();
     destroyGLContext();
 #endif
-}
-
-void SDL2_NanoVG::createRenderer()
-{
-    mRenderer = SDL_CreateRenderer(
-            *mPtrWindow,
-            -1,
-            SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-}
-
-void SDL2_NanoVG::destroyRenderer()
-{
-    SDL_DestroyRenderer(mRenderer);
 }
 
 void SDL2_NanoVG::createGLContext()
 {
     mGlContext = SDL_GL_CreateContext(*mPtrWindow);
-    SDL_GL_MakeCurrent(*mPtrWindow, mGlContext);
+    SDL_GL_SetSwapInterval(1); // Enable vsync
 }
 
 void SDL2_NanoVG::destroyGLContext()
@@ -92,10 +73,8 @@ void SDL2_NanoVG::destroyGLContext()
 void SDL2_NanoVG::beforeBeginFrame()
 {
 #if defined(NANOVG_GL)
-    SDL_GL_MakeCurrent(*mPtrWindow, mGlContext);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 #endif
-    SDL_RenderPresent(mRenderer);
 }
 
 void SDL2_NanoVG::afterEndFrame()
