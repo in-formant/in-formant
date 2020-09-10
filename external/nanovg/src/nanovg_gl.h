@@ -404,7 +404,8 @@ static void glnvg__dumpShaderError(GLuint shader, const char* name, const char* 
 	glGetShaderInfoLog(shader, 512, &len, str);
 	if (len > 512) len = 512;
 	str[len] = '\0';
-	fprintf(stderr, "Shader %s/%s error: \n%s\n", name, type, str);
+        fprintf(stderr, "Error string length: %d\n", len);
+	fprintf(stderr, "Shader %s/%s error: %s\n", name, type, str);
 }
 
 static void glnvg__dumpProgramError(GLuint prog, const char* name)
@@ -414,7 +415,8 @@ static void glnvg__dumpProgramError(GLuint prog, const char* name)
 	glGetProgramInfoLog(prog, 512, &len, str);
 	if (len > 512) len = 512;
 	str[len] = '\0';
-	fprintf(stderr, "Program %s error: \n%s\n", name, str);
+        fprintf(stderr, "Error string length: %d\n", len);
+	fprintf(stderr, "Program %s error: %s\n", name, str);
 }
 
 static void glnvg__checkError(GLNVGcontext* gl, const char* str)

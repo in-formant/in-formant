@@ -52,20 +52,27 @@ void SDL2::initialize()
 #   elif defined(NANOVG_METAL)
         SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "metal", SDL_HINT_OVERRIDE);
 #   elif defined(NANOVG_GLES2)
-        SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "opengles2", SDL_HINT_OVERRIDE);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #   elif defined(NANOVG_GLES3)
-        SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "opengles3", SDL_HINT_OVERRIDE);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #   elif defined(NANOVG_GL3)
-        SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "opengl", SDL_HINT_OVERRIDE);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+#   endif
+
+#   if defined(NANOVG_GL)
+        SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
 #   endif
 #endif
 
@@ -137,13 +144,15 @@ void SDL2::getDisplayDPI(float *hdpi, float *vdpi, float *ddpi)
 
 void SDL2::create()
 {
-    SDL_WindowFlags backendFlag;
+    uint32_t backendFlag = 0;
 
     switch (mRendererType) {
     case Type::OpenGL:
     case Type::GLES:
     case Type::SDL2:
+#ifdef NANOVG_GL
     case Type::NanoVG:
+#endif
         backendFlag = SDL_WINDOW_OPENGL; 
         break;
     case Type::Vulkan:
@@ -151,13 +160,20 @@ void SDL2::create()
         break;
     }
 
+#if defined(ANDROID) || defined(__ANDROID__)
+    SDL_DisplayMode mode;
+    SDL_GetDisplayMode(0, 0, &mode);
+    mWidth = mode.w;
+    mHeight = mode.h;
+#endif
+
     mWindow = SDL_CreateWindow(
             mTitle.c_str(),
-            SDL_WINDOWPOS_UNDEFINED,
-            SDL_WINDOWPOS_UNDEFINED,
+            SDL_WINDOWPOS_CENTERED,
+            SDL_WINDOWPOS_CENTERED,
             mWidth,
             mHeight,
-            backendFlag | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN);
+            backendFlag | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
     checkError(mWindow == nullptr);
 
     mGotQuitEvent = false;

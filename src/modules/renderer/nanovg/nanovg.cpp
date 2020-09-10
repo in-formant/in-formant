@@ -35,14 +35,12 @@ void NanoVG::terminate()
 }
 
 void NanoVG::begin()
-{
+{ 
     getWindowSize(&mWidth, &mHeight);
 
     int drawableWidth, drawableHeight;
     getDrawableSize(&drawableWidth, &drawableHeight);
 
-    mProvider->bindFramebuffer(nullptr);
-    
     mProvider->beforeBeginFrame();
 
     nvgBeginFrame(vg, mWidth, mHeight, (float) drawableWidth / (float) mWidth);
@@ -137,11 +135,8 @@ void NanoVG::renderSpectrogram(const SpectrogramRenderData& slice, int count)
                 0, 0, count, imageHeight,
                 0.0f, mSpectrogramIm1, 1.0f));
     nvgFill(vg);
-    
+   
     nvgRestore(vg);
-    nvgEndFrame(vg);
-
-    nvgBeginFrame(vg, count, imageHeight, 1.0f);
     nvgSave(vg);
 
     float xp = (count - 1);
@@ -164,26 +159,28 @@ void NanoVG::renderSpectrogram(const SpectrogramRenderData& slice, int count)
 
             float y2 = frequencyToCoordinate(frequency);
 
-            float gain = intensity > 1e-10f ? 20.0f * log10(intensity) : -1e6f;
-            float nr, ng, nb;
-            gainToColor(gain, &nr, &ng, &nb);
-
             float nextYp = imageHeight - (y2 + 1.0f) / 2.0f * imageHeight;
-            
-            nvgBeginPath(vg);
-            nvgMoveTo(vg, xp, yp);
-            nvgLineTo(vg, xp, nextYp);
-            nvgStrokePaint(vg,
-                    nvgLinearGradient(
-                        vg,
-                        xp, yp, xp, nextYp,
-                        nvgRGBf(r, g, b),
-                        nvgRGBf(nr, ng, nb)));
-            nvgStrokeWidth(vg, 1.0f);
-            nvgStroke(vg);
+           
+            if (std::abs(std::round(yp) - std::round(nextYp)) >= 1) {
+                float gain = intensity > 1e-10f ? 20.0f * log10(intensity) : -1e6f;
+                float nr, ng, nb;
+                gainToColor(gain, &nr, &ng, &nb);
 
-            yp = nextYp;
-            r = nr; g = ng; b = nb;
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, xp, yp);
+                nvgLineTo(vg, xp, nextYp);
+                nvgStrokePaint(vg,
+                        nvgLinearGradient(
+                            vg,
+                            xp, yp, xp, nextYp,
+                            nvgRGBf(r, g, b),
+                            nvgRGBf(nr, ng, nb)));
+                nvgStrokeWidth(vg, 1.0f);
+                nvgStroke(vg);
+
+                yp = nextYp;
+                r = nr; g = ng; b = nb;
+            }
         }
     }
 

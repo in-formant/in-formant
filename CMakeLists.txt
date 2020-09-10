@@ -126,6 +126,14 @@ check_low_level_exit(
 )
 
 include(ExternalProject)
+set(SOXR_EXTRA_ARGS)
+if(ANDROID)
+    set(SOXR_EXTRA_ARGS
+        -DAVCODEC_LIBRARIES=/usr/$ENV{target}/lib/libavcodec.so
+        -DAVUTIL_LIBRARIES=/usr/$ENV{target}/lib/libavutil.so
+        -DAVCODEC_INCLUDE_DIRS=/usr/$ENV{target}/include
+        -DAVUTIL_INCLUDE_DIRS=/usr/$ENV{target}/include)
+endif()
 ExternalProject_Add(
     soxr
     SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/soxr
@@ -134,8 +142,9 @@ ExternalProject_Add(
         -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/soxr
         -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=OFF -DWITH_OPENMP=OFF -DWITH_LSR_BINDINGS=OFF
         -DWITH_VR32=OFF -DWITH_CR32=ON -DWITH_CR64=OFF -DWITH_CR32S=ON
-        -DWITH_PFFFT=OFF -DWITH_AVFFT=OFF
+        -DWITH_PFFFT=OFF -DWITH_AVFFT=ON
         -DWITH_DEV_TRACE=OFF -Wno-dev
+        ${SOXR_EXTRA_ARGS}
 )
 set(SOXR_INCLUDE_DIR ${PROJECT_BINARY_DIR}/soxr/include)
 set(SOXR_LIBRARIES -L${PROJECT_BINARY_DIR}/soxr/lib -lsoxr)
@@ -416,9 +425,9 @@ if(RENDERER_USE_NVG)
     target_link_libraries(speech-analysis PUBLIC nanovg)
     target_compile_definitions(speech-analysis PUBLIC -DRENDERER_USE_NVG=1)
     if(ANDROID)
-        find_package(OpenGLES2 QUIET)
-        target_include_directories(speech-analysis SYSTEM PUBLIC ${OpenGLES2_INCLUDE_DIRS})
-        target_link_libraries(speech-analysis PUBLIC ${OpenGLES2_LIBRARIES})
+        find_package(OpenGLES3 QUIET)
+        target_include_directories(speech-analysis SYSTEM PUBLIC ${OpenGLES3_INCLUDE_DIRS})
+        target_link_libraries(speech-analysis PUBLIC ${OpenGLES3_LIBRARIES})
     elseif(EMSCRIPTEN)
         find_package(OpenGLES2 QUIET)
         target_include_directories(speech-analysis SYSTEM PUBLIC ${OpenGLES2_INCLUDE_DIRS})
@@ -447,7 +456,7 @@ set(RESAMPLER_QUALITY SOXR_HQ)
 if(EMSCRIPTEN)
     pkg_check_modules(FT2 REQUIRED freetype2)
     
-    set(EMLD_FLAGS "-s FULL_ES2=1 -s \"DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\'$autoResumeAudioContext\']\" --preload-file ${PROJECT_SOURCE_DIR}/Montserrat.ttf@Montserrat.ttf") 
+    set(EMLD_FLAGS "-s FULL_ES2=1 -s \"DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\'$autoResumeAudioContext\']\" --preload-file ${PROJECT_SOURCE_DIR}/Montserrat.otf@Montserrat.otf") 
 
     set_target_properties(speech-analysis PROPERTIES LINK_FLAGS "${EMLD_FLAGS}")
     #target_compile_options(speech-analysis PUBLIC -g4 --source-map-base /)
@@ -459,7 +468,6 @@ if(ANDROID)
         target_sources(speech-analysis PUBLIC src/modules/target/sdl2/sdl2_android.cpp)
     endif()
     target_link_libraries(speech-analysis PUBLIC android)
-    set(RESAMPLER_QUALITY SOXR_QQ)
 endif()
 
 if(UNIX AND NOT APPLE)
