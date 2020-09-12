@@ -62,7 +62,7 @@ void SDL2_NanoVG::deleteContext(NVGcontext *ctx)
 void SDL2_NanoVG::createGLContext()
 {
     mGlContext = SDL_GL_CreateContext(*mPtrWindow);
-    SDL_GL_SetSwapInterval(1); // Enable vsync
+    //SDL_GL_SetSwapInterval(1); // Enable vsync
 }
 
 void SDL2_NanoVG::destroyGLContext()

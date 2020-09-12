@@ -1,5 +1,6 @@
 #include "tail.h"
 #include <cstring>
+#include <iostream>
 
 using namespace Nodes;
 

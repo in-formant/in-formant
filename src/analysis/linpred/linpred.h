@@ -7,6 +7,7 @@ namespace Analysis {
     
     class LinpredSolver {
     public:
+        virtual ~LinpredSolver() {}
         virtual std::vector<float> solve(const float *x, int length, int lpcOrder, float *gain) = 0;
     };
 

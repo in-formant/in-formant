@@ -4,6 +4,11 @@
 #include <fftw3.h>
 #include <complex>
 
+#if defined(EMSCRIPTEN)
+#undef FFTW_MEASURE
+#define FFTW_MEASURE FFTW_ESTIMATE
+#endif
+
 namespace std
 {
     using dcomplex = complex<double>;

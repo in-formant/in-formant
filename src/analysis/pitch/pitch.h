@@ -16,6 +16,7 @@ namespace Analysis {
 
     class PitchSolver {
     public:
+        virtual ~PitchSolver() {}
         virtual PitchResult solve(const float *data, int length, int sampleRate) = 0;
     };
 

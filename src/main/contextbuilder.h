@@ -17,7 +17,7 @@ namespace Main {
 
             ctx->audio = std::make_unique<AudioType>();
             ctx->target = std::make_unique<TargetType>(rendererType);
-            checkBuildRenderer(rendererType);
+            checkBuildRenderer(*ctx);
 
             ctx->captureBuffer = std::make_unique<Audio::Buffer>(
                     captureSampleRate, captureDuration);
@@ -104,9 +104,9 @@ namespace Main {
         }
 
         template<typename RendererType, typename ProviderFunc>
-        void buildRenderer(Context& ctx, ProviderFunc& provider) {
-            ctx->renderer = std::make_unique<RendererType>();
-            ctx->renderer->setProvider(ctx->target->*provider());
+        void buildRenderer(Context& ctx, ProviderFunc provider) {
+            ctx.renderer = std::make_unique<RendererType>();
+            ctx.renderer->setProvider((ctx.target.get()->*provider)());
         }
 
         void checkBuildRenderer(Context& ctx) {
@@ -115,7 +115,7 @@ namespace Main {
 #if ! RENDERER_USE_OPENGL
                 throwRendererError("OpenGL");
 #else
-                buildRenderer<Renderer::OpenGL>(&Target::AbstractBase::getOpenGLProvider);
+                buildRenderer<Renderer::OpenGL>(ctx, &Target::AbstractBase::getOpenGLProvider);
                 break;
 #endif
             
@@ -123,7 +123,7 @@ namespace Main {
 #if ! RENDERER_USE_GLES
                 throwRendererError("OpenGL ES");
 #else
-                buildRenderer<Renderer::GLES>(&Target::AbstractBase::getOpenGLProvider);
+                buildRenderer<Renderer::GLES>(ctx, &Target::AbstractBase::getOpenGLProvider);
                 break;
 #endif
 
@@ -131,7 +131,7 @@ namespace Main {
 #if ! RENDERER_USE_VULKAN
                 throwRendererError("Vulkan");
 #else
-                buildRenderer<Renderer::Vulkan>(&Target::AbstractBase::getVulkanProvider);
+                buildRenderer<Renderer::Vulkan>(ctx, &Target::AbstractBase::getVulkanProvider);
                 break;
 #endif
 
@@ -139,7 +139,7 @@ namespace Main {
 #if ! RENDERER_USE_SDL2
                 throwRendererError("SDL2");
 #else
-                buildRenderer<Renderer::SDL2>(&Target::AbstractBase::getSDL2Provider);
+                buildRenderer<Renderer::SDL2>(ctx, &Target::AbstractBase::getSDL2Provider);
                 break;
 #endif
 
@@ -147,7 +147,7 @@ namespace Main {
 #if ! RENDERER_USE_NVG
                 throwRendererError("NanoVG");
 #else
-                buildRenderer<Renderer::NanoVG>(&Target::AbstractBase::getNvgProvider);
+                buildRenderer<Renderer::NanoVG>(ctx, &Target::AbstractBase::getNvgProvider);
                 break;
 #endif
             }

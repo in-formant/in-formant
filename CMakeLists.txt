@@ -22,7 +22,6 @@ include(${CMAKE_SUPPORT_DIR}/CheckLowLevelExit.cmake)
 
 set(SOURCES
     src/main.cpp
-    src/main/context.cpp
     src/main/context.h
     src/main/contextbuilder.h
     src/main/contextmanager.cpp
@@ -157,7 +156,7 @@ ExternalProject_Add(
         -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/soxr
         -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=OFF -DWITH_OPENMP=OFF -DWITH_LSR_BINDINGS=OFF
         -DWITH_VR32=OFF -DWITH_CR32=ON -DWITH_CR64=OFF -DWITH_CR32S=ON
-        -DWITH_PFFFT=OFF -DWITH_AVFFT=ON
+        -DWITH_PFFFT=ON -DWITH_AVFFT=ON 
         -DWITH_DEV_TRACE=OFF -Wno-dev
         ${SOXR_EXTRA_ARGS}
 )
@@ -471,12 +470,14 @@ endif()
 set(RESAMPLER_QUALITY SOXR_HQ)
 
 if(EMSCRIPTEN)
+    set(RESAMPLER_QUALITY SOXR_QQ)
+
     pkg_check_modules(FT2 REQUIRED freetype2)
    
     set(EM_FLAGS "-sASSERTIONS=0" "-sEMULATE_FUNCTION_POINTER_CASTS=1" "-sERROR_ON_UNDEFINED_SYMBOLS=1" "-sUSE_PTHREADS=1" "-sFULL_ES2=1")
 
     set(EMCC_FLAGS ${EM_FLAGS})
-    set(EMLD_FLAGS ${EM_FLAGS}  "-s \"DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\'$autoResumeAudioContext\']\"" "--preload-file ${PROJECT_SOURCE_DIR}/Montserrat.otf@Montserrat.otf")
+    set(EMLD_FLAGS ${EM_FLAGS} "-s EXPORTED_FUNCTIONS=[\'_main\',\'_webaudio_process_playback\',\'_webaudio_process_capture\']" "-s EXPORTED_RUNTIME_METHODS=[\'ccall\']" "-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\'$autoResumeAudioContext\']" "--preload-file ${PROJECT_SOURCE_DIR}/Montserrat.otf@Montserrat.otf")
 
     target_compile_options(speech-analysis PUBLIC ${EMCC_FLAGS} -g -g4 --source-map-base /)
     target_link_libraries(speech-analysis PUBLIC ${FT2_LDFLAGS} ${EMLD_FLAGS} -g -g4 "--source-map-base /")
@@ -496,7 +497,11 @@ if(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
 endif()
 
 if(WIN32)
-    target_sources(speech-analysis PUBLIC src/backtrace/windows.cpp)
+    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+        target_sources(speech-analysis PUBLIC src/backtrace/windows.cpp)
+    elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        target_sources(speech-analysis PUBLIC src/backtrace/windows64.cpp)
+    endif()
     target_link_libraries(speech-analysis PUBLIC ntdll dbghelp)
 endif()
 
