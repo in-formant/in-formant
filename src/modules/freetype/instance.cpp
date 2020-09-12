@@ -1,6 +1,7 @@
 #include "freetype.h"
 #include "../target/base/base.h"
 #include <stdexcept>
+#include <cmath>
 
 using namespace Module::Freetype;
 

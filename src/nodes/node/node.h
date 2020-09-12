@@ -23,6 +23,16 @@ namespace Nodes {
         const std::vector<NodeIOType> getInputTypes() const;
         const std::vector<NodeIOType> getOutputTypes() const;
 
+        template<typename T>
+        inline T *as() {
+            return static_cast<T *>(this); 
+        }
+
+        template<typename T>
+        inline const T *as() const {
+            return static_cast<const T *>(this);
+        }
+
     private:
         std::vector<NodeIOType> mInputTypes;
         std::vector<NodeIOType> mOutputTypes;

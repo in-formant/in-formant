@@ -1,4 +1,4 @@
-#include "modules/modules.h"
+i#include "modules/modules.h"
 #include "nodes/nodes.h"
 #include "analysis/analysis.h"
 #include "backtrace/backtrace.h"
@@ -49,6 +49,7 @@ constexpr int uiFontSize = 10;
 constexpr int uiFontSize = 16;
 #endif
 
+#if ! defined(__EMSCRIPTEN__)
 static std::atomic_bool signalCaught(false);
 static std::atomic_int signalStatus;
 
@@ -67,6 +68,7 @@ static void signalHandler(int signal) {
 
     exit(EXIT_SUCCESS);
 }
+#endif
 
 static void playbackCallback(float *out, int len, void *data) {
     auto pTime = static_cast<int *>(data);
@@ -84,9 +86,11 @@ int main(int argc, char **argv)
 {
     start_logger("SpeechAnalysis");
 
+#if ! defined(__EMSCRIPTEN__)
     std::signal(SIGTERM, signalHandler);
     std::signal(SIGINT, signalHandler);
     registerCrashHandler();
+#endif
     
     constexpr auto type = Renderer::Type::NanoVG;
     
@@ -112,6 +116,8 @@ int main(int argc, char **argv)
     audio.reset(new Audio::Alsa);
 #elif defined(_WIN32) || defined(__APPLE__)
     audio.reset(new Audio::PortAudio);
+#elif defined(__EMSCRIPTEN__)
+    audio.reset(new Audio::WebAudio);
 #endif
     audio->initialize();
     audio->refreshDevices();
@@ -237,7 +243,7 @@ int main(int argc, char **argv)
     std::deque<std::vector<std::array<float, 2>>>  spectrogramTrack(spectrogramCount);
     std::deque<float>                              pitchTrack(spectrogramCount);
     std::deque<std::vector<Analysis::FormantData>> formantTrack(spectrogramCount);
-     
+
     while (!target->shouldQuit()) {
         auto tLoopStart = Clock::now();
 
@@ -251,7 +257,7 @@ int main(int argc, char **argv)
             renderer->setWindowSize(targetWidth, targetHeight);
         }
 
-        //playbackQueue->pushIfNeeded(&sineTime);
+        playbackQueue->pushIfNeeded(&sineTime);
 
         if (audio->needsTicking()) {
             audio->tickAudio();
@@ -416,9 +422,11 @@ int main(int argc, char **argv)
             std::cout << "!!Loop cycle took too long (must be less than " << testLoopInterval.count() << " ms)" << std::endl;
         }
 
+#if ! defined(__EMSCRIPTEN__)
         if (signalCaught.load()) {
             break;
         }
+#endif
     }
 
     delete[] ndi;

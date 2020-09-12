@@ -25,6 +25,9 @@ void Oboe::initialize()
     jmethodID methodId = env->GetMethodID(clazz, "requestAudioPermission", "()V");
 
     env->CallVoidMethod(activity, methodId);
+
+    mDefaultCaptureDeviceIndex = 0;
+    mDefaultPlaybackDeviceIndex = 0;
 }
 
 void Oboe::terminate()
@@ -36,10 +39,14 @@ void Oboe::refreshDevices()
     mCaptureDevices.clear();
     mPlaybackDevices.clear();
     
-    Device device(Backend::Oboe);
+    Device capture(Backend::Oboe);
+    capture.name = "Capture device";
 
-    mCaptureDevices.push_back(device);
-    mPlaybackDevices.push_back(device);
+    Device playback(Backend::Oboe);
+    playback.name = "Playback device";
+
+    mCaptureDevices.push_back(capture);
+    mPlaybackDevices.push_back(playback);
 }
 
 const std::vector<Device>& Oboe::getCaptureDevices() const

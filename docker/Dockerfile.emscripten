@@ -52,8 +52,9 @@ RUN git clone --depth=1 --branch version_22 https://github.com/emscripten-ports/
 RUN mkdir -p SDL2/build && \
         cd SDL2/build && \
         . /emsdk/emsdk_env.sh && \
-        emconfigure ../configure --host=wasm32-unknown-emscripten --enable-static --disable-shared --prefix=/emusr --disable-assembly --disable-threads --disable-cpuinfo && \
-        emmake make install -j$(nproc)
+        emconfigure ../configure --host=asmjs-unknown-emscripten --disable-assembly --enable-threads --enable-pthreads --disable-cpuinfo CFLAGS="-O2 -Wno-warn-absolute-paths -Wdeclaration-after-statement -Werror=declaration-after-statement -s USE_PTHREADS=1" LDFLAGS="-s USE_PTHREADS=1" --prefix=/emusr && \
+        emmake make -j$(nproc) && \
+        emmake make install 
 
 # Build Freetype2
 ENV ver=2.10.2
@@ -67,30 +68,11 @@ RUN cd freetype-$ver && \
         emmake make install -j$(nproc)
 COPY emscripten-freetype-config /emusr/bin/freetype-config
 
-# Build SDL2_ttf
-ENV ver=2.0.15
-RUN wget https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-$ver.tar.gz && \
-        tar xf SDL2_ttf-$ver.tar.gz
-RUN cd SDL2_ttf-$ver && \
-        mkdir build && \
-        cd build && \
-        . /emsdk/emsdk_env.sh && \
-        emconfigure ../configure --enable-static --disable-shared --disable-freetypetest --with-sdl-prefix=/emusr FT2_CFLAGS="`$PKG_CONFIG freetype2 --cflags`" FT2_LIBS="`$PKG_CONFIG freetype2 --libs`" --prefix=/emusr && \
-        emmake make install -j$(nproc)
-
-# Build SDL2_gfx
-ENV ver=1.0.4
-RUN wget http://www.ferzkopp.net/Software/SDL2_gfx/SDL2_gfx-$ver.tar.gz && \
-        tar xf SDL2_gfx-$ver.tar.gz
-RUN cd SDL2_gfx-$ver && \
-        mkdir build && \
-        cd build && \
-        . /emsdk/emsdk_env.sh && \
-        emconfigure ../configure --enable-static --disable-shared --disable-mmx --with-sdl-prefix=/emusr --prefix=/emusr && \
-        emmake make install -j$(nproc)
+COPY deploy-emscripten.sh /usr/bin/deploy-emscripten.sh
 
 CMD cd /build && \
         . /emsdk/emsdk_env.sh && \
+        export cross="emcmake " && \
         emcmake cmake \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
             -DPKG_CONFIG_EXECUTABLE=$PKG_CONFIG \
