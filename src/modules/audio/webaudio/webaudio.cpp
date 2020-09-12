@@ -106,7 +106,7 @@ void WebAudio::openCaptureStream(const Device *pDevice)
         device.buffer = Module._malloc(device.bufferSize);
         device.bufferView = new Float32Array(Module.HEAPF32.buffer, device.buffer, device.bufferSize);
 
-        device.scriptNode = device.context.createScriptProcessor(bufferSize, 1, 1);
+        device.scriptNode = device.context.createScriptProcessor(bufferSize, channels, channels);
 
         device.scriptNode.onaudioprocess = function(e) {
             if (device.buffer === undefined) {
@@ -200,12 +200,12 @@ void WebAudio::openPlaybackStream(const Device *pDevice)
 
         device.context = new (window.AudioContext || window.webkitAudioContext)({sampleRate:sampleRate});
         device.context.suspend();
-
+        
         device.bufferSize = channels * bufferSize * 4;
         device.buffer = Module._malloc(device.bufferSize);
         device.bufferView = new Float32Array(Module.HEAPF32.buffer, device.buffer, device.bufferSize);
 
-        device.scriptNode = device.context.createScriptProcessor(bufferSize, 1, 1);
+        device.scriptNode = device.context.createScriptProcessor(bufferSize, channels, channels);
 
         device.scriptNode.onaudioprocess = function(e) {
             if (device.buffer === undefined) {
@@ -270,12 +270,12 @@ void WebAudio::closePlaybackStream()
     });
 }
 
-void Module::Audio::webaudio_process_capture(WebAudio *self, int32_t framesToProcess, const float *buffer)
+void webaudio_process_capture(WebAudio *self, int32_t framesToProcess, const float *buffer)
 {
     self->mCaptureBuffer->push(buffer, framesToProcess);
 }
 
-void Module::Audio::webaudio_process_playback(WebAudio *self, int32_t framesToProcess, float *buffer)
+void webaudio_process_playback(WebAudio *self, int32_t framesToProcess, float *buffer)
 {
     self->mPlaybackQueue->pull(buffer, framesToProcess);
 }

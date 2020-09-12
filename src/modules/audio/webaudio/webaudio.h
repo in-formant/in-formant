@@ -6,11 +6,15 @@
 #include <emscripten/val.h>
 
 namespace Module::Audio {
-
     class WebAudio;
+}
 
-    void webaudio_process_capture(WebAudio *self, int32_t framesToProcess, const float *buffer);
-    void webaudio_process_playback(WebAudio *self, int32_t framesToProcess, float *buffer);
+extern "C" {
+void webaudio_process_capture(Module::Audio::WebAudio *self, int32_t framesToProcess, const float *buffer);
+void webaudio_process_playback(Module::Audio::WebAudio *self, int32_t framesToProcess, float *buffer);
+}
+
+namespace Module::Audio {
 
     class WebAudio : public AbstractBase {
     public:
@@ -49,8 +53,8 @@ namespace Module::Audio {
         Buffer *getBuffer() { return mCaptureBuffer; }
         Queue *getQueue() { return mPlaybackQueue; }
 
-        friend void webaudio_process_capture(WebAudio *self, int32_t framesToProcess, const float *buffer);
-        friend void webaudio_process_playback(WebAudio *self, int32_t framesToProcess, float *buffer);
+        friend void ::webaudio_process_capture(WebAudio *self, int32_t framesToProcess, const float *buffer);
+        friend void ::webaudio_process_playback(WebAudio *self, int32_t framesToProcess, float *buffer);
     };
 
 }

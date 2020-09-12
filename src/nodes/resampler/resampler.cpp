@@ -1,6 +1,7 @@
 #include "resampler.h"
 #include <memory>
 #include <cstring>
+#include <iostream>
 
 using namespace Nodes;
 
