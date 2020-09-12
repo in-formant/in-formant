@@ -2,6 +2,7 @@
 
 #include <map>
 #include <utility>
+#include <cmath>
 
 using namespace Module::Renderer;
 

@@ -22,6 +22,11 @@ include(${CMAKE_SUPPORT_DIR}/CheckLowLevelExit.cmake)
 
 set(SOURCES
     src/main.cpp
+    src/main/context.cpp
+    src/main/context.h
+    src/main/contextbuilder.h
+    src/main/contextmanager.cpp
+    src/main/contextmanager.h
     src/backtrace/backtrace.h
     src/android_redirect_log.cpp
     src/modules/audio/base/base.cpp
@@ -126,18 +131,28 @@ check_low_level_exit(
 )
 
 include(ExternalProject)
-set(SOXR_EXTRA_ARGS)
 if(ANDROID)
     set(SOXR_EXTRA_ARGS
+        -DBUILD_SHARED_LIBS=ON
         -DAVCODEC_LIBRARIES=/usr/$ENV{target}/lib/libavcodec.so
         -DAVUTIL_LIBRARIES=/usr/$ENV{target}/lib/libavutil.so
         -DAVCODEC_INCLUDE_DIRS=/usr/$ENV{target}/include
         -DAVUTIL_INCLUDE_DIRS=/usr/$ENV{target}/include)
+    set(SOXR_CMAKE $ENV{cross}cmake)
+elseif(EMSCRIPTEN)
+    set(SOXR_EXTRA_ARGS
+        -DBUILD_SHARED_LIBS=OFF
+        -DCMAKE_MODULE_PATH=/emsdk/upstream/emscripten/cmake/Modules)
+    set(SOXR_CMAKE emcmake cmake)
+else()
+    set(SOXR_EXTRA_ARGS
+        -DBUILD_SHARED_LIBS=ON)
+    set(SOXR_CMAKE $ENV{cross}cmake)
 endif()
 ExternalProject_Add(
     soxr
     SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/soxr
-    CMAKE_COMMAND $ENV{cross}cmake
+    CMAKE_COMMAND ${SOXR_CMAKE}
     CMAKE_ARGS
         -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/soxr
         -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=OFF -DWITH_OPENMP=OFF -DWITH_LSR_BINDINGS=OFF
@@ -200,6 +215,14 @@ if(ANDROID)
         src/modules/audio/oboe/oboe.cpp
         src/modules/audio/oboe/oboe.h
     )
+endif()
+
+if(EMSCRIPTEN)
+    message(STATUS "Including audio module: webaudio")
+    set(AUDIO_USE_WEBAUDIO TRUE)
+    list(APPEND SOURCES
+        src/modules/audio/webaudio/webaudio.cpp
+        src/modules/audio/webaudio/webaudio.h)
 endif()
 
 ### SEARCH TARGET MODULES
@@ -274,15 +297,6 @@ endif()
 if(sdl2_FOUND)
     message(STATUS "Including renderer module: sdl2")
     set(RENDERER_USE_SDL2 TRUE)
-    ExternalProject_Add(
-        SDL2_gfx
-        SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/SDL2_gfx
-        CMAKE_COMMAND $ENV{cross}cmake
-        CMAKE_ARGS
-            -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/SDL2_gfx
-    )
-    set(SDL2_gfx_INCLUDE_DIR ${PROJECT_BINARY_DIR}/SDL2_gfx/include)
-    set(SDL2_gfx_LIBRARIES -L${PROJECT_BINARY_DIR}/SDL2_gfx/lib -lSDL2_gfx)
     list(APPEND SOURCES
         src/modules/renderer/sdl2/sdl2.cpp
         src/modules/renderer/sdl2/sdl2.h
@@ -388,6 +402,10 @@ if(AUDIO_USE_OBOE)
     target_compile_definitions(speech-analysis PUBLIC -DAUDIO_USE_OBOE=1)
 endif()
 
+if(AUDIO_USE_WEBAUDIO)
+    target_compile_definitions(speech-analysis PUBLIC -DAUDIO_USE_WEBAUDIO=1)
+endif()
+
 if(TARGET_USE_SDL2)
     target_include_directories(speech-analysis SYSTEM PUBLIC ${sdl2_INCLUDE_DIRS})
     target_link_libraries(speech-analysis PUBLIC ${sdl2_LDFLAGS})
@@ -414,10 +432,9 @@ if(RENDERER_USE_VULKAN)
 endif()
 
 if(RENDERER_USE_SDL2)
-    add_dependencies(speech-analysis SDL2_gfx)
-    target_include_directories(speech-analysis SYSTEM PUBLIC ${sdl2_INCLUDE_DIRS} ${SDL2_gfx_INCLUDE_DIR})
-    target_link_libraries(speech-analysis PUBLIC ${sdl2_LDFLAGS} ${SDL2_gfx_LIBRARIES})
-    target_compile_definitions(speech-analysis PUBLIC -DRENDERER_USE_SDL2=1)
+    target_include_directories(speech-analysis SYSTEM PUBLIC ${sdl2_INCLUDE_DIRS})
+    target_link_libraries(speech-analysis PUBLIC ${sdl2_LDFLAGS})
+    target_compile_definitions(speech-analysis PUBLIC -DTARGET_USE_SDL2=1)
 endif()
 
 if(RENDERER_USE_NVG)
@@ -429,9 +446,9 @@ if(RENDERER_USE_NVG)
         target_include_directories(speech-analysis SYSTEM PUBLIC ${OpenGLES3_INCLUDE_DIRS})
         target_link_libraries(speech-analysis PUBLIC ${OpenGLES3_LIBRARIES})
     elseif(EMSCRIPTEN)
-        find_package(OpenGLES2 QUIET)
-        target_include_directories(speech-analysis SYSTEM PUBLIC ${OpenGLES2_INCLUDE_DIRS})
-        target_link_libraries(speech-analysis PUBLIC ${OpenGLES2_LIBRARIES})
+        #find_package(OpenGLES2 QUIET)
+        #target_include_directories(speech-analysis SYSTEM PUBLIC ${OpenGLES2_INCLUDE_DIRS})
+        #target_link_libraries(speech-analysis PUBLIC ${OpenGLES2_LIBRARIES})
     elseif(UNIX OR WIN32)
         set(OpenGL_GL_PREFERENCE GLVND)
         find_package(OpenGL QUIET)
@@ -455,12 +472,14 @@ set(RESAMPLER_QUALITY SOXR_HQ)
 
 if(EMSCRIPTEN)
     pkg_check_modules(FT2 REQUIRED freetype2)
-    
-    set(EMLD_FLAGS "-s FULL_ES2=1 -s \"DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\'$autoResumeAudioContext\']\" --preload-file ${PROJECT_SOURCE_DIR}/Montserrat.otf@Montserrat.otf") 
+   
+    set(EM_FLAGS "-sASSERTIONS=0" "-sEMULATE_FUNCTION_POINTER_CASTS=1" "-sERROR_ON_UNDEFINED_SYMBOLS=1" "-sUSE_PTHREADS=1" "-sFULL_ES2=1")
 
-    set_target_properties(speech-analysis PROPERTIES LINK_FLAGS "${EMLD_FLAGS}")
-    #target_compile_options(speech-analysis PUBLIC -g4 --source-map-base /)
-    target_link_libraries(speech-analysis PUBLIC ${FT2_LDFLAGS})
+    set(EMCC_FLAGS ${EM_FLAGS})
+    set(EMLD_FLAGS ${EM_FLAGS}  "-s \"DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\'$autoResumeAudioContext\']\"" "--preload-file ${PROJECT_SOURCE_DIR}/Montserrat.otf@Montserrat.otf")
+
+    target_compile_options(speech-analysis PUBLIC ${EMCC_FLAGS} -g -g4 --source-map-base /)
+    target_link_libraries(speech-analysis PUBLIC ${FT2_LDFLAGS} ${EMLD_FLAGS} -g -g4 "--source-map-base /")
 endif()
 
 if(ANDROID)
@@ -470,7 +489,7 @@ if(ANDROID)
     target_link_libraries(speech-analysis PUBLIC android)
 endif()
 
-if(UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
     target_sources(speech-analysis PUBLIC src/backtrace/unix.cpp)
     target_link_libraries(speech-analysis PUBLIC dl)
     set_target_properties(speech-analysis PROPERTIES LINK_FLAGS "-pthread -static-libstdc++")

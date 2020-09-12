@@ -3,8 +3,6 @@
 
 #include "../../freetype/freetype.h"
 
-#include <glm/glm.hpp>
-
 #ifdef RENDERER_USE_VULKAN
 #   define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #   define VULKAN_HPP_TYPESAFE_CONVERSION 1
@@ -33,8 +31,6 @@
 #include <map>
 
 namespace Module::Renderer {
-
-    constexpr uint64_t deviceMemory = 1024ULL * 1024ULL * 128ULL;
 
     enum class Type {
         OpenGL,
@@ -93,7 +89,6 @@ namespace Module::Renderer {
 #endif
     };
 
-    using Vertex = glm::vec2;
     class Parameters;
 
     struct GraphRenderDataPoint {

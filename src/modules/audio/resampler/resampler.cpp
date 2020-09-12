@@ -119,6 +119,8 @@ void Resampler::process(const float *pIn, int inLength, float *pOut, int outLeng
 
 void Resampler::createResampler()
 {
+    std::cout << "Creating resampler: " << mInRate << " to " << mOutRate << std::endl;
+
     mSoxr = soxr_create(mInRate, mOutRate, 1, &err, &mSoxrIoSpec, &mSoxrQualitySpec, &mSoxrRuntimeSpec);
     checkError();
     

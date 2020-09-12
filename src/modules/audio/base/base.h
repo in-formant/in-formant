@@ -48,6 +48,12 @@ namespace Module::Audio {
         // Nothing.
 #endif
     };
+    
+    struct dev_webaudio_t {
+#ifdef AUDIO_USE_WEBAUDIO
+        // Nothing.
+#endif
+    };
 
     enum class Backend {
         Dummy,
@@ -55,6 +61,7 @@ namespace Module::Audio {
         Pulse,
         PortAudio,
         Oboe,
+        WebAudio,
     };
 
     struct Device {
@@ -89,17 +96,21 @@ namespace Module::Audio {
             case Backend::Oboe:
                 oboe = o.oboe;
                 break;
+            case Backend::WebAudio:
+                webaudio = o.webaudio;
+                break;
             }
         }
 
         Backend backend;
         std::string name;
         union {
-            dev_dummy_t dummy;
-            dev_alsa_t alsa;
-            dev_pulse_t pulse;
+            dev_dummy_t     dummy;
+            dev_alsa_t      alsa;
+            dev_pulse_t     pulse;
             dev_portaudio_t portaudio;
-            dev_oboe_t oboe;
+            dev_oboe_t      oboe;
+            dev_webaudio_t  webaudio;
         };
     };
 

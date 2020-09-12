@@ -1,5 +1,6 @@
 #include "nanovg.h"
 #include <iostream>
+#include <cmath>
 
 using namespace Module::Renderer;
 

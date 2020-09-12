@@ -26,4 +26,8 @@
 #   include "oboe/oboe.h"
 #endif
 
+#ifdef AUDIO_USE_WEBAUDIO
+#   include "webaudio/webaudio.h"
+#endif
+
 #endif // MODULES_AUDIO_H
