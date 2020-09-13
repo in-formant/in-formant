@@ -1,5 +1,4 @@
 #include "freetype.h"
-#include "../target/base/base.h"
 #include <stdexcept>
 #include <cmath>
 
@@ -12,15 +11,9 @@ void Module::Freetype::checkError(FT_Error error)
     }
 }
 
-FTInstance::FTInstance(Module::Target::AbstractBase *target)
+FTInstance::FTInstance()
 {
     FT_Init_FreeType(&mLibrary);
-   
-    float hdpi, vdpi; 
-    target->getDisplayDPI(&hdpi, &vdpi, nullptr);
-
-    mHorizontalDPI = std::round(hdpi);
-    mVerticalDPI = std::round(vdpi);
 }
 
 FTInstance::~FTInstance()
@@ -39,7 +32,7 @@ FontFile& FTInstance::font(const std::string& filename)
         return * it->second;
     }
 
-    mFontFiles.emplace(filename, new FontFile(mLibrary, filename, mHorizontalDPI, mVerticalDPI));
+    mFontFiles.emplace(filename, new FontFile(mLibrary, filename));
     
     return * mFontFiles.find(filename)->second;
 }

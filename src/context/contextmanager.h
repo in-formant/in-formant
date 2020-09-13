@@ -12,6 +12,16 @@ namespace Main {
 
     using namespace Module;
 
+    class ContextManager;
+
+    struct RenderingContextInfo {
+        using CallbackType = std::function<void (RenderingContext)>;
+
+        std::string  name;
+        CallbackType renderCallback; 
+        CallbackType eventCallback;
+    };
+
     class ContextManager {
     public:
         ContextManager(std::unique_ptr<Context>&& ctx);
@@ -23,8 +33,10 @@ namespace Main {
 
         void loadSettings();
 
-        void updateRendererTargetSize();
-        void loadRenderingParameters(Renderer::Parameters *p);
+        void updateRendererTargetSize(RenderingContext& rctx);
+        void updateRendererParameters(RenderingContext& rctx);
+    
+        void createRenderingContexts(const std::initializer_list<std::string>& names);
 
         void createAudioNodes();
         void createAudioIOs();
@@ -34,8 +46,10 @@ namespace Main {
 
         void updateNewData();
 
-        void renderStats();
         void render();
+        void renderSpectrogram(RenderingContext& rctx);
+        void renderFFTSpectrum(RenderingContext& rctx);
+        void renderOscilloscope(RenderingContext& rctx);
 
         void mainBody();
 
@@ -47,6 +61,9 @@ namespace Main {
         std::unordered_map<std::string, std::unique_ptr<Nodes::Node>>                nodes;
         std::unordered_map<std::string, std::vector<std::unique_ptr<Nodes::NodeIO>>> nodeIOs;
         Nodes::NodeIO **ndi, **ndo;
+
+        std::map<std::string, RenderingContextInfo> renderingContextInfos;
+        bool endLoop;
 
         int analysisDuration;
         int analysisMaxFrequency;

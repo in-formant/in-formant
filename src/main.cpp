@@ -2,9 +2,9 @@
 #include "nodes/nodes.h"
 #include "analysis/analysis.h"
 #include "backtrace/backtrace.h"
-#include "main/context.h"
-#include "main/contextbuilder.h"
-#include "main/contextmanager.h"
+#include "context/context.h"
+#include "context/contextbuilder.h"
+#include "context/contextmanager.h"
 #include <iostream>
 #include <atomic>
 #include <memory>

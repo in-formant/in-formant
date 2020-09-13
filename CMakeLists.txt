@@ -22,10 +22,10 @@ include(${CMAKE_SUPPORT_DIR}/CheckLowLevelExit.cmake)
 
 set(SOURCES
     src/main.cpp
-    src/main/context.h
-    src/main/contextbuilder.h
-    src/main/contextmanager.cpp
-    src/main/contextmanager.h
+    src/context/context.h
+    src/context/contextbuilder.h
+    src/context/contextmanager.cpp
+    src/context/contextmanager.h
     src/backtrace/backtrace.h
     src/android_redirect_log.cpp
     src/modules/audio/base/base.cpp
