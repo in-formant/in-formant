@@ -12,6 +12,12 @@
 #include <csignal>
 #include <thread>
 
+#if defined(__APPLE__)
+#   include <mach-o/dyld.h>
+#   include <unistd.h>
+#   include <libgen.h>
+#endif
+
 using namespace Module;
 using namespace std::chrono_literals;
 
@@ -48,6 +54,17 @@ int main(int argc, char **argv)
     std::signal(SIGTERM, signalHandler);
     std::signal(SIGINT, signalHandler);
     registerCrashHandler();
+#endif
+
+#if defined(__APPLE__)
+    uint32_t bufSize = 32;
+    std::vector<char> exePath(bufSize);
+    int ret = _NSGetExecutablePath(exePath.data(), &bufSize);
+    if (ret < 0) {
+        exePath.resize(bufSize);
+        _NSGetExecutablePath(exePath.data(), &bufSize);
+    }
+    chdir(dirname(exePath.data()));
 #endif
     
     constexpr int testToneFrequency = 200;

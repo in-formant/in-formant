@@ -1,0 +1,61 @@
+FROM ubuntu:focal
+ENV container docker
+RUN chmod 1777 /tmp
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install build tools.
+RUN apt-get update -yy && apt-get install -yy \
+            build-essential cmake clang \
+            gcc g++ zlib1g-dev libmpc-dev libmpfr-dev libgmp-dev \
+            git wget patch \
+            libssl-dev \
+            liblzma-dev \
+            libxml2-dev \
+            libllvm7 \
+            llvm
+
+# Install osxcross.
+COPY MacOSX10.15.sdk.tar.xz /
+RUN git clone https://github.com/tpoechtrager/osxcross /osxcross && \
+        cp /MacOSX10.15.sdk.tar.xz /osxcross/tarballs && \
+        cd /osxcross && \
+        UNATTENDED=1 ./build.sh
+
+ENV OSXCROSS=/osxcross/target
+ENV PATH=$OSXCROSS/bin:$PATH
+ENV MACOSX_DEPLOYMENT_TARGET=10.15
+
+RUN apt-get update -yy && apt-get install -yy pkg-config
+RUN echo "1" | osxcross-macports install libsdl2 fftw-3 eigen3 portaudio
+
+# Install recent GL headers
+ENV ver=2.1.0
+RUN wget "https://downloads.sourceforge.net/project/glew/glew/$ver/glew-$ver.tgz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fglew%2Ffiles%2Fglew%2F$ver%2Fglew-$ver.tgz%2Fdownload&ts=1597098028" -O glew.tgz && \
+        tar xf glew.tgz
+RUN cd glew-$ver && \
+        cp -r include/* $OSXCROSS/macports/pkgs/opt/local/include && \
+        cp src/glew.c $OSXCROSS/macports/pkgs/opt/local
+
+ENV OSXCROSS_HOST=x86_64-apple-darwin19
+ENV OSXCROSS_TARGET_DIR=$OSXCROSS
+ENV OSXCROSS_TARGET=darwin19
+
+ENV CROSS=$OSXCROSS_HOST-
+
+RUN apt-get update -yy && apt-get install -yy hfsprogs
+
+COPY macos-toolchain.cmake /toolchain.cmake
+COPY deploy-macos.sh /usr/bin/deploy-macos.sh
+
+CMD cd /build && \
+        export OSXCROSS_SDK="$($OSXCROSS/bin/xcrun --sdk macosx --show-sdk-path)" && \
+        export GLEW_SOURCE_FILE=$OSXCROSS/macports/pkgs/opt/local/glew.c && \
+        cmake /src \
+            -DCMAKE_TOOLCHAIN_FILE=/toolchain.cmake \
+            -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+            -DCMAKE_INSTALL_PREFIX=/ \
+                && \
+        make -j$(nproc) && \
+        host=${OSXCROSS_HOST} deploy-macos.sh
+

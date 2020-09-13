@@ -15,7 +15,7 @@
         <key>CFBundlePackageType</key>
         <string>APPL</string>
         <key>CFBundleSignature</key>
-        <string>sply<string>
+        <string>sply</string>
         <key>CFBundleExecutable</key>
         <string>speech-analysis</string>
     </dict>

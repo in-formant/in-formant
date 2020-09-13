@@ -143,6 +143,9 @@ elseif(EMSCRIPTEN)
         -DBUILD_SHARED_LIBS=OFF
         -DCMAKE_MODULE_PATH=/emsdk/upstream/emscripten/cmake/Modules)
     set(SOXR_CMAKE emcmake cmake)
+elseif(APPLE)
+    set(SOXR_EXTRA_ARGS
+        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
 else()
     set(SOXR_EXTRA_ARGS
         -DBUILD_SHARED_LIBS=ON)
@@ -391,7 +394,7 @@ endif()
 
 if(AUDIO_USE_PORTAUDIO)
     target_include_directories(speech-analysis SYSTEM PUBLIC ${portaudio_INCLUDE_DIRS})
-    target_link_libraries(speech-analysis PUBLIC ${portaudio_LDFLAGS})
+    target_link_libraries(speech-analysis PUBLIC ${portaudio_LIBRARIES})
     target_compile_definitions(speech-analysis PUBLIC -DAUDIO_USE_PORTAUDIO=1)
 endif()
 
@@ -440,6 +443,15 @@ if(RENDERER_USE_NVG)
     target_include_directories(speech-analysis SYSTEM PUBLIC ${NVG_DIR}/src)
     target_link_libraries(speech-analysis PUBLIC nanovg)
     target_compile_definitions(speech-analysis PUBLIC -DRENDERER_USE_NVG=1)
+
+#[[ Future code for Metal render support
+    if(APPLE)
+        find_package(Metal REQUIRED)
+        target_include_directories(speech-analysis SYSTEM PUBLIC ${METAL_INCLUDE_DIR})
+        target_link_libraries(speech-analysis PUBLIC ${METAL_LIBRARIES})
+    elseif(ANDROID)
+]]
+
     if(ANDROID)
         find_package(OpenGLES3 QUIET)
         target_include_directories(speech-analysis SYSTEM PUBLIC ${OpenGLES3_INCLUDE_DIRS})
@@ -448,7 +460,7 @@ if(RENDERER_USE_NVG)
         #find_package(OpenGLES2 QUIET)
         #target_include_directories(speech-analysis SYSTEM PUBLIC ${OpenGLES2_INCLUDE_DIRS})
         #target_link_libraries(speech-analysis PUBLIC ${OpenGLES2_LIBRARIES})
-    elseif(UNIX OR WIN32)
+    elseif(UNIX OR WIN32 OR APPLE)
         set(OpenGL_GL_PREFERENCE GLVND)
         find_package(OpenGL QUIET)
         target_include_directories(speech-analysis SYSTEM PUBLIC ${OPENGL_INCLUDE_DIRS})
@@ -490,7 +502,7 @@ if(ANDROID)
     target_link_libraries(speech-analysis PUBLIC android)
 endif()
 
-if(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
+if(UNIX AND NOT EMSCRIPTEN)
     target_sources(speech-analysis PUBLIC src/backtrace/unix.cpp)
     target_link_libraries(speech-analysis PUBLIC dl)
     set_target_properties(speech-analysis PROPERTIES LINK_FLAGS "-pthread -static-libstdc++")

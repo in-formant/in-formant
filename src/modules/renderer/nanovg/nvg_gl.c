@@ -1,6 +1,6 @@
 #include <nanovg.h>
 
-#if ! ( /* defined(_WIN32) && */ defined(__APPLE__) )
+#if ! ( /* defined(_WIN32) && defined(__APPLE__) */ 0 )
 #  if defined(__EMSCRIPTEN__)
 #    include <GLES2/gl2.h>
 #    define NANOVG_GLES2_IMPLEMENTATION
