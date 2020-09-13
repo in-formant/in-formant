@@ -41,35 +41,31 @@ namespace Module::Freetype {
 
     class FTInstance {
     public:
-        FTInstance(Module::Target::AbstractBase *target);
+        FTInstance();
         ~FTInstance();
         
         FontFile& font(const std::string& filename);
 
     private:
         FT_Library mLibrary;
-        int mHorizontalDPI;
-        int mVerticalDPI;
 
         std::map<std::string, FontFile *> mFontFiles;
     };
 
     class FontFile {
     public:
-        FontFile(FT_Library library, const std::string& filename, int hdpi, int vdpi);
+        FontFile(FT_Library library, const std::string& filename);
         ~FontFile();
 
-        Font& with(int pointSize);
+        Font& with(int pointSize, Module::Target::AbstractBase *target);
 
     private:
         FT_Library mLibrary;
-        int mHorizontalDPI;
-        int mVerticalDPI;
         
         FT_Byte *mData;
         int mDataSize;
 
-        std::map<int, Font *> mFonts;
+        std::map<std::tuple<int, int, int>, Font *> mFonts;
     };
 
     class Font {
@@ -99,7 +95,7 @@ namespace Module::Freetype {
 
     private:
         FT_Face mFace;
-
+        
         std::array<GlyphRenderData, UCHAR_MAX> mGlyphsData;
 
         void *mAttachment;

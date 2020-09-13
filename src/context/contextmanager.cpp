@@ -22,10 +22,6 @@ void ContextManager::initialize()
 {
     ctx->audio->initialize();
     ctx->audio->refreshDevices();
-    
-    ctx->target->initialize();
-    ctx->target->setTitle("Speech analysis");
-    ctx->target->setSize(854, 480);
 
     durProcessing = 0us;
     durRendering = 0us;
@@ -42,17 +38,29 @@ void ContextManager::start()
     ctx->audio->openCaptureStream(nullptr);
     ctx->audio->startCaptureStream();
 
-    ctx->target->create();
+    createRenderingContexts({
+        {"Spectrogram", std::bind(&ContextManager::renderSpectrogram, this)},
+        {"FFT spectrum", std::bind(&ContextManager::renderFFTSpectrum, this)},
+        {"Oscilloscope", std::bind(&ContextManager::renderOscilloscope, this)},
+    });
 
-    ctx->freetypeInstance = std::make_unique<Freetype::FTInstance>(ctx->target.get());
     primaryFont = & ctx->freetypeInstance->font("Montserrat.otf");
 
-    ctx->renderer->initialize();
-    updateRendererTargetSize();
-    loadRenderingParameters(ctx->renderer->getParameters());
+    for (const auto& info : renderingContextInfos) {
+        auto& rctx = ctx->renderingContexts[info.name];
+        rctx.target->initialize();
+        rctx.target->setTitle("Speech analysis - " + info.name);
+        rctx.target->setSize(320, 240);
+        rctx.target->show();
+        rctx.renderer->initialize();
+        updateRendererTargetSize(rctx);
+        updateRendererParameters(rctx);
+    }
 
     createAudioNodes();
     createAudioIOs();
+
+    endLoop = false;
 
 #if defined(__EMSCRIPTEN__)
     emscripten_set_main_loop_arg(
@@ -61,20 +69,30 @@ void ContextManager::start()
                 
                 self->mainBody();
 
-                if (self->ctx->target->shouldQuit()) {
+                if (self->endLoop) {
                     emscripten_cancel_main_loop();
                 }
             }, this, 30, 1);
 #else
-    while (!ctx->target->shouldQuit()) {
+    while (!endLoop) {
         mainBody();
+
+        // Locked to 30 fps
+        if (durLoop < 33.33ms) {
+            std::this_thread::sleep_for(33ms - durLoop);
+        }
     }
 #endif
 }
 
 void ContextManager::terminate()
 {
-    ctx->renderer->terminate();
+    for (const auto& [name, rctx] : ctx->renderingContexts) {
+        rrctx.renderer->terminate();
+        rrctx.target->hide();
+        rrctx.target->close();
+        rrctx.target->terminate();
+    }
 
     ctx->audio->stopPlaybackStream();
     ctx->audio->closePlaybackStream();
@@ -83,10 +101,6 @@ void ContextManager::terminate()
     ctx->audio->closeCaptureStream();
 
     ctx->audio->terminate();
-
-    ctx->target->hide();
-    ctx->target->close();
-    ctx->target->terminate();
 }
 
 void ContextManager::loadSettings()
@@ -126,24 +140,35 @@ void ContextManager::loadSettings()
     formantTrack.resize(spectrogramCount);
 }
 
-void ContextManager::updateRendererTargetSize()
+void ContextManager::updateRendererTargetSize(RenderingContext& rctx)
 {
     int w, h;
 
-    ctx->target->getSizeForRenderer(&w, &h);
-    ctx->renderer->setDrawableSize(w, h);
+    rctx.target->getSizeForRenderer(&w, &h);
+    rctx.renderer->setDrawableSize(w, h);
 
-    ctx->target->getSize(&w, &h);
-    ctx->renderer->setWindowSize(w, h);
+    rctx.target->getSize(&w, &h);
+    rctx.renderer->setWindowSize(w, h);
 }
 
-void ContextManager::loadRenderingParameters(Renderer::Parameters *p)
+void ContextManager::updateRendererParameters(RenderingContext& rctx)
 {
+    auto p = rctx.renderer->getParameters();
+
     p->setMinFrequency(viewMinFrequency);
     p->setMaxFrequency(viewMaxFrequency);
     p->setMinGain(viewMinGain);
     p->setMaxGain(viewMaxGain);
     p->setFrequencyScale(viewFrequencyScale);
+}
+
+void ContextManager::createRenderingContexts(const std::initializer_list<RenderingContextInfo>& infos)
+{
+    RenderingContextBuilder<Target::SDL2> builder(rctx.rendererType);
+    for (const auto& info : infos) {
+        ctx->renderingContexts[info.name] = builder.build();
+        renderingContextInfos[info.name] = info;
+    }
 }
 
 void ContextManager::createAudioNodes()
@@ -260,13 +285,22 @@ void ContextManager::updateNewData()
 
 void ContextManager::render()
 {
-    ctx->renderer->begin();
+    for (const auto& info : renderingContextInfos) {
+        auto& rctx = ctx->renderingContexts[info.name];
 
+        rctx.renderer->begin();
+        info.renderCallback(rctx);
+        rctx.renderer->end(); 
+    }
+}
+
+void ContextManager::renderSpectrogram(RenderingContext &rctx)
+{
     Renderer::SpectrogramRenderData specRender;
     for (const auto& [frequency, intensity] : spectrogramTrack.back()) {
         specRender.push_back({frequency, intensity});
     }
-    ctx->renderer->renderSpectrogram(specRender, spectrogramCount);
+    rctx.renderer->renderSpectrogram(specRender, spectrogramCount);
 
     Renderer::FrequencyTrackRenderData pitchTrackRender;
     for (const auto& x : pitchTrack) {
@@ -275,7 +309,7 @@ void ContextManager::render()
         else
             pitchTrackRender.emplace_back(std::nullopt);
     }
-    ctx->renderer->renderFrequencyTrack(pitchTrackRender, 4.0f, 0.0f, 1.0f, 0.0f);
+    rctx.renderer->renderFrequencyTrack(pitchTrackRender, 4.0f, 0.0f, 1.0f, 0.0f);
 
     std::vector<Renderer::FrequencyTrackRenderData> formantTrackRender(numFormantsToRender);
     for (const auto& formants : formantTrack) {
@@ -289,14 +323,14 @@ void ContextManager::render()
     }
     for (int i = 0; i < numFormantsToRender; ++i) {
         const auto [r, g, b] = formantColors[i];
-        ctx->renderer->renderFrequencyTrack(formantTrackRender[i], 6.0f, r, g, b);
+        rctx.renderer->renderFrequencyTrack(formantTrackRender[i], 6.0f, r, g, b);
     }
 
     if (durLoop > 0us) {
         std::stringstream ss;
         ss << "Loop cycle took " << (durLoop.count() / 1000.0f) << " ms";
         ss.flush();
-        ctx->renderer->renderText(
+        rctx.renderer->renderText(
                 primaryFont->with(uiFontSize),
                 ss.str(),
                 20,
@@ -309,7 +343,7 @@ void ContextManager::render()
         ss.str("");
         ss << "- Processing: " << std::round(100 * processingFrac) << "%";
         ss.flush();
-        ctx->renderer->renderText(
+        rctx.renderer->renderText(
                 primaryFont->with(uiFontSize),
                 ss.str(),
                 20,
@@ -319,7 +353,7 @@ void ContextManager::render()
         ss.str("");
         ss << "- Rendering: " << std::round(100 * renderingFrac) << "%";
         ss.flush();
-        ctx->renderer->renderText(
+        rctx.renderer->renderText(
                 primaryFont->with(uiFontSize),
                 ss.str(),
                 20,
@@ -327,17 +361,28 @@ void ContextManager::render()
                 1.0f, 0.5f, 1.0f);
     }
 
-    ctx->renderer->end();
+    rctx.renderer->end();
 }
 
 void ContextManager::mainBody()
 {
     auto t0 = Clock::now();
 
-    ctx->target->processEvents();
+    for (auto& rctx : ctx->renderingContexts) {
+        rctx.target->processEvents();
 
-    if (ctx->target->sizeChanged()) {
-        updateRendererTargetSize();
+        if (rctx.target->shouldQuit()) {
+            endLoop = true;
+            break;
+        }
+
+        if (rctx.target->sizeChanged()) {
+            updateRendererTargetSize(rctx);
+        }
+    }
+    
+    if (endLoop) {
+        return;
     }
 
     //ctx->playbackQueue->pushIfNeeded(nullptr);

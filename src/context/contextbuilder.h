@@ -9,6 +9,81 @@ namespace Main {
 
     using namespace Module;
 
+    template <typename TargetType>
+    class RenderingContextBuilder {
+    public:
+        RenderingContextBuilder(Renderer::Type rendererType)
+            : rendererType(rendererType) {
+        }
+
+        RenderingContext build() {
+            RenderingContext rctx;
+            rctx.target = std::make_unique<TargetType>(rendererType);
+            checkBuildRenderer(rctx);
+            return rctx;
+        }
+       
+        void throwRendererError(const std::string& name) {
+            std::stringstream ss;
+            ss << "Main] Requested " << name << " renderer but wasn't compiled with " << name << " support";
+            ss.flush();
+            throw std::runtime_error(ss.str());
+        }
+
+        template<typename RendererType, typename ProviderFunc>
+        void buildRenderer(RenderingContext& rctx, ProviderFunc provider) {
+            rctx.renderer = std::make_unique<RendererType>();
+            rctx.renderer->setProvider((rctx.target.get()->*provider)());
+        }
+
+        void checkBuildRenderer(Context& ctx) {
+            switch (rendererType) {
+            case Renderer::Type::OpenGL:
+#if ! RENDERER_USE_OPENGL
+                throwRendererError("OpenGL");
+#else
+                buildRenderer<Renderer::OpenGL>(ctx, &Target::AbstractBase::getOpenGLProvider);
+                break;
+#endif
+            
+            case Renderer::Type::GLES:
+#if ! RENDERER_USE_GLES
+                throwRendererError("OpenGL ES");
+#else
+                buildRenderer<Renderer::GLES>(ctx, &Target::AbstractBase::getOpenGLProvider);
+                break;
+#endif
+
+            case Renderer::Type::Vulkan:
+#if ! RENDERER_USE_VULKAN
+                throwRendererError("Vulkan");
+#else
+                buildRenderer<Renderer::Vulkan>(ctx, &Target::AbstractBase::getVulkanProvider);
+                break;
+#endif
+
+            case Renderer::Type::SDL2:
+#if ! RENDERER_USE_SDL2
+                throwRendererError("SDL2");
+#else
+                buildRenderer<Renderer::SDL2>(ctx, &Target::AbstractBase::getSDL2Provider);
+                break;
+#endif
+
+            case Renderer::Type::NanoVG:
+#if ! RENDERER_USE_NVG
+                throwRendererError("NanoVG");
+#else
+                buildRenderer<Renderer::NanoVG>(ctx, &Target::AbstractBase::getNvgProvider);
+                break;
+#endif
+            }
+        }
+    
+    private:
+        Renderer::Type rendererType;
+    };
+
     template <typename AudioType, typename TargetType, Renderer::Type rendererType>
     class ContextBuilder {
     public:
@@ -16,8 +91,6 @@ namespace Main {
             auto ctx = std::make_unique<Context>();
 
             ctx->audio = std::make_unique<AudioType>();
-            ctx->target = std::make_unique<TargetType>(rendererType);
-            checkBuildRenderer(*ctx);
 
             ctx->captureBuffer = std::make_unique<Audio::Buffer>(
                     captureSampleRate, captureDuration);
@@ -29,6 +102,8 @@ namespace Main {
 
             ctx->audio->setCaptureBuffer(ctx->captureBuffer.get());
             ctx->audio->setPlaybackQueue(ctx->playbackQueue.get());
+
+            ctx->freetypeInstance = std::make_unique<Freetype::FTInstance>();
 
             ctx->pitchSolver.reset(pitchSolver);
             ctx->linpredSolver.reset(linpredSolver);
@@ -84,6 +159,7 @@ namespace Main {
             return *this;
         }
 
+
     private:
         Analysis::PitchSolver   *pitchSolver;
         Analysis::LinpredSolver *linpredSolver;
@@ -95,63 +171,6 @@ namespace Main {
         int playbackDuration;
         int playbackSampleRate;
         Audio::QueueCallback playbackCallback;
-
-        void throwRendererError(const std::string& name) {
-            std::stringstream ss;
-            ss << "Main] Requested " << name << " renderer but wasn't compiled with " << name << " support";
-            ss.flush();
-            throw std::runtime_error(ss.str());
-        }
-
-        template<typename RendererType, typename ProviderFunc>
-        void buildRenderer(Context& ctx, ProviderFunc provider) {
-            ctx.renderer = std::make_unique<RendererType>();
-            ctx.renderer->setProvider((ctx.target.get()->*provider)());
-        }
-
-        void checkBuildRenderer(Context& ctx) {
-            switch (rendererType) {
-            case Renderer::Type::OpenGL:
-#if ! RENDERER_USE_OPENGL
-                throwRendererError("OpenGL");
-#else
-                buildRenderer<Renderer::OpenGL>(ctx, &Target::AbstractBase::getOpenGLProvider);
-                break;
-#endif
-            
-            case Renderer::Type::GLES:
-#if ! RENDERER_USE_GLES
-                throwRendererError("OpenGL ES");
-#else
-                buildRenderer<Renderer::GLES>(ctx, &Target::AbstractBase::getOpenGLProvider);
-                break;
-#endif
-
-            case Renderer::Type::Vulkan:
-#if ! RENDERER_USE_VULKAN
-                throwRendererError("Vulkan");
-#else
-                buildRenderer<Renderer::Vulkan>(ctx, &Target::AbstractBase::getVulkanProvider);
-                break;
-#endif
-
-            case Renderer::Type::SDL2:
-#if ! RENDERER_USE_SDL2
-                throwRendererError("SDL2");
-#else
-                buildRenderer<Renderer::SDL2>(ctx, &Target::AbstractBase::getSDL2Provider);
-                break;
-#endif
-
-            case Renderer::Type::NanoVG:
-#if ! RENDERER_USE_NVG
-                throwRendererError("NanoVG");
-#else
-                buildRenderer<Renderer::NanoVG>(ctx, &Target::AbstractBase::getNvgProvider);
-                break;
-#endif
-            }
-        }
     };
 
 }

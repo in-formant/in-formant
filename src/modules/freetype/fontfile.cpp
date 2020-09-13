@@ -1,13 +1,12 @@
 #include "freetype.h"
+#include "../target/base/base.h"
 #include <fstream>
 #include <memory>
 
 using namespace Module::Freetype;
 
-FontFile::FontFile(FT_Library library, const std::string& filename, int hdpi, int vdpi)
-    : mLibrary(library),
-      mHorizontalDPI(hdpi),
-      mVerticalDPI(vdpi)
+FontFile::FontFile(FT_Library library, const std::string& filename)
+    : mLibrary(library)
 {
     std::ifstream file(filename, std::ios::binary);
 
@@ -50,14 +49,21 @@ FontFile::~FontFile()
     delete[] mData;
 }
 
-Font& FontFile::with(int pointSize)
-{
-    auto it = mFonts.find(pointSize);
+Font& FontFile::with(int pointSize, Module::Target::AbstractBase *target)
+{ 
+    float horizontalDPI, verticalDPI;
+    target->getDisplayDPI(&horizontalDPI, &verticalDPI, nullptr);
+
+    auto key = std::make_tuple(horizontalDPI, verticalDPI, pointSize);
+
+    auto it = mFonts.find(key);
     if (it != mFonts.end()) {
         return * it->second;
     }
 
-    mFonts.emplace(pointSize, new Font(mLibrary, mData, mDataSize, pointSize, mHorizontalDPI, mVerticalDPI));
+    auto font = new Font(mLibrary, mData, mDataSize, pointSize, horizontalDPI, verticalDPI);
 
-    return * mFonts.find(pointSize)->second;
+    mFonts.emplace(key, font);
+
+    return *font;
 }
