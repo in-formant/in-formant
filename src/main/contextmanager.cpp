@@ -266,7 +266,7 @@ void ContextManager::render()
     for (const auto& [frequency, intensity] : spectrogramTrack.back()) {
         specRender.push_back({frequency, intensity});
     }
-    //ctx->renderer->renderSpectrogram(specRender, spectrogramCount);
+    ctx->renderer->renderSpectrogram(specRender, spectrogramCount);
 
     Renderer::FrequencyTrackRenderData pitchTrackRender;
     for (const auto& x : pitchTrack) {
