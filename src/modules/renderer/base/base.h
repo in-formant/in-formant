@@ -20,8 +20,9 @@
 //#    define NANOVG_DX11
 #    include "../nanovg/nvg_gl.h"
 #  elif defined(__APPLE__)
-#    include <nanovg_mtl.h>
-#    define NANOVG_METAL
+//#    include <nanovg_mtl.h>
+//#    define NANOVG_METAL
+#    include "../nanovg/nvg_gl.h"
 #  else
 #    include "../nanovg/nvg_gl.h"
 #  endif

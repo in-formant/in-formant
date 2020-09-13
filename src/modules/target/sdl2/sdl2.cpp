@@ -76,7 +76,7 @@ void SDL2::initialize()
 #   endif
 #endif
 
-#ifdef __ANDROID__
+#if defined(ANDROID) || defined(__ANDROID__)
     prepareAssets();
 #endif
 }
@@ -173,7 +173,7 @@ void SDL2::create()
             SDL_WINDOWPOS_CENTERED,
             mWidth,
             mHeight,
-            backendFlag | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
+            backendFlag | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_SHOWN);
     checkError(mWindow == nullptr);
 
     mGotQuitEvent = false;

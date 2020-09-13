@@ -9,18 +9,19 @@ function read_libs()
     IFS=';' read -r -a libs <<< "${string}"
 }
 
-origin="/build/pitch-tracker"
+origin="/build/speech-analysis"
 targets=("${origin}")
 real_targets=("${origin}")
 processed=()
 
-dd if=/dev/zero of=/dist/pitch-tracker.dmg bs=1M count=7
-mkfs.hfsplus -v "Pitch tracker" /dist/pitch-tracker.dmg
+dd if=/dev/zero of=/dist/speech-analysis.dmg bs=1M count=10
+mkfs.hfsplus -v "Speech analysis" /dist/speech-analysis.dmg
 mkdir -p /dmg
-mount -o loop /dist/pitch-tracker.dmg /dmg
+mount -o loop /dist/speech-analysis.dmg /dmg
 
-mkdir -p /dmg/PitchTracker.app/Contents/MacOS
-cp -v /src/dist-res/Info.plist /dmg/PitchTracker.app/Contents
+mkdir -p /dmg/SpeechAnalysis.app/Contents/MacOS
+cp -v /src/dist-res/Info.plist /dmg/SpeechAnalysis.app/Contents
+cp -v /src/Montserrat.otf /dmg/SpeechAnalysis.app/Contents/MacOS
 
 while [ ${#targets[@]} -gt 0 ]; do
     current=${targets[0]}
@@ -35,7 +36,7 @@ while [ ${#targets[@]} -gt 0 ]; do
 
     read_libs $real_current
 
-    cp -v "$real_current" /dmg/PitchTracker.app/Contents/MacOS
+    cp -v "$real_current" /dmg/SpeechAnalysis.app/Contents/MacOS
 
     current_name=$(basename "${current}")
     
@@ -51,13 +52,13 @@ while [ ${#targets[@]} -gt 0 ]; do
         if [ -n "${actual_file}" ]; then
             filtered_libs+=("${lib}")
             filtered_real_libs+=("${actual_file}")
+    
+            lib_name=$(basename "${lib}")
+            ${host}-install_name_tool -change "${lib}" "@executable_path/${lib_name}" /dmg/SpeechAnalysis.app/Contents/MacOS/${current_name}
         fi
-         
-        lib_name=$(basename "${lib}")
-        ${host}-install_name_tool -change "${lib}" "@rpath/${lib_name}" /dmg/PitchTracker.app/Contents/MacOS/${current_name}
     done
 
-    ${host}-install_name_tool -id "@rpath/${current_name}" /dmg/PitchTracker.app/Contents/MacOS/${current_name}
+    ${host}-install_name_tool -id "@executable_path/${current_name}" /dmg/SpeechAnalysis.app/Contents/MacOS/${current_name}
 
     targets+=("${filtered_libs[@]}")
     real_targets+=("${filtered_real_libs[@]}")

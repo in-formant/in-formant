@@ -18,7 +18,7 @@ NVGcontext *SDL2_NanoVG::createContext(int flags)
     return nvgCreateD3D11(device, flags);
 #elif defined(NANOVG_METAL)
     createRenderer();
-    const CAMetalLayer *layer = SDL_RenderGetMetalLayer(mMetalRenderer);
+    void *layer = SDL_RenderGetMetalLayer(mRenderer);
     return nvgCreateMTL(layer, flags);
 #elif defined(NANOVG_GLES2)
     createGLContext();
@@ -57,6 +57,16 @@ void SDL2_NanoVG::deleteContext(NVGcontext *ctx)
     nvgDeleteGL3(ctx);
     destroyGLContext();
 #endif
+}
+
+void SDL2_NanoVG::createRenderer()
+{
+    mRenderer = SDL_CreateRenderer(*mPtrWindow, -1, SDL_RENDERER_ACCELERATED);
+}
+
+void SDL2_NanoVG::destroyRenderer()
+{
+    SDL_DestroyRenderer(mRenderer);
 }
 
 void SDL2_NanoVG::createGLContext()

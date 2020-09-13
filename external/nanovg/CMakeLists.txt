@@ -14,6 +14,14 @@ set(HEADERS
 set(SOURCES
         src/nanovg.c)
 
+#[[ Future support for Metal render
+if(APPLE)
+    list(APPEND SOURCES
+        src/nanovg_mtl.m
+        src/nanovg_mtl_shaders.metal)
+endif()
+]]
+
 add_library(nanovg STATIC ${HEADERS} ${SOURCES})
 
 set(FT_DIR ${PROJECT_SOURCE_DIR}/../freetype)
