@@ -8,6 +8,8 @@
 #   include <SDL2/SDL_vulkan.h>
 #endif
 
+#include <mutex>
+
 namespace Module::Target {
 
     class SDL2 : public AbstractBase {
@@ -39,6 +41,8 @@ namespace Module::Target {
         void prepareAssets(); 
 #endif
 
+        static std::vector<SDL_Event> globalEvents;
+
         Type mRendererType;
 
         std::string mTitle;
@@ -49,7 +53,7 @@ namespace Module::Target {
 
         bool mGotQuitEvent;
         bool mWindowSizeChanged;
-
+    
         int err;
         void checkError(bool cond);
     };

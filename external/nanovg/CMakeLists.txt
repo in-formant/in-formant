@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(nanovg)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -D_CRT_SECURE_NO_WARNINGS -DFONS_USE_FREETYPE")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -D_CRT_SECURE_NO_WARNINGS")
 
 set(HEADERS
         src/fontstash.h

@@ -25,6 +25,9 @@ set(SOURCES
     src/context/context.h
     src/context/contextbuilder.h
     src/context/contextmanager.cpp
+    src/context/ctxmgr_spectrogram.cpp
+    src/context/ctxmgr_fftspectrum.cpp
+    src/context/ctxmgr_oscilloscope.cpp
     src/context/contextmanager.h
     src/backtrace/backtrace.h
     src/android_redirect_log.cpp

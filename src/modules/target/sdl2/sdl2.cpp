@@ -5,6 +5,8 @@
 
 using namespace Module::Target;
 
+std::vector<SDL_Event> SDL2::globalEvents;
+
 SDL2::SDL2(Type rendererType)
     : AbstractBase { Type::OpenGL, Type::GLES, Type::Vulkan, Type::SDL2, Type::NanoVG },
       mRendererType(rendererType),
@@ -133,7 +135,7 @@ void SDL2::getDisplayDPI(float *hdpi, float *vdpi, float *ddpi)
     }
 
     if (SDL_GetDisplayDPI(display, ddpi, hdpi, vdpi) < 0) {
-        std::cout << "Target::SDL2] Could not retrieve display DPI: " << SDL_GetError() << std::endl;
+        // std::cout << "Target::SDL2] Could not retrieve display DPI: " << SDL_GetError() << std::endl;
 
         constexpr int dpi = 96;
 
@@ -198,20 +200,54 @@ void SDL2::close()
 
 void SDL2::processEvents()
 {
+    uint32_t windowId = SDL_GetWindowID(mWindow);
+
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+        globalEvents.push_back(event);
+    }
+
+    auto it = globalEvents.begin();
+    while (it != globalEvents.end()) {
+        auto& event = *it;
+
+        bool deleteEvent = true;
+
         if (event.type == SDL_QUIT) {
             mGotQuitEvent = true;
         }
         else if (event.type == SDL_KEYDOWN) {
-            if (event.key.keysym.sym == SDLK_ESCAPE) {
-                mGotQuitEvent = true;
+            if (event.key.windowID == windowId) {
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    mGotQuitEvent = true;
+                }
+            }
+            else {
+                deleteEvent = false;
             }
         }
         else if (event.type == SDL_WINDOWEVENT) {
-            if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                mWindowSizeChanged = true;
+            if (event.window.windowID == windowId) {
+                if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+                    mGotQuitEvent = true;
+                }
+                else if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                    mWindowSizeChanged = true;
+                }
             }
+            else {
+                deleteEvent = false;
+            }
+        }
+        else {
+            deleteEvent = true;
+        }
+
+        if (deleteEvent) {
+            it = globalEvents.erase(it);
+        }
+        else {
+            ++it;
         }
     }
 }

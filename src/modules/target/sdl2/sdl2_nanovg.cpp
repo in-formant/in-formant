@@ -72,7 +72,7 @@ void SDL2_NanoVG::destroyRenderer()
 void SDL2_NanoVG::createGLContext()
 {
     mGlContext = SDL_GL_CreateContext(*mPtrWindow);
-    //SDL_GL_SetSwapInterval(1); // Enable vsync
+    SDL_GL_SetSwapInterval(0); // Disable vsync
 }
 
 void SDL2_NanoVG::destroyGLContext()
@@ -83,6 +83,7 @@ void SDL2_NanoVG::destroyGLContext()
 void SDL2_NanoVG::beforeBeginFrame()
 {
 #if defined(NANOVG_GL)
+    SDL_GL_MakeCurrent(*mPtrWindow, mGlContext);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 #endif
 }
