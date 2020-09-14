@@ -49,6 +49,7 @@ RUN mkdir -p fftw-$ver/build && \
 
 # Build SDL2.
 RUN git clone --depth=1 --branch version_22 https://github.com/emscripten-ports/SDL2.git
+COPY sdl2-emscripten-patch/* /SDL2/src/video/emscripten/
 RUN mkdir -p SDL2/build && \
         cd SDL2/build && \
         . /emsdk/emsdk_env.sh && \

@@ -36,7 +36,7 @@ namespace Main {
             rctx.renderer->setProvider((rctx.target.get()->*provider)());
         }
 
-        void checkBuildRenderer(Context& ctx) {
+        void checkBuildRenderer(RenderingContext& ctx) {
             switch (rendererType) {
             case Renderer::Type::OpenGL:
 #if ! RENDERER_USE_OPENGL
@@ -89,6 +89,7 @@ namespace Main {
     public:
         std::unique_ptr<Context> build() {
             auto ctx = std::make_unique<Context>();
+            ctx->rendererType = rendererType;
 
             ctx->audio = std::make_unique<AudioType>();
 

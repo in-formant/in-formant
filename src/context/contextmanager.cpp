@@ -1,5 +1,11 @@
 #include "contextmanager.h"
-#include <thread>
+#include "contextbuilder.h"
+
+#ifdef __EMSCRIPTEN__
+extern const char *EMSCRIPTEN_CANVAS_NAME;
+#endif
+
+#include <iostream>
 
 using namespace Main;
 using namespace std::chrono;
@@ -39,22 +45,29 @@ void ContextManager::start()
     ctx->audio->startCaptureStream();
 
     createRenderingContexts({
-        {"Spectrogram", std::bind(&ContextManager::renderSpectrogram, this)},
-        {"FFT spectrum", std::bind(&ContextManager::renderFFTSpectrum, this)},
-        {"Oscilloscope", std::bind(&ContextManager::renderOscilloscope, this)},
+        {"Spectrogram", &ContextManager::renderSpectrogram, &ContextManager::eventSpectrogram},
+        {"FFT spectrum", &ContextManager::renderFFTSpectrum, &ContextManager::eventFFTSpectrum},
+        {"Oscilloscope", &ContextManager::renderOscilloscope, &ContextManager::eventOscilloscope},
     });
 
     primaryFont = & ctx->freetypeInstance->font("Montserrat.otf");
 
-    for (const auto& info : renderingContextInfos) {
-        auto& rctx = ctx->renderingContexts[info.name];
+    for (const auto& [name, info] : renderingContextInfos) {
+        auto& rctx = ctx->renderingContexts[name];
         rctx.target->initialize();
         rctx.target->setTitle("Speech analysis - " + info.name);
         rctx.target->setSize(320, 240);
-        rctx.target->show();
+#ifdef __EMSCRIPTEN__
+        std::string canvasIdWithSharp = "#" + info.canvasId;
+        EMSCRIPTEN_CANVAS_NAME = canvasIdWithSharp.c_str();
+#endif
+        rctx.target->create();
         rctx.renderer->initialize();
         updateRendererTargetSize(rctx);
         updateRendererParameters(rctx);
+#ifdef __EMSCRIPTEN__
+        saveModuleCtx(info.canvasId);
+#endif
     }
 
     createAudioNodes();
@@ -87,11 +100,15 @@ void ContextManager::start()
 
 void ContextManager::terminate()
 {
-    for (const auto& [name, rctx] : ctx->renderingContexts) {
-        rrctx.renderer->terminate();
-        rrctx.target->hide();
-        rrctx.target->close();
-        rrctx.target->terminate();
+    for (const auto& [name, info] : renderingContextInfos) {
+#ifdef __EMSCRIPTEN__
+        changeModuleCanvas(info.canvasId);
+#endif
+        auto& rctx = ctx->renderingContexts[name];
+        rctx.renderer->terminate();
+        rctx.target->hide();
+        rctx.target->close();
+        rctx.target->terminate();
     }
 
     ctx->audio->stopPlaybackStream();
@@ -162,12 +179,26 @@ void ContextManager::updateRendererParameters(RenderingContext& rctx)
     p->setFrequencyScale(viewFrequencyScale);
 }
 
+void ContextManager::updateAllRendererParameters()
+{
+    for (auto& [name, rctx] : ctx->renderingContexts) {
+        updateRendererParameters(rctx);
+    }
+}
+
 void ContextManager::createRenderingContexts(const std::initializer_list<RenderingContextInfo>& infos)
 {
-    RenderingContextBuilder<Target::SDL2> builder(rctx.rendererType);
+    RenderingContextBuilder<Target::SDL2> builder(ctx->rendererType);
     for (const auto& info : infos) {
         ctx->renderingContexts[info.name] = builder.build();
         renderingContextInfos[info.name] = info;
+        
+#ifdef __EMSCRIPTEN__
+        std::string canvasId(info.name);
+        std::transform(canvasId.begin(), canvasId.end(), canvasId.begin(),
+                [](char c) { return c == ' ' ? '_' : std::tolower(c); });
+        renderingContextInfos[info.name].canvasId = canvasId;
+#endif
     }
 }
 
@@ -283,92 +314,17 @@ void ContextManager::updateNewData()
     formantTrack.push_back(std::move(formants));
 }
 
-void ContextManager::render()
-{
-    for (const auto& info : renderingContextInfos) {
-        auto& rctx = ctx->renderingContexts[info.name];
-
-        rctx.renderer->begin();
-        info.renderCallback(rctx);
-        rctx.renderer->end(); 
-    }
-}
-
-void ContextManager::renderSpectrogram(RenderingContext &rctx)
-{
-    Renderer::SpectrogramRenderData specRender;
-    for (const auto& [frequency, intensity] : spectrogramTrack.back()) {
-        specRender.push_back({frequency, intensity});
-    }
-    rctx.renderer->renderSpectrogram(specRender, spectrogramCount);
-
-    Renderer::FrequencyTrackRenderData pitchTrackRender;
-    for (const auto& x : pitchTrack) {
-        if (x > 0)
-            pitchTrackRender.push_back(std::make_optional<float>(x));
-        else
-            pitchTrackRender.emplace_back(std::nullopt);
-    }
-    rctx.renderer->renderFrequencyTrack(pitchTrackRender, 4.0f, 0.0f, 1.0f, 0.0f);
-
-    std::vector<Renderer::FrequencyTrackRenderData> formantTrackRender(numFormantsToRender);
-    for (const auto& formants : formantTrack) {
-        int i = 0;
-        for (const auto& formant : formants) {
-            formantTrackRender[i].push_back(std::make_optional<float>(formant.frequency));
-            if (++i >= numFormantsToRender) break;
-        }
-        for (int j = i; j < numFormantsToRender; ++j)
-            formantTrackRender[j].emplace_back(std::nullopt);
-    }
-    for (int i = 0; i < numFormantsToRender; ++i) {
-        const auto [r, g, b] = formantColors[i];
-        rctx.renderer->renderFrequencyTrack(formantTrackRender[i], 6.0f, r, g, b);
-    }
-
-    if (durLoop > 0us) {
-        std::stringstream ss;
-        ss << "Loop cycle took " << (durLoop.count() / 1000.0f) << " ms";
-        ss.flush();
-        rctx.renderer->renderText(
-                primaryFont->with(uiFontSize),
-                ss.str(),
-                20,
-                20,
-                1.0f, 0.5f, 1.0f);
-
-        float processingFrac = (float) durProcessing.count() / (float) durLoop.count();
-        float renderingFrac = (float) durRendering.count() / (float) durLoop.count();
-
-        ss.str("");
-        ss << "- Processing: " << std::round(100 * processingFrac) << "%";
-        ss.flush();
-        rctx.renderer->renderText(
-                primaryFont->with(uiFontSize),
-                ss.str(),
-                20,
-                20+uiFontSize+5,
-                1.0f, 0.5f, 1.0f);
-
-        ss.str("");
-        ss << "- Rendering: " << std::round(100 * renderingFrac) << "%";
-        ss.flush();
-        rctx.renderer->renderText(
-                primaryFont->with(uiFontSize),
-                ss.str(),
-                20,
-                20+2*(uiFontSize+5),
-                1.0f, 0.5f, 1.0f);
-    }
-
-    rctx.renderer->end();
-}
-
 void ContextManager::mainBody()
 {
     auto t0 = Clock::now();
 
-    for (auto& rctx : ctx->renderingContexts) {
+    for (const auto& [name, info] : renderingContextInfos) {
+#ifdef __EMSCRIPTEN__
+        changeModuleCanvas(info.canvasId);
+#endif
+
+        auto& rctx = ctx->renderingContexts[name];
+
         rctx.target->processEvents();
 
         if (rctx.target->shouldQuit()) {
@@ -379,6 +335,8 @@ void ContextManager::mainBody()
         if (rctx.target->sizeChanged()) {
             updateRendererTargetSize(rctx);
         }
+
+        (this->*info.eventCallback)(rctx);
     }
     
     if (endLoop) {
@@ -397,7 +355,17 @@ void ContextManager::mainBody()
 
     auto tr0 = Clock::now();
 
-    render();
+    for (const auto& [name, info] : renderingContextInfos) {
+#ifdef __EMSCRIPTEN__
+        changeModuleCanvas(info.canvasId);
+#endif
+
+        auto& rctx = ctx->renderingContexts[name];
+
+        rctx.renderer->begin();
+        (this->*info.renderCallback)(rctx);
+        rctx.renderer->end(); 
+    }
 
     auto tr1 = Clock::now();
 
@@ -407,3 +375,21 @@ void ContextManager::mainBody()
 
     durLoop = duration_cast<microseconds>(t1 - t0);
 }
+
+#ifdef __EMSCRIPTEN__
+void ContextManager::changeModuleCanvas(const std::string& id)
+{
+    EM_ASM({
+        var canvasId = UTF8ToString($0);
+        Module['canvas'] = document.getElementById(canvasId);
+        EGL['context'] = Module['ctx-' + canvasId];
+    }, id.c_str());
+}
+
+void ContextManager::saveModuleCtx(const std::string& id)
+{
+    EM_ASM({
+        Module['ctx-' + UTF8ToString($0)] = EGL['context'];
+    }, id.c_str());
+}
+#endif

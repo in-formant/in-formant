@@ -12,15 +12,7 @@ namespace Main {
 
     using namespace Module;
 
-    class ContextManager;
-
-    struct RenderingContextInfo {
-        using CallbackType = std::function<void (RenderingContext)>;
-
-        std::string  name;
-        CallbackType renderCallback; 
-        CallbackType eventCallback;
-    };
+    struct RenderingContextInfo;
 
     class ContextManager {
     public:
@@ -31,12 +23,14 @@ namespace Main {
         void start();
         void terminate();
 
+    private:
         void loadSettings();
 
         void updateRendererTargetSize(RenderingContext& rctx);
         void updateRendererParameters(RenderingContext& rctx);
+        void updateAllRendererParameters();
     
-        void createRenderingContexts(const std::initializer_list<std::string>& names);
+        void createRenderingContexts(const std::initializer_list<RenderingContextInfo>& infos);
 
         void createAudioNodes();
         void createAudioIOs();
@@ -45,15 +39,24 @@ namespace Main {
         void processAudioNode(const char *in, const std::string& nodeName);
 
         void updateNewData();
-
-        void render();
+        
         void renderSpectrogram(RenderingContext& rctx);
         void renderFFTSpectrum(RenderingContext& rctx);
         void renderOscilloscope(RenderingContext& rctx);
 
+        void eventCommon();
+
+        void eventSpectrogram(RenderingContext& rctx);
+        void eventFFTSpectrum(RenderingContext& rctx);
+        void eventOscilloscope(RenderingContext& rctx);
+
         void mainBody();
 
-    private:
+#ifdef __EMSCRIPTEN__
+        void changeModuleCanvas(const std::string& id);
+        void saveModuleCtx(const std::string& id);
+#endif
+
         std::unique_ptr<Context> ctx;
 
         Freetype::FontFile *primaryFont;
@@ -94,6 +97,18 @@ namespace Main {
         std::chrono::microseconds durProcessing;
         std::chrono::microseconds durRendering;
         std::chrono::microseconds durLoop;
+    };
+
+    struct RenderingContextInfo {
+        using CallbackType = void (ContextManager::*)(RenderingContext&);
+
+        std::string  name;
+        CallbackType renderCallback; 
+        CallbackType eventCallback;
+
+#ifdef __EMSCRIPTEN__
+        std::string  canvasId;
+#endif
     };
     
 }
