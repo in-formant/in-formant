@@ -10,5 +10,6 @@
 #include "linpred/linpred.h"
 #include "pitchtracker/pitchtracker.h"
 #include "formants/formants.h"
+#include "invglot/invglot.h"
 
 #endif // NODES_H

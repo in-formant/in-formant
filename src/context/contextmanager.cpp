@@ -6,6 +6,7 @@ extern const char *EMSCRIPTEN_CANVAS_NAME;
 #endif
 
 #include <iostream>
+#include <thread>
 
 using namespace Main;
 using namespace std::chrono;
@@ -123,27 +124,28 @@ void ContextManager::terminate()
 void ContextManager::loadSettings()
 {
     analysisDuration = 25;
-    analysisMaxFrequency = 3700;
+    analysisMaxFrequency = 4700;
 
-    viewMinFrequency = 20;
+    viewMinFrequency = 1;
     viewMaxFrequency = 8000;
     viewMinGain = -45;
     viewMaxGain = +10;
     viewFrequencyScale = Renderer::FrequencyScale::Mel;
 
-    fftLength = 2048;
+    fftLength = 4096;
     fftMaxFrequency = viewMaxFrequency;
 
     preEmphasisFrequency = 50.0f;
-    linPredOrder = 6;
+    linPredOrder = 8;
 
     spectrogramCount = 400;
 
-    numFormantsToRender = 3;
+    numFormantsToRender = 4;
     formantColors = {
         {0.0f,  1.0f,  0.0f},
         {0.86f, 0.78f, 0.24f},
         {1.0f,  0.71f, 0.76f},
+        {0.96f, 0.5f,  0.45f},
     };
 
 #if defined(ANDROID) || defined(__ANDROID__)
@@ -211,6 +213,7 @@ void ContextManager::createAudioNodes()
     nodes["spec"] = std::make_unique<Nodes::Spectrum>(fftLength);
     nodes["tail"] = std::make_unique<Nodes::Tail>(analysisDuration);
     nodes["pitch"] = std::make_unique<Nodes::PitchTracker>(ctx->pitchSolver.get());
+    nodes["invglot"] = std::make_unique<Nodes::InvGlot>(ctx->invglotSolver.get());
     nodes["rs"] = std::make_unique<Nodes::Resampler>(captureSampleRate, 2 * analysisMaxFrequency);
     nodes["preemph"] = std::make_unique<Nodes::PreEmphasis>(preEmphasisFrequency);
     nodes["linpred"] = std::make_unique<Nodes::LinPred>(ctx->linpredSolver.get(), linPredOrder);
@@ -224,7 +227,7 @@ void ContextManager::createAudioIOs()
     nodeIOs["spec"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioSpec);
     nodeIOs["tail"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["pitch"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeFrequencies);
-    nodeIOs["tail_rs"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
+    nodeIOs["invglot"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["rs"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["preemph"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["linpred"] = Nodes::makeNodeIO(2, Nodes::kNodeIoTypeIIRFilter, Nodes::kNodeIoTypeAudioSpec);
@@ -246,6 +249,8 @@ void ContextManager::propagateAudio()
     
     processAudioNode("prereqs", "tail");
     processAudioNode("tail", "pitch");
+    processAudioNode("tail", "preemph");
+    processAudioNode("preemph", "invglot");
 
     processAudioNode("prereqs", "rs");
     processAudioNode("rs", "tail");

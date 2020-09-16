@@ -78,7 +78,7 @@ namespace Module::Freetype {
         GlyphRenderData prepareCharRender(char character);
         TextRenderData prepareTextRender(const std::string& text);
 
-        void queryBBox(const std::string& text, FT_BBox *abbox);
+        std::array<float, 4> queryTextSize(const std::string& text);
 
         void setAttachment(void *p) {
             mAttachment = p;

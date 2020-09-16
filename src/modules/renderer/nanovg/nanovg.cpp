@@ -63,7 +63,7 @@ void NanoVG::test()
 {
 }
 
-void NanoVG::renderGraph(const GraphRenderData& graph)
+void NanoVG::renderGraph(const GraphRenderData& graph, float thick, float r, float g, float b)
 {
     float xi, yi;
     float xip, yip;
@@ -93,8 +93,8 @@ void NanoVG::renderGraph(const GraphRenderData& graph)
         nvgLineTo(vg, xip, yip);
     }
 
-    nvgStrokeColor(vg, nvgRGB(255, 255, 255));
-    nvgStrokeWidth(vg, 2.0f);
+    nvgStrokeColor(vg, nvgRGBf(r, g, b));
+    nvgStrokeWidth(vg, thick);
     nvgStroke(vg);
 }
 
@@ -245,6 +245,121 @@ void NanoVG::renderFrequencyTrack(const FrequencyTrackRenderData& track, float t
     nvgStroke(vg);
 }
 
+void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::Freetype::Font& minorFont)
+{
+    FrequencyScale scale = getParameters()->getFrequencyScale();
+    float min = getParameters()->getMinFrequency();
+    float max = getParameters()->getMaxFrequency();
+
+    if (scale == FrequencyScale::Linear) {
+
+        int lo = 100 * (((int) min / 100) - 1);
+        int hi = 100 * (((int) max / 100) + 1);
+
+        for (int val = lo; val <= hi; val += 100) {
+            if (val >= min && val < max) {
+                float y = frequencyToCoordinate(val);
+                float yp = mHeight - (y + 1.0f) / 2.0f * mHeight;
+
+                bool majorTick = (val % 1000 == 0);
+                int tickLen                       = majorTick ? 5 : 3;
+                float tickThick                   = majorTick ? 3 : 2;
+                Module::Freetype::Font *labelFont = majorTick ? &majorFont : &minorFont;
+
+                nvgBeginPath(vg);
+                nvgLineCap(vg, NVG_SQUARE);
+                nvgMoveTo(vg, mWidth - 1, yp);
+                nvgLineTo(vg, mWidth - 1 - tickLen, yp);
+                nvgStrokeColor(vg, nvgRGBf(1, 1, 1));
+                nvgStrokeWidth(vg, tickThick);
+                nvgStroke(vg);
+
+                if (majorTick || val % 500 == 0) {
+                    const auto valstr = std::to_string((int) val);
+                    const auto [tx, ty, tw, th] = labelFont->queryTextSize(valstr + "  ");
+                    renderText(*labelFont, valstr, mWidth - 1 - tickLen - tw, yp + ty + th / 2, 1, 1, 1);
+                }
+            }
+        }
+    }
+    else {
+        float loLog = log10(min);
+        float hiLog = log10(max);
+        int loDecade = (int) floor(loLog);
+
+        float val;
+        float startDecade = pow(10.0f, loDecade);
+            
+        float decade = startDecade;
+        float delta = hiLog - loLog, steps = fabs(delta);
+        float step = delta >= 0 ? 10 : 0.1;
+        float rMin = std::min(min, max), rMax = std::max(min, max);
+        float start, end, mstep;
+        
+        decade = startDecade;
+        if (delta > 0) {
+            start = 10;
+            end = 100;
+            mstep = 1;
+        }
+        else {
+            start = 100;
+            end = 10;
+            mstep = -1;
+        }
+        steps++;
+        for (int i = 0; i <= steps; ++i) {
+            for (int f = start; f != (int) end; f += mstep) {
+                val = decade * f / 10;
+                if (val >= rMin && val < rMax) {
+                    float y = frequencyToCoordinate(val);
+                    float yp = mHeight - (y + 1.0f) / 2.0f * mHeight;
+
+                    bool majorTick = ((int) (f / 10.0f) == f / 10.0f);
+
+                    int tickLen                       = majorTick ? 5 : 3;
+                    float tickThick                   = majorTick ? 3 : 2;
+                    Module::Freetype::Font *labelFont = majorTick ? &majorFont : &minorFont;
+
+                    nvgBeginPath(vg);
+                    nvgLineCap(vg, NVG_SQUARE);
+                    nvgMoveTo(vg, mWidth - 1, yp);
+                    nvgLineTo(vg, mWidth - 1 - tickLen, yp);
+                    nvgStrokeColor(vg, nvgRGBf(1, 1, 1));
+                    nvgStrokeWidth(vg, tickThick);
+                    nvgStroke(vg);
+                  
+                    bool shouldRenderLabel;
+
+                    if (scale == FrequencyScale::Mel) {
+                        shouldRenderLabel =
+                               (3000 <= val && fmod(val, 200) == 0)
+                            || (1000 <= val && val < 3000 && fmod(val, 100) == 0)
+                            || ( 500 <= val && val < 1000 && fmod(val,  50) == 0)
+                            || ( 100 <= val && val <  500 && fmod(val,  25) == 0)
+                            || (  10 <= val && val <  100 && fmod(val,  20) == 0)
+                            || (   1 == val);
+                    }
+                    else if (scale == FrequencyScale::Logarithmic) {
+                        shouldRenderLabel =
+                               (1000 <= val && fmod(val, 1000) == 0)
+                            || ( 100 <= val && val < 1000 && fmod(val, 100) == 0)
+                            || (  10 <= val && val <  100 && fmod(val,  10) == 0)
+                            || (   1 == val);
+                    }
+
+                    if (shouldRenderLabel) {
+                        const auto valstr = std::to_string((int) val);
+                        const auto [tx, ty, tw, th] = labelFont->queryTextSize(valstr + "  ");
+                        renderText(*labelFont, valstr, mWidth - 1 - tickLen - tw, yp + ty + th / 2, 1, 1, 1);
+                    }
+                }
+            }
+            decade *= step;
+        }
+    }
+}
+
 void NanoVG::renderText(Module::Freetype::Font& font, const std::string& text, int x0, int y0, float r, float g, float b)
 {
     if (!font.hasAttachment()) {
@@ -253,32 +368,8 @@ void NanoVG::renderText(Module::Freetype::Font& font, const std::string& text, i
     auto fa = font.getAttachment<NvgUtils::FontAttachment>();
 
     Module::Freetype::TextRenderData textRenderData = font.prepareTextRender(text);
-
-    float xmin(HUGE_VALF), xmax(-HUGE_VALF);
-    float ymin(HUGE_VALF), ymax(-HUGE_VALF);
-
-    int startx = x0;
-
-    for (const auto& glyphRenderData : textRenderData.glyphs) {
-        float x = x0 + glyphRenderData.left;
-        float y = y0 - glyphRenderData.top;
-
-        float w = glyphRenderData.width;
-        float h = glyphRenderData.height;
-
-        x0 += glyphRenderData.advanceX >> 6;
-
-        xmin = std::min(x, xmin);
-        ymin = std::min(y, ymin);
-
-        xmax = std::max(x + w, xmax);
-        ymax = std::max(y + h, ymax);
-    }
-    
-    float textWidth = xmax - xmin;
-    float textHeight = ymax - ymin;
-    
-    x0 = startx;
+    const auto [_1, _2, textWidth, textHeight] = font.queryTextSize(text);
+     
     y0 = y0 + textHeight;
 
     for (const auto& glyphRenderData : textRenderData.glyphs) {
@@ -303,8 +394,6 @@ void NanoVG::renderText(Module::Freetype::Font& font, const std::string& text, i
         
         x0 += glyphRenderData.advanceX >> 6;
     }
-
-
 }
 
 std::pair<float, float> NanoVG::convertNormCoord(float x, float y)

@@ -1,6 +1,7 @@
 #include "freetype.h"
 #include <stdexcept>
 #include <iostream>
+#include <cmath>
 #include FT_TRUETYPE_IDS_H
 
 using namespace Module::Freetype;
@@ -118,14 +119,35 @@ TextRenderData Font::prepareTextRender(const std::string& text)
     return std::move(data);
 }
 
-void Font::queryBBox(const std::string& text, FT_BBox *abbox)
+std::array<float, 4> Font::queryTextSize(const std::string& text)
 {
-    FT_BBox bbox;
+    TextRenderData textRenderData = prepareTextRender(text);
 
-    bbox.xMin = bbox.yMin =  32000;
-    bbox.xMax = bbox.yMax = -32000;
+    float xmin(HUGE_VALF), xmax(-HUGE_VALF);
+    float ymin(HUGE_VALF), ymax(-HUGE_VALF);
 
-    for (int i = 0; i < text.size(); ++i) {
+    int x0 = 0;
+    int y0 = 0;
 
+    for (const auto& glyphRenderData : textRenderData.glyphs) {
+        float x = x0 + glyphRenderData.left;
+        float y = y0 - glyphRenderData.top;
+
+        float w = glyphRenderData.width;
+        float h = glyphRenderData.height;
+
+        x0 += glyphRenderData.advanceX >> 6;
+
+        xmin = std::min(x, xmin);
+        ymin = std::min(y, ymin);
+
+        xmax = std::max(x + w, xmax);
+        ymax = std::max(y + h, ymax);
     }
+    
+    float textWidth = xmax - xmin;
+    float textHeight = ymax - ymin;
+    
+    return {xmin, ymin, textWidth, textHeight};
 }
+

@@ -3,13 +3,8 @@
 using namespace Nodes::IO;
 
 AudioSpec::AudioSpec()
-    : mSampleRate(0), mLength(0), mData(nullptr)
+    : mSampleRate(0), mLength(0)
 {
-}
-
-AudioSpec::~AudioSpec()
-{
-    delete[] mData;
 }
 
 void AudioSpec::setSampleRate(int sampleRate)
@@ -23,14 +18,13 @@ void AudioSpec::setLength(int length)
         return;
     }
 
-    delete[] mData;
-    mData = new float[length];
+    mData.resize(length);
     mLength = length;
 }
 
 float *AudioSpec::getData()
 {
-    return mData;
+    return mData.data();
 }
 
 int AudioSpec::getSampleRate() const
@@ -45,6 +39,6 @@ int AudioSpec::getLength() const
 
 const float *AudioSpec::getConstData() const
 {
-    return mData;
+    return mData.data();
 }
 

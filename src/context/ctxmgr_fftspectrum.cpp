@@ -11,7 +11,7 @@ void ContextManager::renderFFTSpectrum(RenderingContext &rctx)
             .y = 4.3f * intensity - 9.6f,
         });
     }
-    rctx.renderer->renderGraph(graphRender);
+    rctx.renderer->renderGraph(graphRender, 3.0f, 1, 1, 1);
 }
 
 void ContextManager::eventFFTSpectrum(RenderingContext &rctx)
