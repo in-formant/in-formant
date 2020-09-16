@@ -109,7 +109,8 @@ namespace Main {
             ctx->pitchSolver.reset(pitchSolver);
             ctx->linpredSolver.reset(linpredSolver);
             ctx->formantSolver.reset(formantSolver);
-
+            ctx->invglotSolver.reset(invglotSolver);
+            
             return ctx;
         }
 
@@ -125,6 +126,11 @@ namespace Main {
 
         ContextBuilder& setFormantSolver(Analysis::FormantSolver *o) {
             formantSolver = o;
+            return *this;
+        }
+
+        ContextBuilder& setInvglotSolver(Analysis::InvglotSolver *o) {
+            invglotSolver = o;
             return *this;
         }
 
@@ -165,6 +171,7 @@ namespace Main {
         Analysis::PitchSolver   *pitchSolver;
         Analysis::LinpredSolver *linpredSolver;
         Analysis::FormantSolver *formantSolver;
+        Analysis::InvglotSolver *invglotSolver;
         int captureSampleRate;
         int captureDuration;
         int playbackBlockMinDuration;

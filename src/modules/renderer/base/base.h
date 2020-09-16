@@ -120,11 +120,13 @@ namespace Module::Renderer {
 
         virtual void test() = 0;
 
-        virtual void renderGraph(const GraphRenderData& data) = 0;
+        virtual void renderGraph(const GraphRenderData& data, float thick, float r, float g, float b) = 0;
         
         virtual void renderSpectrogram(const SpectrogramRenderData& data, int count) = 0;
 
         virtual void renderFrequencyTrack(const FrequencyTrackRenderData& data, float thick, float r, float g, float b) = 0;
+
+        virtual void renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::Freetype::Font& minorFont) = 0;
 
         virtual void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, float r, float g, float b) = 0;
 

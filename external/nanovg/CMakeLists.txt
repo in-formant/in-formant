@@ -24,9 +24,5 @@ endif()
 
 add_library(nanovg STATIC ${HEADERS} ${SOURCES})
 
-set(FT_DIR ${PROJECT_SOURCE_DIR}/../freetype)
-target_link_libraries(nanovg freetype)
-target_include_directories(nanovg PUBLIC ${FT_DIR}/include)
-
 install(FILES $<TARGET_FILE:nanovg> DESTINATION lib)
 install(FILES ${HEADERS}            DESTINATION include)

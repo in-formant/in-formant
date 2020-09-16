@@ -5,6 +5,7 @@
 #include "pitch/pitch.h"
 #include "linpred/linpred.h"
 #include "formant/formant.h"
+#include "invglot/invglot.h"
 #include "util/util.h"
 
 #endif // ANALYSIS_H

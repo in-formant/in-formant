@@ -8,8 +8,7 @@ namespace Nodes::IO {
     class AudioTime : public NodeIO {
     public:
         AudioTime();
-        ~AudioTime();
-
+        
         void setSampleRate(int sampleRate);
         void setLength(int length);
         float *getData();
@@ -22,7 +21,7 @@ namespace Nodes::IO {
         int mSampleRate;
         int mLength;
 
-        float *mData;
+        std::vector<float> mData;
     };
 
 }

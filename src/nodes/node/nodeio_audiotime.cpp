@@ -3,13 +3,8 @@
 using namespace Nodes::IO;
 
 AudioTime::AudioTime()
-    : mSampleRate(0), mLength(0), mData(nullptr)
+    : mSampleRate(0), mLength(0)
 {
-}
-
-AudioTime::~AudioTime()
-{
-    delete[] mData;
 }
 
 void AudioTime::setSampleRate(int sampleRate)
@@ -23,14 +18,13 @@ void AudioTime::setLength(int length)
         return;
     }
 
-    delete[] mData;
-    mData = new float[length];
+    mData.resize(length);
     mLength = length;
 }
 
 float *AudioTime::getData()
 {
-    return mData;
+    return mData.data();
 }
 
 int AudioTime::getSampleRate() const
@@ -45,5 +39,5 @@ int AudioTime::getLength() const
 
 const float *AudioTime::getConstData() const
 {
-    return mData;
+    return mData.data();
 }

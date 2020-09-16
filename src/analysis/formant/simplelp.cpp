@@ -19,7 +19,7 @@ FormantResult SimpleLP::solve(const float *lpc, int lpcOrder, float sampleRate)
 
         float r = std::abs(z);
         float phi = std::arg(z);
-
+        
         result.formants.push_back(calculateFormant(r, phi, sampleRate));
     }
 

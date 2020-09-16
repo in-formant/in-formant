@@ -8,7 +8,6 @@ namespace Nodes::IO {
     class AudioSpec : public NodeIO {
     public:
         AudioSpec();
-        ~AudioSpec();
 
         void setSampleRate(int sampleRate);
         void setLength(int length);
@@ -22,7 +21,7 @@ namespace Nodes::IO {
         int mSampleRate;
         int mLength;
 
-        float *mData;
+        std::vector<float> mData;
     };
 
 }

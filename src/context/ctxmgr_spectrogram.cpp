@@ -18,7 +18,7 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
         else
             pitchTrackRender.emplace_back(std::nullopt);
     }
-    rctx.renderer->renderFrequencyTrack(pitchTrackRender, 4.0f, 0.0f, 1.0f, 0.0f);
+    rctx.renderer->renderFrequencyTrack(pitchTrackRender, 4.0f, 0.0f, 1.0f, 1.0f);
 
     std::vector<Renderer::FrequencyTrackRenderData> formantTrackRender(numFormantsToRender);
     for (const auto& formants : formantTrack) {
@@ -34,6 +34,10 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
         const auto [r, g, b] = formantColors[i];
         rctx.renderer->renderFrequencyTrack(formantTrackRender[i], 6.0f, r, g, b);
     }
+ 
+    auto& majorFont = primaryFont->with(13, rctx.target.get());
+    auto& minorFont = primaryFont->with(12, rctx.target.get());
+    rctx.renderer->renderFrequencyScaleBar(majorFont, minorFont);
 
     if (durLoop > 0us) {
         auto& font = primaryFont->with(uiFontSize, rctx.target.get());

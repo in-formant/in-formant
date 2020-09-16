@@ -76,10 +76,14 @@ set(SOURCES
     src/nodes/linpred/linpred.h
     src/nodes/formants/formants.cpp
     src/nodes/formants/formants.h
+    src/nodes/invglot/invglot.cpp
+    src/nodes/invglot/invglot.h
     src/nodes/nodes.h
     src/analysis/fft/realfft.cpp
     src/analysis/fft/complexfft.cpp
     src/analysis/fft/fft.h
+    src/analysis/filter/filter.cpp
+    src/analysis/filter/filter.h
     src/analysis/pitch/amdf_m.cpp
     src/analysis/pitch/yin.cpp
     src/analysis/pitch/pitch.h
@@ -89,6 +93,8 @@ set(SOURCES
     src/analysis/formant/simplelp.cpp
     src/analysis/formant/filteredlp.cpp
     src/analysis/formant/formant.h
+    src/analysis/invglot/iaif.cpp
+    src/analysis/invglot/invglot.h
     src/analysis/util/find_peaks.cpp
     src/analysis/util/find_roots.cpp
     src/analysis/util/calc_formant.cpp
@@ -340,7 +346,6 @@ if(TRUE)
     message(STATUS "Including font module: freetype")
     set(FREETYPE_DIR ${PROJECT_SOURCE_DIR}/external/freetype)
     add_subdirectory(${FREETYPE_DIR} ${PROJECT_BINARY_DIR}/freetype)
-    target_compile_definitions(freetype PUBLIC -DFT_CONFIG_OPTION_ERROR_STRINGS)
     set(FONT_USE_FREETYPE TRUE)
     list(APPEND SOURCES
         src/modules/freetype/instance.cpp

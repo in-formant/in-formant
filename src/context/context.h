@@ -29,6 +29,7 @@ namespace Main {
         std::shared_ptr<Analysis::PitchSolver>      pitchSolver;
         std::shared_ptr<Analysis::LinpredSolver>    linpredSolver;
         std::shared_ptr<Analysis::FormantSolver>    formantSolver;
+        std::shared_ptr<Analysis::InvglotSolver>    invglotSolver;
     };
 
 }
