@@ -13,6 +13,7 @@ namespace Main {
     using namespace Module;
 
     struct RenderingContextInfo;
+    struct SettingsUIField;
 
     class ContextManager {
     public:
@@ -22,6 +23,10 @@ namespace Main {
         void initialize();
         void start();
         void terminate();
+
+#if defined(ANDROID) || defined(__ANDROID__)
+        void selectView(const std::string& name);
+#endif
 
     private:
         void loadSettings();
@@ -34,21 +39,24 @@ namespace Main {
 
         void createAudioNodes();
         void createAudioIOs();
+        void updateNodeParameters();
 
         void propagateAudio();
         void processAudioNode(const char *in, const std::string& nodeName);
 
         void updateNewData();
-        
+       
+        void initSettingsUI();
+
         void renderSpectrogram(RenderingContext& rctx);
         void renderFFTSpectrum(RenderingContext& rctx);
         void renderOscilloscope(RenderingContext& rctx);
-
-        void eventCommon();
+        void renderSettings(RenderingContext& rctx);
 
         void eventSpectrogram(RenderingContext& rctx);
         void eventFFTSpectrum(RenderingContext& rctx);
         void eventOscilloscope(RenderingContext& rctx);
+        void eventSettings(RenderingContext& rctx);
 
         void mainBody();
 
@@ -68,6 +76,10 @@ namespace Main {
         std::map<std::string, RenderingContextInfo> renderingContextInfos;
         bool endLoop;
 
+#if defined(ANDROID) || defined(__ANDROID__)
+        std::string selectedViewName;
+#endif
+
         int analysisDuration;
         int analysisMaxFrequency;
 
@@ -80,7 +92,7 @@ namespace Main {
         int fftLength;
         int fftMaxFrequency;
 
-        float preEmphasisFrequency;
+        int preEmphasisFrequency;
         int linPredOrder;
 
         int spectrogramCount;
@@ -89,6 +101,8 @@ namespace Main {
         std::vector<std::array<float, 3>> formantColors;
 
         int uiFontSize;
+
+        std::vector<SettingsUIField> mSettingFields;
 
         std::deque<std::vector<std::array<float, 2>>>  spectrogramTrack;
         std::deque<float>                              pitchTrack;
@@ -109,6 +123,14 @@ namespace Main {
 #ifdef __EMSCRIPTEN__
         std::string  canvasId;
 #endif
+    };
+    
+    struct SettingsUIField {
+        std::string labelText;
+        int ContextManager::*field;
+
+        int x, y, w, h;
+        bool isFocused;
     };
     
 }
