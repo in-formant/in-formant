@@ -28,6 +28,7 @@ set(SOURCES
     src/context/ctxmgr_spectrogram.cpp
     src/context/ctxmgr_fftspectrum.cpp
     src/context/ctxmgr_oscilloscope.cpp
+    src/context/ctxmgr_settings.cpp
     src/context/contextmanager.h
     src/backtrace/backtrace.h
     src/android_redirect_log.cpp
@@ -494,7 +495,7 @@ if(EMSCRIPTEN)
 
     pkg_check_modules(FT2 REQUIRED freetype2)
    
-    set(EM_FLAGS "-sASSERTIONS=0" "-sEMULATE_FUNCTION_POINTER_CASTS=1" "-sERROR_ON_UNDEFINED_SYMBOLS=1" "-sUSE_PTHREADS=1" "-sFULL_ES2=1")
+    set(EM_FLAGS "-flto" "-sASSERTIONS=0" "-sALLOW_MEMORY_GROWTH=1" "-sEMULATE_FUNCTION_POINTER_CASTS=1" "-sERROR_ON_UNDEFINED_SYMBOLS=1" "-sUSE_PTHREADS=1" "-sFULL_ES2=1")
 
     set(EMCC_FLAGS ${EM_FLAGS})
     set(EMLD_FLAGS ${EM_FLAGS} "-s EXPORTED_FUNCTIONS=[\'_main\',\'_webaudio_process_playback\',\'_webaudio_process_capture\']" "-s EXPORTED_RUNTIME_METHODS=[\'ccall\']" "-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\'$autoResumeAudioContext\']" "--preload-file ${PROJECT_SOURCE_DIR}/Montserrat.otf@Montserrat.otf")

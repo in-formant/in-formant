@@ -36,8 +36,12 @@ namespace Module::Target {
 
         virtual void processEvents() = 0;
         virtual bool shouldQuit() = 0;
+        virtual bool shouldClose() = 0;
         virtual bool sizeChanged() = 0;
-    
+        virtual bool isKeyPressed(uint32_t key) = 0;
+        virtual bool isMousePressed(uint32_t button) = 0;
+        virtual std::pair<int, int> getMousePosition() = 0;
+
         bool supportsRenderer(Type rendererType);
 
     public:

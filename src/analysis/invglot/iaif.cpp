@@ -9,7 +9,7 @@ using Analysis::InvglotResult;
 IAIF::IAIF(float d)
     : d(d)
 {
-    lpc = std::make_unique<LP::Autocorr>();
+    lpc = std::make_unique<LP::Burg>();
 }
 
 static void applyWindow(const std::vector<float>& w, const std::vector<float>& x, std::vector<float>& y)

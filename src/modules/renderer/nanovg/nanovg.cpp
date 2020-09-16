@@ -333,12 +333,7 @@ void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::
 
                     if (scale == FrequencyScale::Mel) {
                         shouldRenderLabel =
-                               (3000 <= val && fmod(val, 200) == 0)
-                            || (1000 <= val && val < 3000 && fmod(val, 100) == 0)
-                            || ( 500 <= val && val < 1000 && fmod(val,  50) == 0)
-                            || ( 100 <= val && val <  500 && fmod(val,  25) == 0)
-                            || (  10 <= val && val <  100 && fmod(val,  20) == 0)
-                            || (   1 == val);
+                               ( fmod(val, 500) == 0 );
                     }
                     else if (scale == FrequencyScale::Logarithmic) {
                         shouldRenderLabel =
@@ -394,6 +389,35 @@ void NanoVG::renderText(Module::Freetype::Font& font, const std::string& text, i
         
         x0 += glyphRenderData.advanceX >> 6;
     }
+}
+
+std::tuple<float, float, float, float> NanoVG::renderInputBox(Module::Freetype::Font& font, const std::string& content, int x, int y, int w, bool isFocused)
+{
+    int h = std::get<3>(font.queryTextSize("M")) + 10;
+    
+    NVGcolor startClr = isFocused ? nvgRGBA( 70, 102, 255, 128) : nvgRGBA(255, 255, 255,  32);
+    NVGcolor endClr   = isFocused ? nvgRGBA( 32,  32,  32,  32) : nvgRGBA( 32,  32,  32,  32);
+
+    NVGpaint bg;
+    bg = nvgBoxGradient(vg, x+1,y+1+1.5f, w-2,h-2, 3,4, startClr, endClr);
+    nvgBeginPath(vg);
+    nvgRoundedRect(vg, x+1,y+1, w-2, h-2, 4-1);
+    nvgFillPaint(vg, bg);
+    nvgFill(vg);
+
+    nvgBeginPath(vg);
+    nvgRoundedRect(vg, x+0.5f,y+0.5f, w-1,h-1, 4-0.5f);
+    nvgStrokeColor(vg, nvgRGBA(255,255,255,48));
+    nvgStroke(vg);
+
+    renderText(font, content, x + 5, y + 5, 1.0f, 1.0f, 1.0f);
+
+    return {
+        (float) x,
+        (float) y,
+        (float) w,
+        (float) h,
+    };
 }
 
 std::pair<float, float> NanoVG::convertNormCoord(float x, float y)

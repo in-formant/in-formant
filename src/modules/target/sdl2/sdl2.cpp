@@ -77,10 +77,6 @@ void SDL2::initialize()
         SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
 #   endif
 #endif
-
-#if defined(ANDROID) || defined(__ANDROID__)
-    prepareAssets();
-#endif
 }
 
 void SDL2::terminate()
@@ -179,13 +175,13 @@ void SDL2::create()
     checkError(mWindow == nullptr);
 
     mGotQuitEvent = false;
+    mGotCloseEvent = false;
     mWindowSizeChanged = false;
 }
 
 void SDL2::show()
 {
     SDL_ShowWindow(mWindow);
-    SDL_RaiseWindow(mWindow);
 }
 
 void SDL2::hide()
@@ -218,8 +214,21 @@ void SDL2::processEvents()
         }
         else if (event.type == SDL_KEYDOWN) {
             if (event.key.windowID == windowId) {
-                if (event.key.keysym.sym == SDLK_ESCAPE) {
-                    mGotQuitEvent = true;
+                if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+                    mGotCloseEvent = true;
+                }
+                else {
+                    mKeyState[event.key.keysym.scancode] = true;
+                }
+            }
+            else {
+                deleteEvent = false;
+            }
+        }
+        else if (event.type == SDL_KEYUP) {
+            if (event.key.windowID == windowId) {
+                if (event.key.keysym.scancode != SDL_SCANCODE_ESCAPE) {
+                    mKeyState[event.key.keysym.scancode] = false;
                 }
             }
             else {
@@ -229,7 +238,7 @@ void SDL2::processEvents()
         else if (event.type == SDL_WINDOWEVENT) {
             if (event.window.windowID == windowId) {
                 if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
-                    mGotQuitEvent = true;
+                    mGotCloseEvent = true;
                 }
                 else if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
                     mWindowSizeChanged = true;
@@ -250,11 +259,18 @@ void SDL2::processEvents()
             ++it;
         }
     }
+
+    mMouseBitmask = SDL_GetMouseState(&mMouseX, &mMouseY);
 }
 
 bool SDL2::shouldQuit()
 {
     return mGotQuitEvent;
+}
+
+bool SDL2::shouldClose()
+{
+    return mGotCloseEvent;
 }
 
 bool SDL2::sizeChanged()
@@ -264,6 +280,25 @@ bool SDL2::sizeChanged()
         return true;
     }
     return false;
+}
+
+bool SDL2::isKeyPressed(uint32_t key)
+{
+    auto it = mKeyState.find((SDL_Scancode) key);
+    if (it == mKeyState.end()) {
+        return false;
+    }
+    return it->second;
+}
+
+bool SDL2::isMousePressed(uint32_t button)
+{
+    return mMouseBitmask & SDL_BUTTON(button);
+}
+
+std::pair<int, int> SDL2::getMousePosition()
+{
+    return {mMouseX, mMouseY};
 }
 
 void SDL2::checkError(bool cond)

@@ -78,6 +78,12 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 }
 
 void ContextManager::eventSpectrogram(RenderingContext &rctx)
-{
+{ 
+    if (rctx.target->isKeyPressed(SDL_SCANCODE_F1)) {
+        ctx->renderingContexts["Oscilloscope"].target->show();
+    }
+    else if (rctx.target->isKeyPressed(SDL_SCANCODE_F2)) {
+        ctx->renderingContexts["FFT Spectrum"].target->show();
+    }
 }
 

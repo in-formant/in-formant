@@ -30,6 +30,10 @@ void ContextManager::initialize()
     ctx->audio->initialize();
     ctx->audio->refreshDevices();
 
+#if defined(ANDROID) || defined(__ANDROID__)
+    Target::SDL2::prepareAssets();
+#endif
+
     durProcessing = 0us;
     durRendering = 0us;
     durLoop = 0us;
@@ -49,9 +53,12 @@ void ContextManager::start()
         {"Spectrogram", &ContextManager::renderSpectrogram, &ContextManager::eventSpectrogram},
         {"FFT spectrum", &ContextManager::renderFFTSpectrum, &ContextManager::eventFFTSpectrum},
         {"Oscilloscope", &ContextManager::renderOscilloscope, &ContextManager::eventOscilloscope},
+        {"Settings", &ContextManager::renderSettings, &ContextManager::eventSettings},
     });
 
     primaryFont = & ctx->freetypeInstance->font("Montserrat.otf");
+
+    initSettingsUI();
 
     for (const auto& [name, info] : renderingContextInfos) {
         auto& rctx = ctx->renderingContexts[name];
@@ -69,6 +76,9 @@ void ContextManager::start()
 #ifdef __EMSCRIPTEN__
         saveModuleCtx(info.canvasId);
 #endif
+        if (name == "Settings") {
+            rctx.target->hide();
+        }
     }
 
     createAudioNodes();
@@ -128,14 +138,14 @@ void ContextManager::loadSettings()
 
     viewMinFrequency = 1;
     viewMaxFrequency = 8000;
-    viewMinGain = -45;
-    viewMaxGain = +10;
+    viewMinGain = -40;
+    viewMaxGain = +20;
     viewFrequencyScale = Renderer::FrequencyScale::Mel;
 
     fftLength = 4096;
     fftMaxFrequency = viewMaxFrequency;
 
-    preEmphasisFrequency = 50.0f;
+    preEmphasisFrequency = 500.0f;
     linPredOrder = 8;
 
     spectrogramCount = 400;
@@ -234,6 +244,12 @@ void ContextManager::createAudioIOs()
     nodeIOs["formant"] = Nodes::makeNodeIO(2, Nodes::kNodeIoTypeFrequencies, Nodes::kNodeIoTypeFrequencies);
 }
 
+void ContextManager::updateNodeParameters()
+{
+    nodes["rs"]->as<Nodes::Resampler>()->setOutputSampleRate(2 * analysisMaxFrequency);
+    nodes["linpred"]->as<Nodes::LinPred>()->setOrder(linPredOrder);
+}
+
 void ContextManager::propagateAudio()
 {
     auto t0 = Clock::now();
@@ -248,9 +264,8 @@ void ContextManager::propagateAudio()
     processAudioNode("rs_spec", "spec");
     
     processAudioNode("prereqs", "tail");
+    processAudioNode("tail", "invglot");
     processAudioNode("tail", "pitch");
-    processAudioNode("tail", "preemph");
-    processAudioNode("preemph", "invglot");
 
     processAudioNode("prereqs", "rs");
     processAudioNode("rs", "tail");
@@ -335,6 +350,22 @@ void ContextManager::mainBody()
         if (rctx.target->shouldQuit()) {
             endLoop = true;
             break;
+        }
+
+        if (rctx.target->shouldClose()) {
+            if (name == "Spectrogram") {
+                endLoop = true;
+                break;
+            }
+            else {
+                rctx.target->hide();
+            }
+        }
+
+        if (name != "Settings") {
+            if (rctx.target->isKeyPressed(SDL_SCANCODE_S)) {
+                ctx->renderingContexts["Settings"].target->show();
+            }
         }
 
         if (rctx.target->sizeChanged()) {
