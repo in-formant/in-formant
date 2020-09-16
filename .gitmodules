@@ -10,7 +10,3 @@
 	path = external/freetype
 	url = https://git.sv.nongnu.org/r/freetype/freetype2.git
 	branch = VER-2-10-2
-[submodule "wavelib"]
-	path = external/wavelib
-	url = https://github.com/rafat/wavelib
-	branch = master

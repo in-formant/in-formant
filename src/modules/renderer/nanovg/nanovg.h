@@ -52,6 +52,8 @@ namespace Module::Renderer {
 
         void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, float r, float g, float b) override;
 
+        std::tuple<float, float, float, float> renderInputBox(Module::Freetype::Font& font, const std::string& content, int x, int y, int w, bool isFocused) override;
+
     private:
         std::pair<float, float> convertNormCoord(float x, float y);
 

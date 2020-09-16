@@ -35,12 +35,13 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
         rctx.renderer->renderFrequencyTrack(formantTrackRender[i], 6.0f, r, g, b);
     }
  
-    auto& majorFont = primaryFont->with(13, rctx.target.get());
-    auto& minorFont = primaryFont->with(12, rctx.target.get());
-    rctx.renderer->renderFrequencyScaleBar(majorFont, minorFont);
+    auto& tickLabelFont = primaryFont->with(uiFontSize - 4, rctx.target.get());
+    rctx.renderer->renderFrequencyScaleBar(tickLabelFont, tickLabelFont);
 
     if (durLoop > 0us) {
         auto& font = primaryFont->with(uiFontSize, rctx.target.get());
+
+        const auto [tx, ty, tw, th] = font.queryTextSize("M");
 
         std::stringstream ss;
         ss << "Loop cycle took " << (durLoop.count() / 1000.0f) << " ms";
@@ -62,7 +63,7 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
                 font,
                 ss.str(),
                 20,
-                20+uiFontSize+5,
+                20 + th + 10,
                 1.0f, 0.5f, 1.0f);
 
         ss.str("");
@@ -72,12 +73,18 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
                 font,
                 ss.str(),
                 20,
-                20+2*(uiFontSize+5),
+                20 + 2 * (th + 10),
                 1.0f, 0.5f, 1.0f);
     }
 }
 
 void ContextManager::eventSpectrogram(RenderingContext &rctx)
-{
+{ 
+    if (rctx.target->isKeyPressed(SDL_SCANCODE_F1)) {
+        ctx->renderingContexts["Oscilloscope"].target->show();
+    }
+    else if (rctx.target->isKeyPressed(SDL_SCANCODE_F2)) {
+        ctx->renderingContexts["FFT Spectrum"].target->show();
+    }
 }
 

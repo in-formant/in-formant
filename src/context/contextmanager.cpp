@@ -30,6 +30,10 @@ void ContextManager::initialize()
     ctx->audio->initialize();
     ctx->audio->refreshDevices();
 
+#if defined(ANDROID) || defined(__ANDROID__)
+    Target::SDL2::prepareAssets();
+#endif
+
     durProcessing = 0us;
     durRendering = 0us;
     durLoop = 0us;
@@ -49,10 +53,23 @@ void ContextManager::start()
         {"Spectrogram", &ContextManager::renderSpectrogram, &ContextManager::eventSpectrogram},
         {"FFT spectrum", &ContextManager::renderFFTSpectrum, &ContextManager::eventFFTSpectrum},
         {"Oscilloscope", &ContextManager::renderOscilloscope, &ContextManager::eventOscilloscope},
+        {"Settings", &ContextManager::renderSettings, &ContextManager::eventSettings},
     });
 
     primaryFont = & ctx->freetypeInstance->font("Montserrat.otf");
 
+    initSettingsUI();
+
+#if defined(ANDROID) || defined(__ANDROID__)
+    auto& rctx = ctx->renderingContexts["main"];
+    rctx.target->initialize(); 
+    rctx.target->setTitle("Speech analysis for Android");
+    rctx.target->create();
+    rctx.renderer->initialize();
+    updateRendererTargetSize(rctx);
+    updateRendererParameters(rctx);
+    selectedViewName = "Spectrogram";
+#else
     for (const auto& [name, info] : renderingContextInfos) {
         auto& rctx = ctx->renderingContexts[name];
         rctx.target->initialize();
@@ -69,7 +86,11 @@ void ContextManager::start()
 #ifdef __EMSCRIPTEN__
         saveModuleCtx(info.canvasId);
 #endif
+        if (name == "Settings") {
+            rctx.target->hide();
+        }
     }
+#endif
 
     createAudioNodes();
     createAudioIOs();
@@ -101,16 +122,22 @@ void ContextManager::start()
 
 void ContextManager::terminate()
 {
+#if defined(ANDROID) || defined(__ANDROID__)
+    auto& rctx = ctx->renderingContexts["main"];
+#else
     for (const auto& [name, info] : renderingContextInfos) {
 #ifdef __EMSCRIPTEN__
         changeModuleCanvas(info.canvasId);
 #endif
         auto& rctx = ctx->renderingContexts[name];
+#endif
         rctx.renderer->terminate();
         rctx.target->hide();
         rctx.target->close();
         rctx.target->terminate();
+#if ! ( defined(ANDROID) || defined(__ANDROID__) )
     }
+#endif
 
     ctx->audio->stopPlaybackStream();
     ctx->audio->closePlaybackStream();
@@ -121,21 +148,28 @@ void ContextManager::terminate()
     ctx->audio->terminate();
 }
 
+#if defined(ANDROID) || defined(__ANDROID__)
+void ContextManager::selectView(const std::string& name)
+{
+    selectedViewName = name;
+}
+#endif
+
 void ContextManager::loadSettings()
 {
     analysisDuration = 25;
     analysisMaxFrequency = 4700;
 
     viewMinFrequency = 1;
-    viewMaxFrequency = 8000;
-    viewMinGain = -45;
-    viewMaxGain = +10;
+    viewMaxFrequency = 6500;
+    viewMinGain = -40;
+    viewMaxGain = +20;
     viewFrequencyScale = Renderer::FrequencyScale::Mel;
 
     fftLength = 4096;
     fftMaxFrequency = viewMaxFrequency;
 
-    preEmphasisFrequency = 50.0f;
+    preEmphasisFrequency = 500.0f;
     linPredOrder = 8;
 
     spectrogramCount = 400;
@@ -149,9 +183,9 @@ void ContextManager::loadSettings()
     };
 
 #if defined(ANDROID) || defined(__ANDROID__)
-    uiFontSize = 11;
+    uiFontSize = 10;
 #else
-    uiFontSize = 16;
+    uiFontSize = 14;
 #endif
 
     spectrogramTrack.resize(spectrogramCount);
@@ -183,7 +217,12 @@ void ContextManager::updateRendererParameters(RenderingContext& rctx)
 
 void ContextManager::updateAllRendererParameters()
 {
-    for (auto& [name, rctx] : ctx->renderingContexts) {
+#if defined(ANDROID) || defined(__ANDROID__)
+    auto& rctx = ctx->renderingContexts["main"];
+#else
+    for (auto& [name, rctx] : ctx->renderingContexts)
+#endif
+    {
         updateRendererParameters(rctx);
     }
 }
@@ -191,8 +230,15 @@ void ContextManager::updateAllRendererParameters()
 void ContextManager::createRenderingContexts(const std::initializer_list<RenderingContextInfo>& infos)
 {
     RenderingContextBuilder<Target::SDL2> builder(ctx->rendererType);
+#if defined(ANDROID) || defined(__ANDROID__)
+    ctx->renderingContexts["main"] = builder.build();
+#endif
+
     for (const auto& info : infos) {
+#if ! ( defined(ANDROID) || defined(__ANDROID__) )
         ctx->renderingContexts[info.name] = builder.build();
+#endif
+
         renderingContextInfos[info.name] = info;
         
 #ifdef __EMSCRIPTEN__
@@ -234,6 +280,12 @@ void ContextManager::createAudioIOs()
     nodeIOs["formant"] = Nodes::makeNodeIO(2, Nodes::kNodeIoTypeFrequencies, Nodes::kNodeIoTypeFrequencies);
 }
 
+void ContextManager::updateNodeParameters()
+{
+    nodes["rs"]->as<Nodes::Resampler>()->setOutputSampleRate(2 * analysisMaxFrequency);
+    nodes["linpred"]->as<Nodes::LinPred>()->setOrder(linPredOrder);
+}
+
 void ContextManager::propagateAudio()
 {
     auto t0 = Clock::now();
@@ -248,9 +300,8 @@ void ContextManager::propagateAudio()
     processAudioNode("rs_spec", "spec");
     
     processAudioNode("prereqs", "tail");
+    processAudioNode("tail", "invglot");
     processAudioNode("tail", "pitch");
-    processAudioNode("tail", "preemph");
-    processAudioNode("preemph", "invglot");
 
     processAudioNode("prereqs", "rs");
     processAudioNode("rs", "tail");
@@ -323,12 +374,18 @@ void ContextManager::mainBody()
 {
     auto t0 = Clock::now();
 
+#if defined(ANDROID) || defined(__ANDROID__)
+    const auto& name = selectedViewName;
+    const auto& info = renderingContextInfos[name];
+    auto& rctx = ctx->renderingContexts["main"];
+#define break 
+#else
     for (const auto& [name, info] : renderingContextInfos) {
 #ifdef __EMSCRIPTEN__
         changeModuleCanvas(info.canvasId);
 #endif
-
         auto& rctx = ctx->renderingContexts[name];
+#endif
 
         rctx.target->processEvents();
 
@@ -337,13 +394,33 @@ void ContextManager::mainBody()
             break;
         }
 
+        if (rctx.target->shouldClose()) {
+            if (name == "Spectrogram") {
+                endLoop = true;
+                break;
+            }
+            else {
+                rctx.target->hide();
+            }
+        }
+
+        if (name != "Settings") {
+            if (rctx.target->isKeyPressed(SDL_SCANCODE_S)) {
+                ctx->renderingContexts["Settings"].target->show();
+            }
+        }
+
         if (rctx.target->sizeChanged()) {
             updateRendererTargetSize(rctx);
         }
 
         (this->*info.eventCallback)(rctx);
+#if defined(ANDROID) || defined(__ANDROID__)
+#   undef break
+#else
     }
-    
+#endif
+
     if (endLoop) {
         return;
     }
@@ -360,17 +437,21 @@ void ContextManager::mainBody()
 
     auto tr0 = Clock::now();
 
+#if ! ( defined(ANDROID) || defined(__ANDROID__) )
     for (const auto& [name, info] : renderingContextInfos) {
 #ifdef __EMSCRIPTEN__
         changeModuleCanvas(info.canvasId);
 #endif
 
         auto& rctx = ctx->renderingContexts[name];
+#endif
 
         rctx.renderer->begin();
         (this->*info.renderCallback)(rctx);
         rctx.renderer->end(); 
+#if ! ( defined(ANDROID) || defined(__ANDROID__) )
     }
+#endif
 
     auto tr1 = Clock::now();
 

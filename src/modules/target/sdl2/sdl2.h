@@ -34,11 +34,15 @@ namespace Module::Target {
 
         void processEvents() override;
         bool shouldQuit() override;
+        bool shouldClose() override;
         bool sizeChanged() override;
+        bool isKeyPressed(uint32_t key) override;
+        bool isMousePressed(uint32_t key) override;
+        std::pair<int, int> getMousePosition() override;
 
-    private:
+    public:
 #ifdef __ANDROID__
-        void prepareAssets(); 
+        static void prepareAssets(); 
 #endif
 
         static std::vector<SDL_Event> globalEvents;
@@ -52,8 +56,14 @@ namespace Module::Target {
         SDL_Window *mWindow;
 
         bool mGotQuitEvent;
+        bool mGotCloseEvent;
         bool mWindowSizeChanged;
     
+        std::map<SDL_Scancode, bool> mKeyState;
+    
+        int mMouseX, mMouseY;
+        uint32_t mMouseBitmask;
+
         int err;
         void checkError(bool cond);
     };
