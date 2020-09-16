@@ -41,8 +41,24 @@ RUN apt-get -y update && apt-get -y install \
 RUN git clone https://github.com/mxe/mxe.git
 RUN cd /mxe && make JOBS=$(nproc) STRIP_LIB=true MXE_TARGETS='i686-w64-mingw32.shared x86_64-w64-mingw32.shared' MXE_PLUGIN_DIRS='plugins/gcc10' cc
 RUN cd /mxe && make JOBS=$(nproc) STRIP_LIB=true MXE_TARGETS='i686-w64-mingw32.shared x86_64-w64-mingw32.shared' MXE_PLUGIN_DIRS='plugins/gcc10' fftw eigen pthreads
-RUN cd /mxe && make JOBS=$(nproc) STRIP_LIB=true MXE_TARGETS='i686-w64-mingw32.shared x86_64-w64-mingw32.shared' MXE_PLUGIN_DIRS='plugins/gcc10' sdl2 portaudio
+RUN cd /mxe && make JOBS=$(nproc) STRIP_LIB=true MXE_TARGETS='i686-w64-mingw32.shared x86_64-w64-mingw32.shared' MXE_PLUGIN_DIRS='plugins/gcc10' sdl2
 RUN cd /mxe && make clean-junk
+
+ENV MXE=/mxe PATH=/mxe/usr/bin:$PATH
+
+# Build portaudio
+RUN wget http://www.portaudio.com/archives/pa_stable_v190600_20161030.tgz && \
+        tar xf pa_stable_v190600_20161030.tgz
+RUN cd /portaudio && \
+        mkdir -p objs/32 && \
+        cd objs/32 && \
+        ../../configure --host=i686-w64-mingw32.shared --enable-shared --disable-static --prefix=/mxe/usr/i686-w64-mingw32.shared && \
+        make install -j$(nproc)
+RUN cd /portaudio && \
+        mkdir -p objs/64 && \
+        cd objs/64 && \
+        ../../configure --host=x86_64-w64-mingw32.shared --enable-shared --disable-static --prefix=/mxe/usr/x86_64-w64-mingw32.shared && \
+        make install -j$(nproc)
 
 # Install recent GL headers
 ENV ver=2.1.0
@@ -64,7 +80,6 @@ RUN cd glm-$ver && \
         done
 
 COPY deploy-windows.sh /usr/local/bin
-ENV MXE=/mxe PATH=/mxe/usr/bin:$PATH
 CMD cd /build && \
         if [ $target = win32 ]; then export cross=i686-w64-mingw32.shared- ; fi && \
         if [ $target = win64 ]; then export cross=x86_64-w64-mingw32.shared- ; fi && \
