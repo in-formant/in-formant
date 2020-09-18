@@ -3,7 +3,6 @@
 
 #include "../base/base.h"
 #include <emscripten.h>
-#include <emscripten/val.h>
 
 namespace Module::Audio {
     class WebAudio;

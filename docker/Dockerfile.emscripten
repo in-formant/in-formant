@@ -53,7 +53,7 @@ COPY sdl2-emscripten-patch/* /SDL2/src/video/emscripten/
 RUN mkdir -p SDL2/build && \
         cd SDL2/build && \
         . /emsdk/emsdk_env.sh && \
-        emconfigure ../configure --host=asmjs-unknown-emscripten --disable-assembly --enable-threads --enable-pthreads --disable-cpuinfo CFLAGS="-O2 -Wno-warn-absolute-paths -Wdeclaration-after-statement -Werror=declaration-after-statement -s USE_PTHREADS=1" LDFLAGS="-s USE_PTHREADS=1" --prefix=/emusr && \
+        emconfigure ../configure --host=asmjs-unknown-emscripten --disable-assembly --disable-threads --disable-pthreads --disable-cpuinfo CFLAGS="-O2 -Wno-warn-absolute-paths -Wdeclaration-after-statement -Werror=declaration-after-statement -s USE_PTHREADS=0" LDFLAGS="-s USE_PTHREADS=0" --prefix=/emusr && \
         emmake make -j$(nproc) && \
         emmake make install 
 

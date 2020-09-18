@@ -491,17 +491,25 @@ endif()
 set(RESAMPLER_QUALITY SOXR_HQ)
 
 if(EMSCRIPTEN)
-    set(RESAMPLER_QUALITY SOXR_QQ)
+    #set(RESAMPLER_QUALITY SOXR_QQ)
 
     pkg_check_modules(FT2 REQUIRED freetype2)
    
-    set(EM_FLAGS "-flto" "-sASSERTIONS=0" "-sALLOW_MEMORY_GROWTH=1" "-sEMULATE_FUNCTION_POINTER_CASTS=1" "-sERROR_ON_UNDEFINED_SYMBOLS=1" "-sUSE_PTHREADS=1" "-sFULL_ES2=1")
+    set(EM_FLAGS "-sASSERTIONS=0" "-sTOTAL_MEMORY=268435456" "-sEMULATE_FUNCTION_POINTER_CASTS=1" "-sERROR_ON_UNDEFINED_SYMBOLS=1" "-sUSE_PTHREADS=0" "-sFULL_ES2=1")
 
     set(EMCC_FLAGS ${EM_FLAGS})
     set(EMLD_FLAGS ${EM_FLAGS} "-s EXPORTED_FUNCTIONS=[\'_main\',\'_webaudio_process_playback\',\'_webaudio_process_capture\']" "-s EXPORTED_RUNTIME_METHODS=[\'ccall\']" "-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\'$autoResumeAudioContext\']" "--preload-file ${PROJECT_SOURCE_DIR}/Montserrat.otf@Montserrat.otf")
 
-    target_compile_options(speech-analysis PUBLIC ${EMCC_FLAGS} -g -g4 --source-map-base /)
-    target_link_libraries(speech-analysis PUBLIC ${FT2_LDFLAGS} ${EMLD_FLAGS} -g -g4 "--source-map-base /")
+    if (CMAKE_BUILD_TYPE MATCHES "^Debug")
+        target_compile_options(speech-analysis PUBLIC ${EMCC_FLAGS} -g -g4 --source-map-base /)
+        target_link_libraries(speech-analysis PUBLIC ${FT2_LDFLAGS} ${EMLD_FLAGS} -g -g4 "--source-map-base /")
+    elseif (CMAKE_BUILD_TYPE MATCHES "^Release")
+        target_compile_options(speech-analysis PUBLIC ${EMCC_FLAGS} -fno-rtti)
+        target_link_libraries(speech-analysis PUBLIC ${FT2_LDFLAGS} ${EMLD_FLAGS} -fno-rtti)
+    else()
+        target_compile_options(speech-analysis PUBLIC ${EMCC_FLAGS})
+        target_link_libraries(speech-analysis PUBLIC ${FT2_LDFLAGS} ${EMLD_FLAGS})
+    endif()
 endif()
 
 if(ANDROID)
