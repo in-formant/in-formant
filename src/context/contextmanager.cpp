@@ -107,7 +107,7 @@ void ContextManager::start()
                 if (self->endLoop) {
                     emscripten_cancel_main_loop();
                 }
-            }, this, 30, 1);
+            }, this, 60, 1);
 #else
     while (!endLoop) {
         mainBody();

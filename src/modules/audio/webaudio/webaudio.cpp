@@ -47,6 +47,10 @@ void WebAudio::initialize()
 
 void WebAudio::terminate()
 {
+    EM_ASM({
+        Module.free(_webaudio.captureDevice.buffer);
+        Module.free(_webaudio.playbackDevice.buffer);
+    });
 }
 
 void WebAudio::refreshDevices()
@@ -89,15 +93,15 @@ void WebAudio::openCaptureStream(const Device *pDevice)
     (void) pDevice;
 
     const int channelCount = 1;
-    const int bufferSize = 1024;
+    const int bufferSize = 512;
 
     EM_ASM({
-        const channels   = $0;
-        const sampleRate = $1;
-        const bufferSize = $2;
-        const pThis      = $3;
+        var channels   = $0;
+        var sampleRate = $1;
+        var bufferSize = $2;
+        var pThis      = $3;
         
-        const device = {};
+        var device = {};
 
         device.context = new (window.AudioContext || window.webkitAudioContext)({sampleRate:sampleRate});
         device.context.suspend();
@@ -117,7 +121,7 @@ void WebAudio::openCaptureStream(const Device *pDevice)
                 e.outputBuffer.getChannelData(ch).fill(0.0);
             }
 
-            const sendSilence = device.silenced || (device.streamNode === undefined);
+            var sendSilence = device.silenced || (device.streamNode === undefined);
 
             var totalFramesProcessed = 0;
             while (totalFramesProcessed < e.inputBuffer.length) {
@@ -188,15 +192,15 @@ void WebAudio::openPlaybackStream(const Device *pDevice)
     (void) pDevice;
 
     const int channelCount = 1;
-    const int bufferSize = 1024;
+    const int bufferSize = 512;
 
     EM_ASM({
-        const channels   = $0;
-        const sampleRate = $1;
-        const bufferSize = $2;
-        const pThis      = $3;
+        var channels   = $0;
+        var sampleRate = $1;
+        var bufferSize = $2;
+        var pThis      = $3;
         
-        const device = {};
+        var device = {};
 
         device.context = new (window.AudioContext || window.webkitAudioContext)({sampleRate:sampleRate});
         device.context.suspend();
@@ -212,7 +216,7 @@ void WebAudio::openPlaybackStream(const Device *pDevice)
                 return;
             }
 
-            const sendSilence = device.silenced || (e.outputBuffer.numberOfChannels != channels);
+            var sendSilence = device.silenced || (e.outputBuffer.numberOfChannels != channels);
 
             var totalFramesProcessed = 0;
             while (totalFramesProcessed < e.outputBuffer.length) {
@@ -241,6 +245,8 @@ void WebAudio::openPlaybackStream(const Device *pDevice)
                 totalFramesProcessed += framesToProcess;
             }
         };
+        
+        device.scriptNode.connect(device.context.destination);
 
         device.silenced = true;
         _webaudio.playbackDevice = device;
