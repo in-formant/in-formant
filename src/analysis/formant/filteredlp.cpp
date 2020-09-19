@@ -20,7 +20,12 @@ FormantResult FilteredLP::solve(const float *lpc, int lpcOrder, float sampleRate
         float r = std::abs(z);
         float phi = std::arg(z);
 
-        result.formants.push_back(calculateFormant(r, phi, sampleRate));
+        if (r > 0.7f && r < 1.0f) {
+            FormantData formant = calculateFormant(r, phi, sampleRate);
+            if (formant.frequency > 50.0f && formant.frequency < sampleRate / 2 - 50.0f) {
+                result.formants.push_back(std::move(formant));
+            }
+        }
     }
 
     sortFormants(result.formants);

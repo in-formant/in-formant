@@ -1,4 +1,5 @@
 #include "linpred.h"
+#include <cmath>
 
 using namespace Analysis::LP;
 
@@ -53,6 +54,11 @@ std::vector<float> Burg::solve(const float *x, int length, int lpcOrder, float *
     }
 
 end:
+    if (xms <= 0.0) {
+        a.resize(0);
+        xms = 0.0;
+    }
+
     std::vector<float> lpc(a.size());
     for (int i = 0; i < a.size(); ++i) {
         lpc[i] = -a[i];

@@ -100,6 +100,10 @@ set(SOURCES
     src/analysis/invglot/invglot.h
     src/analysis/util/find_peaks.cpp
     src/analysis/util/find_roots.cpp
+    src/analysis/util/laguerre.cpp
+    src/analysis/util/laguerre.h
+    src/analysis/util/polish_root.cpp
+    src/analysis/util/eval_polynomial.cpp
     src/analysis/util/calc_formant.cpp
     src/analysis/util/sort_formants.cpp
     src/analysis/util/util.h
