@@ -154,19 +154,19 @@ void ContextManager::selectView(const std::string& name)
 void ContextManager::loadSettings()
 {
     analysisDuration = 25;
-    analysisMaxFrequency = 6000;
+    analysisMaxFrequency = 5200;
 
     viewMinFrequency = 1;
     viewMaxFrequency = 6500;
     viewMinGain = -70;
-    viewMaxGain = +10;
+    viewMaxGain = +15;
     viewFrequencyScale = Renderer::FrequencyScale::Mel;
 
     fftLength = 4096;
     fftMaxFrequency = viewMaxFrequency;
 
-    preEmphasisFrequency = 150.0f;
-    linPredOrder = 11;
+    preEmphasisFrequency = 50.0f;
+    linPredOrder = 10;
 
     spectrogramCount = 400;
 

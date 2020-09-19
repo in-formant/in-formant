@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     ctxBuilder
         .setPitchSolver(new Analysis::Pitch::Yin(0.35f))
         .setLinpredSolver(new Analysis::LP::Burg)
-        .setFormantSolver(new Analysis::Formant::SimpleLP)
+        .setFormantSolver(new Analysis::Formant::FilteredLP)
         .setInvglotSolver(new Analysis::Invglot::IAIF(0.98f))
         .setCaptureSampleRate(48000)
         .setCaptureDuration(200ms)

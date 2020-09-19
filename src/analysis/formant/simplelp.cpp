@@ -23,7 +23,7 @@ FormantResult SimpleLP::solve(const float *lpc, int lpcOrder, float sampleRate)
         if (r > 1.0f) {
             continue;
         }
-       
+
         result.formants.push_back(calculateFormant(r, phi, sampleRate));
     }
 

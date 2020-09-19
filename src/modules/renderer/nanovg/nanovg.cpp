@@ -265,8 +265,8 @@ void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float r, fl
 
             float cx = xp + xstep / 2.0f;
             float cy = (y1p + y2p) / 2.0f;
-            float rx = xstep + 0.5f;
-            float ry = std::max(fabsf(y1p - y2p) / 2.0f, 2.5f);
+            float rx = xstep + 5.0f;
+            float ry = std::max(fabsf(y1p - y2p) / 2.0f, 5.0f);
 
             nvgBeginPath(vg);
             nvgEllipse(vg, cx, cy, rx, ry);
