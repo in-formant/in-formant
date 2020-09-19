@@ -108,9 +108,9 @@ void ContextManager::start()
     while (!endLoop) {
         mainBody();
 
-        // Locked to 30 fps
-        if (durLoop < 33.33ms) {
-            std::this_thread::sleep_for(33ms - durLoop);
+        // Locked to 60 fps
+        if (durLoop < 16.67ms) {
+            std::this_thread::sleep_for(16.67ms - durLoop);
         }
     }
 #endif
