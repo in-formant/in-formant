@@ -20,11 +20,11 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
     }
     rctx.renderer->renderFrequencyTrack(pitchTrackRender, 4.0f, 0.0f, 1.0f, 1.0f);
 
-    std::vector<Renderer::FrequencyTrackRenderData> formantTrackRender(numFormantsToRender);
+    std::vector<Renderer::FormantTrackRenderData> formantTrackRender(numFormantsToRender);
     for (const auto& formants : formantTrack) {
         int i = 0;
         for (const auto& formant : formants) {
-            formantTrackRender[i].push_back(std::make_optional<float>(formant.frequency));
+            formantTrackRender[i].push_back(std::make_optional<Analysis::FormantData>(formant));
             if (++i >= numFormantsToRender) break;
         }
         for (int j = i; j < numFormantsToRender; ++j)
@@ -32,7 +32,7 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
     }
     for (int i = 0; i < numFormantsToRender; ++i) {
         const auto [r, g, b] = formantColors[i];
-        rctx.renderer->renderFrequencyTrack(formantTrackRender[i], 6.0f, r, g, b);
+        rctx.renderer->renderFormantTrack(formantTrackRender[i], r, g, b);
     }
  
     auto& tickLabelFont = primaryFont->with(uiFontSize - 4, rctx.target.get());
@@ -80,11 +80,13 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 
 void ContextManager::eventSpectrogram(RenderingContext &rctx)
 { 
+#ifndef __EMSCRIPTEN__
     if (rctx.target->isKeyPressed(SDL_SCANCODE_F1)) {
         ctx->renderingContexts["Oscilloscope"].target->show();
     }
     else if (rctx.target->isKeyPressed(SDL_SCANCODE_F2)) {
         ctx->renderingContexts["FFT Spectrum"].target->show();
     }
+#endif
 }
 

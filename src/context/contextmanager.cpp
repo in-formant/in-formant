@@ -73,7 +73,7 @@ void ContextManager::start()
     for (const auto& [name, info] : renderingContextInfos) {
         auto& rctx = ctx->renderingContexts[name];
         rctx.target->initialize();
-        rctx.target->setTitle("Speech analysis - " + info.name);
+        rctx.target->setTitle("Speech analysis - " + info.name); 
         rctx.target->setSize(320, 240);
 #ifdef __EMSCRIPTEN__
         std::string canvasIdWithSharp = "#" + info.canvasId;
@@ -103,10 +103,6 @@ void ContextManager::start()
                 auto self = static_cast<ContextManager *>(userdata);
                 
                 self->mainBody();
-
-                if (self->endLoop) {
-                    emscripten_cancel_main_loop();
-                }
             }, this, 60, 1);
 #else
     while (!endLoop) {
@@ -158,19 +154,19 @@ void ContextManager::selectView(const std::string& name)
 void ContextManager::loadSettings()
 {
     analysisDuration = 25;
-    analysisMaxFrequency = 4700;
+    analysisMaxFrequency = 6000;
 
     viewMinFrequency = 1;
     viewMaxFrequency = 6500;
-    viewMinGain = -40;
-    viewMaxGain = +20;
+    viewMinGain = -70;
+    viewMaxGain = +10;
     viewFrequencyScale = Renderer::FrequencyScale::Mel;
 
     fftLength = 4096;
     fftMaxFrequency = viewMaxFrequency;
 
-    preEmphasisFrequency = 500.0f;
-    linPredOrder = 8;
+    preEmphasisFrequency = 150.0f;
+    linPredOrder = 11;
 
     spectrogramCount = 400;
 
@@ -261,6 +257,7 @@ void ContextManager::createAudioNodes()
     nodes["pitch"] = std::make_unique<Nodes::PitchTracker>(ctx->pitchSolver.get());
     nodes["invglot"] = std::make_unique<Nodes::InvGlot>(ctx->invglotSolver.get());
     nodes["rs"] = std::make_unique<Nodes::Resampler>(captureSampleRate, 2 * analysisMaxFrequency);
+    nodes["tail_rs"] = std::make_unique<Nodes::Tail>(analysisDuration);
     nodes["preemph"] = std::make_unique<Nodes::PreEmphasis>(preEmphasisFrequency);
     nodes["linpred"] = std::make_unique<Nodes::LinPred>(ctx->linpredSolver.get(), linPredOrder);
     nodes["formant"] = std::make_unique<Nodes::FormantTracker>(ctx->formantSolver.get());
@@ -275,6 +272,7 @@ void ContextManager::createAudioIOs()
     nodeIOs["pitch"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeFrequencies);
     nodeIOs["invglot"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["rs"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
+    nodeIOs["tail_rs"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["preemph"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["linpred"] = Nodes::makeNodeIO(2, Nodes::kNodeIoTypeIIRFilter, Nodes::kNodeIoTypeAudioSpec);
     nodeIOs["formant"] = Nodes::makeNodeIO(2, Nodes::kNodeIoTypeFrequencies, Nodes::kNodeIoTypeFrequencies);
@@ -304,8 +302,8 @@ void ContextManager::propagateAudio()
     processAudioNode("tail", "pitch");
 
     processAudioNode("prereqs", "rs");
-    processAudioNode("rs", "tail");
-    processAudioNode("tail", "preemph");
+    processAudioNode("rs", "tail_rs");
+    processAudioNode("tail_rs", "preemph");
     processAudioNode("preemph", "linpred");
     processAudioNode("linpred", "formant");
 
@@ -389,6 +387,7 @@ void ContextManager::mainBody()
 
         rctx.target->processEvents();
 
+#ifndef __EMSCRIPTEN__
         if (rctx.target->shouldQuit()) {
             endLoop = true;
             break;
@@ -409,6 +408,7 @@ void ContextManager::mainBody()
                 ctx->renderingContexts["Settings"].target->show();
             }
         }
+#endif
 
         if (rctx.target->sizeChanged()) {
             updateRendererTargetSize(rctx);
@@ -465,6 +465,9 @@ void ContextManager::mainBody()
 #ifdef __EMSCRIPTEN__
 void ContextManager::changeModuleCanvas(const std::string& id)
 {
+    static std::string str;
+    str = "#" + id;
+    EMSCRIPTEN_CANVAS_NAME = str.c_str();
     EM_ASM({
         var canvasId = UTF8ToString($0);
         Module['canvas'] = document.getElementById(canvasId);

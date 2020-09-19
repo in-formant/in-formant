@@ -3,6 +3,11 @@
 #include <stdexcept>
 #include <iostream>
 
+#if defined(__EMSCRIPTEN__)
+#   include <emscripten.h>
+extern const char *EMSCRIPTEN_CANVAS_NAME;
+#endif
+
 using namespace Module::Target;
 
 std::vector<SDL_Event> SDL2::globalEvents;
@@ -98,18 +103,55 @@ void SDL2::setSize(int width, int height)
     mWidth = width;
     mHeight = height;
 
+#if ! ( defined(ANDROID) || defined(__ANDROID__) )
     if (mWindow != nullptr) {
         SDL_SetWindowSize(mWindow, width, height);
     }
+#endif
 }
 
 void SDL2::getSize(int *pWidth, int *pHeight)
 {
+#ifdef __EMSCRIPTEN__
+    *pWidth = EM_ASM_INT({
+        var canvas = document.querySelector(UTF8ToString($0));
+        if (canvas.width !== canvas.clientWidth) {
+            canvas.width = canvas.clientWidth;
+        }
+        return canvas.clientWidth;
+    }, EMSCRIPTEN_CANVAS_NAME);
+    
+    *pHeight = EM_ASM_INT({
+        var canvas = document.querySelector(UTF8ToString($0));
+        if (canvas.height !== canvas.clientHeight) {
+            canvas.height = canvas.clientHeight;
+        }
+        return canvas.clientHeight;
+    }, EMSCRIPTEN_CANVAS_NAME);
+#else
     SDL_GetWindowSize(mWindow, pWidth, pHeight);
+#endif
 }
 
 void SDL2::getSizeForRenderer(int *pWidth, int *pHeight)
 {
+#ifdef __EMSCRIPTEN__
+    *pWidth = EM_ASM_INT({
+        var canvas = document.querySelector(UTF8ToString($0));
+        if (canvas.width !== canvas.clientWidth) {
+            canvas.width = canvas.clientWidth;
+        }
+        return canvas.clientWidth;
+    }, EMSCRIPTEN_CANVAS_NAME);
+    
+    *pHeight = EM_ASM_INT({
+        var canvas = document.querySelector(UTF8ToString($0));
+        if (canvas.height !== canvas.clientHeight) {
+            canvas.height = canvas.clientHeight;
+        }
+        return canvas.clientHeight;
+    }, EMSCRIPTEN_CANVAS_NAME);
+#else
     if (mRendererType == Type::OpenGL || mRendererType == Type::GLES) {
         SDL_GL_GetDrawableSize(mWindow, pWidth, pHeight);
     }
@@ -118,9 +160,17 @@ void SDL2::getSizeForRenderer(int *pWidth, int *pHeight)
         SDL_Vulkan_GetDrawableSize(mWindow, pWidth, pHeight);
 #endif
     }
+    else if (mRendererType == Type::NanoVG) {
+#ifdef NANOVG_GL
+        SDL_GL_GetDrawableSize(mWindow, pWidth, pHeight);
+#else
+        SDL_GetWindowSize(mWindow, pWidth, pHeight);
+#endif
+    }
     else {
         SDL_GetWindowSize(mWindow, pWidth, pHeight);
     }
+#endif
 }
 
 void SDL2::getDisplayDPI(float *hdpi, float *vdpi, float *ddpi)
@@ -240,7 +290,8 @@ void SDL2::processEvents()
                 if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
                     mGotCloseEvent = true;
                 }
-                else if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                else if (event.window.event == SDL_WINDOWEVENT_RESIZED
+                        || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
                     mWindowSizeChanged = true;
                 }
             }

@@ -2,6 +2,7 @@
 #define RENDERER_BASE_H
 
 #include "../../freetype/freetype.h"
+#include "../../../analysis/formant/formant.h"
 
 #ifdef RENDERER_USE_VULKAN
 #   define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -106,6 +107,8 @@ namespace Module::Renderer {
 
     using FrequencyTrackRenderData = std::vector<std::optional<float>>;
 
+    using FormantTrackRenderData = std::vector<std::optional<Analysis::FormantData>>;
+
     class AbstractBase { 
     public:
         AbstractBase(Type type);
@@ -125,6 +128,8 @@ namespace Module::Renderer {
         virtual void renderSpectrogram(const SpectrogramRenderData& data, int count) = 0;
 
         virtual void renderFrequencyTrack(const FrequencyTrackRenderData& data, float thick, float r, float g, float b) = 0;
+
+        virtual void renderFormantTrack(const FormantTrackRenderData& data, float r, float g, float b) = 0;
 
         virtual void renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::Freetype::Font& minorFont) = 0;
 

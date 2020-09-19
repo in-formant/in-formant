@@ -30,7 +30,7 @@ PitchResult AMDF_M::solve(const float *data, int length, int sampleRate)
         float sum = 0.0f;
 
         for (int j = 0; j < maxShift - i; ++j) {
-            sum += fabs(data[j] - data[i + j]);
+            sum += fabsf(data[j] - data[i + j]);
         }
 
         mAMDF[i] = sum / (maxShift - i);

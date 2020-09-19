@@ -8,12 +8,15 @@ RealFFT::RealFFT(size_t n)
       mIn(fftw_alloc_real(n)),
       mOut(fftw_alloc_complex(n / 2 + 1))
 {
-    mPlan = fftw_plan_dft_r2c_1d(n, mIn, mOut, FFTW_MEASURE);
+    importFFTWisdom();
+    mPlanForward = fftw_plan_dft_r2c_1d(n, mIn, mOut, FFTW_EM_FLAG);
+    mPlanBackward = fftw_plan_dft_c2r_1d(n, mOut, mIn, FFTW_EM_FLAG);
 }
 
 RealFFT::~RealFFT()
 {
-    fftw_destroy_plan(mPlan);
+    fftw_destroy_plan(mPlanForward);
+    fftw_destroy_plan(mPlanBackward);
     fftw_free(mIn);
     fftw_free(mOut);
 }
@@ -42,9 +45,14 @@ std::dcomplex& RealFFT::output(int index)
     return std::cast_dcomplex(mOut[index]);
 }
 
-void RealFFT::compute()
+void RealFFT::computeForward()
 {
-    fftw_execute(mPlan);
+    fftw_execute(mPlanForward);
+}
+
+void RealFFT::computeBackward()
+{
+    fftw_execute(mPlanBackward);
 }
 
 size_t RealFFT::getInputLength() const

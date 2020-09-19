@@ -148,7 +148,7 @@ void NanoVG::renderSpectrogram(const SpectrogramRenderData& slice, int count)
 
         float y = frequencyToCoordinate(slice[0].frequency);
 
-        float gain = intensity > 1e-10f ? 20.0f * log10(intensity) : -1e6f;
+        float gain = intensity > 1e-10f ? 20.0f * log10f(intensity) : -1e6f;
         float r, g, b;
         gainToColor(gain, &r, &g, &b);
 
@@ -163,7 +163,7 @@ void NanoVG::renderSpectrogram(const SpectrogramRenderData& slice, int count)
             float nextYp = imageHeight - (y2 + 1.0f) / 2.0f * imageHeight;
            
             if (std::abs(std::round(yp) - std::round(nextYp)) >= 1) {
-                float gain = intensity > 1e-10f ? 20.0f * log10(intensity) : -1e6f;
+                float gain = intensity > 1e-10f ? 20.0f * log10f(intensity) : -1e6f;
                 float nr, ng, nb;
                 gainToColor(gain, &nr, &ng, &nb);
 
@@ -245,6 +245,39 @@ void NanoVG::renderFrequencyTrack(const FrequencyTrackRenderData& track, float t
     nvgStroke(vg);
 }
 
+void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float r, float g, float b)
+{
+    float xstep = (float) mWidth / (float) track.size();
+
+    for (int i = 0; i < track.size(); ++i) {
+        const auto& point = track[i];
+
+        if (point.has_value()) {
+            const auto& formant = point.value();
+
+            float xp = i * xstep;
+
+            float y1 = frequencyToCoordinate(formant.frequency - formant.bandwidth / 4.0f);
+            float y1p = mHeight - (y1 + 1.0f) / 2.0f * mHeight;
+
+            float y2 = frequencyToCoordinate(formant.frequency + formant.bandwidth / 4.0f);
+            float y2p = mHeight - (y2 + 1.0f) / 2.0f * mHeight;
+
+            float cx = xp + xstep / 2.0f;
+            float cy = (y1p + y2p) / 2.0f;
+            float rx = xstep + 0.5f;
+            float ry = std::max(fabsf(y1p - y2p) / 2.0f, 2.5f);
+
+            nvgBeginPath(vg);
+            nvgEllipse(vg, cx, cy, rx, ry);
+            nvgFillPaint(vg,
+                    nvgRadialGradient(vg, cx, cy, 2.0f, ry,
+                        nvgRGBf(r, g, b), nvgRGBAf(r, g, b, 0.05f)));
+            nvgFill(vg);
+        }
+    }
+}
+
 void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::Freetype::Font& minorFont)
 {
     FrequencyScale scale = getParameters()->getFrequencyScale();
@@ -286,15 +319,15 @@ void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::
         }
     }
     else {
-        float loLog = log10(min);
-        float hiLog = log10(max);
-        int loDecade = (int) floor(loLog);
+        float loLog = log10f(min);
+        float hiLog = log10f(max);
+        int loDecade = (int) floorf(loLog);
 
         float val;
-        float startDecade = pow(10.0f, loDecade);
+        float startDecade = powf(10.0f, loDecade);
             
         float decade = startDecade;
-        float delta = hiLog - loLog, steps = fabs(delta);
+        float delta = hiLog - loLog, steps = fabsf(delta);
         float step = delta >= 0 ? 10 : 0.1;
         float rMin = std::min(min, max), rMax = std::max(min, max);
         float start, end, mstep;
@@ -336,15 +369,15 @@ void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::
 
                     if (scale == FrequencyScale::Mel) {
                         shouldRenderLabel =
-                               ( 500 <= val && fmod(val, 500) == 0)
-                            || ( 100 <= val && val <  500 && fmod(val,  100) == 0)
+                               ( 500 <= val && fmodf(val, 500) == 0)
+                            || ( 100 <= val && val <  500 && fmodf(val,  100) == 0)
                             || (  10 == val);
                     }
                     else if (scale == FrequencyScale::Logarithmic) {
                         shouldRenderLabel =
-                               (1000 <= val && fmod(val, 1000) == 0)
-                            || ( 100 <= val && val < 1000 && fmod(val, 100) == 0)
-                            || (  10 <= val && val <  100 && fmod(val,  10) == 0)
+                               (1000 <= val && fmodf(val, 1000) == 0)
+                            || ( 100 <= val && val < 1000 && fmodf(val, 100) == 0)
+                            || (  10 <= val && val <  100 && fmodf(val,  10) == 0)
                             || (   1 == val);
                     }
 

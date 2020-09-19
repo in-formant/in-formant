@@ -5,6 +5,11 @@
 
 using namespace Module::Target;
 
+#ifdef __EMSCRIPTEN__
+#   include <emscripten.h>
+extern const char *EMSCRIPTEN_CANVAS_NAME;
+#endif
+
 SDL2_NanoVG::SDL2_NanoVG(SDL_Window **ptrWindow)
     : mPtrWindow(ptrWindow)
 {

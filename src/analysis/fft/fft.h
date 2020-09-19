@@ -5,8 +5,9 @@
 #include <complex>
 
 #if defined(EMSCRIPTEN)
-#undef FFTW_MEASURE
-#define FFTW_MEASURE FFTW_ESTIMATE
+#   define FFTW_EM_FLAG FFTW_ESTIMATE
+#else
+#   define FFTW_EM_FLAG FFTW_MEASURE
 #endif
 
 namespace std
@@ -26,6 +27,30 @@ namespace std
 
 namespace Analysis
 {
+    void importFFTWisdom();
+
+    class ReReFFT
+    {
+    public:
+        ReReFFT(size_t n, fftw_r2r_kind method);
+        ~ReReFFT();
+        
+        double data(int index) const;
+        double& data(int index);
+
+        void compute();
+
+        size_t getLength() const;
+
+    private:
+        void checkIndex(int index) const;
+
+        size_t mSize;
+        fftw_plan mPlan;
+
+        double *mData;
+    };
+
     class RealFFT
     {
     public:
@@ -38,7 +63,8 @@ namespace Analysis
         std::dcomplex output(int index) const;
         std::dcomplex& output(int index);
 
-        void compute();
+        void computeForward();
+        void computeBackward();
 
         size_t getInputLength() const;
         size_t getOutputLength() const;
@@ -48,7 +74,8 @@ namespace Analysis
         void checkOutputIndex(int index) const;
 
         size_t mSize;
-        fftw_plan mPlan;
+        fftw_plan mPlanForward;
+        fftw_plan mPlanBackward;
 
         double *mIn;
         fftw_complex *mOut;
