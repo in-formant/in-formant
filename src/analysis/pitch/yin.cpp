@@ -3,6 +3,20 @@
 using Analysis::PitchResult;
 using namespace Analysis::Pitch;
 
+inline int
+pow2roundup (int x)
+{
+    if (x < 0)
+        return 0;
+    --x;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    return x+1;
+}
+
 Yin::Yin(float threshold)
     : mThreshold(threshold),
       mFFT(nullptr)
@@ -11,15 +25,22 @@ Yin::Yin(float threshold)
 
 PitchResult Yin::solve(const float *data, int length, int sampleRate) 
 {
-    mFFT.reset(new ComplexFFT(length));
+    int nfft = pow2roundup(length);
+
+    if (!mFFT || mFFT->getLength() != nfft) {
+        mFFT.reset(new ComplexFFT(nfft));
+    }
 
     for (int i = 0; i < length; ++i) {
         mFFT->data(i) = data[i];
     }
+    for (int i = length; i < nfft; ++i) {
+        mFFT->data(i) = 0.0;
+    }
     mFFT->computeForward();
-    for (int i = 0; i < length; ++i) {
+    for (int i = 0; i < nfft; ++i) {
         std::dcomplex z = mFFT->data(i);
-        mFFT->data(i) = (z * conj(z)) / (double) length;
+        mFFT->data(i) = (z * conj(z)) / (double) nfft;
     }
     mFFT->computeBackward();
 

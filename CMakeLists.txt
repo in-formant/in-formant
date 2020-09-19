@@ -82,6 +82,8 @@ set(SOURCES
     src/nodes/nodes.h
     src/analysis/fft/realfft.cpp
     src/analysis/fft/complexfft.cpp
+    src/analysis/fft/realrealfft.cpp
+    src/analysis/fft/wisdom.cpp
     src/analysis/fft/fft.h
     src/analysis/filter/filter.cpp
     src/analysis/filter/filter.h
@@ -491,9 +493,7 @@ endif()
 set(RESAMPLER_QUALITY SOXR_HQ)
 
 if(EMSCRIPTEN)
-    #set(RESAMPLER_QUALITY SOXR_QQ)
-
-    pkg_check_modules(FT2 REQUIRED freetype2)
+    set(RESAMPLER_QUALITY SOXR_QQ)
    
     set(EM_FLAGS "-sASSERTIONS=0" "-sTOTAL_MEMORY=268435456" "-sEMULATE_FUNCTION_POINTER_CASTS=1" "-sERROR_ON_UNDEFINED_SYMBOLS=1" "-sUSE_PTHREADS=0" "-sFULL_ES2=1")
 
@@ -502,13 +502,13 @@ if(EMSCRIPTEN)
 
     if (CMAKE_BUILD_TYPE MATCHES "^Debug")
         target_compile_options(speech-analysis PUBLIC ${EMCC_FLAGS} -g -g4 --source-map-base /)
-        target_link_libraries(speech-analysis PUBLIC ${FT2_LDFLAGS} ${EMLD_FLAGS} -g -g4 "--source-map-base /")
+        target_link_libraries(speech-analysis PUBLIC ${EMLD_FLAGS} -g -g4 "--source-map-base /")
     elseif (CMAKE_BUILD_TYPE MATCHES "^Release")
         target_compile_options(speech-analysis PUBLIC ${EMCC_FLAGS} -fno-rtti)
-        target_link_libraries(speech-analysis PUBLIC ${FT2_LDFLAGS} ${EMLD_FLAGS} -fno-rtti)
+        target_link_libraries(speech-analysis PUBLIC ${EMLD_FLAGS} -fno-rtti)
     else()
         target_compile_options(speech-analysis PUBLIC ${EMCC_FLAGS})
-        target_link_libraries(speech-analysis PUBLIC ${FT2_LDFLAGS} ${EMLD_FLAGS})
+        target_link_libraries(speech-analysis PUBLIC ${EMLD_FLAGS})
     endif()
 endif()
 

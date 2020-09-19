@@ -17,7 +17,7 @@ namespace Nodes
 
     private:
         Analysis::LinpredSolver *mSolver;
-        Analysis::RealFFT mFFT;
+        Analysis::ReReFFT mFFT;
         int mOrder;
     };
 }

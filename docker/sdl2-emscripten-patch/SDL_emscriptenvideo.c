@@ -201,8 +201,8 @@ Emscripten_CreateWindow(_THIS, SDL_Window * window)
     wdata->canvas_id = SDL_strdup(EMSCRIPTEN_CANVAS_NAME);
 
     EM_ASM({
-        Module.canvas = document.getElementById(UTF8ToString($0));
-    }, wdata->canvas_id + 1);
+        Module.canvas = document.querySelector(UTF8ToString($0));
+    }, wdata->canvas_id);
 
     if (window->flags & SDL_WINDOW_ALLOW_HIGHDPI) {
         wdata->pixel_ratio = emscripten_get_device_pixel_ratio();
@@ -256,9 +256,9 @@ Emscripten_CreateWindow(_THIS, SDL_Window * window)
     /* Setup driver data for this window */
     window->driverdata = wdata;
 
-    /* One window, it always has focus */
-    SDL_SetMouseFocus(window);
-    SDL_SetKeyboardFocus(window);
+    // /* One window, it always has focus */
+    // SDL_SetMouseFocus(window);
+    // SDL_SetKeyboardFocus(window);
 
     Emscripten_RegisterEventHandlers(wdata);
 

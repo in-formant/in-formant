@@ -107,14 +107,14 @@ float AbstractBase::frequencyToCoordinate(float frequency) const
             transVal = frequency;
             break;
         case FrequencyScale::Logarithmic:
-            transMin = log10(10.0f + minFrequency);
-            transMax = log10(10.0f + maxFrequency);
-            transVal = log10(10.0f + frequency);
+            transMin = log10f(10.0f + minFrequency);
+            transMax = log10f(10.0f + maxFrequency);
+            transVal = log10f(10.0f + frequency);
             break;
         case FrequencyScale::Mel:
-            transMin = 2595.0f + log10(1.0f + minFrequency / 700.0f);
-            transMax = 2595.0f + log10(1.0f + maxFrequency / 700.0f);
-            transVal = 2595.0f + log10(1.0f + frequency / 700.0f);
+            transMin = 2595.0f + log10f(1.0f + minFrequency / 700.0f);
+            transMax = 2595.0f + log10f(1.0f + maxFrequency / 700.0f);
+            transVal = 2595.0f + log10f(1.0f + frequency / 700.0f);
             break;
         }
 

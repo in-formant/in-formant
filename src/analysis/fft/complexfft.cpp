@@ -7,8 +7,9 @@ ComplexFFT::ComplexFFT(size_t n)
     : mSize(n),
       mData(fftw_alloc_complex(n))
 {
-    mPlanForward = fftw_plan_dft_1d(n, mData, mData, FFTW_FORWARD, FFTW_MEASURE);
-    mPlanBackward = fftw_plan_dft_1d(n, mData, mData, FFTW_BACKWARD, FFTW_MEASURE);
+    importFFTWisdom();
+    mPlanForward = fftw_plan_dft_1d(n, mData, mData, FFTW_FORWARD, FFTW_EM_FLAG);
+    mPlanBackward = fftw_plan_dft_1d(n, mData, mData, FFTW_BACKWARD, FFTW_EM_FLAG);
 }
 
 ComplexFFT::~ComplexFFT()

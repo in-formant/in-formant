@@ -16,7 +16,7 @@ namespace Nodes
         void process(const NodeIO *inputs[], NodeIO *outputs[]) override;
 
     private:
-        Analysis::RealFFT *mFFT;
+        Analysis::ReReFFT *mFFT;
     };
 }
 

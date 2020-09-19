@@ -97,7 +97,7 @@ int main(int argc, char **argv)
         .setPlaybackCallback(
                 [&](float *x, int n, void *) {
                     for (int i = 0; i < n; ++i) {
-                        x[i] = 0.5f * std::sin(2.0f * M_PI * sineTime * testToneFrequency / 48000);
+                        x[i] = 0.5f * sinf((2.0f * M_PI * sineTime * testToneFrequency) / 48000);
                         sineTime++;
                     }
                 });

@@ -16,7 +16,7 @@ LinPred::LinPred(Analysis::LinpredSolver *solver, int order)
             .outputs = outTypes,
         }),
       mSolver(solver),
-      mFFT(512),
+      mFFT(512, FFTW_R2HC),
       mOrder(order)
 {
 }
@@ -24,6 +24,25 @@ LinPred::LinPred(Analysis::LinpredSolver *solver, int order)
 void LinPred::setOrder(int order)
 {
     mOrder = order;
+}
+
+inline float G(float x, int L, float alpha)
+{
+    const int N = L - 1;
+    const float k = (x - N / 2.0f) / (2 * L * alpha);
+    return expf(-(k * k));
+}
+
+static void calcGaussian(std::vector<float>& win, float alpha)
+{
+    const int L = win.size();
+    
+    float Gmh = G(-0.5f, L, alpha);
+    float GmhpLpGmhmL = G(-0.5f + L, L, alpha) - G(-0.5f - L, L, alpha);
+
+    for (int n = 0; n < L; ++n) {
+        win[n] = G(n, L, alpha) - (Gmh * (G(n + L, L, alpha) + G(n - L, L, alpha))) / GmhpLpGmhmL;
+    }
 }
 
 void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
@@ -34,34 +53,48 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
 
     int sampleRate = in->getSampleRate();
 
-    float gain;
+    int inLength = in->getLength();
 
+    static std::vector<float> window;
+    if (window.size() != inLength) {
+        constexpr float alpha = 0.1;
+        window.resize(inLength);
+        calcGaussian(window, alpha);
+    }
+
+    auto inData = std::make_unique<float[]>(inLength);
+
+    for (int i = 0; i < inLength; ++i) {
+        inData[i] = in->getConstData()[i] * window[i];
+    }
+
+    float gain;
     std::vector<float> lpc = mSolver->solve(
-            in->getConstData(),
-            in->getLength(),
+            inData.get(),
+            inLength,
             mOrder,
             &gain);
 
     out->setSampleRate(sampleRate);
 
     out->setFBOrder(1);
-    out->getFBData()[0] = pow(fabs(gain), 1.0f / 3.0f);
+    out->getFBData()[0] = fabsf(powf(fabsf(gain), 1.0f / 3.0f));
     
     out->setFFOrder(lpc.size());
     std::copy(lpc.begin(), lpc.end(), out->getFFData());
 
     // Filter frequency response.
 
-    int nfft = mFFT.getInputLength();
-    int outLength = mFFT.getOutputLength();
+    int nfft = mFFT.getLength();
+    int outLength = nfft / 2 + 1;
 
-    mFFT.input(0) = 1.0f;
+    mFFT.data(0) = 1.0f;
 
     for (int i = 0; i < lpc.size(); ++i)
-        mFFT.input(i + 1) = lpc[i];
+        mFFT.data(i + 1) = lpc[i];
 
-    for (int i = lpc.size() + 1; i < outLength; ++i)
-        mFFT.input(i) = 0.0;
+    for (int i = lpc.size() + 1; i < nfft; ++i)
+        mFFT.data(i) = 0.0;
 
     mFFT.compute();
 
@@ -69,6 +102,8 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
     outSpec->setLength(outLength);
 
     for (int i = 0; i < outLength; ++i) {
-        outSpec->getData()[i] = fabs(out->getFBConstData()[0]) / std::abs(mFFT.output(i));
+        outSpec->getData()[i] = out->getFBConstData()[0]
+                                / (mFFT.data(i) * mFFT.data(i)
+                                        + mFFT.data(nfft - 1 - i) * mFFT.data(nfft - 1 - i));
     }
 }

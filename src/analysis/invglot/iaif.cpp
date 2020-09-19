@@ -48,7 +48,7 @@ InvglotResult IAIF::solve(const float *xData, int length, float sampleRate)
 
     std::vector<float> hann(length);
     for (int i = 0; i < length; ++i) {
-        hann[i] = 0.5f - 0.5f * cos(2.0f * M_PI / (length - 1));
+        hann[i] = 0.5f - 0.5f * cosf(2.0f * M_PI / (length - 1));
     }
 
     int preflt = p_vt + 1;
@@ -81,8 +81,9 @@ InvglotResult IAIF::solve(const float *xData, int length, float sampleRate)
 
     float gMax = 0;
     for (int i = 0; i < g.size(); ++i) {
-        if (fabs(g[i]) > gMax)
-            gMax = fabs(g[i]);
+        float absG = fabsf(g[i]);
+        if (absG > gMax)
+            gMax = absG;
     }
     for (int i = 0; i < g.size(); ++i) {
         g[i] /= gMax;
