@@ -10,6 +10,8 @@ namespace Analysis {
 
     std::vector<int> findPeaks(const float *data, int length, int sign = +1);
 
+    std::pair<float, float> parabolicInterpolation(const std::vector<float>& array, int x);
+    
     std::vector<std::complex<float>> findRoots(const std::vector<float>& p);
 
     FormantData calculateFormant(float r, float phi, float sampleRate);

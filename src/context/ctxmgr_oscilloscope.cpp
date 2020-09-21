@@ -5,7 +5,7 @@ using namespace Main;
 
 void ContextManager::renderOscilloscope(RenderingContext &rctx)
 {
-    auto audioNode = nodeIOs["tail"][0]->as<Nodes::IO::AudioTime>();
+    auto audioNode = nodeIOs["tail_2"][0]->as<Nodes::IO::AudioTime>();
 
     const float *data = audioNode->getConstData();
     int   length      = audioNode->getLength();

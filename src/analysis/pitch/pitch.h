@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "../fft/fft.h"
+#include "rapt.h"
 
 namespace Analysis {
 
@@ -44,6 +45,14 @@ namespace Analysis {
             std::vector<double> mAutocorrelation;
             std::vector<double> mDifference;
             std::vector<double> mCMND;
+        };
+
+        class RAPT : public PitchSolver, public Analysis::RAPT {
+        public:
+            RAPT();
+            PitchResult solve(const float *data, int length, int sampleRate) override;
+        private:
+            std::vector<float> pitches;
         };
     }
 

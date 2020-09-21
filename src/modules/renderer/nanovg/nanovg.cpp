@@ -257,25 +257,69 @@ void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float r, fl
 
             float xp = i * xstep;
 
-            float y1 = frequencyToCoordinate(formant.frequency - formant.bandwidth / 4.0f);
+            float y1 = frequencyToCoordinate(formant.frequency - formant.bandwidth / 2.0f);
             float y1p = mHeight - (y1 + 1.0f) / 2.0f * mHeight;
 
-            float y2 = frequencyToCoordinate(formant.frequency + formant.bandwidth / 4.0f);
+            float y2 = frequencyToCoordinate(formant.frequency + formant.bandwidth / 2.0f);
             float y2p = mHeight - (y2 + 1.0f) / 2.0f * mHeight;
 
             float cx = xp + xstep / 2.0f;
             float cy = (y1p + y2p) / 2.0f;
-            float rx = xstep + 5.0f;
+            float rx = xstep + 0.5f;
             float ry = std::max(fabsf(y1p - y2p) / 2.0f, 4.0f);
 
             nvgBeginPath(vg);
             nvgEllipse(vg, cx, cy, rx, ry);
             nvgFillPaint(vg,
-                    nvgRadialGradient(vg, cx, cy, 2.0f, ry,
-                        nvgRGBf(r, g, b), nvgRGBAf(r, g, b, 0.05f)));
+                    nvgRadialGradient(vg, cx, cy, ry / 4, ry,
+                        nvgRGBf(r, g, b), nvgRGBAf(r, g, b, 1.0f / 1800.0f)));
             nvgFill(vg);
         }
     }
+
+    nvgBeginPath(vg);
+    nvgLineCap(vg, NVG_ROUND);
+    nvgLineJoin(vg, NVG_ROUND);
+
+    float prevYp;
+
+    for (int i = 0; i < track.size(); ++i) {
+        const auto& point = track[i];
+
+        if (point.has_value()) {
+            const auto& formant = point.value();
+
+            float xp = i * xstep;
+
+            float y = frequencyToCoordinate(formant.frequency);
+            float yp = mHeight - (y + 1.0f) / 2.0f * mHeight;
+
+            if (i == 0 || !track[i - 1].has_value()) {
+                nvgMoveTo(vg, xp, yp);
+            }
+            else {
+                float xmid = xp - xstep / 2.0f;
+                float ymid = (prevYp + yp) / 2.0f;
+
+                float cx1 = (xmid + xp - xstep) / 2;
+                float cx2 = (xmid + xp + xstep) / 2;
+
+                nvgQuadTo(vg, cx1, prevYp, xmid, ymid);
+                nvgQuadTo(vg, cx2, yp, xp, yp);
+            }
+
+            prevYp = yp;
+        }
+    }
+
+    nvgStrokeWidth(vg, 3.0f);
+    nvgStrokeColor(vg, nvgRGBAf(1, 1, 1, 0.5f));
+    nvgStroke(vg);
+
+    nvgStrokeWidth(vg, 2.0f);
+    nvgStrokeColor(vg, nvgRGBAf(0, 0, 0, 1.0f));
+    nvgStroke(vg);
+
 }
 
 void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::Freetype::Font& minorFont)
