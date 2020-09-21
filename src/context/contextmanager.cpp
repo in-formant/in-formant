@@ -103,7 +103,7 @@ void ContextManager::start()
                 auto self = static_cast<ContextManager *>(userdata);
                 
                 self->mainBody();
-            }, this, 60, 1);
+            }, this, 30, 1);
 #else
     while (!endLoop) {
         mainBody();
@@ -157,12 +157,12 @@ void ContextManager::loadSettings()
     analysisMaxFrequency = 5200;
 
     viewMinFrequency = 1;
-    viewMaxFrequency = 6500;
+    viewMaxFrequency = 6000;
     viewMinGain = -70;
     viewMaxGain = +15;
     viewFrequencyScale = Renderer::FrequencyScale::Mel;
 
-    fftLength = 4096;
+    fftLength = 2048;
     fftMaxFrequency = viewMaxFrequency;
 
     preEmphasisFrequency = 50.0f;
@@ -173,9 +173,9 @@ void ContextManager::loadSettings()
     numFormantsToRender = 4;
     formantColors = {
         {0.0f,  1.0f,  0.0f},
-        {0.86f, 0.78f, 0.24f},
-        {1.0f,  0.71f, 0.76f},
-        {0.96f, 0.5f,  0.45f},
+        {0.57f, 0.93f, 0.57f},
+        {1.0f,  0.0f,  0.0f},
+        {1.0f,  0.5f,  1.0f},
     };
 
 #if defined(ANDROID) || defined(__ANDROID__)
@@ -253,7 +253,8 @@ void ContextManager::createAudioNodes()
     nodes["prereqs"] = std::make_unique<Nodes::Prereqs>(ctx->captureBuffer.get(), analysisDuration, 0);
     nodes["rs_spec"] = std::make_unique<Nodes::Resampler>(captureSampleRate, 2 * fftMaxFrequency);
     nodes["spec"] = std::make_unique<Nodes::Spectrum>(fftLength);
-    nodes["tail"] = std::make_unique<Nodes::Tail>(analysisDuration);
+    nodes["rs_2"] = std::make_unique<Nodes::Resampler>(captureSampleRate, 16000);
+    nodes["tail_2"] = std::make_unique<Nodes::Tail>(analysisDuration);
     nodes["pitch"] = std::make_unique<Nodes::PitchTracker>(ctx->pitchSolver.get());
     nodes["invglot"] = std::make_unique<Nodes::InvGlot>(ctx->invglotSolver.get());
     nodes["rs"] = std::make_unique<Nodes::Resampler>(captureSampleRate, 2 * analysisMaxFrequency);
@@ -268,7 +269,8 @@ void ContextManager::createAudioIOs()
     nodeIOs["prereqs"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["rs_spec"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["spec"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioSpec);
-    nodeIOs["tail"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
+    nodeIOs["rs_2"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
+    nodeIOs["tail_2"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["pitch"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeFrequencies);
     nodeIOs["invglot"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["rs"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
@@ -297,9 +299,10 @@ void ContextManager::propagateAudio()
     processAudioNode("prereqs", "rs_spec");
     processAudioNode("rs_spec", "spec");
     
-    processAudioNode("prereqs", "tail");
-    processAudioNode("tail", "invglot");
-    processAudioNode("tail", "pitch");
+    processAudioNode("prereqs", "rs_2");
+    processAudioNode("rs_2", "pitch");
+    processAudioNode("rs_2", "tail_2");
+    processAudioNode("tail_2", "invglot");
 
     processAudioNode("prereqs", "rs");
     processAudioNode("rs", "tail_rs");

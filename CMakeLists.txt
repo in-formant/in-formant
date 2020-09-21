@@ -89,6 +89,8 @@ set(SOURCES
     src/analysis/filter/filter.h
     src/analysis/pitch/amdf_m.cpp
     src/analysis/pitch/yin.cpp
+    src/analysis/pitch/rapt.cpp
+    src/analysis/pitch/rapt.h
     src/analysis/pitch/pitch.h
     src/analysis/linpred/autocorr.cpp
     src/analysis/linpred/burg.cpp
@@ -106,6 +108,7 @@ set(SOURCES
     src/analysis/util/eval_polynomial.cpp
     src/analysis/util/calc_formant.cpp
     src/analysis/util/sort_formants.cpp
+    src/analysis/util/parabolic_interpolation.cpp
     src/analysis/util/util.h
     src/analysis/analysis.h
 )

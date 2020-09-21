@@ -26,24 +26,30 @@ Resampler::~Resampler()
 
 void Resampler::setInputRate(int newInRate)
 {
-    soxr_delete(mSoxr);
-    mInRate = newInRate;
-    createResampler();
+    if (mInRate != newInRate) {
+        soxr_delete(mSoxr);
+        mInRate = newInRate;
+        createResampler();
+    }
 }
 
 void Resampler::setOutputRate(int newOutRate)
 {
-    soxr_delete(mSoxr);
-    mOutRate = newOutRate;
-    createResampler();
+    if (mOutRate != newOutRate) {
+        soxr_delete(mSoxr);
+        mOutRate = newOutRate;
+        createResampler();
+    }
 }
 
 void Resampler::setRate(int newInRate, int newOutRate)
 {
-    soxr_delete(mSoxr);
-    mInRate = newInRate;
-    mOutRate = newOutRate;
-    createResampler();
+    if (mInRate != newInRate || mOutRate != newOutRate) {
+        soxr_delete(mSoxr);
+        mInRate = newInRate;
+        mOutRate = newOutRate;
+        createResampler();
+    }
 }
 
 int Resampler::getInputRate() const

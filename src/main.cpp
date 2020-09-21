@@ -85,7 +85,8 @@ int main(int argc, char **argv)
             Renderer::Type::NanoVG>();
 
     ctxBuilder
-        .setPitchSolver(new Analysis::Pitch::Yin(0.4f))
+        //.setPitchSolver(new Analysis::Pitch::Yin(0.4f))
+        .setPitchSolver(new Analysis::Pitch::RAPT)
         .setLinpredSolver(new Analysis::LP::Burg)
         .setFormantSolver(new Analysis::Formant::FilteredLP)
         .setInvglotSolver(new Analysis::Invglot::IAIF(0.98f))
