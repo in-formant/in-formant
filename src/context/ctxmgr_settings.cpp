@@ -5,14 +5,14 @@ using namespace Main;
 void ContextManager::initSettingsUI()
 {
     mSettingFields = {
-        {"LP order: ", &ContextManager::linPredOrder},
-        {"Max formant: ", &ContextManager::analysisMaxFrequency},
+        { .labelText = "LP order: ",    .field = &ContextManager::linPredOrder},
+        { .labelText = "Max formant: ", .field = &ContextManager::analysisMaxFrequency},
     };
 }
 
 void ContextManager::renderSettings(RenderingContext &rctx)
 {
-    auto& font = primaryFont->with(11, rctx.target.get());
+    auto& font = primaryFont->with(uiFontSize - 2, rctx.target.get());
   
     int x0 = 10;
     int y0 = 10;

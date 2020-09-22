@@ -75,6 +75,7 @@ namespace Main {
 
         std::map<std::string, RenderingContextInfo> renderingContextInfos;
         bool endLoop;
+        bool isPaused;
 
 #if defined(ANDROID) || defined(__ANDROID__)
         std::string selectedViewName;

@@ -46,7 +46,8 @@ namespace Module::Renderer {
         void test() override;
  
         void renderGraph(const GraphRenderData& data, float thick, float r, float g, float b) override;
-        void renderSpectrogram(const SpectrogramRenderData& data, int count) override;
+        void scrollSpectrogram(const SpectrogramRenderData& data, int count) override;
+        void renderSpectrogram() override;
         void renderFrequencyTrack(const FrequencyTrackRenderData& data, float thick, float r, float g, float b) override;
         void renderFormantTrack(const FormantTrackRenderData& data, float r, float g, float b) override;
         void renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::Freetype::Font& minorFont) override;

@@ -32,12 +32,16 @@ namespace Module::Target {
         void hide() override;
         void close() override;
 
+        bool isVisible() const override;
+
         void processEvents() override;
         bool shouldQuit() override;
         bool shouldClose() override;
         bool sizeChanged() override;
         bool isKeyPressed(uint32_t key) override;
+        bool isKeyPressedOnce(uint32_t key) override;
         bool isMousePressed(uint32_t key) override;
+        bool isMousePressedOnce(uint32_t key) override;
         std::pair<int, int> getMousePosition() override;
 
     public:
@@ -54,15 +58,18 @@ namespace Module::Target {
         int mHeight;
 
         SDL_Window *mWindow;
+        bool mIsShown;
 
         bool mGotQuitEvent;
         bool mGotCloseEvent;
         bool mWindowSizeChanged;
     
         std::map<SDL_Scancode, bool> mKeyState;
+        std::map<SDL_Scancode, char> mKeyupState;
     
         int mMouseX, mMouseY;
         uint32_t mMouseBitmask;
+        std::map<uint32_t, char> mMouseupState;
 
         int err;
         void checkError(bool cond);

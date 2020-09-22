@@ -227,21 +227,35 @@ void SDL2::create()
     mGotQuitEvent = false;
     mGotCloseEvent = false;
     mWindowSizeChanged = false;
+    mIsShown = true;
 }
 
 void SDL2::show()
 {
     SDL_ShowWindow(mWindow);
+    mIsShown = true;
 }
 
 void SDL2::hide()
 {
     SDL_HideWindow(mWindow);
+    
+    mIsShown = false;
+    mKeyState.clear();
+    mKeyupState.clear();
+    mMouseBitmask = 0;
+    mMouseupState.clear();
 }
 
 void SDL2::close()
 {
     SDL_DestroyWindow(mWindow);
+    mIsShown = false;
+}
+
+bool SDL2::isVisible() const
+{
+    return mIsShown;
 }
 
 void SDL2::processEvents()
@@ -264,11 +278,10 @@ void SDL2::processEvents()
         }
         else if (event.type == SDL_KEYDOWN) {
             if (event.key.windowID == windowId) {
-                if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
-                    mGotCloseEvent = true;
-                }
-                else {
-                    mKeyState[event.key.keysym.scancode] = true;
+                mKeyState[event.key.keysym.scancode] = true;
+                if (mKeyupState.find(event.key.keysym.scancode) == mKeyupState.end()
+                        || mKeyupState[event.key.keysym.scancode] != 2) {
+                    mKeyupState[event.key.keysym.scancode] = 1;
                 }
             }
             else {
@@ -279,6 +292,7 @@ void SDL2::processEvents()
             if (event.key.windowID == windowId) {
                 if (event.key.keysym.scancode != SDL_SCANCODE_ESCAPE) {
                     mKeyState[event.key.keysym.scancode] = false;
+                    mKeyupState[event.key.keysym.scancode] = 0;
                 }
             }
             else {
@@ -312,6 +326,26 @@ void SDL2::processEvents()
     }
 
     mMouseBitmask = SDL_GetMouseState(&mMouseX, &mMouseY);
+
+    constexpr std::array<uint32_t, 5> buttons = {
+        SDL_BUTTON_LEFT,
+        SDL_BUTTON_MIDDLE,
+        SDL_BUTTON_RIGHT,
+        SDL_BUTTON_X1,
+        SDL_BUTTON_X2,
+    };
+
+    for (const uint32_t& button : buttons) {
+        if (mMouseBitmask & SDL_BUTTON(button)) {
+            if (mMouseupState.find(button) == mMouseupState.end()
+                    || mMouseupState[button] == 2) {
+                mMouseupState[button] = 1;
+            }
+        }
+        else {
+            mMouseupState[button] = 0;
+        }
+    }
 }
 
 bool SDL2::shouldQuit()
@@ -342,9 +376,35 @@ bool SDL2::isKeyPressed(uint32_t key)
     return it->second;
 }
 
+bool SDL2::isKeyPressedOnce(uint32_t key)
+{
+    auto it = mKeyupState.find((SDL_Scancode) key);
+    if (it == mKeyupState.end()) {
+        return false;
+    }
+    if (it->second == 1) {
+        it->second = 2;
+        return true;
+    }
+    return false;
+}
+
 bool SDL2::isMousePressed(uint32_t button)
 {
     return mMouseBitmask & SDL_BUTTON(button);
+}
+
+bool SDL2::isMousePressedOnce(uint32_t button)
+{
+    auto it = mMouseupState.find((SDL_Scancode) button);
+    if (it == mMouseupState.end()) {
+        return false;
+    }
+    if (it->second == 1) {
+        it->second = 2;
+        return true;
+    }
+    return false;
 }
 
 std::pair<int, int> SDL2::getMousePosition()
