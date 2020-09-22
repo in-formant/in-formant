@@ -15,10 +15,9 @@ RUN mkdir /android-sdk && cd /android-sdk && \
         mkdir cmdline-tools && \
         mv tools cmdline-tools/latest
 ENV ANDROID_HOME=/android-sdk ANDROID_SDK=/android-sdk PATH=/android-sdk/cmdline-tools/latest/bin:$PATH
-ENV android_api=24 ndk_ver=21.3.6528147 buildtools_ver=30.0.1
+ENV android_api=30 ndk_ver=21.3.6528147 buildtools_ver=30.0.1
 ENV ANDROID_PLATFORM=android-$android_api ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ndk_ver
 RUN yes | sdkmanager --install "platforms;$ANDROID_PLATFORM"
-RUN yes | sdkmanager --install "platforms;30"
 RUN yes | sdkmanager --install "ndk;$ndk_ver"
 RUN yes | sdkmanager --install "build-tools;$buildtools_ver"
 
@@ -241,7 +240,7 @@ RUN mkdir -p /tmp/gradle
 COPY android-project/build.gradle /tmp/gradle
 RUN cd /tmp/gradle && gradle --no-daemon
 
-ENV android_api=30 ndk_ver=21.3.6528147
+ENV android_api=30 ndk_ver=21.3.6528147 
 ENV ANDROID_HOME=/android-sdk ANDROID_PLATFORM=android-$android_api ANDROID_NDK_HOME=/android-sdk/ndk/$ndk_ver
 
 COPY env-android.sh /usr/local/bin
