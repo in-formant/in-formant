@@ -32,9 +32,6 @@ namespace Module::Target {
         void hide() override;
         void close() override;
 
-        void hookEventWatch(int (*)(void *, SDL_Event *), void *userdata);
-        int getWindowId();
-
         bool isVisible() const override;
 
         void processEvents() override;

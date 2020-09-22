@@ -89,33 +89,6 @@ void ContextManager::start()
         if (name == "Settings") {
             rctx.target->hide();
         }
-#if defined(_WIN32) || defined(__APPLE__)
-        auto sdl2target = static_cast<Target::SDL2 *>(rctx.target.get());
-        struct {
-            RenderingContext *rctx;
-            ContextManager *self;
-            void (ContextManager::*renderCallback)(RenderingContext&);
-            int windowId;
-        } filterUserdata = {
-            .rctx = &rctx,
-            .self = this,
-            .renderCallback = info.renderCallback,
-            .windowId = sdl2target->getWindowId(),
-        };
-        sdl2target->hookEventWatch(
-                [](void *userdata, SDL_Event *event) -> int {
-                    auto data = static_cast<std::add_pointer_t<decltype(filterUserdata)>>(userdata);
-                    if (event->type == SDL_WINDOWEVENT
-                            && event->window.windowID == data->windowId
-                            && (event->window.event == SDL_WINDOWEVENT_RESIZED
-                                || event->window.event == SDL_WINDOWEVENT_MOVED)) {
-                        data->rctx->renderer->begin();
-                        (data->self->*data->renderCallback)(*data->rctx);
-                        data->rctx->renderer->end();
-                    }
-                    return 0;
-                }, &filterUserdata);
-#endif
     }
 #endif
 
@@ -399,65 +372,69 @@ void ContextManager::updateNewData()
     formantTrack.push_back(std::move(formants));
 }
 
-void ContextManager::mainBody()
+void ContextManager::mainBody(bool processEvents)
 {
     auto t0 = Clock::now();
 
 #if defined(ANDROID) || defined(__ANDROID__)
-    const auto& name = selectedViewName;
-    const auto& info = renderingContextInfos[name];
-    auto& rctx = ctx->renderingContexts["main"];
+        const auto& name = selectedViewName;
+        const auto& info = renderingContextInfos[name];
+        auto& rctx = ctx->renderingContexts["main"];
 #define break 
-#else
-    for (const auto& [name, info] : renderingContextInfos) {
+#endif
+
+    if (processEvents) {
+#if ! ( defined(ANDROID) || defined(__ANDROID__) )
+        for (const auto& [name, info] : renderingContextInfos) {
 #ifdef __EMSCRIPTEN__
-        changeModuleCanvas(info.canvasId);
+            changeModuleCanvas(info.canvasId);
 #endif
-        auto& rctx = ctx->renderingContexts[name];
+            auto& rctx = ctx->renderingContexts[name];
 #endif
 
-        rctx.target->processEvents();
+            rctx.target->processEvents();
 
-        if (rctx.target->isVisible()) {
+            if (rctx.target->isVisible()) {
 #ifndef __EMSCRIPTEN__
-            if (rctx.target->shouldQuit()) {
-                endLoop = true;
-                break;
-            }
-
-            if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_ESCAPE)
-                    || rctx.target->shouldClose()) {
-                if (name == "Spectrogram") {
+                if (rctx.target->shouldQuit()) {
                     endLoop = true;
                     break;
                 }
-                else {
-                    rctx.target->hide();
-                }
-            }
 
-            if (name != "Settings") {
-                if (rctx.target->isKeyPressed(SDL_SCANCODE_S)) {
-                    ctx->renderingContexts["Settings"].target->show();
+                if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_ESCAPE)
+                        || rctx.target->shouldClose()) {
+                    if (name == "Spectrogram") {
+                        endLoop = true;
+                        break;
+                    }
+                    else {
+                        rctx.target->hide();
+                    }
                 }
-            }
+
+                if (name != "Settings") {
+                    if (rctx.target->isKeyPressed(SDL_SCANCODE_S)) {
+                        ctx->renderingContexts["Settings"].target->show();
+                    }
+                }
 #endif
-            
-            if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_P)) {
-                isPaused = !isPaused;
-            }
+                    
+                if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_P)) {
+                    isPaused = !isPaused;
+                }
 
-            if (rctx.target->sizeChanged()) {
-                updateRendererTargetSize(rctx);
-            }
+                if (rctx.target->sizeChanged()) {
+                    updateRendererTargetSize(rctx);
+                }
 
-            (this->*info.eventCallback)(rctx);
-        }
+                (this->*info.eventCallback)(rctx);
+            }
 #if defined(ANDROID) || defined(__ANDROID__)
 #   undef break
 #else
-    }
+        }
 #endif
+    }
 
     if (endLoop) {
         return;

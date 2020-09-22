@@ -58,7 +58,7 @@ namespace Main {
         void eventOscilloscope(RenderingContext& rctx);
         void eventSettings(RenderingContext& rctx);
 
-        void mainBody();
+        void mainBody(bool processEvents = true);
 
 #ifdef __EMSCRIPTEN__
         void changeModuleCanvas(const std::string& id);
