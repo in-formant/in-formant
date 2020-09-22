@@ -18,9 +18,6 @@ do
     cp -vL /usr/$target/lib/libhidapi.so $tmp/app/libs/$android_abi
     cp -vL /usr/$target/lib/libSDL2.so $tmp/app/libs/$android_abi
     cp -vL /usr/$target/lib/libfftw3.so $tmp/app/libs/$android_abi
-    cp -vL /usr/$target/lib/libavcodec.so $tmp/app/libs/$android_abi
-    cp -vL /usr/$target/lib/libavutil.so $tmp/app/libs/$android_abi
-    cp -vL /usr/$target/lib/libswresample.so $tmp/app/libs/$android_abi
 done
 
 mkdir -p $tmp/app/src/main/assets

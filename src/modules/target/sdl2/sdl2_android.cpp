@@ -1,6 +1,7 @@
 #include "sdl2.h"
 #include <iostream>
 
+#include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -14,6 +15,8 @@ void SDL2::prepareAssets()
 {
     chdir(SDL_AndroidGetInternalStoragePath());
 
+    std::cout << "test: " << SDL_AndroidGetInternalStoragePath() << std::endl;
+
     JNIEnv *env = (JNIEnv *) SDL_AndroidGetJNIEnv();
     jobject activity = (jobject) SDL_AndroidGetActivity();
 
@@ -24,7 +27,7 @@ void SDL2::prepareAssets()
 
     AAssetManager *assetManager = AAssetManager_fromJava(env, assetManagerJava);
 
-    std::vector<std::string> dirsToCopy { "", "shaders", "shaders/vulkan", "shaders/gles" };
+    std::vector<std::string> dirsToCopy { "" };
    
     constexpr size_t bufferSize = 1024;
     auto buffer = std::make_unique<char[]>(bufferSize);
@@ -41,12 +44,18 @@ void SDL2::prepareAssets()
             AAsset *asset = AAssetManager_open(assetManager, filePath.c_str(), AASSET_MODE_STREAMING);
 
             int nbRead;
-            FILE *out = fopen(filePath.c_str(), "w");
+            int outfd = ::open(filePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
             while ((nbRead = AAsset_read(asset, buffer.get(), bufferSize)) > 0) {
-                fwrite(buffer.get(), nbRead, 1, out);
+                int nbToWrite = nbRead;
+                int off = 0;
+                while (nbToWrite > 0) {
+                    int nbWritten = ::write(outfd, buffer.get() + off, nbToWrite);
+                    nbToWrite -= nbWritten;
+                    off += nbWritten;
+                }
             }
 
-            fclose(out);
+            ::close(outfd);
             AAsset_close(asset);
         }
 
