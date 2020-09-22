@@ -253,6 +253,16 @@ void SDL2::close()
     mIsShown = false;
 }
 
+void SDL2::hookEventWatch(int (*filter)(void *, SDL_Event *), void *userdata)
+{
+    SDL_AddEventWatch(filter, userdata);
+}
+
+int SDL2::getWindowId()
+{
+    return SDL_GetWindowID(mWindow);
+}
+
 bool SDL2::isVisible() const
 {
     return mIsShown;

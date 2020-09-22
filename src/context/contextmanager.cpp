@@ -89,6 +89,33 @@ void ContextManager::start()
         if (name == "Settings") {
             rctx.target->hide();
         }
+#if defined(_WIN32) || defined(__APPLE__)
+        auto sdl2target = static_cast<Target::SDL2 *>(rctx.target.get());
+        struct {
+            RenderingContext *rctx;
+            ContextManager *self;
+            void (ContextManager::*renderCallback)(RenderingContext&);
+            int windowId;
+        } filterUserdata = {
+            .rctx = &rctx,
+            .self = this,
+            .renderCallback = info.renderCallback,
+            .windowId = sdl2target->getWindowId(),
+        };
+        sdl2target->hookEventWatch(
+                [](void *userdata, SDL_Event *event) -> int {
+                    auto data = static_cast<std::add_pointer_t<decltype(filterUserdata)>>(userdata);
+                    if (event->type == SDL_WINDOWEVENT
+                            && event->window.windowID == data->windowId
+                            && (event->window.event == SDL_WINDOWEVENT_RESIZED
+                                || event->window.event == SDL_WINDOWEVENT_MOVED)) {
+                        data->rctx->renderer->begin();
+                        (data->self->*data->renderCallback)(*data->rctx);
+                        data->rctx->renderer->end();
+                    }
+                    return 0;
+                }, &filterUserdata);
+#endif
     }
 #endif
 
