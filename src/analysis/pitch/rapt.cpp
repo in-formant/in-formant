@@ -1,4 +1,5 @@
 #include "../util/util.h"
+#include "../../modules/math/constants.h"
 #include "rapt.h"
 #include "pitch.h"
 #include <cmath>

@@ -350,6 +350,7 @@ endif()
 if(TRUE)
     message(STATUS "Including font module: freetype")
     set(FREETYPE_DIR ${PROJECT_SOURCE_DIR}/external/freetype)
+    set(BUILD_SHARED_LIBS TRUE)
     add_subdirectory(${FREETYPE_DIR} ${PROJECT_BINARY_DIR}/freetype)
     set(FONT_USE_FREETYPE TRUE)
     list(APPEND SOURCES
