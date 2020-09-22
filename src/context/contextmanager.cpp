@@ -96,6 +96,7 @@ void ContextManager::start()
     createAudioIOs();
 
     endLoop = false;
+    isPaused = false;
 
 #if defined(__EMSCRIPTEN__)
     emscripten_set_main_loop_arg(
@@ -390,34 +391,41 @@ void ContextManager::mainBody()
 
         rctx.target->processEvents();
 
+        if (rctx.target->isVisible()) {
 #ifndef __EMSCRIPTEN__
-        if (rctx.target->shouldQuit()) {
-            endLoop = true;
-            break;
-        }
-
-        if (rctx.target->shouldClose()) {
-            if (name == "Spectrogram") {
+            if (rctx.target->shouldQuit()) {
                 endLoop = true;
                 break;
             }
-            else {
-                rctx.target->hide();
-            }
-        }
 
-        if (name != "Settings") {
-            if (rctx.target->isKeyPressed(SDL_SCANCODE_S)) {
-                ctx->renderingContexts["Settings"].target->show();
+            if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_ESCAPE)
+                    || rctx.target->shouldClose()) {
+                if (name == "Spectrogram") {
+                    endLoop = true;
+                    break;
+                }
+                else {
+                    rctx.target->hide();
+                }
             }
-        }
+
+            if (name != "Settings") {
+                if (rctx.target->isKeyPressed(SDL_SCANCODE_S)) {
+                    ctx->renderingContexts["Settings"].target->show();
+                }
+            }
 #endif
+            
+            if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_P)) {
+                isPaused = !isPaused;
+            }
 
-        if (rctx.target->sizeChanged()) {
-            updateRendererTargetSize(rctx);
+            if (rctx.target->sizeChanged()) {
+                updateRendererTargetSize(rctx);
+            }
+
+            (this->*info.eventCallback)(rctx);
         }
-
-        (this->*info.eventCallback)(rctx);
 #if defined(ANDROID) || defined(__ANDROID__)
 #   undef break
 #else
@@ -434,9 +442,10 @@ void ContextManager::mainBody()
         ctx->audio->tickAudio();
     }
 
-    propagateAudio();
-
-    updateNewData();
+    if (!isPaused) {
+        propagateAudio();
+        updateNewData();
+    }
 
     auto tr0 = Clock::now();
 
@@ -449,9 +458,11 @@ void ContextManager::mainBody()
         auto& rctx = ctx->renderingContexts[name];
 #endif
 
-        rctx.renderer->begin();
-        (this->*info.renderCallback)(rctx);
-        rctx.renderer->end(); 
+        if (rctx.target->isVisible()) {
+            rctx.renderer->begin();
+            (this->*info.renderCallback)(rctx);
+            rctx.renderer->end(); 
+        }
 #if ! ( defined(ANDROID) || defined(__ANDROID__) )
     }
 #endif

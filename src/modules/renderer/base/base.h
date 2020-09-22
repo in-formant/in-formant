@@ -124,8 +124,10 @@ namespace Module::Renderer {
         virtual void test() = 0;
 
         virtual void renderGraph(const GraphRenderData& data, float thick, float r, float g, float b) = 0;
-        
-        virtual void renderSpectrogram(const SpectrogramRenderData& data, int count) = 0;
+       
+        virtual void scrollSpectrogram(const SpectrogramRenderData& data, int count) = 0;
+
+        virtual void renderSpectrogram() = 0;
 
         virtual void renderFrequencyTrack(const FrequencyTrackRenderData& data, float thick, float r, float g, float b) = 0;
 

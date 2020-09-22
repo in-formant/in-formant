@@ -98,7 +98,7 @@ void NanoVG::renderGraph(const GraphRenderData& graph, float thick, float r, flo
     nvgStroke(vg);
 }
 
-void NanoVG::renderSpectrogram(const SpectrogramRenderData& slice, int count)
+void NanoVG::scrollSpectrogram(const SpectrogramRenderData& slice, int count)
 {
     constexpr int imageHeight = 2048;
 
@@ -194,10 +194,10 @@ void NanoVG::renderSpectrogram(const SpectrogramRenderData& slice, int count)
     mProvider->bindFramebuffer(nullptr);
 
     begin();
-    nvgSave(vg);
+}
 
-    nvgResetTransform(vg);
-
+void NanoVG::renderSpectrogram()
+{ 
     nvgBeginPath(vg);
     nvgRect(vg,
         0,
@@ -210,8 +210,6 @@ void NanoVG::renderSpectrogram(const SpectrogramRenderData& slice, int count)
                 0, 0, mWidth, mHeight,
                 0.0f, mSpectrogramIm1, 1.0f));
     nvgFill(vg);
-
-    nvgRestore(vg);
 }
 
 void NanoVG::renderFrequencyTrack(const FrequencyTrackRenderData& track, float thick, float r, float g, float b)
@@ -445,9 +443,9 @@ void NanoVG::renderText(Module::Freetype::Font& font, const std::string& text, i
     auto fa = font.getAttachment<NvgUtils::FontAttachment>();
 
     Module::Freetype::TextRenderData textRenderData = font.prepareTextRender(text);
-    const auto [_1, _2, textWidth, textHeight] = font.queryTextSize(text);
+    const auto [tx, ty, tw, th] = font.queryTextSize(text);
      
-    y0 = y0 + textHeight;
+    y0 = y0 - ty;
 
     for (const auto& glyphRenderData : textRenderData.glyphs) {
         int x = x0 + glyphRenderData.left;

@@ -119,7 +119,7 @@ TextRenderData Font::prepareTextRender(const std::string& text)
     return std::move(data);
 }
 
-std::array<float, 4> Font::queryTextSize(const std::string& text)
+std::tuple<float, float, float, float> Font::queryTextSize(const std::string& text)
 {
     TextRenderData textRenderData = prepareTextRender(text);
 

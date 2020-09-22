@@ -5,11 +5,14 @@ using namespace std::chrono_literals;
 
 void ContextManager::renderSpectrogram(RenderingContext &rctx)
 {
-    Renderer::SpectrogramRenderData specRender;
-    for (const auto& [frequency, intensity] : spectrogramTrack.back()) {
-        specRender.push_back({frequency, intensity});
+    if (!isPaused) {
+        Renderer::SpectrogramRenderData specRender;
+        for (const auto& [frequency, intensity] : spectrogramTrack.back()) {
+            specRender.push_back({frequency, intensity});
+        }
+        rctx.renderer->scrollSpectrogram(specRender, spectrogramCount);
     }
-    rctx.renderer->renderSpectrogram(specRender, spectrogramCount);
+    rctx.renderer->renderSpectrogram();
 
     Renderer::FrequencyTrackRenderData pitchTrackRender;
     for (const auto& x : pitchTrack) {
@@ -39,53 +42,77 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
     rctx.renderer->renderFrequencyScaleBar(tickLabelFont, tickLabelFont);
 
     if (durLoop > 0us) {
-        auto& font = primaryFont->with(uiFontSize, rctx.target.get());
+        auto& font = primaryFont->with(uiFontSize - 3, rctx.target.get());
+        
+        int em = std::get<3>(font.queryTextSize("M"));
 
-        const auto [tx, ty, tw, th] = font.queryTextSize("M");
+        float y;
+        float tx, ty, tw, th;
 
         std::stringstream ss;
+
+        y = 15;
+
+        ss.str("");
         ss << "Loop cycle took " << (durLoop.count() / 1000.0f) << " ms";
-        ss.flush();
+        std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
         rctx.renderer->renderText(
                 font,
                 ss.str(),
-                20,
-                20,
-                1.0f, 0.5f, 1.0f);
-
-        float processingFrac = (float) durProcessing.count() / (float) durLoop.count();
-        float renderingFrac = (float) durRendering.count() / (float) durLoop.count();
+                15,
+                y,
+                0.7f, 0.7f, 0.7f);
+        y += em + 10;
 
         ss.str("");
-        ss << "- Processing: " << std::round(100 * processingFrac) << "%";
-        ss.flush();
+        ss << "F1: Reopen oscilloscope"; 
+        std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
         rctx.renderer->renderText(
                 font,
                 ss.str(),
-                20,
-                20 + th + 10,
-                1.0f, 0.5f, 1.0f);
+                15,   
+                y,
+                1.0f, 1.0f, 1.0f);
+        y += em + 10;
 
         ss.str("");
-        ss << "- Rendering: " << std::round(100 * renderingFrac) << "%";
-        ss.flush();
+        ss << "F2: Reopen FFT spectrum";
+        std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
         rctx.renderer->renderText(
                 font,
                 ss.str(),
-                20,
-                20 + 2 * (th + 10),
-                1.0f, 0.5f, 1.0f);
+                15,
+                y,
+                1.0f, 1.0f, 1.0f);  
+        y += em + 10;
+
+        ss.str("");
+        ss << "P: " << (isPaused ? "Resume" : "Pause");
+        std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
+        rctx.renderer->renderText(
+                font,
+                ss.str(),
+                15,
+                y,
+                1.0f, 1.0f, 1.0f);
+
     }
 }
 
 void ContextManager::eventSpectrogram(RenderingContext &rctx)
 { 
 #ifndef __EMSCRIPTEN__
-    if (rctx.target->isKeyPressed(SDL_SCANCODE_F1)) {
-        ctx->renderingContexts["Oscilloscope"].target->show();
+    if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_F1)) {
+        auto& target = ctx->renderingContexts["Oscilloscope"].target;
+        if (!target->isVisible()) {
+            target->show();
+        }
     }
-    else if (rctx.target->isKeyPressed(SDL_SCANCODE_F2)) {
-        ctx->renderingContexts["FFT Spectrum"].target->show();
+    if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_F2)) {
+        auto& target = ctx->renderingContexts["FFT spectrum"].target;
+        if (!target->isVisible()) {
+            target->show();
+        }
     }
 #endif
 }
