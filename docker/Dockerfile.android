@@ -15,9 +15,10 @@ RUN mkdir /android-sdk && cd /android-sdk && \
         mkdir cmdline-tools && \
         mv tools cmdline-tools/latest
 ENV ANDROID_HOME=/android-sdk ANDROID_SDK=/android-sdk PATH=/android-sdk/cmdline-tools/latest/bin:$PATH
-ENV android_api=30 ndk_ver=21.3.6528147 buildtools_ver=30.0.1
+ENV android_api=24 ndk_ver=21.3.6528147 buildtools_ver=30.0.1
 ENV ANDROID_PLATFORM=android-$android_api ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ndk_ver
 RUN yes | sdkmanager --install "platforms;$ANDROID_PLATFORM"
+RUN yes | sdkmanager --install "platforms;30"
 RUN yes | sdkmanager --install "ndk;$ndk_ver"
 RUN yes | sdkmanager --install "build-tools;$buildtools_ver"
 
@@ -198,17 +199,6 @@ ENV gver=4.10.2
 RUN wget https://downloads.gradle-dn.com/distributions/gradle-$gver-bin.zip && \
         unzip gradle-$gver-bin.zip && \
         mv gradle-$gver gradle
-
-# Install ffmpeg
-RUN git clone https://github.com/Javernaut/ffmpeg-android-maker
-RUN apt-get -y install curl
-RUN cd ffmpeg-android-maker && ANDROID_SDK_HOME=/android-sdk ./ffmpeg-android-maker.sh
-RUN cd ffmpeg-android-maker && \
-        for arch in arm arm64 x86 x86_64; do \
-            . env-android.sh android-$arch; \
-            cp -r output/include/$android_abi/* /usr/android-$arch/include; \
-            cp -r output/lib/$android_abi/*     /usr/android-$arch/lib; \
-        done
 
 # Install recent GLES headers
 RUN mkdir gles-headers && \

@@ -151,11 +151,7 @@ check_low_level_exit(
 include(ExternalProject)
 if(ANDROID)
     set(SOXR_EXTRA_ARGS
-        -DBUILD_SHARED_LIBS=ON
-        -DAVCODEC_LIBRARIES=/usr/$ENV{target}/lib/libavcodec.so
-        -DAVUTIL_LIBRARIES=/usr/$ENV{target}/lib/libavutil.so
-        -DAVCODEC_INCLUDE_DIRS=/usr/$ENV{target}/include
-        -DAVUTIL_INCLUDE_DIRS=/usr/$ENV{target}/include)
+        -DBUILD_SHARED_LIBS=ON)
     set(SOXR_CMAKE $ENV{cross}cmake)
 elseif(EMSCRIPTEN)
     set(SOXR_EXTRA_ARGS
@@ -184,7 +180,6 @@ ExternalProject_Add(
 )
 set(SOXR_INCLUDE_DIR ${PROJECT_BINARY_DIR}/soxr/include)
 set(SOXR_LIBRARIES -L${PROJECT_BINARY_DIR}/soxr/lib -lsoxr)
-
 ### SEARCH AUDIO MODULES 
 
 if(TRUE)
