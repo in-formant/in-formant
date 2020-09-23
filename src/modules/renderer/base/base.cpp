@@ -112,9 +112,9 @@ float AbstractBase::frequencyToCoordinate(float frequency) const
             transVal = log10f(10.0f + frequency);
             break;
         case FrequencyScale::Mel:
-            transMin = 2595.0f + log10f(1.0f + minFrequency / 700.0f);
-            transMax = 2595.0f + log10f(1.0f + maxFrequency / 700.0f);
-            transVal = 2595.0f + log10f(1.0f + frequency / 700.0f);
+            transMin = 2595.0f * log10f(1.0f + minFrequency / 700.0f);
+            transMax = 2595.0f * log10f(1.0f + maxFrequency / 700.0f);
+            transVal = 2595.0f * log10f(1.0f + frequency / 700.0f);
             break;
         }
 
@@ -160,23 +160,25 @@ float AbstractBase::coordinateToFrequency(float y) const
             transMax = log10f(10.0f + maxFrequency);
             break;
         case FrequencyScale::Mel:
-            transMin = 2595.0f + log10f(1.0f + minFrequency / 700.0f);
-            transMax = 2595.0f + log10f(1.0f + maxFrequency / 700.0f);
+            transMin = 2595.0f * log10f(1.0f + minFrequency / 700.0f);
+            transMax = 2595.0f * log10f(1.0f + maxFrequency / 700.0f);
             break;
         }
 
-        transVal = (y + 1) * (transMax - transMin) / 2 + transMin;
-        float frequency;
+        float coord = 2.0f * (transVal - transMin) / (transMax - transMin) - 1.0f;
 
+        transVal = (y + 1.0f) / 2.0f * (transMax - transMin) + transMin;
+
+        float frequency;
         switch (scale) {
         case FrequencyScale::Linear:
             frequency = transVal;
             break;
         case FrequencyScale::Logarithmic:
-            frequency = expf(transVal) - 10.0f;
+            frequency = powf(10.0f, transVal) - 10.0f;
             break;
         case FrequencyScale::Mel:
-            frequency = 700.0f * expf(transVal - 2595.0f) - 1.0f;
+            frequency = 700.0f * (powf(10.0f, transVal / 2595.0f) - 1.0f);
             break;
         }
 

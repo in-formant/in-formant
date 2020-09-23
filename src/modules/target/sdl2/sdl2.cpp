@@ -227,6 +227,7 @@ void SDL2::create()
     mGotQuitEvent = false;
     mGotCloseEvent = false;
     mWindowSizeChanged = false;
+    mMouseFocus = false;
     mIsShown = true;
 }
 
@@ -308,6 +309,12 @@ void SDL2::processEvents()
                         || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
                     mWindowSizeChanged = true;
                 }
+                else if (event.window.event == SDL_WINDOWEVENT_ENTER) {
+                    mMouseFocus = true;
+                }
+                else if (event.window.event == SDL_WINDOWEVENT_LEAVE) {
+                    mMouseFocus = false;
+                }
             }
             else {
                 deleteEvent = false;
@@ -325,7 +332,9 @@ void SDL2::processEvents()
         }
     }
 
-    mMouseBitmask = SDL_GetMouseState(&mMouseX, &mMouseY);
+    if (mMouseFocus) {
+        mMouseBitmask = SDL_GetMouseState(&mMouseX, &mMouseY);
+    }
 
     constexpr std::array<uint32_t, 5> buttons = {
         SDL_BUTTON_LEFT,
