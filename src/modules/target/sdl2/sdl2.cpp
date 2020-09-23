@@ -350,12 +350,20 @@ void SDL2::processEvents()
 
 bool SDL2::shouldQuit()
 {
-    return mGotQuitEvent;
+    if (mGotQuitEvent) {
+        mGotQuitEvent = false;
+        return true;
+    }
+    return false;
 }
 
 bool SDL2::shouldClose()
 {
-    return mGotCloseEvent;
+    if (mGotCloseEvent) {
+        mGotCloseEvent = false;
+        return true;
+    }
+    return false;
 }
 
 bool SDL2::sizeChanged()
