@@ -77,11 +77,11 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
 
     out->setSampleRate(sampleRate);
 
-    out->setFBOrder(1);
-    out->getFBData()[0] = fabsf(powf(fabsf(gain), 1.0f / 3.0f));
+    out->setFFOrder(1);
+    out->getFFData()[0] = 1e5 * gain;
     
-    out->setFFOrder(lpc.size());
-    std::copy(lpc.begin(), lpc.end(), out->getFFData());
+    out->setFBOrder(lpc.size());
+    std::copy(lpc.begin(), lpc.end(), out->getFBData());
 
     // Filter frequency response.
 
@@ -102,7 +102,7 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
     outSpec->setLength(outLength);
 
     for (int i = 0; i < outLength; ++i) {
-        outSpec->getData()[i] = out->getFBConstData()[0]
+        outSpec->getData()[i] = out->getFFConstData()[0]
                                 / (mFFT.data(i) * mFFT.data(i)
                                         + mFFT.data(nfft - 1 - i) * mFFT.data(nfft - 1 - i));
     }

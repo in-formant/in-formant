@@ -435,6 +435,21 @@ void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::
     }
 }
 
+float NanoVG::renderFrequencyCursor(float mx, float my)
+{
+    float y = 2 * my - 1;
+    float yp = my * mHeight;
+    
+    nvgBeginPath(vg);
+    nvgMoveTo(vg, 0, yp);
+    nvgLineTo(vg, mWidth, yp);
+    nvgStrokeColor(vg, nvgRGBf(0.75f, 0.75f, 0.75f));
+    nvgStrokeWidth(vg, 2.0f);
+    nvgStroke(vg);
+
+    return coordinateToFrequency(y);
+}
+
 void NanoVG::renderText(Module::Freetype::Font& font, const std::string& text, int x0, int y0, float r, float g, float b)
 {
     if (!font.hasAttachment()) {

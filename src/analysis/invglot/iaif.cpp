@@ -30,7 +30,9 @@ static std::vector<float> calculateLPC(const std::vector<float>& x, const std::v
     for (int i = 0; i < nx; ++i) {
         lpcIn[i] = w[i] * x[i];
     }
-    return lpc->solve(lpcIn.data(), nx, order, &gain);
+    auto a = lpc->solve(lpcIn.data(), nx, order, &gain);
+    a.insert(a.begin(), 1.0f);
+    return a;
 }
 
 static std::vector<float> removePreRamp(const std::vector<float>& x, int preflt)

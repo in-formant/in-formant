@@ -1,5 +1,6 @@
 #include "contextmanager.h"
 #include "contextbuilder.h"
+#include "../synthesis/synthesis.h"
 
 #ifdef __EMSCRIPTEN__
 extern const char *EMSCRIPTEN_CANVAS_NAME;
@@ -74,7 +75,7 @@ void ContextManager::start()
         auto& rctx = ctx->renderingContexts[name];
         rctx.target->initialize();
         rctx.target->setTitle("Speech analysis - " + info.name); 
-        rctx.target->setSize(320, 240);
+        rctx.target->setSize(640, 480);
 #ifdef __EMSCRIPTEN__
         std::string canvasIdWithSharp = "#" + info.canvasId;
         EMSCRIPTEN_CANVAS_NAME = canvasIdWithSharp.c_str();
@@ -154,6 +155,8 @@ void ContextManager::selectView(const std::string& name)
 
 void ContextManager::loadSettings()
 {
+    outputGain = 0;
+    
     analysisDuration = 25;
     analysisMaxFrequency = 5200;
 
@@ -258,6 +261,7 @@ void ContextManager::createAudioNodes()
     nodes["tail_2"] = std::make_unique<Nodes::Tail>(analysisDuration);
     nodes["pitch"] = std::make_unique<Nodes::PitchTracker>(ctx->pitchSolver.get());
     nodes["invglot"] = std::make_unique<Nodes::InvGlot>(ctx->invglotSolver.get());
+    nodes["linpred_2"] = std::make_unique<Nodes::LinPred>(ctx->linpredSolver.get(), 2 * 16000 / 2000 + 4);
     nodes["rs"] = std::make_unique<Nodes::Resampler>(captureSampleRate, 2 * analysisMaxFrequency);
     nodes["tail_rs"] = std::make_unique<Nodes::Tail>(analysisDuration);
     nodes["preemph"] = std::make_unique<Nodes::PreEmphasis>(preEmphasisFrequency);
@@ -274,6 +278,7 @@ void ContextManager::createAudioIOs()
     nodeIOs["tail_2"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["pitch"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeFrequencies);
     nodeIOs["invglot"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
+    nodeIOs["linpred_2"] = Nodes::makeNodeIO(2, Nodes::kNodeIoTypeIIRFilter, Nodes::kNodeIoTypeAudioSpec);
     nodeIOs["rs"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["tail_rs"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
     nodeIOs["preemph"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
@@ -304,6 +309,8 @@ void ContextManager::propagateAudio()
     processAudioNode("rs_2", "pitch");
     processAudioNode("rs_2", "tail_2");
     processAudioNode("tail_2", "invglot");
+    processAudioNode("tail_2", "preemph");
+    processAudioNode("preemph", "linpred_2");
 
     processAudioNode("prereqs", "rs");
     processAudioNode("rs", "tail_rs");
@@ -344,22 +351,22 @@ void ContextManager::updateNewData()
         specSlice[i][1] = ioSpectrum->getConstData()[i];
     }
 
-    float lpGain = ioLinpredFilter->getFBConstData()[0];
+    float lpGain = ioLinpredFilter->getFFConstData()[0];
     
     float pitch = -1.0f;
     std::vector<Analysis::FormantData> formants;
 
-    if (lpGain > 0.5e-4f && ioPitch->getLength() > 0) {
+    if (ioPitch->getLength() > 0) {
         pitch = ioPitch->get(0);
+    }
 
-        int formantCount = ioFormantFreqs->getLength();
-        formants.resize(formantCount);
-        for (int i = 0; i < formantCount; ++i) {
-            formants[i] = {
-                .frequency = ioFormantFreqs->get(i),
-                .bandwidth = ioFormantBands->get(i),
-            };
-        }
+    int formantCount = ioFormantFreqs->getLength();
+    formants.resize(formantCount);
+    for (int i = 0; i < formantCount; ++i) {
+        formants[i] = {
+            .frequency = ioFormantFreqs->get(i),
+            .bandwidth = ioFormantBands->get(i),
+        };
     }
 
     spectrogramTrack.pop_front();
@@ -370,6 +377,37 @@ void ContextManager::updateNewData()
 
     formantTrack.pop_front();
     formantTrack.push_back(std::move(formants));
+}
+
+void ContextManager::generateAudio(float *x, int length)
+{
+    if (outputGain > 1e-6) {
+        auto lpc = nodeIOs["linpred_2"][0]->as<Nodes::IO::IIRFilter>();
+
+        std::vector<float> b(lpc->getFFConstData(), lpc->getFFConstData() + lpc->getFFOrder());
+        std::vector<float> a(lpc->getFBConstData(), lpc->getFBConstData() + lpc->getFBOrder());
+        b[0] = 0.005f;
+        a.insert(a.begin(), 1.0f);
+
+        const float sampleRate = ctx->playbackQueue->getInSampleRate();
+
+        static Audio::Resampler resampler(lpc->getSampleRate(), sampleRate);
+        resampler.setRate(lpc->getSampleRate(), sampleRate);
+
+        int inlen = resampler.getRequiredInLength(length);
+
+        static float lastNoise = 0.0f;
+        auto noise = Synthesis::brownNoise(inlen, lastNoise);
+        lastNoise = noise.back();
+
+        auto filtNoise = Synthesis::filter(b, a, noise);
+
+        resampler.process(filtNoise.data(), inlen, x, length);
+
+        for (int i = 0; i < length; ++i) {
+            x[i] *= outputGain;
+        }
+    }
 }
 
 void ContextManager::mainBody(bool processEvents)
@@ -423,6 +461,13 @@ void ContextManager::mainBody(bool processEvents)
                     isPaused = !isPaused;
                 }
 
+                if (rctx.target->isKeyPressed(SDL_SCANCODE_N)) {
+                    outputGain = 0.5 * outputGain + 0.5;
+                }
+                else {
+                    outputGain = 0.95 * outputGain;
+                }
+
                 if (rctx.target->sizeChanged()) {
                     updateRendererTargetSize(rctx);
                 }
@@ -440,8 +485,6 @@ void ContextManager::mainBody(bool processEvents)
         return;
     }
 
-    //ctx->playbackQueue->pushIfNeeded(nullptr);
-
     if (ctx->audio->needsTicking()) {
         ctx->audio->tickAudio();
     }
@@ -450,6 +493,8 @@ void ContextManager::mainBody(bool processEvents)
         propagateAudio();
         updateNewData();
     }
+
+    ctx->playbackQueue->pushIfNeeded(this);
 
     auto tr0 = Clock::now();
 
