@@ -45,7 +45,7 @@ namespace Module::Renderer {
 
         void test() override;
  
-        void renderGraph(const GraphRenderData& data, float thick, float r, float g, float b) override;
+        void renderGraph(const GraphRenderData& data, float pmin, float pmax, float thick, float r, float g, float b) override;
         void scrollSpectrogram(const SpectrogramRenderData& data, int count) override;
         void renderSpectrogram() override;
         void renderFrequencyTrack(const FrequencyTrackRenderData& data, float thick, float r, float g, float b) override;

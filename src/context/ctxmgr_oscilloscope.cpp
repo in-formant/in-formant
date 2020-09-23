@@ -11,6 +11,8 @@ void ContextManager::renderOscilloscope(RenderingContext &rctx)
     int   length      = audioNode->getLength();
     float sampleRate  = audioNode->getSampleRate();
 
+    float duration = (float) length / (float) sampleRate;
+
     Renderer::GraphRenderData graphRender(length);
     for (int i = 0; i < length; ++i) {
         graphRender[i] = {
@@ -18,7 +20,7 @@ void ContextManager::renderOscilloscope(RenderingContext &rctx)
             .y = data[i] * 20.0f + 5.0f,
         };
     }
-    rctx.renderer->renderGraph(graphRender, 3.0f, 1, 1, 1);
+    rctx.renderer->renderGraph(graphRender, 0, duration, 3.0f, 1, 1, 1);
 
     auto glotAudioNode = nodeIOs["invglot"][0]->as<Nodes::IO::AudioTime>();
 
@@ -33,7 +35,7 @@ void ContextManager::renderOscilloscope(RenderingContext &rctx)
             .y = data[i] * 2.5f - 5.0f,
         };
     }
-    rctx.renderer->renderGraph(graphRender, 3.0f, 1, 1, 1);
+    rctx.renderer->renderGraph(graphRender, 0, duration, 3.0f, 1, 1, 1);
 }
 
 void ContextManager::eventOscilloscope(RenderingContext &rctx)

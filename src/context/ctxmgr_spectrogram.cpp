@@ -7,9 +7,21 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 {
     if (!isPaused) {
         Renderer::SpectrogramRenderData specRender;
-        for (const auto& [frequency, intensity] : spectrogramTrack.back()) {
-            specRender.push_back({frequency, intensity});
+        
+        if (displayLpSpec) { 
+            auto lpSpec = nodeIOs["linpred"][1]->as<Nodes::IO::AudioSpec>();
+            for (int i = 0; i < lpSpec->getLength(); ++i) {
+                float frequency = (i * lpSpec->getSampleRate() / 2.0f) / lpSpec->getLength();
+                specRender.push_back({frequency, lpSpec->getConstData()[i]});
+            }
         }
+        else {
+            for (const auto& [frequency, intensity] : spectrogramTrack.back()) {
+                specRender.push_back({frequency, intensity});
+            }
+        }
+
+
         rctx.renderer->scrollSpectrogram(specRender, spectrogramCount);
     }
     rctx.renderer->renderSpectrogram();
@@ -65,6 +77,7 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
             "F2: Open FFT spectrum",
             "P: Pause/resume analysis",
             "N: Play filtered noise",
+            std::string("L: Display ") + (displayLpSpec ? "spectrogram" : "LP spectrum"),
         };
 
         for (const auto& str : keyLegends) {
@@ -85,6 +98,8 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
         ss.str("");
         ss << "Cursor: " << std::round(frequency) << " Hz";
         bottomStrings.push_back(ss.str());
+
+        frequency = pitchTrack.back();
 
         ss.str("");
         ss << "Pitch: ";
@@ -157,5 +172,9 @@ void ContextManager::eventSpectrogram(RenderingContext &rctx)
 
     specMX = (float) mx / (float) mw;
     specMY = (float) my / (float) mh;
+
+    if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_L)) {
+        displayLpSpec = !displayLpSpec;
+    }
 }
 

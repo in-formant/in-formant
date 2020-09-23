@@ -67,6 +67,7 @@ namespace Module::Target {
         std::map<SDL_Scancode, bool> mKeyState;
         std::map<SDL_Scancode, char> mKeyupState;
     
+        bool mMouseFocus;
         int mMouseX, mMouseY;
         uint32_t mMouseBitmask;
         std::map<uint32_t, char> mMouseupState;

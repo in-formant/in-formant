@@ -123,7 +123,7 @@ namespace Module::Renderer {
 
         virtual void test() = 0;
 
-        virtual void renderGraph(const GraphRenderData& data, float thick, float r, float g, float b) = 0;
+        virtual void renderGraph(const GraphRenderData& data, float pmin, float pmax, float thick, float r, float g, float b) = 0;
        
         virtual void scrollSpectrogram(const SpectrogramRenderData& data, int count) = 0;
 

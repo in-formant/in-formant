@@ -63,7 +63,7 @@ void NanoVG::test()
 {
 }
 
-void NanoVG::renderGraph(const GraphRenderData& graph, float thick, float r, float g, float b)
+void NanoVG::renderGraph(const GraphRenderData& graph, float pmin, float pmax, float thick, float r, float g, float b)
 {
     float xi, yi;
     float xip, yip;
@@ -85,7 +85,7 @@ void NanoVG::renderGraph(const GraphRenderData& graph, float thick, float r, flo
     for (int i = 1; i < graph.size(); ++i) {
         const auto& p = graph[i];
 
-        xi = 0.9 * (2.0f * (p.x - p0.x) / (pend.x - p0.x) - 1.0f); 
+        xi = 0.9 * (2.0f * (p.x - pmin) / (pmax - pmin) - 1.0f); 
         yi = p.y / 10.0f;
 
         std::tie(xip, yip) = convertNormCoord(xi, yi);
@@ -437,7 +437,6 @@ void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::
 
 float NanoVG::renderFrequencyCursor(float mx, float my)
 {
-    float y = 2 * my - 1;
     float yp = my * mHeight;
     
     nvgBeginPath(vg);
@@ -446,6 +445,8 @@ float NanoVG::renderFrequencyCursor(float mx, float my)
     nvgStrokeColor(vg, nvgRGBf(0.75f, 0.75f, 0.75f));
     nvgStrokeWidth(vg, 2.0f);
     nvgStroke(vg);
+    
+    float y = 2.0f * (0.5f - my);
 
     return coordinateToFrequency(y);
 }

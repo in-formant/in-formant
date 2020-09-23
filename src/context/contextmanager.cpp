@@ -98,6 +98,7 @@ void ContextManager::start()
 
     endLoop = false;
     isPaused = false;
+    displayLpSpec = false;
 
 #if defined(__EMSCRIPTEN__)
     emscripten_set_main_loop_arg(
