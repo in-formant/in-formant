@@ -30,8 +30,8 @@ void FormantTracker::process(const NodeIO *inputs[], NodeIO *outputs[])
     auto outBs = outputs[1]->as<IO::Frequencies>();
    
     Analysis::FormantResult result = mSolver->solve(
-            in->getFFConstData(),
-            in->getFFOrder(),
+            in->getFBConstData(),
+            in->getFBOrder(),
             in->getSampleRate());
 
     outFs->setLength(result.formants.size());

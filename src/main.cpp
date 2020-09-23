@@ -92,16 +92,14 @@ int main(int argc, char **argv)
         .setInvglotSolver(new Analysis::Invglot::IAIF(0.98f))
         .setCaptureSampleRate(48000)
         .setCaptureDuration(200ms)
-        .setPlaybackBlockDuration(5ms, 200ms)
-        .setPlaybackDuration(500ms)
+        .setPlaybackBlockDuration(2ms, 30ms)
+        .setPlaybackDuration(30ms)
         .setPlaybackSampleRate(48000)
         .setPlaybackCallback(
-                [&](float *x, int n, void *) {
-                    for (int i = 0; i < n; ++i) {
-                        x[i] = 0.5f * sinf((2.0f * M_PI * sineTime * testToneFrequency) / 48000);
-                        sineTime++;
-                    }
-                });
+            [](float *output, int length, void *userdata) {
+                auto ctxmgr = static_cast<Main::ContextManager *>(userdata);
+                ctxmgr->generateAudio(output, length);
+            });
 
     Main::ContextManager manager(ctxBuilder.build());
 

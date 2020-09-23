@@ -24,15 +24,20 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
     rctx.renderer->renderFrequencyTrack(pitchTrackRender, 4.0f, 0.0f, 1.0f, 1.0f);
 
     std::vector<Renderer::FormantTrackRenderData> formantTrackRender(numFormantsToRender);
+    int n = 0;
     for (const auto& formants : formantTrack) {
         int i = 0;
-        for (const auto& formant : formants) {
-            formantTrackRender[i].push_back(std::make_optional<Analysis::FormantData>(formant));
-            if (++i >= numFormantsToRender) break;
+        if (pitchTrackRender[n] > 0) {
+            for (const auto& formant : formants) {
+                formantTrackRender[i].push_back(std::make_optional<Analysis::FormantData>(formant));
+                if (++i >= numFormantsToRender) break;
+            }
         }
         for (int j = i; j < numFormantsToRender; ++j)
             formantTrackRender[j].emplace_back(std::nullopt);
+        n++;
     }
+
     for (int i = 0; i < numFormantsToRender; ++i) {
         const auto [r, g, b] = formantColors[i];
         rctx.renderer->renderFormantTrack(formantTrackRender[i], r, g, b);
@@ -43,8 +48,10 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 
     if (durLoop > 0us) {
         auto& font = primaryFont->with(uiFontSize - 3, rctx.target.get());
+        auto& smallerFont = primaryFont->with(uiFontSize - 5, rctx.target.get());
         
         int em = std::get<3>(font.queryTextSize("M"));
+        int smallerEm = std::get<3>(smallerFont.queryTextSize("M"));
 
         float y;
         float tx, ty, tw, th;
@@ -53,49 +60,77 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 
         y = 15;
 
+        const std::vector<std::string> keyLegends = {
+            "F1: Open oscilloscope",
+            "F2: Open FFT spectrum",
+            "P: Pause/resume analysis",
+            "N: Play filtered noise",
+        };
+
+        for (const auto& str : keyLegends) {
+            rctx.renderer->renderText(
+                    font,
+                    str,
+                    15,   
+                    y,
+                    1.0f, 1.0f, 1.0f);
+            y += em + 10;
+        }
+
+        std::vector<std::string> bottomStrings;
+        float frequency;
+
+        frequency = rctx.renderer->renderFrequencyCursor(specMX, specMY);
+        
+        ss.str("");
+        ss << "Cursor: " << std::round(frequency) << " Hz";
+        bottomStrings.push_back(ss.str());
+
+        ss.str("");
+        ss << "Pitch: ";
+        if (frequency > 0)
+            ss << (10 * std::round(frequency)) << " Hz";
+        else
+            ss << "unvoiced";
+        bottomStrings.push_back(ss.str());
+
+        auto& formants = formantTrack.back();
+        int i = 1;
+        for (auto it = formants.begin(); it != formants.end(); ++it) {
+            frequency = it->frequency;
+
+            ss.str("");
+            ss << "R" << i << ": " << std::round(frequency) << " Hz";
+            bottomStrings.push_back(ss.str());
+            
+            i++;
+        }
+
+        frequency = pitchTrack.back(); 
+
+        y += smallerEm;
+
+        for (const auto& str : bottomStrings) {
+            rctx.renderer->renderText(
+                    smallerFont,
+                    str,
+                    15,
+                    y,
+                    1.0f, 1.0f, 1.0f);
+            y += smallerEm + 10;
+        }
+
+        int h;
+        rctx.target->getSize(nullptr, &h);
+
         ss.str("");
         ss << "Loop cycle took " << (durLoop.count() / 1000.0f) << " ms";
-        std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
         rctx.renderer->renderText(
-                font,
+                smallerFont,
                 ss.str(),
                 15,
-                y,
-                0.7f, 0.7f, 0.7f);
-        y += em + 10;
-
-        ss.str("");
-        ss << "F1: Reopen oscilloscope"; 
-        std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-        rctx.renderer->renderText(
-                font,
-                ss.str(),
-                15,   
-                y,
+                h - 15 - smallerEm,
                 1.0f, 1.0f, 1.0f);
-        y += em + 10;
-
-        ss.str("");
-        ss << "F2: Reopen FFT spectrum";
-        std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-        rctx.renderer->renderText(
-                font,
-                ss.str(),
-                15,
-                y,
-                1.0f, 1.0f, 1.0f);  
-        y += em + 10;
-
-        ss.str("");
-        ss << "P: " << (isPaused ? "Resume" : "Pause");
-        std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-        rctx.renderer->renderText(
-                font,
-                ss.str(),
-                15,
-                y,
-                1.0f, 1.0f, 1.0f);
-
     }
 }
 
@@ -115,5 +150,12 @@ void ContextManager::eventSpectrogram(RenderingContext &rctx)
         }
     }
 #endif
+
+    const auto [mx, my] = rctx.target->getMousePosition();
+    int mw, mh;
+    rctx.target->getSize(&mw, &mh);
+
+    specMX = (float) mx / (float) mw;
+    specMY = (float) my / (float) mh;
 }
 

@@ -135,6 +135,8 @@ namespace Module::Renderer {
 
         virtual void renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::Freetype::Font& minorFont) = 0;
 
+        virtual float renderFrequencyCursor(float mx, float my) = 0;
+
         virtual void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, float r, float g, float b) = 0;
 
         virtual std::tuple<float, float, float, float> renderInputBox(Module::Freetype::Font& font, const std::string& content, int x, int y, int w, bool isFocused) = 0;
@@ -156,6 +158,7 @@ namespace Module::Renderer {
         void resetWindowSizeChanged();
 
         float frequencyToCoordinate(float frequency) const;
+        float coordinateToFrequency(float y) const;
         void gainToColor(float gain, float *r, float *g, float *b) const;
 
     private:

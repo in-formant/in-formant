@@ -111,6 +111,9 @@ set(SOURCES
     src/analysis/util/parabolic_interpolation.cpp
     src/analysis/util/util.h
     src/analysis/analysis.h
+    src/synthesis/noise.cpp
+    src/synthesis/vtfilter.cpp
+    src/synthesis/synthesis.h
 )
 
 set(GL_SHADER_SOURCES

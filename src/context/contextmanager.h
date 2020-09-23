@@ -28,6 +28,8 @@ namespace Main {
         void selectView(const std::string& name);
 #endif
 
+        void generateAudio(float *x, int n);
+
     private:
         void loadSettings();
 
@@ -45,7 +47,7 @@ namespace Main {
         void processAudioNode(const char *in, const std::string& nodeName);
 
         void updateNewData();
-       
+
         void initSettingsUI();
 
         void renderSpectrogram(RenderingContext& rctx);
@@ -81,6 +83,8 @@ namespace Main {
         std::string selectedViewName;
 #endif
 
+        float outputGain;
+            
         int analysisDuration;
         int analysisMaxFrequency;
 
@@ -102,6 +106,8 @@ namespace Main {
         std::vector<std::array<float, 3>> formantColors;
 
         int uiFontSize;
+
+        float specMX, specMY;
 
         std::vector<SettingsUIField> mSettingFields;
 

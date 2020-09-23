@@ -124,6 +124,68 @@ float AbstractBase::frequencyToCoordinate(float frequency) const
     }
 }
 
+float AbstractBase::coordinateToFrequency(float y) const
+{
+    static std::map<
+            std::tuple<FrequencyScale, float, float>,
+            std::map<float, float>> mappings;
+
+    FrequencyScale scale = mParameters->getFrequencyScale();
+    float minFrequency = mParameters->getMinFrequency();
+    float maxFrequency = mParameters->getMaxFrequency();
+
+    float transMin, transMax, transVal;
+    
+    auto key = std::make_tuple(scale, minFrequency, maxFrequency);
+    auto it1 = mappings.find(key);
+    if (it1 == mappings.end()) {
+        mappings.emplace(key, std::map<float, float>());
+        it1 = mappings.find(key);
+    }
+
+    auto& map = it1->second;
+
+    auto it2 = map.find(y);
+    if (it2 != map.end()) {
+        return it2->second;
+    }
+    else {
+        switch (scale) {
+        case FrequencyScale::Linear:
+            transMin = minFrequency;
+            transMax = maxFrequency;
+            break;
+        case FrequencyScale::Logarithmic:
+            transMin = log10f(10.0f + minFrequency);
+            transMax = log10f(10.0f + maxFrequency);
+            break;
+        case FrequencyScale::Mel:
+            transMin = 2595.0f + log10f(1.0f + minFrequency / 700.0f);
+            transMax = 2595.0f + log10f(1.0f + maxFrequency / 700.0f);
+            break;
+        }
+
+        transVal = (y + 1) * (transMax - transMin) / 2 + transMin;
+        float frequency;
+
+        switch (scale) {
+        case FrequencyScale::Linear:
+            frequency = transVal;
+            break;
+        case FrequencyScale::Logarithmic:
+            frequency = expf(transVal) - 10.0f;
+            break;
+        case FrequencyScale::Mel:
+            frequency = 700.0f * expf(transVal - 2595.0f) - 1.0f;
+            break;
+        }
+
+        map.emplace(y, frequency);
+        return frequency;
+    }
+}
+
+
 void AbstractBase::gainToColor(float gain, float *r, float *g, float *b) const
 {
     float minGain = mParameters->getMinGain();
