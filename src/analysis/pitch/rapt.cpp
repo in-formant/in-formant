@@ -172,7 +172,7 @@ std::vector<float> RAPT::computePath()
 
                 if (cj.voiced && ck.voiced) { // Voiced to voiced
                     float xi = fabsf(logf(cj.L / ck.L));
-                    row[k] = freq_wt * std::min(xi, (doubl_c + fabsf(xi - M_LN2)));
+                    row[k] = freq_wt * std::min((double) xi, (doubl_c + fabs(xi - M_LN2)));
                 }
                 else if (!cj.voiced && ck.voiced) { // Voiced to unvoiced
                     row[k] = vtran_c + vtr_s_c * Si + vtr_a_c * rri;
