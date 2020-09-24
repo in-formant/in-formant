@@ -238,8 +238,12 @@ void NanoVG::renderFrequencyTrack(const FrequencyTrackRenderData& track, float t
         }
     }
 
-    nvgStrokeColor(vg, nvgRGBf(r, g, b));
-    nvgStrokeWidth(vg, thick);
+    nvgStrokeWidth(vg, thick + 1.0f);
+    nvgStrokeColor(vg, nvgRGBAf(r, g, b, 1.0f));
+    nvgStroke(vg);
+
+    nvgStrokeWidth(vg, 2.0f);
+    nvgStrokeColor(vg, nvgRGBAf(0, 0, 0, 1.0f));
     nvgStroke(vg);
 }
 
