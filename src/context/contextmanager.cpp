@@ -410,9 +410,8 @@ void ContextManager::generateAudio(float *x, int length)
     if (outputGain > 1e-6) {
         auto lpc = nodeIOs["linpred_2"][0]->as<Nodes::IO::IIRFilter>();
 
-        std::vector<float> b(lpc->getFFConstData(), lpc->getFFConstData() + lpc->getFFOrder());
+        float b = 0.2;
         std::vector<float> a(lpc->getFBConstData(), lpc->getFBConstData() + lpc->getFBOrder());
-        b[0] = 0.005f;
         a.insert(a.begin(), 1.0f);
 
         const float sampleRate = ctx->playbackQueue->getInSampleRate();
@@ -426,7 +425,8 @@ void ContextManager::generateAudio(float *x, int length)
         auto noise = Synthesis::brownNoise(inlen, lastNoise);
         lastNoise = noise.back();
 
-        auto filtNoise = Synthesis::filter(b, a, noise);
+        static std::deque<float> memoryOut(30, 0.0f);
+        auto filtNoise = Synthesis::filter(b, a, noise, memoryOut);
 
         resampler.process(filtNoise.data(), inlen, x, length);
 

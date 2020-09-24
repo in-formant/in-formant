@@ -75,6 +75,7 @@
       var Module = {
         preRun: [],
         postRun: [],
+        doNotCaptureKeyboard: true,
       };
       window.onerror = function(event) {
         // TODO: do not warn on ok events like simulating an infinite loop or exitStatus

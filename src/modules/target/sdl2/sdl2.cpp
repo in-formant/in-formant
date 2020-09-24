@@ -6,6 +6,7 @@
 #if defined(__EMSCRIPTEN__)
 #   include <emscripten.h>
 extern const char *EMSCRIPTEN_CANVAS_NAME;
+extern "C" void SDL_SetKeyboardFocus(SDL_Window *);
 #endif
 
 using namespace Module::Target;
@@ -215,6 +216,10 @@ void SDL2::create()
     mHeight = mode.h;
 #endif
 
+#if defined(__EMSCRIPTEN__)
+    SDL_SetHintWithPriority(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, EMSCRIPTEN_CANVAS_NAME, SDL_HINT_OVERRIDE);
+#endif
+
     mWindow = SDL_CreateWindow(
             mTitle.c_str(),
             SDL_WINDOWPOS_CENTERED,
@@ -285,7 +290,7 @@ void SDL2::processEvents()
                     mKeyupState[event.key.keysym.scancode] = 1;
                 }
             }
-            else {
+            else if (event.key.windowID != 0) {
                 deleteEvent = false;
             }
         }
@@ -296,7 +301,7 @@ void SDL2::processEvents()
                     mKeyupState[event.key.keysym.scancode] = 0;
                 }
             }
-            else {
+            else if (event.key.windowID != 0) {
                 deleteEvent = false;
             }
         }
@@ -311,12 +316,15 @@ void SDL2::processEvents()
                 }
                 else if (event.window.event == SDL_WINDOWEVENT_ENTER) {
                     mMouseFocus = true;
+#ifdef __EMSCRIPTEN__
+                    SDL_SetKeyboardFocus(mWindow);
+#endif
                 }
                 else if (event.window.event == SDL_WINDOWEVENT_LEAVE) {
                     mMouseFocus = false;
                 }
             }
-            else {
+            else if (event.key.windowID != 0) {
                 deleteEvent = false;
             }
         }

@@ -16,9 +16,11 @@ namespace Synthesis
                                         const Nodes::IO::Frequencies *bandwidths,
                                         float Fs);
 
-    inline std::vector<float> filter(const std::vector<float>& b, const std::vector<float>& a, const std::vector<float>& x) {
-        return Analysis::filter(b, a, x);
-    }
+    std::vector<float> filter(
+                    float b,
+                    const std::vector<float>& a,
+                    const std::vector<float>& x,
+                    std::deque<float>& memoryOut);
 }
 
 #endif // SYNTHESIS_H
