@@ -79,6 +79,7 @@ namespace Main {
         bool endLoop;
         bool isPaused;
         bool displayLpSpec;
+        bool useFrameCursor;
 
 #if defined(ANDROID) || defined(__ANDROID__)
         std::string selectedViewName;
@@ -113,8 +114,11 @@ namespace Main {
         std::vector<SettingsUIField> mSettingFields;
 
         std::deque<std::vector<std::array<float, 2>>>  spectrogramTrack;
+        std::deque<std::vector<std::array<float, 2>>>  lpSpecTrack;
         std::deque<float>                              pitchTrack;
         std::deque<std::vector<Analysis::FormantData>> formantTrack;
+        std::deque<std::vector<float>>                 soundTrack;
+        std::deque<std::vector<float>>                 glotTrack;
 
         std::chrono::microseconds durProcessing;
         std::chrono::microseconds durRendering;

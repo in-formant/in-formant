@@ -21,7 +21,6 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
             }
         }
 
-
         rctx.renderer->scrollSpectrogram(specRender, spectrogramCount);
     }
     rctx.renderer->renderSpectrogram();
@@ -77,7 +76,8 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
             "F2: Open FFT spectrum",
             "P: Pause/resume analysis",
             "N: Play filtered noise",
-            std::string("L: Display ") + (displayLpSpec ? "spectrogram" : "LP spectrum"),
+            "L: Toggle spectrogram/LP spectra",
+            "F: Toggle frame cursor",
         };
 
         for (const auto& str : keyLegends) {
@@ -99,7 +99,11 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
         ss << "Cursor: " << std::round(frequency) << " Hz";
         bottomStrings.push_back(ss.str());
 
-        frequency = pitchTrack.back();
+        int iframe = 
+            useFrameCursor ? rctx.renderer->renderFrameCursor(specMX, specMY, spectrogramCount)
+                           : spectrogramCount - 1;
+
+        frequency = pitchTrack[iframe];
 
         ss.str("");
         ss << "Pitch: ";
@@ -109,7 +113,7 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
             ss << "unvoiced";
         bottomStrings.push_back(ss.str());
 
-        auto& formants = formantTrack.back();
+        auto& formants = formantTrack[iframe];
         int i = 1;
         for (auto it = formants.begin(); it != formants.end(); ++it) {
             frequency = it->frequency;
@@ -125,13 +129,33 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 
         y += smallerEm;
 
+        std::tie(tx, ty, tw, th) = smallerFont.queryTextSize("Cursor: 55555 Hz");
+
+        int maxWidth = tw;
+        static int maxHeight = 0;
+        th = bottomStrings.size() * (smallerEm + 10) - 10;
+        if (th > maxHeight) {
+            maxHeight = th;
+        }
+
+        for (const auto& str : bottomStrings) {
+            const auto [tx, ty, tw, th] = smallerFont.queryTextSize(str);
+            if (tw > maxWidth) {
+                maxWidth = tw;
+            }
+        }
+
+        rctx.renderer->renderRoundedRect(
+                15, y, maxWidth + 16, maxHeight + 16,
+                0.157f, 0.165f, 0.212f);
+
         for (const auto& str : bottomStrings) {
             rctx.renderer->renderText(
                     smallerFont,
                     str,
-                    15,
-                    y,
-                    1.0f, 1.0f, 1.0f);
+                    15 + 8,
+                    y + 8,
+                    0.973f, 0.973f, 0.949f);
             y += smallerEm + 10;
         }
 
@@ -140,7 +164,8 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 
         ss.str("");
         ss << "Loop cycle took " << (durLoop.count() / 1000.0f) << " ms";
-        rctx.renderer->renderText(
+        rctx.renderer->
+renderText(
                 smallerFont,
                 ss.str(),
                 15,
@@ -175,6 +200,10 @@ void ContextManager::eventSpectrogram(RenderingContext &rctx)
 
     if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_L)) {
         displayLpSpec = !displayLpSpec;
+    }
+
+    if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_F)) {
+        useFrameCursor = !useFrameCursor;
     }
 }
 

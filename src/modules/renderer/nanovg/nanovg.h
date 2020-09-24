@@ -51,7 +51,10 @@ namespace Module::Renderer {
         void renderFrequencyTrack(const FrequencyTrackRenderData& data, float thick, float r, float g, float b) override;
         void renderFormantTrack(const FormantTrackRenderData& data, float r, float g, float b) override;
         void renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::Freetype::Font& minorFont) override;
-        float renderFrequencyCursor(float mx, float my);
+        float renderFrequencyCursor(float mx, float my) override;
+        int renderFrameCursor(float mx, float my, int count) override;
+        
+        void renderRoundedRect(float x, float y, float w, float h, float r, float g, float b) override;
 
         void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, float r, float g, float b) override;
 

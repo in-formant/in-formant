@@ -5,37 +5,35 @@ using namespace Main;
 
 void ContextManager::renderOscilloscope(RenderingContext &rctx)
 {
-    auto audioNode = nodeIOs["tail_2"][0]->as<Nodes::IO::AudioTime>();
+    int iframe = 
+        useFrameCursor ? std::min(std::max<int>(std::round(specMX * spectrogramCount), 0), spectrogramCount - 1)
+                       : spectrogramCount - 1;
 
-    const float *data = audioNode->getConstData();
-    int   length      = audioNode->getLength();
-    float sampleRate  = audioNode->getSampleRate();
+    auto& sound = soundTrack[iframe];
+    auto& glot = glotTrack[iframe];
+    int length;
 
-    float duration = (float) length / (float) sampleRate;
+    length = sound.size();
 
     Renderer::GraphRenderData graphRender(length);
     for (int i = 0; i < length; ++i) {
         graphRender[i] = {
-            .x = i / sampleRate,
-            .y = data[i] * 20.0f + 5.0f,
+            .x = static_cast<float>(i),
+            .y = sound[i] * 20.0f + 5.0f,
         };
     }
-    rctx.renderer->renderGraph(graphRender, 0, duration, 3.0f, 1, 1, 1);
+    rctx.renderer->renderGraph(graphRender, 0, length - 1, 3.0f, 1.0f, 1.0f, 1.0f);
 
-    auto glotAudioNode = nodeIOs["invglot"][0]->as<Nodes::IO::AudioTime>();
-
-    data       = glotAudioNode->getConstData();
-    length     = glotAudioNode->getLength();
-    sampleRate = glotAudioNode->getSampleRate();
+    length = glot.size(); 
     graphRender.resize(length);
 
     for (int i = 0; i < length; ++i) {
         graphRender[i] = {
-            .x = i / sampleRate,
-            .y = data[i] * 2.5f - 5.0f,
+            .x = static_cast<float>(i),
+            .y = glot[i] * 2.5f - 5.0f,
         };
     }
-    rctx.renderer->renderGraph(graphRender, 0, duration, 3.0f, 1, 1, 1);
+    rctx.renderer->renderGraph(graphRender, 0, length - 1, 3.0f, 1.0f, 0.5f, 0.0f);
 }
 
 void ContextManager::eventOscilloscope(RenderingContext &rctx)
