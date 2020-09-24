@@ -112,6 +112,7 @@ set(SOURCES
     src/analysis/util/util.h
     src/analysis/analysis.h
     src/synthesis/noise.cpp
+    src/synthesis/filter.cpp
     src/synthesis/vtfilter.cpp
     src/synthesis/synthesis.h
 )
