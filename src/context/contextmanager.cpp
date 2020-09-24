@@ -107,12 +107,12 @@ void ContextManager::start()
                 auto self = static_cast<ContextManager *>(userdata);
                 
                 self->mainBody();
-            }, this, 30, 1);
+            }, this, 60, 1);
 #else
     while (!endLoop) {
         mainBody();
 
-        // Locked to 60 fps
+        // Locked to ~60 fps
         if (durLoop < 16.67ms) {
             std::this_thread::sleep_for(16.67ms - durLoop);
         }
@@ -159,8 +159,8 @@ void ContextManager::loadSettings()
 {
     outputGain = 0;
     
-    analysisDuration = 25;
-    analysisMaxFrequency = 5200;
+    analysisDuration = 17;
+    analysisMaxFrequency = 5300;
 
     viewMinFrequency = 1;
     viewMaxFrequency = 6000;
@@ -171,10 +171,10 @@ void ContextManager::loadSettings()
     fftLength = 2048;
     fftMaxFrequency = viewMaxFrequency;
 
-    preEmphasisFrequency = 50.0f;
+    preEmphasisFrequency = 500.0f;
     linPredOrder = 10;
 
-    spectrogramCount = 400;
+    spectrogramCount = 700;
 
     numFormantsToRender = 4;
     formantColors = {

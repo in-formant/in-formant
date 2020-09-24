@@ -12,7 +12,7 @@ using namespace Analysis;
 
 Pitch::RAPT::RAPT()
 {
-    F0min   = 40;
+    F0min   = 60;
     F0max   = 600;
     cand_tr = 0.3;
     lag_wt  = 0.3;
@@ -20,12 +20,12 @@ Pitch::RAPT::RAPT()
     vtran_c = 0.005;
     vtr_a_c = 0.5;
     vtr_s_c = 0.5;
-    vo_bias = 0.0;
+    vo_bias = -0.4;
     doubl_c = 0.35;
     a_fact  = 10000;
     n_cands = 20;
 
-    nbFrames = 3;
+    nbFrames = 1;
 }
 
 PitchResult Pitch::RAPT::solve(const float *data, int length, int sampleRate)
@@ -223,7 +223,7 @@ std::vector<float> RAPT::computePath()
     std::iota(indices.begin(), indices.end(), 0);
 
     std::sort(indices.begin(), indices.end(),
-            [&](int j, int k) { return D[1][j] > D[1][k]; });
+            [&](int j, int k) { return D[1][j] < D[1][k]; });
 
     int k = indices[0];
 

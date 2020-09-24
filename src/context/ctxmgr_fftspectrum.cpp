@@ -18,6 +18,10 @@ void ContextManager::renderFFTSpectrum(RenderingContext &rctx)
             .y = 4.6f * log10f(1.0f + intensity) - 9.6f,
         });
     }
+    if (graphRender.empty()) {
+        graphRender.push_back({.x = static_cast<float>(viewMinFrequency), .y = -9.6f});
+        graphRender.push_back({.x = static_cast<float>(viewMaxFrequency), .y = -9.6f});
+    }
     rctx.renderer->renderGraph(graphRender, viewMinFrequency, viewMaxFrequency, 3.0f, 0.9f, 0.9f, 0.9f);
 
     graphRender.clear();
@@ -26,6 +30,10 @@ void ContextManager::renderFFTSpectrum(RenderingContext &rctx)
             .x = frequency,
             .y = 6.0f * intensity - 9.6f,
         });
+    }
+    if (graphRender.empty()) {
+        graphRender.push_back({.x = static_cast<float>(viewMinFrequency), .y = -9.6f});
+        graphRender.push_back({.x = static_cast<float>(viewMaxFrequency), .y = -9.6f});
     }
     rctx.renderer->renderGraph(graphRender, viewMinFrequency, viewMaxFrequency, 2.0f, 1.0f, 0.5f, 0.0f);
 }

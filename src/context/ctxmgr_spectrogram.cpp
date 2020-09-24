@@ -25,20 +25,11 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
     }
     rctx.renderer->renderSpectrogram();
 
-    Renderer::FrequencyTrackRenderData pitchTrackRender;
-    for (const auto& x : pitchTrack) {
-        if (x > 0)
-            pitchTrackRender.push_back(std::make_optional<float>(x));
-        else
-            pitchTrackRender.emplace_back(std::nullopt);
-    }
-    rctx.renderer->renderFrequencyTrack(pitchTrackRender, 4.0f, 0.0f, 1.0f, 1.0f);
-
     std::vector<Renderer::FormantTrackRenderData> formantTrackRender(numFormantsToRender);
     int n = 0;
     for (const auto& formants : formantTrack) {
         int i = 0;
-        if (pitchTrackRender[n] > 0) {
+        if (pitchTrack[n] > 0) {
             for (const auto& formant : formants) {
                 formantTrackRender[i].push_back(std::make_optional<Analysis::FormantData>(formant));
                 if (++i >= numFormantsToRender) break;
@@ -53,6 +44,15 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
         const auto [r, g, b] = formantColors[i];
         rctx.renderer->renderFormantTrack(formantTrackRender[i], r, g, b);
     }
+
+    Renderer::FrequencyTrackRenderData pitchTrackRender;
+    for (const auto& x : pitchTrack) {
+        if (x > 0)
+            pitchTrackRender.push_back(std::make_optional<float>(x));
+        else
+            pitchTrackRender.emplace_back(std::nullopt);
+    }
+    rctx.renderer->renderFrequencyTrack(pitchTrackRender, 6.0f, 0.0f, 1.0f, 1.0f);
  
     auto& tickLabelFont = primaryFont->with(uiFontSize - 4, rctx.target.get());
     rctx.renderer->renderFrequencyScaleBar(tickLabelFont, tickLabelFont);
