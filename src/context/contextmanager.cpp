@@ -99,6 +99,7 @@ void ContextManager::start()
     endLoop = false;
     isPaused = false;
     displayLpSpec = false;
+    useFrameCursor = false;
 
 #if defined(__EMSCRIPTEN__)
     emscripten_set_main_loop_arg(
@@ -190,8 +191,11 @@ void ContextManager::loadSettings()
 #endif
 
     spectrogramTrack.resize(spectrogramCount);
+    lpSpecTrack.resize(spectrogramCount);
     pitchTrack.resize(spectrogramCount);
     formantTrack.resize(spectrogramCount);
+    soundTrack.resize(spectrogramCount);
+    glotTrack.resize(spectrogramCount);
 }
 
 void ContextManager::updateRendererTargetSize(RenderingContext& rctx)
@@ -344,12 +348,21 @@ void ContextManager::updateNewData()
     auto ioPitch            = nodeIOs["pitch"]  [0]->as<Nodes::IO::Frequencies>();
     auto ioFormantFreqs     = nodeIOs["formant"][0]->as<Nodes::IO::Frequencies>();
     auto ioFormantBands     = nodeIOs["formant"][1]->as<Nodes::IO::Frequencies>();
+    auto ioTail2            = nodeIOs["tail_2"] [0]->as<Nodes::IO::AudioTime>();
+    auto ioInvglot          = nodeIOs["invglot"][0]->as<Nodes::IO::AudioTime>();
 
     int specLength = ioSpectrum->getLength();
     std::vector<std::array<float, 2>> specSlice(specLength);
     for (int i = 0; i < specLength; ++i) {
         specSlice[i][0] = (ioSpectrum->getSampleRate() * i) / (2.0f * specLength);
         specSlice[i][1] = ioSpectrum->getConstData()[i];
+    }
+
+    int lpSpecLength = ioLinpredSpectrum->getLength();
+    std::vector<std::array<float, 2>> lpSpecSlice(lpSpecLength);
+    for (int i = 0; i < lpSpecLength; ++i) {
+        lpSpecSlice[i][0] = (ioLinpredSpectrum->getSampleRate() * i) / (2.0f * lpSpecLength);
+        lpSpecSlice[i][1] = log10(1 + ioLinpredSpectrum->getConstData()[i]);
     }
 
     float lpGain = ioLinpredFilter->getFFConstData()[0];
@@ -370,14 +383,26 @@ void ContextManager::updateNewData()
         };
     }
 
+    std::vector<float> sound(ioTail2->getConstData(), ioTail2->getConstData() + ioTail2->getLength());
+    std::vector<float> glot(ioInvglot->getConstData(), ioInvglot->getConstData() + ioInvglot->getLength());
+
     spectrogramTrack.pop_front();
     spectrogramTrack.push_back(std::move(specSlice));
+
+    lpSpecTrack.pop_front();
+    lpSpecTrack.push_back(std::move(lpSpecSlice));
 
     pitchTrack.pop_front();
     pitchTrack.push_back(pitch);
 
     formantTrack.pop_front();
     formantTrack.push_back(std::move(formants));
+
+    soundTrack.pop_front();
+    soundTrack.push_back(std::move(sound));
+
+    glotTrack.pop_front();
+    glotTrack.push_back(std::move(glot));
 }
 
 void ContextManager::generateAudio(float *x, int length)

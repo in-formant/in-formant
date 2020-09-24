@@ -451,6 +451,29 @@ float NanoVG::renderFrequencyCursor(float mx, float my)
     return coordinateToFrequency(y);
 }
 
+int NanoVG::renderFrameCursor(float mx, float my, int count)
+{
+    int frame = std::min<int>(std::max<int>(std::round(mx * count), 0), count - 1);
+    float xp = (float) (mWidth * frame) / (float) count;
+
+    nvgBeginPath(vg);
+    nvgMoveTo(vg, xp, 0);
+    nvgLineTo(vg, xp, mHeight);
+    nvgStrokeColor(vg, nvgRGBf(0.75f, 0.75f, 0.75f));
+    nvgStrokeWidth(vg, 2.0f);
+    nvgStroke(vg);
+
+    return frame;
+}
+
+void NanoVG::renderRoundedRect(float x, float y, float w, float h, float r, float g, float b)
+{
+    nvgBeginPath(vg);
+    nvgRoundedRect(vg, x, y, w, h, 10.0);
+    nvgFillColor(vg, nvgRGBAf(r, g, b, 0.8f));
+    nvgFill(vg);
+}
+
 void NanoVG::renderText(Module::Freetype::Font& font, const std::string& text, int x0, int y0, float r, float g, float b)
 {
     if (!font.hasAttachment()) {
