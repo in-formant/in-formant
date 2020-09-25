@@ -184,6 +184,9 @@ ExternalProject_Add(
 )
 set(SOXR_INCLUDE_DIR ${PROJECT_BINARY_DIR}/soxr/include)
 set(SOXR_LIBRARIES -L${PROJECT_BINARY_DIR}/soxr/lib -lsoxr)
+
+set(NANOSVG_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/nanosvg)
+
 ### SEARCH AUDIO MODULES 
 
 if(TRUE)
@@ -375,7 +378,7 @@ endif()
 
 add_dependencies(speech-analysis soxr)
 
-target_include_directories(speech-analysis SYSTEM PUBLIC ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${SOXR_INCLUDE_DIR})
+target_include_directories(speech-analysis SYSTEM PUBLIC ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${SOXR_INCLUDE_DIR} ${NANOSVG_INCLUDE_DIR})
 target_link_libraries(speech-analysis PUBLIC ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} ${SOXR_LIBRARIES})
 
 if(LL_EXIT_FUNC)

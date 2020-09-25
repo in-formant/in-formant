@@ -32,6 +32,10 @@ void NanoVG::initialize()
 
 void NanoVG::terminate()
 {
+    for (const auto& [path, image] : mSvgImages) {
+        nvgDeleteImage(vg, image);
+    }
+
     mProvider->deleteContext(vg);
 }
 
@@ -475,6 +479,40 @@ void NanoVG::renderRoundedRect(float x, float y, float w, float h, float r, floa
     nvgBeginPath(vg);
     nvgRoundedRect(vg, x, y, w, h, 10.0);
     nvgFillColor(vg, nvgRGBAf(r, g, b, a));
+    nvgFill(vg);
+}
+
+void NanoVG::renderSVG(const std::string& path, float dpi, float x, float y, float w, float h)
+{
+    int image;
+
+    auto it = mSvgImages.find(path);
+    if (it != mSvgImages.end()) {
+        image = it->second;
+    }
+    else {
+        NSVGimage *svgmg = nsvgParseFromFile(path.c_str(), "px", dpi);
+        int iw = svgmg->width;
+        int ih = svgmg->height;
+
+        NSVGrasterizer *rast = nsvgCreateRasterizer();
+        
+        std::vector<unsigned char> data(iw * ih * 4);
+        nsvgRasterize(rast, svgmg, 0, 0, 1, data.data(), iw, ih, iw * 4);
+
+        nsvgDeleteRasterizer(rast);
+
+        image = nvgCreateImageRGBA(vg, iw, ih, 0, data.data());
+
+        mSvgImages[path] = image;
+        mSvgImageData[path] = std::move(data);
+    }
+
+    nvgBeginPath(vg);
+    nvgRect(vg, x, y, w, h);
+    nvgFillPaint(vg,
+            nvgImagePattern(
+                vg, x, y, w, h, 0.0f, image, 1.0f));
     nvgFill(vg);
 }
 

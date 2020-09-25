@@ -62,6 +62,8 @@ void ContextManager::start()
     initSettingsUI();
 
 #if defined(ANDROID) || defined(__ANDROID__)
+    initAndroidUI();
+
     auto& rctx = ctx->renderingContexts["main"];
     rctx.target->initialize(); 
     rctx.target->setTitle("Speech analysis for Android");

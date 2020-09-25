@@ -24,6 +24,7 @@ done
 mkdir -p $tmp/app/src/main/assets
 
 cp -v /src/Montserrat.otf $tmp/app/src/main/assets
+cp -v /src/icons/* $tmp/app/src/main/assets
 
 if [ "x$1" == "xDebug" ]; then
     cd $tmp && gradle --no-daemon assembleDebug
