@@ -234,6 +234,7 @@ void SDL2::create()
     mWindowSizeChanged = false;
     mMouseFocus = false;
     mIsShown = true;
+    mSwipeX = mSwipeY = 0.0f;
 }
 
 void SDL2::show()
@@ -326,6 +327,22 @@ void SDL2::processEvents()
             }
             else if (event.key.windowID != 0) {
                 deleteEvent = false;
+            }
+        }
+        else if (event.type == SDL_FINGERMOTION) {
+            mSwipeX = event.tfinger.dx;
+            mSwipeY = event.tfinger.dy;
+
+            mTouchAbsdx += fabsf(event.tfinger.dx);
+            mTouchAbsdy += fabsf(event.tfinger.dy);
+        }
+        else if (event.type == SDL_FINGERDOWN) {
+            mTouchTime = event.tfinger.timestamp;
+            mTouchAbsdx = mTouchAbsdy = 0.0f;
+        }
+        else if (event.type == SDL_FINGERUP) {
+            if (event.tfinger.timestamp - mTouchTime < 500 && mTouchAbsdx < 0.1 && mTouchAbsdy < 0.1) {
+                mTouchPressed = true;
             }
         }
         else {
@@ -435,6 +452,22 @@ bool SDL2::isMousePressedOnce(uint32_t button)
 std::pair<int, int> SDL2::getMousePosition()
 {
     return {mMouseX, mMouseY};
+}
+
+std::pair<float, float> SDL2::getSwipeMovement()
+{
+    auto ret = std::make_pair(mSwipeX, mSwipeY);
+    mSwipeX = mSwipeY = 0.0f;
+    return ret;
+}
+
+bool SDL2::isTouchPressed()
+{
+    if (mTouchPressed) {
+        mTouchPressed = false;
+        return true;
+    }
+    return false;
 }
 
 void SDL2::checkError(bool cond)

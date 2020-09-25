@@ -60,6 +60,11 @@ namespace Main {
         void eventOscilloscope(RenderingContext& rctx);
         void eventSettings(RenderingContext& rctx);
 
+#if defined(ANDROID) || defined(__ANDROID__)
+        void renderAndroidCommon(RenderingContext& rctx);
+        void eventAndroidCommon(RenderingContext& rctx);
+#endif
+
         void mainBody(bool processEvents = true);
 
 #ifdef __EMSCRIPTEN__
@@ -80,6 +85,7 @@ namespace Main {
         bool isPaused;
         bool displayLpSpec;
         bool useFrameCursor;
+        bool isNoiseOn;
 
 #if defined(ANDROID) || defined(__ANDROID__)
         std::string selectedViewName;

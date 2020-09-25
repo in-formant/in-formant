@@ -44,6 +44,8 @@ namespace Module::Target {
         virtual bool isMousePressed(uint32_t button) = 0;
         virtual bool isMousePressedOnce(uint32_t button) = 0;
         virtual std::pair<int, int> getMousePosition() = 0;
+        virtual std::pair<float, float> getSwipeMovement() = 0;
+        virtual bool isTouchPressed() = 0;
 
         bool supportsRenderer(Type rendererType);
 
