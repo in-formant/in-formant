@@ -71,6 +71,7 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 
         y = 15;
 
+#if ! ( defined(ANDROID) || defined(__ANDROID__) ) 
         const std::vector<std::string> keyLegends = {
             "F1: Open oscilloscope",
             "F2: Open FFT spectrum",
@@ -79,6 +80,9 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
             "L: Toggle spectrogram/LP spectra",
             "F: Toggle frame cursor",
         };
+#else
+        const std::array<std::string, 0> keyLegends {};
+#endif
 
         for (const auto& str : keyLegends) {
             rctx.renderer->renderText(
@@ -147,7 +151,7 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 
         rctx.renderer->renderRoundedRect(
                 15, y, maxWidth + 16, maxHeight + 16,
-                0.157f, 0.165f, 0.212f);
+                0.157f, 0.165f, 0.212f, 0.8f);
 
         for (const auto& str : bottomStrings) {
             rctx.renderer->renderText(

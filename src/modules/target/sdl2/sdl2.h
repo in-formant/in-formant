@@ -44,6 +44,10 @@ namespace Module::Target {
         bool isMousePressedOnce(uint32_t key) override;
         std::pair<int, int> getMousePosition() override;
 
+        std::pair<float, float> getSwipeMovement() override;
+   
+        bool isTouchPressed() override;
+            
     public:
 #ifdef __ANDROID__
         static void prepareAssets(); 
@@ -71,6 +75,12 @@ namespace Module::Target {
         int mMouseX, mMouseY;
         uint32_t mMouseBitmask;
         std::map<uint32_t, char> mMouseupState;
+
+        float mSwipeX, mSwipeY;
+        bool mTouchPressed;
+        uint32_t mTouchTime;
+        float mTouchAbsdx;
+        float mTouchAbsdy;
 
         int err;
         void checkError(bool cond);

@@ -100,6 +100,7 @@ void ContextManager::start()
     isPaused = false;
     displayLpSpec = false;
     useFrameCursor = false;
+    isNoiseOn = false;
 
 #if defined(__EMSCRIPTEN__)
     emscripten_set_main_loop_arg(
@@ -441,9 +442,9 @@ void ContextManager::mainBody(bool processEvents)
     auto t0 = Clock::now();
 
 #if defined(ANDROID) || defined(__ANDROID__)
+        auto& rctx = ctx->renderingContexts["main"];
         const auto& name = selectedViewName;
         const auto& info = renderingContextInfos[name];
-        auto& rctx = ctx->renderingContexts["main"];
 #define break 
 #endif
 
@@ -482,16 +483,13 @@ void ContextManager::mainBody(bool processEvents)
                     }
                 }
 #endif
-                    
+                 
                 if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_P)) {
                     isPaused = !isPaused;
                 }
 
                 if (rctx.target->isKeyPressed(SDL_SCANCODE_N)) {
-                    outputGain = 0.5 * outputGain + 0.5;
-                }
-                else {
-                    outputGain = 0.95 * outputGain;
+                    isNoiseOn = !isNoiseOn;
                 }
 
                 if (rctx.target->sizeChanged()) {
@@ -502,6 +500,7 @@ void ContextManager::mainBody(bool processEvents)
             }
 #if defined(ANDROID) || defined(__ANDROID__)
 #   undef break
+            eventAndroidCommon(rctx);
 #else
         }
 #endif
@@ -520,6 +519,13 @@ void ContextManager::mainBody(bool processEvents)
         updateNewData();
     }
 
+    if (isNoiseOn) {
+        outputGain = 0.5 * outputGain + 0.5;
+    }
+    else {
+        outputGain = 0.95 * outputGain;
+    }
+
     ctx->playbackQueue->pushIfNeeded(this);
 
     auto tr0 = Clock::now();
@@ -536,9 +542,12 @@ void ContextManager::mainBody(bool processEvents)
         if (rctx.target->isVisible()) {
             rctx.renderer->begin();
             (this->*info.renderCallback)(rctx);
+#if defined(ANDROID) || defined(__ANDROID__)
+        renderAndroidCommon(rctx);
+#endif
             rctx.renderer->end(); 
         }
-#if ! ( defined(ANDROID) || defined(__ANDROID__) )
+#if ! (defined(ANDROID) || defined(__ANDROID__) ) 
     }
 #endif
 

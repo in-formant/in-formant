@@ -139,7 +139,7 @@ namespace Module::Renderer {
         
         virtual int renderFrameCursor(float mx, float my, int count) = 0;
 
-        virtual void renderRoundedRect(float x, float y, float w, float h, float r, float g, float b) = 0;
+        virtual void renderRoundedRect(float x, float y, float w, float h, float r, float g, float b, float a) = 0;
 
         virtual void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, float r, float g, float b) = 0;
 

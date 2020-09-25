@@ -470,11 +470,11 @@ int NanoVG::renderFrameCursor(float mx, float my, int count)
     return frame;
 }
 
-void NanoVG::renderRoundedRect(float x, float y, float w, float h, float r, float g, float b)
+void NanoVG::renderRoundedRect(float x, float y, float w, float h, float r, float g, float b, float a)
 {
     nvgBeginPath(vg);
     nvgRoundedRect(vg, x, y, w, h, 10.0);
-    nvgFillColor(vg, nvgRGBAf(r, g, b, 0.8f));
+    nvgFillColor(vg, nvgRGBAf(r, g, b, a));
     nvgFill(vg);
 }
 

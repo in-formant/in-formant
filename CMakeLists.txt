@@ -520,6 +520,7 @@ if(EMSCRIPTEN)
 endif()
 
 if(ANDROID)
+    target_sources(speech-analysis PUBLIC src/context/ctxmgr_androidcommon.cpp)
     if(TARGET_USE_SDL2)
         target_sources(speech-analysis PUBLIC src/modules/target/sdl2/sdl2_android.cpp)
     endif()

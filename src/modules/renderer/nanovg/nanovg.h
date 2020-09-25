@@ -54,7 +54,7 @@ namespace Module::Renderer {
         float renderFrequencyCursor(float mx, float my) override;
         int renderFrameCursor(float mx, float my, int count) override;
         
-        void renderRoundedRect(float x, float y, float w, float h, float r, float g, float b) override;
+        void renderRoundedRect(float x, float y, float w, float h, float r, float g, float b, float a) override;
 
         void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, float r, float g, float b) override;
 
