@@ -1,3 +1,5 @@
+#define NANOSVG_IMPLEMENTATION
+#define NANOSVGRAST_IMPLEMENTATION
 #include "base.h"
 
 #include <map>

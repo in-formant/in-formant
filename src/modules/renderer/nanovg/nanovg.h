@@ -55,6 +55,7 @@ namespace Module::Renderer {
         int renderFrameCursor(float mx, float my, int count) override;
         
         void renderRoundedRect(float x, float y, float w, float h, float r, float g, float b, float a) override;
+        void renderSVG(const std::string& path, float dpi, float x, float y, float w, float h) override;
 
         void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, float r, float g, float b) override;
 
@@ -72,6 +73,9 @@ namespace Module::Renderer {
         int mSpectrogramCount; 
         void *mSpectrogramFb1, *mSpectrogramFb2;
         int mSpectrogramIm1, mSpectrogramIm2;
+
+        std::map<std::string, int> mSvgImages;
+        std::map<std::string, std::vector<uint8_t>> mSvgImageData;
     };
 
 }

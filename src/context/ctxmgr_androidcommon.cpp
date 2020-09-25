@@ -2,91 +2,130 @@
 
 using namespace Main;
 
-static std::array<int, 4> buttonPosPause;
-static std::array<int, 4> buttonPosNoise;
-static std::array<int, 4> buttonPosCursor;
+struct ButtonEntry {
+    int x, y, w, h;
+    std::function<std::string()> icon;
+    std::function<float()> gray;
+    std::function<void()> action;
+};
 
-static std::array<int, 4> buttonPosSpec;
-static std::array<int, 4> buttonPosFFTspec;
-static std::array<int, 4> buttonPosOscil;
+static std::vector<ButtonEntry> buttonsTop;
+static std::vector<ButtonEntry> buttonsBottom;
+
+void ContextManager::initAndroidUI()
+{
+    buttonsTop = {
+        {
+            .icon = [this]() { return isPaused ? "play.svg" : "pause.svg"; },
+            .gray = [this]() { return isPaused ? 0.7f : 1.0f; },
+            .action = [this]() { isPaused = !isPaused; },
+        },
+        {
+            .icon = [this]() { return isNoiseOn ? "play-circle.svg" : "pause-circle.svg"; },
+            .gray = [this]() { return isNoiseOn ? 0.7f : 1.0f; },
+            .action = [this]() { isNoiseOn = !isNoiseOn; },
+        },
+        {
+            .icon = [this]() { return "add.svg"; },
+            .gray = [this]() { return useFrameCursor ? 0.7f : 1.0f; },
+            .action = [this]() { useFrameCursor = !useFrameCursor; },
+        },
+    };
+    
+    buttonsBottom = {
+        {
+            .icon = [this]() { return "analytics.svg"; },
+            .gray = [this]() { return (selectedViewName == "Spectrogram") ? 0.7f : 1.0f; },
+            .action = [this]() { selectedViewName = "Spectrogram"; },
+        },
+        {
+            .icon = [this]() { return "stats-chart.svg"; },
+            .gray = [this]() { return (selectedViewName == "FFT spectrum") ? 0.7f : 1.0f; },
+            .action = [this]() { selectedViewName = "FFT spectrum"; },
+        },
+        {
+            .icon = [this]() { return "barcode.svg"; },
+            .gray = [this]() { return (selectedViewName == "Oscilloscope") ? 0.7f : 1.0f; },
+            .action = [this]() { selectedViewName = "Oscilloscope"; },
+        },
+    };
+}
 
 void ContextManager::renderAndroidCommon(RenderingContext& rctx)
 {
     int rw, rh;
     rctx.target->getSizeForRenderer(&rw, &rh);
-
-    auto& font = primaryFont->with(uiFontSize - 4, rctx.target.get());
+    
+    auto& font = primaryFont->with(uiFontSize + 3, rctx.target.get());
 
     int em = std::get<3>(font.queryTextSize("M"));
-    int ty, tw;
+    int cx1, cy1, cx2, cy2, dx, dy;
 
     float g1 = 1.0f;
     float g2 = 0.7;
-    int padding = 15;
+    int padding = 5;
+    int margin = 20;
 
-    ty = 3 * rh / 5 - (6 * (em + 2 * padding + padding)) / 2;
+    if (rh >= rw) {
+        dx = 0;
+        dy = em + 2 * padding + margin;
+        cx1 = em / 2 + padding + margin / 2;
+        cx2 = cx1 + dy;
+        cy1 = cy2 = 3 * rh / 5;
+    }
+    else {
+        dx = em + 2 * padding + margin;
+        dy = 0;
+        cx1 = cx2 = rw / 2;
+        cy1 = em / 2 + padding + margin / 2;
+        cy2 = cy1 + dx;
+    }
+
+    float hdpi, vdpi, ddpi;
+    rctx.target->getDisplayDPI(&hdpi, &vdpi, &ddpi);
+    float dpi = (hdpi + vdpi) / 2.0f;
 
     std::string str;
     float g;
     std::array<int, 4> pos;
 
-    str = (isPaused ? "Resume" : "Pause");
-    g = isPaused ? g2 : g1;
-    tw = std::get<2>(font.queryTextSize(str));
-    pos = {padding, ty, tw + 2 * padding, em + 2 * padding};
-    rctx.renderer->renderRoundedRect(pos[0], pos[1], pos[2], pos[3], g, g, g, 0.9f);
-    rctx.renderer->renderText(font, str, pos[0] + padding, pos[1] + padding, 0.0f, 0.0f, 0.0f);
+    float x, y;
 
-    ty += em + 3 * padding;
-    buttonPosPause = pos;
+    x = cx1 - buttonsTop.size() * dx / 2;
+    y = cy1 - buttonsTop.size() * dy / 2;
 
-    str = (isNoiseOn ? "Noise off" : "Noise on");
-    g = isNoiseOn ? g2 : g1;
-    tw = std::get<2>(font.queryTextSize(str));
-    pos = {padding, ty, tw + 2 * padding, em + 2 * padding};
-    rctx.renderer->renderRoundedRect(pos[0], pos[1], pos[2], pos[3], g, g, g, 0.9f);
-    rctx.renderer->renderText(font, str, pos[0] + padding, pos[1] + padding, 0.0f, 0.0f, 0.0f);
+    for (auto& b : buttonsTop) {
+        std::string icon = b.icon();
+        float gray = b.gray();
 
-    ty += em + 3 * padding;
-    buttonPosNoise = pos;
+        b.x = x;
+        b.y = y;
+        b.w = em + 2 * padding;
+        b.h = em + 2 * padding;
+        rctx.renderer->renderRoundedRect(b.x, b.y, b.w, b.h, gray, gray, gray, 0.9f);
+        rctx.renderer->renderSVG(icon, dpi, b.x + padding, b.y + padding, em, em);
 
-    str = (useFrameCursor ? "Hide cursor" : "Show cursor");
-    g = useFrameCursor ? g2 : g1;
-    tw = std::get<2>(font.queryTextSize(str));
-    pos = {padding, ty, tw + 2 * padding, em + 2 * padding};
-    rctx.renderer->renderRoundedRect(pos[0], pos[1], pos[2], pos[3], g, g, g, 0.9f);
-    rctx.renderer->renderText(font, str, pos[0] + padding, pos[1] + padding, 0.0f, 0.0f, 0.0f);
+        x += dx;
+        y += dy;
+    }
 
-    ty += em + 4 * padding;
+    x = cx2 - buttonsTop.size() * dx / 2;
+    y = cy2 - buttonsTop.size() * dy / 2;
 
-    str = "Spectrogram";
-    g = (selectedViewName == "Spectrogram" ? g2 : g1);
-    tw = std::get<2>(font.queryTextSize(str));
-    pos = {padding, ty, tw + 2 * padding, em + 2 * padding};
-    rctx.renderer->renderRoundedRect(pos[0], pos[1], pos[2], pos[3], g, g, g, 0.9f);
-    rctx.renderer->renderText(font, str, pos[0] + padding, pos[1] + padding, 0.0f, 0.0f, 0.0f);
+    for (auto& b : buttonsBottom) {
+        std::string icon = b.icon();
+        float gray = b.gray();
 
-    ty += em + 3 * padding;
-    buttonPosSpec = pos;
+        b.x = x;
+        b.y = y;
+        b.w = em + 2 * padding;
+        b.h = em + 2 * padding;
+        rctx.renderer->renderRoundedRect(b.x, b.y, b.w, b.h, gray, gray, gray, 0.9f);
+        rctx.renderer->renderSVG(icon, dpi, b.x + padding, b.y + padding, em, em);
 
-    str = "FFT spectrum";
-    g = (selectedViewName == "FFT spectrum" ? g2 : g1);
-    tw = std::get<2>(font.queryTextSize(str));
-    pos = {padding, ty, tw + 2 * padding, em + 2 * padding};
-    rctx.renderer->renderRoundedRect(pos[0], pos[1], pos[2], pos[3], g, g, g, 0.9f);
-    rctx.renderer->renderText(font, str, pos[0] + padding, pos[1] + padding, 0.0f, 0.0f, 0.0f);
-
-    ty += em + 3 * padding;
-    buttonPosFFTspec = pos;
-
-    str = "Oscilloscope";
-    g = (selectedViewName == "Oscilloscope" ? g2 : g1);
-    tw = std::get<2>(font.queryTextSize(str));
-    pos = {padding, ty, tw + 2 * padding, em + 2 * padding};
-    rctx.renderer->renderRoundedRect(pos[0], pos[1], pos[2], pos[3], g, g, g, 0.9f);
-    rctx.renderer->renderText(font, str, pos[0] + padding, pos[1] + padding, 0.0f, 0.0f, 0.0f);
-
-    buttonPosOscil = pos;
+        x += dx;
+        y += dy;
+    }
 }
 
 void ContextManager::eventAndroidCommon(RenderingContext& rctx)
@@ -98,72 +137,30 @@ void ContextManager::eventAndroidCommon(RenderingContext& rctx)
 
     const auto [tx, ty] = rctx.target->getMousePosition();
     int x, y, w, h;
-    std::array<int, 4> pos;
-    bool hover;
 
-    pos = buttonPosPause;
-    x = (pos[0] * tw) / rw;
-    y = (pos[1] * th) / rh;
-    w = (pos[2] * tw) / rw;
-    h = (pos[3] * th) / rh;
-    hover = (tx >= x && tx <= x + w
-            && ty >= y && ty <= y + h);
-    if (hover && rctx.target->isTouchPressed()) {
-        isPaused = !isPaused;
-    }
+    if (rctx.target->isTouchPressed()) {
+        for (const auto& b : buttonsTop) {
+            int x = (b.x * tw) / rw;
+            int y = (b.y * th) / rh;
+            int w = (b.w * tw) / rw;
+            int h = (b.h * th) / rh;
 
-    pos = buttonPosNoise;
-    x = (pos[0] * tw) / rw;
-    y = (pos[1] * th) / rh;
-    w = (pos[2] * tw) / rw;
-    h = (pos[3] * th) / rh;
-    hover = (tx >= x && tx <= x + w
-            && ty >= y && ty <= y + h);
-    if (hover && rctx.target->isTouchPressed()) {
-        isNoiseOn = !isNoiseOn;
-    }
+            if (tx >= x && tx <= x + w
+                    && ty >= y && ty <= y + h) {
+                b.action();
+            }
+        }
 
-    pos = buttonPosCursor;
-    x = (pos[0] * tw) / rw;
-    y = (pos[1] * th) / rh;
-    w = (pos[2] * tw) / rw;
-    h = (pos[3] * th) / rh;
-    hover = (tx >= x && tx <= x + w
-            && ty >= y && ty <= y + h);
-    if (hover && rctx.target->isTouchPressed()) {
-        useFrameCursor = !useFrameCursor;
-    }
-    
-    pos = buttonPosSpec;
-    x = (pos[0] * tw) / rw;
-    y = (pos[1] * th) / rh;
-    w = (pos[2] * tw) / rw;
-    h = (pos[3] * th) / rh;
-    hover = (tx >= x && tx <= x + w
-            && ty >= y && ty <= y + h);
-    if (hover && rctx.target->isTouchPressed()) {
-        selectedViewName = "Spectrogram";
-    } 
-    
-    pos = buttonPosFFTspec;
-    x = (pos[0] * tw) / rw;
-    y = (pos[1] * th) / rh;
-    w = (pos[2] * tw) / rw;
-    h = (pos[3] * th) / rh;
-    hover = (tx >= x && tx <= x + w
-            && ty >= y && ty <= y + h);
-    if (hover && rctx.target->isTouchPressed()) {
-        selectedViewName = "FFT spectrum";
-    }
+        for (const auto& b : buttonsBottom) {
+            int x = (b.x * tw) / rw;
+            int y = (b.y * th) / rh;
+            int w = (b.w * tw) / rw;
+            int h = (b.h * th) / rh;
 
-    pos = buttonPosOscil;
-    x = (pos[0] * tw) / rw;
-    y = (pos[1] * th) / rh;
-    w = (pos[2] * tw) / rw;
-    h = (pos[3] * th) / rh;
-    hover = (tx >= x && tx <= x + w
-            && ty >= y && ty <= y + h);
-    if (hover && rctx.target->isTouchPressed()) {
-        selectedViewName = "Oscilloscope";
+            if (tx >= x && tx <= x + w
+                    && ty >= y && ty <= y + h) {
+                b.action();
+            }
+        }
     }
 }

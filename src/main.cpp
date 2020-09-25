@@ -92,13 +92,8 @@ int main(int argc, char **argv)
         .setInvglotSolver(new Analysis::Invglot::IAIF(0.98f))
         .setCaptureSampleRate(48000)
         .setCaptureDuration(200ms)
-#ifdef __EMSCRIPTEN__
         .setPlaybackBlockDuration(50ms, 150ms)
-        .setPlaybackDuration(500ms)
-#else
-        .setPlaybackBlockDuration(2ms, 30ms)
-        .setPlaybackDuration(30ms)
-#endif
+        .setPlaybackDuration(200ms)
         .setPlaybackSampleRate(48000)
         .setPlaybackCallback(
             [](float *output, int length, void *userdata) {
