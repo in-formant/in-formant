@@ -28,12 +28,12 @@ void Buffer::setSampleRate(int newSampleRate)
     auto array = std::make_unique<float[]>(mLength);
     std::copy(mData.begin(), mData.end(), array.get());
 
-    rsx.process(array.get(), mLength, newArray.get(), newLength);
+    auto outVec = rsx.process(array.get(), mLength);
 
     mSampleRate = newSampleRate;
-    mLength = newLength;
-    mData.resize(newLength);
-    std::copy(newArray.get(), std::next(newArray.get(), newLength), mData.begin());
+    mLength = outVec.size();
+    mData.resize(outVec.size());
+    std::copy(outVec.begin(), outVec.end(), mData.begin());
 
     mLock.unlock();
 }

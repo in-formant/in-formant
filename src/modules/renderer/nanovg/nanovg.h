@@ -61,6 +61,8 @@ namespace Module::Renderer {
 
         std::tuple<float, float, float, float> renderInputBox(Module::Freetype::Font& font, const std::string& content, int x, int y, int w, bool isFocused) override;
 
+        intptr_t getContextNumber() override;
+
     private:
         std::pair<float, float> convertNormCoord(float x, float y);
 

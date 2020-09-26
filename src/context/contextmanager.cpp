@@ -91,8 +91,19 @@ void ContextManager::start()
 #endif
         if (name == "Settings") {
             rctx.target->hide();
+#ifdef __EMSCRIPTEN__
+            EM_ASM({
+                document.getElementById("popup").classList.replace("visible", "hidden");
+            });
+#endif
         }
     }
+#endif
+
+#ifdef __EMSCRIPTEN__
+    EM_ASM({
+        setWindowTitle('Speech analysis for Web');
+    });
 #endif
 
     createAudioNodes();
@@ -105,12 +116,13 @@ void ContextManager::start()
     isNoiseOn = false;
 
 #if defined(__EMSCRIPTEN__)
+    emscripten_set_main_loop_timing(EM_TIMING_RAF, 1);
     emscripten_set_main_loop_arg(
             [](void *userdata) {
                 auto self = static_cast<ContextManager *>(userdata);
                 
-                self->mainBody();
-            }, this, 60, 1);
+                self->mainBody(true);
+            }, this, 0, 1);
 #else
     while (!endLoop) {
         mainBody();
@@ -125,6 +137,8 @@ void ContextManager::start()
 
 void ContextManager::terminate()
 {
+    ctx->freetypeInstance.reset();
+
 #if defined(ANDROID) || defined(__ANDROID__)
     auto& rctx = ctx->renderingContexts["main"];
 #else
@@ -162,12 +176,12 @@ void ContextManager::loadSettings()
 {
     outputGain = 0;
     
-    analysisDuration = 17;
+    analysisDuration = 18;
     analysisMaxFrequency = 5300;
 
     viewMinFrequency = 1;
     viewMaxFrequency = 6000;
-    viewMinGain = -70;
+    viewMinGain = -75;
     viewMaxGain = +15;
     viewFrequencyScale = Renderer::FrequencyScale::Mel;
 
@@ -177,7 +191,7 @@ void ContextManager::loadSettings()
     preEmphasisFrequency = 500.0f;
     linPredOrder = 10;
 
-    spectrogramCount = 700;
+    spectrogramCount = 600;
 
     numFormantsToRender = 4;
     formantColors = {
@@ -250,7 +264,7 @@ void ContextManager::createRenderingContexts(const std::initializer_list<Renderi
         renderingContextInfos[info.name] = info;
         
 #ifdef __EMSCRIPTEN__
-        std::string canvasId(info.name);
+        std::string canvasId = info.name;
         std::transform(canvasId.begin(), canvasId.end(), canvasId.begin(),
                 [](char c) { return c == ' ' ? '_' : std::tolower(c); });
         renderingContextInfos[info.name].canvasId = canvasId;
@@ -262,7 +276,7 @@ void ContextManager::createAudioNodes()
 {
     int captureSampleRate = ctx->captureBuffer->getSampleRate();
 
-    nodes["prereqs"] = std::make_unique<Nodes::Prereqs>(ctx->captureBuffer.get(), analysisDuration, 0);
+    nodes["prereqs"] = std::make_unique<Nodes::Prereqs>(ctx->captureBuffer.get(), analysisDuration, 256);
     nodes["rs_spec"] = std::make_unique<Nodes::Resampler>(captureSampleRate, 2 * fftMaxFrequency);
     nodes["spec"] = std::make_unique<Nodes::Spectrum>(fftLength);
     nodes["rs_2"] = std::make_unique<Nodes::Resampler>(captureSampleRate, 16000);
@@ -296,6 +310,7 @@ void ContextManager::createAudioIOs()
 
 void ContextManager::updateNodeParameters()
 {
+    nodes["rs_spec"]->as<Nodes::Resampler>()->setOutputSampleRate(2 * viewMaxFrequency);
     nodes["rs"]->as<Nodes::Resampler>()->setOutputSampleRate(2 * analysisMaxFrequency);
     nodes["linpred"]->as<Nodes::LinPred>()->setOrder(linPredOrder);
 }
@@ -413,7 +428,7 @@ void ContextManager::generateAudio(float *x, int length)
     if (outputGain > 1e-6) {
         auto lpc = nodeIOs["linpred_2"][0]->as<Nodes::IO::IIRFilter>();
 
-        float b = 0.2;
+        float b = 0.07;
         std::vector<float> a(lpc->getFBConstData(), lpc->getFBConstData() + lpc->getFBOrder());
         a.insert(a.begin(), 1.0f);
 
@@ -431,20 +446,20 @@ void ContextManager::generateAudio(float *x, int length)
         static std::deque<float> memoryOut(30, 0.0f);
         auto filtNoise = Synthesis::filter(b, a, noise, memoryOut);
 
-        resampler.process(filtNoise.data(), inlen, x, length);
-
-        for (int i = 0; i < length; ++i) {
-            x[i] *= outputGain;
+        auto output = resampler.process(filtNoise.data(), inlen);
+      
+        for (int i = 0; i < std::min<int>(length, output.size()); ++i) {
+            x[i] = outputGain * output[i];
         }
     }
 }
 
 void ContextManager::mainBody(bool processEvents)
 {
-    auto t0 = Clock::now();
+auto t0 = Clock::now();
 
 #if defined(ANDROID) || defined(__ANDROID__)
-        auto& rctx = ctx->renderingContexts["main"];
+    auto& rctx = ctx->renderingContexts["main"];
         const auto& name = selectedViewName;
         const auto& info = renderingContextInfos[name];
 #define break 
@@ -467,30 +482,47 @@ void ContextManager::mainBody(bool processEvents)
                     endLoop = true;
                     break;
                 }
+#endif
 
-                if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_ESCAPE)
-                        || rctx.target->shouldClose()) {
+                if ((rctx.target->isKeyPressedOnce(SDL_SCANCODE_ESCAPE)
+                        || rctx.target->shouldClose())
+#ifdef __EMSCRIPTEN__
+                        && name == "Settings"
+#endif    
+                    ) {
                     if (name == "Spectrogram") {
                         endLoop = true;
                         break;
                     }
                     else {
                         rctx.target->hide();
+#ifdef __EMSCRIPTEN__
+                        EM_ASM({
+                            document.getElementById("popup").classList.replace("visible", "hidden");
+                        });
+#endif
                     }
                 }
 
                 if (name != "Settings") {
-                    if (rctx.target->isKeyPressed(SDL_SCANCODE_S)) {
+                    if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_S)) {
+#ifdef __EMSCRIPTEN__
+                        EM_ASM({
+                            document.getElementById("popup").classList.replace("hidden", "visible");
+                            var canvas = document.getElementById("settings");
+                            canvas.width = canvas.clientWidth;
+                            canvas.height = canvas.clientHeight;
+                        });
+#endif
                         ctx->renderingContexts["Settings"].target->show();
                     }
                 }
-#endif
                  
                 if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_P)) {
                     isPaused = !isPaused;
                 }
 
-                if (rctx.target->isKeyPressed(SDL_SCANCODE_N)) {
+                if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_N)) {
                     isNoiseOn = !isNoiseOn;
                 }
 
@@ -525,7 +557,7 @@ void ContextManager::mainBody(bool processEvents)
         outputGain = 0.5 * outputGain + 0.5;
     }
     else {
-        outputGain = 0.95 * outputGain;
+        outputGain = 0.5 * outputGain;
     }
 
     ctx->playbackQueue->pushIfNeeded(this);
@@ -545,7 +577,7 @@ void ContextManager::mainBody(bool processEvents)
             rctx.renderer->begin();
             (this->*info.renderCallback)(rctx);
 #if defined(ANDROID) || defined(__ANDROID__)
-        renderAndroidCommon(rctx);
+            renderAndroidCommon(rctx);
 #endif
             rctx.renderer->end(); 
         }

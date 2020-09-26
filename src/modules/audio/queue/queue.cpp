@@ -60,7 +60,7 @@ void Queue::pushIfNeeded(void *userdata)
 void Queue::pull(float *pOut, int outLength)
 {
     mLock.lock();
-    
+  
     int pullSize = mResampler.getRequiredInLength(outLength);
 
     auto preResampleData = std::make_unique<float[]>(pullSize);
@@ -78,7 +78,8 @@ void Queue::pull(float *pOut, int outLength)
     std::copy(mDeque.begin(), pullEndIt, preResampleData.get());
     std::fill(preResampleData.get() + pullCopyLength, std::next(preResampleData.get(), pullSize), 0.0f);
 
-    mResampler.process(preResampleData.get(), pullSize, pOut, outLength);
+    auto outVec = mResampler.process(preResampleData.get(), pullSize);
+    std::copy(outVec.begin(), outVec.end(), pOut);
 
     mDeque.erase(mDeque.begin(), pullEndIt);
 

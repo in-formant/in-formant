@@ -114,21 +114,25 @@ void SDL2::setSize(int width, int height)
 void SDL2::getSize(int *pWidth, int *pHeight)
 {
 #ifdef __EMSCRIPTEN__
-    *pWidth = EM_ASM_INT({
-        var canvas = document.querySelector(UTF8ToString($0));
-        if (canvas.width !== canvas.clientWidth) {
-            canvas.width = canvas.clientWidth;
-        }
-        return canvas.clientWidth;
-    }, EMSCRIPTEN_CANVAS_NAME);
-    
-    *pHeight = EM_ASM_INT({
-        var canvas = document.querySelector(UTF8ToString($0));
-        if (canvas.height !== canvas.clientHeight) {
-            canvas.height = canvas.clientHeight;
-        }
-        return canvas.clientHeight;
-    }, EMSCRIPTEN_CANVAS_NAME);
+    if (pWidth != nullptr) {
+        *pWidth = EM_ASM_INT({
+            var canvas = document.querySelector(UTF8ToString($0));
+            if (canvas.width !== canvas.clientWidth) {
+                canvas.width = canvas.clientWidth;
+            }
+            return canvas.clientWidth;
+        }, EMSCRIPTEN_CANVAS_NAME);
+    }
+
+    if (pHeight != nullptr) {
+        *pHeight = EM_ASM_INT({
+            var canvas = document.querySelector(UTF8ToString($0));
+            if (canvas.height !== canvas.clientHeight) {
+                canvas.height = canvas.clientHeight;
+            }
+            return canvas.clientHeight;
+        }, EMSCRIPTEN_CANVAS_NAME);
+    }
 #else
     SDL_GetWindowSize(mWindow, pWidth, pHeight);
 #endif
@@ -137,21 +141,25 @@ void SDL2::getSize(int *pWidth, int *pHeight)
 void SDL2::getSizeForRenderer(int *pWidth, int *pHeight)
 {
 #ifdef __EMSCRIPTEN__
-    *pWidth = EM_ASM_INT({
-        var canvas = document.querySelector(UTF8ToString($0));
-        if (canvas.width !== canvas.clientWidth) {
-            canvas.width = canvas.clientWidth;
-        }
-        return canvas.clientWidth;
-    }, EMSCRIPTEN_CANVAS_NAME);
-    
-    *pHeight = EM_ASM_INT({
-        var canvas = document.querySelector(UTF8ToString($0));
-        if (canvas.height !== canvas.clientHeight) {
-            canvas.height = canvas.clientHeight;
-        }
-        return canvas.clientHeight;
-    }, EMSCRIPTEN_CANVAS_NAME);
+    if (pWidth != nullptr) {
+        *pWidth = EM_ASM_INT({
+            var canvas = document.querySelector(UTF8ToString($0));
+            if (canvas.width !== canvas.clientWidth) {
+                canvas.width = canvas.clientWidth;
+            }
+            return canvas.clientWidth;
+        }, EMSCRIPTEN_CANVAS_NAME);
+    }
+   
+    if (pHeight != nullptr) {
+        *pHeight = EM_ASM_INT({
+            var canvas = document.querySelector(UTF8ToString($0));
+            if (canvas.height !== canvas.clientHeight) {
+                canvas.height = canvas.clientHeight;
+            }
+            return canvas.clientHeight;
+        }, EMSCRIPTEN_CANVAS_NAME);
+    }
 #else
     if (mRendererType == Type::OpenGL || mRendererType == Type::GLES) {
         SDL_GL_GetDrawableSize(mWindow, pWidth, pHeight);
@@ -186,8 +194,9 @@ void SDL2::getDisplayDPI(float *hdpi, float *vdpi, float *ddpi)
 
         constexpr int dpi = 96;
 
-        *hdpi = *vdpi = dpi;
-        *ddpi = sqrt(2 * dpi * dpi);
+        if (hdpi != nullptr) *hdpi = dpi;
+        if (vdpi != nullptr) *vdpi = dpi;
+        if (ddpi != nullptr) *ddpi = sqrt(2 * dpi * dpi);
     }
 }
 

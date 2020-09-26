@@ -54,12 +54,12 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
     }
     rctx.renderer->renderFrequencyTrack(pitchTrackRender, 6.0f, 0.0f, 1.0f, 1.0f);
  
-    auto& tickLabelFont = primaryFont->with(uiFontSize - 4, rctx.target.get());
+    auto& tickLabelFont = FONT(primaryFont, uiFontSize - 4, rctx);
     rctx.renderer->renderFrequencyScaleBar(tickLabelFont, tickLabelFont);
 
     if (durLoop > 0us) {
-        auto& font = primaryFont->with(uiFontSize - 3, rctx.target.get());
-        auto& smallerFont = primaryFont->with(uiFontSize - 5, rctx.target.get());
+        auto& font = FONT(primaryFont, uiFontSize - 3, rctx);
+        auto& smallerFont = FONT(primaryFont, uiFontSize - 4, rctx);
         
         int em = std::get<3>(font.queryTextSize("M"));
         int smallerEm = std::get<3>(smallerFont.queryTextSize("M"));
@@ -73,12 +73,15 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 
 #if ! ( defined(ANDROID) || defined(__ANDROID__) ) 
         const std::vector<std::string> keyLegends = {
+#ifndef __EMSCRIPTEN__
             "F1: Open oscilloscope",
             "F2: Open FFT spectrum",
+#endif
             "P: Pause/resume analysis",
             "N: Play filtered noise",
             "L: Toggle spectrogram/LP spectra",
             "F: Toggle frame cursor",
+            "S: Open settings window",
         };
 #else
         const std::array<std::string, 0> keyLegends {};

@@ -36,17 +36,13 @@ void Resampler::process(const NodeIO *inputs[], NodeIO *outputs[])
     }
 
     int inLength = in->getLength();
-    int outLength = mResampler.getExpectedOutLength(inLength);
 
-    auto array = std::make_unique<float[]>(outLength);
-    mResampler.process(in->getConstData(), inLength, array.get(), outLength);
-    
-    int delay = mResampler.getDelay();
-    int actualOutLength = outLength - delay;
+    mResampler.clear();
+    auto outVec = mResampler.process(in->getConstData(), inLength);
 
     out->setSampleRate(mResampler.getOutputRate());
-    out->setLength(actualOutLength);
+    out->setLength(outVec.size());
 
-    memcpy(out->getData(), std::next(array.get(), delay), actualOutLength * sizeof(float));
+    std::copy(outVec.begin(), outVec.end(), out->getData());
 }
 

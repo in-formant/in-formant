@@ -74,9 +74,9 @@ int Resampler::getRequiredInLength(int outLength)
         return 0;
     }
 
-    float ioRatio = (float) mInRate / (float) mOutRate;
+    float ioRatio = (float) mInRate / (float) (mInRate + mOutRate);
 
-    return ceil((float) outLength * ioRatio);
+    return (int) (outLength * (1 - ioRatio) / ioRatio);
 }
 
 int Resampler::getExpectedOutLength(int inLength)
@@ -85,9 +85,9 @@ int Resampler::getExpectedOutLength(int inLength)
         return 0;
     }
     
-    float ioRatio = (float) mInRate / (float) mOutRate;
+    float ioRatio = (float) mOutRate / (float) (mInRate + mOutRate);
 
-    return ceil((float) inLength / ioRatio);
+    return (int) ((ioRatio * inLength) / (1 - ioRatio));
 }
 
 int Resampler::getDelay() const
@@ -100,27 +100,25 @@ void Resampler::clear()
     soxr_clear(mSoxr);
 }
 
-void Resampler::process(const float *pIn, int inLength, float *pOut, int outLength)
+std::vector<float> Resampler::process(const float *pIn, int inLength)
 {
-    size_t inDone = 0;
-    size_t outDone = 0;
-    int inRemaining = inLength;
-    int outRemaining = outLength;
-
-    while (inRemaining > 0 && outRemaining > 0) {
-        size_t localInDone;
-        size_t localOutDone;
-
-        err = soxr_process(mSoxr,
-                        std::next(pIn, inDone), inRemaining, &localInDone,
-                        std::next(pOut, outDone), outRemaining, &localOutDone);
-        checkError();
-        
-        inDone += localInDone;
-        outDone += localOutDone;
-        inRemaining -= localInDone;
-        outRemaining -= localOutDone;
+    if (inLength == 0) {
+        return {0.0f};
     }
+
+    size_t outDone = 0;
+    int outLength = getExpectedOutLength(inLength);
+
+    std::vector<float> out(outLength);
+
+    err = soxr_process(mSoxr,
+                    pIn, inLength, nullptr,
+                    out.data(), outLength, &outDone);
+    checkError();
+    
+    out.resize(outDone);
+
+    return out;
 }
 
 void Resampler::createResampler()

@@ -56,7 +56,7 @@ void ContextManager::renderAndroidCommon(RenderingContext& rctx)
     int rw, rh;
     rctx.target->getSizeForRenderer(&rw, &rh);
     
-    auto& font = primaryFont->with(uiFontSize + 3, rctx.target.get());
+    auto& font = FONT(primaryFont, uiFontSize + 3, rctx);
 
     int em = std::get<3>(font.queryTextSize("M"));
     int cx1, cy1, cx2, cy2, dx, dy;

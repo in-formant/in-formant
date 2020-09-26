@@ -519,7 +519,7 @@ void NanoVG::renderSVG(const std::string& path, float dpi, float x, float y, flo
 void NanoVG::renderText(Module::Freetype::Font& font, const std::string& text, int x0, int y0, float r, float g, float b)
 {
     if (!font.hasAttachment()) {
-        font.setAttachment(new NvgUtils::FontAttachment(vg, font));
+        font.setAttachment(new NvgUtils::FontAttachment(vg, font), [](void *p) { delete (NvgUtils::FontAttachment *) p; });
     }
     auto fa = font.getAttachment<NvgUtils::FontAttachment>();
 
@@ -543,7 +543,7 @@ void NanoVG::renderText(Module::Freetype::Font& font, const std::string& text, i
         NVGpaint paint = nvgImagePattern(
                 vg, x, y, glyphRenderData.width, glyphRenderData.height, 0.0f, image, 1.0f);
 
-        paint.innerColor = nvgRGBf(r, g, b);
+        paint.innerColor = nvgRGBAf(r, g, b, 1.0f);
 
         nvgFillPaint(vg, paint);
         nvgFill(vg);
@@ -587,4 +587,9 @@ std::pair<float, float> NanoVG::convertNormCoord(float x, float y)
         (x + 1.0f) / 2.0f * mWidth,
         mHeight - (y + 1.0f) / 2.0f * mHeight,
     };
+}
+
+intptr_t NanoVG::getContextNumber()
+{
+    return (intptr_t) (vg);
 }

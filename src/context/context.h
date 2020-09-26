@@ -16,11 +16,11 @@ namespace Main {
         std::unique_ptr<Renderer::AbstractBase> renderer;
     };
 
-    struct Context {
+    struct Context { 
         std::unique_ptr<Audio::AbstractBase>        audio;
-        Renderer::Type                              rendererType;
+        Renderer::Type                              rendererType; 
         std::map<std::string, RenderingContext>     renderingContexts;
-        
+
         std::unique_ptr<Freetype::FTInstance>       freetypeInstance;
 
         std::unique_ptr<Audio::Buffer>              captureBuffer;

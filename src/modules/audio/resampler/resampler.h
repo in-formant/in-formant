@@ -2,6 +2,7 @@
 #define AUDIO_RESAMPLER_H
 
 #include <soxr.h>
+#include <vector>
 
 namespace Module::Audio {
 
@@ -30,7 +31,7 @@ namespace Module::Audio {
         int getDelay() const;
 
         void clear();
-        void process(const float *pIn, int inLength, float *pOut, int outLength);
+        std::vector<float> process(const float *pIn, int inLength);
         
     private:
         void createResampler();

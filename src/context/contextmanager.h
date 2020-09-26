@@ -147,11 +147,14 @@ namespace Main {
     struct SettingsUIField {
         std::string labelText;
         int ContextManager::*field;
+        int delta, min, max;
 
         int x, y, w, h;
         bool isFocused;
     };
     
 }
+
+#define FONT(font, size, rctx) ((font)->with((size), (rctx).renderer->getContextNumber(), (rctx).target.get()))
 
 #endif // MAIN_CONTEXT_MANAGER_H
