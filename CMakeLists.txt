@@ -503,16 +503,14 @@ endif()
 set(RESAMPLER_QUALITY SOXR_HQ)
 
 if(EMSCRIPTEN)
-    set(RESAMPLER_QUALITY SOXR_QQ)
-   
-    set(EM_FLAGS "-sASSERTIONS=0" "-sTOTAL_MEMORY=268435456" "-sEMULATE_FUNCTION_POINTER_CASTS=1" "-sERROR_ON_UNDEFINED_SYMBOLS=1" "-sUSE_PTHREADS=0" "-sFULL_ES2=1")
+    set(EM_FLAGS "-sASSERTIONS=0" "-sTOTAL_MEMORY=512MB" "-sEMULATE_FUNCTION_POINTER_CASTS=1" "-sERROR_ON_UNDEFINED_SYMBOLS=1" "-sUSE_PTHREADS=0" "-sFULL_ES2=1" "-sEXIT_RUNTIME=1")
 
     set(EMCC_FLAGS ${EM_FLAGS})
     set(EMLD_FLAGS ${EM_FLAGS} "-s EXPORTED_FUNCTIONS=[\'_main\',\'_webaudio_process_playback\',\'_webaudio_process_capture\']" "-s EXPORTED_RUNTIME_METHODS=[\'ccall\']" "-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\'$autoResumeAudioContext\']" "--preload-file ${PROJECT_SOURCE_DIR}/Montserrat.otf@Montserrat.otf")
 
     if (CMAKE_BUILD_TYPE MATCHES "^Debug")
-        target_compile_options(speech-analysis PUBLIC ${EMCC_FLAGS} -g -g4 --source-map-base /)
-        target_link_libraries(speech-analysis PUBLIC ${EMLD_FLAGS} -g -g4 "--source-map-base /")
+        target_compile_options(speech-analysis PUBLIC ${EMCC_FLAGS} -g -g4 --source-map-base / -sASSERTIONS=2)
+        target_link_libraries(speech-analysis PUBLIC ${EMLD_FLAGS} -g -g4 "--source-map-base /" "-s ASSERTIONS=2")
     elseif (CMAKE_BUILD_TYPE MATCHES "^Release")
         target_compile_options(speech-analysis PUBLIC ${EMCC_FLAGS} -fno-rtti)
         target_link_libraries(speech-analysis PUBLIC ${EMLD_FLAGS} -fno-rtti)

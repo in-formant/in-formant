@@ -36,10 +36,14 @@ void Spectrum::process(const NodeIO *inputs[], NodeIO *outputs[])
     const int N = inLength - 1;
 
     for (int i = 0; i < nfft; ++i) {
-        float sample = (i < inLength) ? in->getConstData()[i] : 0.0f;
-        float window = (i < inLength) ? 
-                          0.5f - 0.5f * cosf((2.0f * M_PI * i) / N)
-                        : 0.0f;
+        mFFT->data(i) = 0.0f;
+    }
+
+    for (int j = 0; j < inLength; ++j) {
+        float sample = in->getConstData()[j];
+        float window = 0.5f - 0.5f * cosf((2.0f * M_PI * j) / N);
+
+        int i = nfft / 2 - inLength / 2 + j;
 
         mFFT->data(i) = sample * window;
     }

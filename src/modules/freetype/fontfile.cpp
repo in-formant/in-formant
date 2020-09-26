@@ -49,12 +49,12 @@ FontFile::~FontFile()
     delete[] mData;
 }
 
-Font& FontFile::with(int pointSize, Module::Target::AbstractBase *target)
+Font& FontFile::with(int pointSize, intptr_t context, Module::Target::AbstractBase *target)
 { 
     float horizontalDPI, verticalDPI;
     target->getDisplayDPI(&horizontalDPI, &verticalDPI, nullptr);
 
-    auto key = std::make_tuple(horizontalDPI, verticalDPI, pointSize);
+    auto key = std::make_tuple(context, horizontalDPI, verticalDPI, pointSize);
 
     auto it = mFonts.find(key);
     if (it != mFonts.end()) {

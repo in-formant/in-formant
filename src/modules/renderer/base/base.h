@@ -150,6 +150,8 @@ namespace Module::Renderer {
 
         virtual std::tuple<float, float, float, float> renderInputBox(Module::Freetype::Font& font, const std::string& content, int x, int y, int w, bool isFocused) = 0;
 
+        virtual intptr_t getContextNumber() = 0;
+
         void setDrawableSize(int width, int height);
         void setWindowSize(int width, int height);
 

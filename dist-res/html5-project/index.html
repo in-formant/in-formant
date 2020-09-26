@@ -5,10 +5,12 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Speech analysis for Web</title>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap');
+
       body {
         width: 100vw;
         height: 100vh;
-        font-family: arial;
+        font-family: 'Montserrat', sans-serif;
         margin: 0;
         padding: none;
         background: #282a36;
@@ -34,10 +36,6 @@
         outline: none;
       }
 
-      #spectrogram, #settings {
-        height: calc(67% - 6px);
-      }
-
       #fft_spectrum, #oscilloscope {
         width: calc(50% - 6px);
         height: calc(33% - 6px);
@@ -45,30 +43,78 @@
 
       #spectrogram {
         order: 1;
-        width: calc(75% - 6px);
-      }
-
-      #settings {
-        order: 2;
-        width: calc(25% - 6px);
+        width: calc(100% - 6px);
+        height: calc(67% - 6px);
       }
 
       #fft_spectrum {
-        order: 3;
+        order: 2;
       }
 
       #oscilloscope {
-        order: 4;
+        order: 3;
       }
 
+      #popup {
+        position: absolute;
+        min-width: 320px;
+        min-height: calc(240px + 1.2em);
+        border: solid 2px #44475a;
+        border-radius: 6px;
+        background: #282a36;
+        padding: none;
+        margin: 0;
+        text-align: center;
+      }
+    
+      #popup_titlebar {
+        min-width: 100%;
+        min-height: 1.2em;
+        line-height: 1.2em;
+        cursor: default;
+      }
+
+      #popup_titlebar span {
+        text-align: center;
+        vertical-align: middle;
+        color: #f8f8f2;
+        user-select: none;
+      }
+
+      #settings {
+        min-width: 100%;
+        min-height: calc(100% - 1.2em);
+        border: none;
+        border-radius: 6px;
+        padding: none;
+        margin: 0;
+      }
+
+      .visible {
+        display: block;
+      }
+      .hidden {
+        display: none;
+      }
+
+      .move-cursor {
+        cursor: move;
+      }
     </style>
   </head>
   <body>
     <div id="container">
       <canvas id="spectrogram" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
-      <canvas id="settings" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
       <canvas id="fft_spectrum" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
       <canvas id="oscilloscope" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+      <div id="popup" class="visible">
+        <div id="popup_titlebar">
+            <span>
+                Settings
+            </span>
+        </div>
+        <canvas id="settings" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+      </div>
     </div>
     
     <script type='text/javascript'>
@@ -88,6 +134,31 @@
         document.body.appendChild(script);
         document.body.onclick = undefined;
       };
+
+      var popup = document.getElementById('popup');
+      var popupTitlebar = document.getElementById('popup_titlebar');
+
+      var popupTrack = false;
+      var popupTrackOffX, popupTrackOffY;
+
+      popupTitlebar.onmousedown = function(event) {
+        popupTrack = true;
+        popupTrackOffX = -event.offsetX;
+        popupTrackOffY = -event.offsetY;
+      }
+
+      popupTitlebar.onmouseup = function(event) {
+        popupTrack = false;
+        popupTitlebar.classList.remove('move-cursor');
+      }
+
+      document.body.onmousemove = function(event) {
+        if (popupTrack) {
+          popup.style.left = (popupTrackOffX + event.clientX) + 'px'; 
+          popup.style.top = (popupTrackOffY + event.clientY) + 'px';
+          popupTitlebar.classList.add('move-cursor');
+        }
+      }
     </script>
   </body>
 </html>

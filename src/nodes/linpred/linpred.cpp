@@ -57,7 +57,7 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
 
     static std::vector<float> window;
     if (window.size() != inLength) {
-        constexpr float alpha = 0.1;
+        constexpr float alpha = 0.2;
         window.resize(inLength);
         calcGaussian(window, alpha);
     }

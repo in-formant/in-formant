@@ -1,4 +1,5 @@
 #include "contextmanager.h"
+#include <iostream>
 
 using namespace Main;
 

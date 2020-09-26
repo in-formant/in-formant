@@ -82,6 +82,7 @@ Font::Font(FT_Library library,
 
 Font::~Font()
 {
+    mAttachmentDeleter(mAttachment);
     FT_Done_Face(mFace);
 }
 

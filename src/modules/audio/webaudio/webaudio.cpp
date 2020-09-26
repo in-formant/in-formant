@@ -93,7 +93,7 @@ void WebAudio::openCaptureStream(const Device *pDevice)
     (void) pDevice;
 
     const int channelCount = 1;
-    const int bufferSize = 512;
+    const int bufferSize = 2048;
 
     EM_ASM({
         var channels   = $0;
@@ -110,15 +110,11 @@ void WebAudio::openCaptureStream(const Device *pDevice)
         device.buffer = Module._malloc(device.bufferSize);
         device.bufferView = new Float32Array(Module.HEAPF32.buffer, device.buffer, device.bufferSize);
 
-        device.scriptNode = device.context.createScriptProcessor(bufferSize, channels, channels);
+        device.scriptNode = device.context.createScriptProcessor(bufferSize, channels, 1);
 
         device.scriptNode.onaudioprocess = function(e) {
             if (device.buffer === undefined) {
                 return;
-            }
-
-            for (var ch = 0; ch < e.outputBuffer.numberOfChannels; ++ch) {
-                e.outputBuffer.getChannelData(ch).fill(0.0);
             }
 
             var sendSilence = device.silenced || (device.streamNode === undefined);
@@ -149,14 +145,18 @@ void WebAudio::openCaptureStream(const Device *pDevice)
             }
         };
 
+        var zeroGain = device.context.createGain();
+        zeroGain.gain.setValueAtTime(0, device.context.currentTime);
+        zeroGain.connect(device.context.destination);
+
         navigator.mediaDevices.getUserMedia({audio:true, video:false})
             .then(function(stream) {
                 device.streamNode = device.context.createMediaStreamSource(stream);
                 device.streamNode.connect(device.scriptNode);
-                device.scriptNode.connect(device.context.destination);
+                device.scriptNode.connect(zeroGain);
             })
             .catch(function(error) {
-                device.scriptNode.connect(device.context.destination);
+                device.scriptNode.connect(zeroGain);
             });
 
         device.silenced = true;
@@ -192,7 +192,7 @@ void WebAudio::openPlaybackStream(const Device *pDevice)
     (void) pDevice;
 
     const int channelCount = 1;
-    const int bufferSize = 512;
+    const int bufferSize = 2048;
 
     EM_ASM({
         var channels   = $0;
@@ -209,7 +209,7 @@ void WebAudio::openPlaybackStream(const Device *pDevice)
         device.buffer = Module._malloc(device.bufferSize);
         device.bufferView = new Float32Array(Module.HEAPF32.buffer, device.buffer, device.bufferSize);
 
-        device.scriptNode = device.context.createScriptProcessor(bufferSize, channels, channels);
+        device.scriptNode = device.context.createScriptProcessor(bufferSize, 1, channels);
 
         device.scriptNode.onaudioprocess = function(e) {
             if (device.buffer === undefined) {

@@ -250,13 +250,11 @@ void subtractReferenceMean(std::vector<float>& s, int n, int K)
         s[j] -= mu;
 }
 
-
 std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds, Module::Audio::Resampler& downsampler)
 {
     downsampler.setRate(Fs, Fds);
-    int dsLength = downsampler.getExpectedOutLength(s.size());
-    std::vector<float> dss(dsLength);
-    downsampler.process(s.data(), s.size(), dss.data(), dss.size());
+    auto dss = downsampler.process(s.data(), s.size());
+    dss.resize(s.size() * Fds / Fs, 0.0f);
     return dss;
 }
 
@@ -305,7 +303,7 @@ std::vector<std::pair<float, float>> findPeaksWithThreshold(const std::vector<fl
     std::vector<std::pair<float, float>> peaks;
 
     for (const int& k : allPeaks) {
-        if (nccf[k] > threshold) {
+        if (k >= 0 && k < nccf.size() && nccf[k] > threshold) {
             if (paraInterp) {
                 peaks.push_back(parabolicInterpolation(nccf, k));
             }

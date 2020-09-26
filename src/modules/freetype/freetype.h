@@ -57,7 +57,7 @@ namespace Module::Freetype {
         FontFile(FT_Library library, const std::string& filename);
         ~FontFile();
 
-        Font& with(int pointSize, Module::Target::AbstractBase *target);
+        Font& with(int pointSize, intptr_t context, Module::Target::AbstractBase *target);
 
     private:
         FT_Library mLibrary;
@@ -65,7 +65,7 @@ namespace Module::Freetype {
         FT_Byte *mData;
         int mDataSize;
 
-        std::map<std::tuple<int, int, int>, Font *> mFonts;
+        std::map<std::tuple<intptr_t, int, int, int>, Font *> mFonts;
     };
 
     class Font {
@@ -80,8 +80,9 @@ namespace Module::Freetype {
 
         std::tuple<float, float, float, float> queryTextSize(const std::string& text);
 
-        void setAttachment(void *p) {
+        void setAttachment(void *p, void(*deleter)(void *)) {
             mAttachment = p;
+            mAttachmentDeleter = deleter;
         }
 
         template<typename T>
@@ -99,6 +100,7 @@ namespace Module::Freetype {
         std::array<GlyphRenderData, UCHAR_MAX> mGlyphsData;
 
         void *mAttachment;
+        void (*mAttachmentDeleter)(void *);
     };
 
 }
