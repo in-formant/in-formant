@@ -23,6 +23,43 @@ void Pipeline::initialize()
     wasInitializedAtLeastOnce = true;
 }
 
+Pipeline& Pipeline::setPitchSolver(Analysis::PitchSolver *value)
+{
+    pitchSolver = value;
+    if (wasInitializedAtLeastOnce) {
+        nodes["pitch"] = std::make_unique<Nodes::PitchTracker>(pitchSolver);
+    }
+    return *this;
+}
+
+Pipeline& Pipeline::setInvglotSolver(Analysis::InvglotSolver *value)
+{
+    invglotSolver = value;
+    if (wasInitializedAtLeastOnce) {
+        nodes["invglot"] = std::make_unique<Nodes::InvGlot>(invglotSolver);
+    }
+    return *this;
+}
+
+Pipeline& Pipeline::setLinpredSolver(Analysis::LinpredSolver *value)
+{
+    linpredSolver = value;
+    if (wasInitializedAtLeastOnce) {
+        nodes["linpred_spectrum"] = std::make_unique<Nodes::LinPred>(linpredSolver, lpSpecLpOrder);
+        nodes["linpred_formant"]  = std::make_unique<Nodes::LinPred>(linpredSolver, formantLpOrder);
+    }
+    return *this;
+}
+
+Pipeline& Pipeline::setFormantSolver(Analysis::FormantSolver *value)
+{
+    formantSolver = value;
+    if (wasInitializedAtLeastOnce) {
+        nodes["formants"] = std::make_unique<Nodes::FormantTracker>(formantSolver);
+    }
+    return *this;
+}
+
 Pipeline& Pipeline::setAnalysisDuration(millis value)
 {
     analysisDuration = value;
@@ -76,7 +113,7 @@ Pipeline& Pipeline::setLpSpectrumLpOrder(int value)
 {
     lpSpecLpOrder = value;
     if (wasInitializedAtLeastOnce) {
-        nodes["linpred_2"]->as<Nodes::LinPred>()->setOrder(value);
+        nodes["linpred_spectrum"]->as<Nodes::LinPred>()->setOrder(value);
     }
     return *this;
 }
@@ -141,9 +178,10 @@ void Pipeline::processAll()
     processArc("prereqs", "rs_2");
     processArc("rs_2", "tail_2");
     processArc("tail_2", "pitch");
-    processArc("tail_2", "preemph_2");
-    processArc("preemph_2", "invglot");
-    processArc("preemph_2", "linpred_2");
+    processArc("tail_2", "invglot");
+    processArc("rs_2", "preemph_2");
+    processArc("preemph_2", "tail_2");
+    processArc("tail_2", "linpred_spectrum");
 
     processArc("prereqs", "rs_formant");
     processArc("rs_formant", "preemph_formant");
@@ -183,7 +221,7 @@ void Pipeline::updateOutputData()
         fftSlice[i][1] = ioFFT->getConstData()[i];
     }
     
-    auto ioLpSpec = nodeIOs["linpred_2"][1]->as<Nodes::IO::AudioSpec>();
+    auto ioLpSpec = nodeIOs["linpred_spectrum"][1]->as<Nodes::IO::AudioSpec>();
     int lpSpecSliceLength = ioLpSpec->getLength();
     lpSpecSlice.resize(lpSpecSliceLength);
     for (int i = 0; i < lpSpecSliceLength; ++i) {

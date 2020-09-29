@@ -1,4 +1,5 @@
 #include "../util/util.h"
+#include "../filter/filter.h"
 #include "../../modules/math/constants.h"
 #include "rapt.h"
 #include "pitch.h"
@@ -20,7 +21,7 @@ Pitch::RAPT::RAPT()
     vtran_c = 0.005;
     vtr_a_c = 0.5;
     vtr_s_c = 0.5;
-    vo_bias = -0.4;
+    vo_bias = 0.0;
     doubl_c = 0.35;
     a_fact  = 10000;
     n_cands = 20;

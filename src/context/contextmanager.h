@@ -19,7 +19,6 @@ namespace Main {
     class ContextManager {
     public:
         ContextManager(std::unique_ptr<Context>&& ctx);
-        ~ContextManager();
 
         void initialize();
         void start();
@@ -41,6 +40,9 @@ namespace Main {
         void createRenderingContexts(const std::initializer_list<RenderingContextInfo>& infos);
 
         void initSettingsUI();
+
+        void updateNodeParameters();
+        void updateTracks();
 
         void scrollSpectrogram(RenderingContext& rctx);
 
@@ -71,7 +73,7 @@ namespace Main {
 
         Freetype::FontFile *primaryFont;
 
-        App::Pipeline audioPipeline;
+        App::Pipeline pipeline;
 
         std::map<std::string, RenderingContextInfo> renderingContextInfos;
         bool endLoop;
