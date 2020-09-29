@@ -58,8 +58,10 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
     static std::vector<float> window;
     if (window.size() != inLength) {
         constexpr float alpha = 0.2;
-        window.resize(inLength);
+        window.resize(2 * inLength);
         calcGaussian(window, alpha);
+        window.erase(window.begin(), std::next(window.begin(), inLength / 2));
+        window.erase(std::prev(window.end(), inLength / 2), window.end());
     }
 
     auto inData = std::make_unique<float[]>(inLength);

@@ -53,6 +53,10 @@ void ContextManager::initAndroidUI()
 
 void ContextManager::renderAndroidCommon(RenderingContext& rctx)
 {
+    if (selectedViewName != "Spectrogram") {
+        scrollSpectrogram(rctx);
+    }
+
     int rw, rh;
     rctx.target->getSizeForRenderer(&rw, &rh);
     

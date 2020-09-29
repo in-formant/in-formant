@@ -16,15 +16,15 @@ RUN apt-get update -yy && apt-get install -yy \
             llvm
 
 # Install osxcross.
-COPY MacOSX10.15.sdk.tar.xz /
+COPY MacOSX10.12.sdk.tar.xz /
 RUN git clone https://github.com/tpoechtrager/osxcross /osxcross && \
-        cp /MacOSX10.15.sdk.tar.xz /osxcross/tarballs && \
+        cp /MacOSX10.12.sdk.tar.xz /osxcross/tarballs && \
         cd /osxcross && \
         UNATTENDED=1 ./build.sh
 
 ENV OSXCROSS=/osxcross/target
 ENV PATH=$OSXCROSS/bin:$PATH
-ENV MACOSX_DEPLOYMENT_TARGET=10.15
+ENV MACOSX_DEPLOYMENT_TARGET=10.12
 
 RUN apt-get update -yy && apt-get install -yy pkg-config
 RUN echo "1" | osxcross-macports install libsdl2 fftw-3 eigen3 portaudio
@@ -37,9 +37,9 @@ RUN cd glew-$ver && \
         cp -r include/* $OSXCROSS/macports/pkgs/opt/local/include && \
         cp src/glew.c $OSXCROSS/macports/pkgs/opt/local
 
-ENV OSXCROSS_HOST=x86_64-apple-darwin19
+ENV OSXCROSS_HOST=x86_64-apple-darwin16
 ENV OSXCROSS_TARGET_DIR=$OSXCROSS
-ENV OSXCROSS_TARGET=darwin19
+ENV OSXCROSS_TARGET=darwin16
 
 ENV CROSS=$OSXCROSS_HOST-
 

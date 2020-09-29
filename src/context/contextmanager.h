@@ -3,6 +3,7 @@
 
 #include "context.h"
 #include "../nodes/nodes.h"
+#include "../modules/app/app.h"
 
 #include <unordered_map>
 #include <memory>
@@ -39,16 +40,9 @@ namespace Main {
     
         void createRenderingContexts(const std::initializer_list<RenderingContextInfo>& infos);
 
-        void createAudioNodes();
-        void createAudioIOs();
-        void updateNodeParameters();
-
-        void propagateAudio();
-        void processAudioNode(const char *in, const std::string& nodeName);
-
-        void updateNewData();
-
         void initSettingsUI();
+
+        void scrollSpectrogram(RenderingContext& rctx);
 
         void renderSpectrogram(RenderingContext& rctx);
         void renderFFTSpectrum(RenderingContext& rctx);
@@ -77,9 +71,7 @@ namespace Main {
 
         Freetype::FontFile *primaryFont;
 
-        std::unordered_map<std::string, std::unique_ptr<Nodes::Node>>                nodes;
-        std::unordered_map<std::string, std::vector<std::unique_ptr<Nodes::NodeIO>>> nodeIOs;
-        Nodes::NodeIO **ndi, **ndo;
+        App::Pipeline audioPipeline;
 
         std::map<std::string, RenderingContextInfo> renderingContextInfos;
         bool endLoop;

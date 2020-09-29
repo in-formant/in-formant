@@ -10,7 +10,10 @@
 #include <climits>
 #include <string>
 #include <vector>
-#include <optional>
+#include "../../optional.hpp"
+namespace std {
+    using namespace experimental;
+}
 
 namespace Module::Target {
     class AbstractBase;

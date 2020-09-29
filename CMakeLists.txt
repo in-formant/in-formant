@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
+set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{MACOSX_DEPLOYMENT_TARGET})
 project(speech-analysis)
 
 set(CMAKE_SUPPORT_DIR "${PROJECT_SOURCE_DIR}/cmake_support")
@@ -48,6 +49,9 @@ set(SOURCES
     src/modules/renderer/base/parameters.h
     src/modules/renderer/base/base.h
     src/modules/renderer/renderer.h
+    src/modules/app/pipeline/pipeline.cpp
+    src/modules/app/pipeline/pipeline.h
+    src/modules/app/app.h
     src/modules/modules.h
     src/nodes/node/nodeio_audiotime.cpp
     src/nodes/node/nodeio_audiotime.h
@@ -99,7 +103,10 @@ set(SOURCES
     src/analysis/formant/filteredlp.cpp
     src/analysis/formant/formant.h
     src/analysis/invglot/iaif.cpp
+    src/analysis/invglot/amgif.cpp
     src/analysis/invglot/invglot.h
+    src/analysis/wavelet/wavelet.cpp
+    src/analysis/wavelet/wavelet.h
     src/analysis/util/find_peaks.cpp
     src/analysis/util/find_roots.cpp
     src/analysis/util/laguerre.cpp

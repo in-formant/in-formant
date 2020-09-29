@@ -2904,13 +2904,32 @@ NSVGimage* nsvgParse(char* input, const char* units, float dpi)
 	return ret;
 }
 
+#if defined(ANDROID) || defined(__ANDROID__)
+#   include <fcntl.h>
+#   include <unistd.h>
+#   include <sys/stat.h>
+#   include <sys/types.h>
+#endif
+
 NSVGimage* nsvgParseFromFile(const char* filename, const char* units, float dpi)
 {
-	FILE* fp = NULL;
 	size_t size;
 	char* data = NULL;
 	NSVGimage* image = NULL;
 
+#if defined(ANDROID) || defined(__ANDROID__)
+        int fd = -1;
+        fd = open(filename, O_RDONLY);
+        if (fd < 0) goto error;
+        size = lseek(fd, 0, SEEK_END);
+        lseek(fd, 0, SEEK_SET);
+        data = (char*)malloc(size+1);
+        if (data == NULL) goto error;
+        if (read(fd, data, size) != size) goto error;
+        data[size] = '\0';
+        close(fd);
+#else
+	FILE* fp = NULL;
 	fp = fopen(filename, "rb");
 	if (!fp) goto error;
 	fseek(fp, 0, SEEK_END);
@@ -2921,13 +2940,18 @@ NSVGimage* nsvgParseFromFile(const char* filename, const char* units, float dpi)
 	if (fread(data, 1, size, fp) != size) goto error;
 	data[size] = '\0';	// Must be null terminated.
 	fclose(fp);
+#endif
 	image = nsvgParse(data, units, dpi);
 	free(data);
 
 	return image;
 
 error:
+#if defined(ANDROID) || defined(__ANDROID__)
+        if (fd >= 0) close(fd);
+#else
 	if (fp) fclose(fp);
+#endif
 	if (data) free(data);
 	if (image) nsvgDelete(image);
 	return NULL;

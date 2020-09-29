@@ -450,8 +450,8 @@ float NanoVG::renderFrequencyCursor(float mx, float my)
     nvgBeginPath(vg);
     nvgMoveTo(vg, 0, yp);
     nvgLineTo(vg, mWidth, yp);
-    nvgStrokeColor(vg, nvgRGBf(0.75f, 0.75f, 0.75f));
-    nvgStrokeWidth(vg, 2.0f);
+    nvgStrokeColor(vg, nvgRGBf(1, 1, 1));
+    nvgStrokeWidth(vg, 3.0f);
     nvgStroke(vg);
     
     float y = 2.0f * (0.5f - my);
@@ -467,8 +467,8 @@ int NanoVG::renderFrameCursor(float mx, float my, int count)
     nvgBeginPath(vg);
     nvgMoveTo(vg, xp, 0);
     nvgLineTo(vg, xp, mHeight);
-    nvgStrokeColor(vg, nvgRGBf(0.75f, 0.75f, 0.75f));
-    nvgStrokeWidth(vg, 2.0f);
+    nvgStrokeColor(vg, nvgRGBf(1, 1, 1));
+    nvgStrokeWidth(vg, 3.0f);
     nvgStroke(vg);
 
     return frame;
