@@ -16,7 +16,7 @@ using Clock = steady_clock;
 
 ContextManager::ContextManager(std::unique_ptr<Context>&& ctx)
     : ctx(std::move(ctx)),
-      ndi(nullptr), ndo(nullptr)
+      pipeline(ctx->captureBuffer.get())
 {
 }
 
@@ -106,8 +106,7 @@ void ContextManager::start()
     });
 #endif
 
-    createAudioNodes();
-    createAudioIOs();
+    pipeline.initialize();
 
     endLoop = false;
     isPaused = false;
@@ -272,160 +271,37 @@ void ContextManager::createRenderingContexts(const std::initializer_list<Renderi
     }
 }
 
-void ContextManager::createAudioNodes()
-{
-    int captureSampleRate = ctx->captureBuffer->getSampleRate();
-
-    nodes["prereqs"] = std::make_unique<Nodes::Prereqs>(ctx->captureBuffer.get(), analysisDuration, 256);
-    nodes["rs_spec"] = std::make_unique<Nodes::Resampler>(captureSampleRate, 2 * fftMaxFrequency);
-    nodes["spec"] = std::make_unique<Nodes::Spectrum>(fftLength);
-    nodes["rs_2"] = std::make_unique<Nodes::Resampler>(captureSampleRate, 16000);
-    nodes["tail_2"] = std::make_unique<Nodes::Tail>(analysisDuration);
-    nodes["pitch"] = std::make_unique<Nodes::PitchTracker>(ctx->pitchSolver.get());
-    nodes["invglot"] = std::make_unique<Nodes::InvGlot>(ctx->invglotSolver.get());
-    nodes["linpred_2"] = std::make_unique<Nodes::LinPred>(ctx->linpredSolver.get(), 2 * 16000 / 2000 + 4);
-    nodes["rs"] = std::make_unique<Nodes::Resampler>(captureSampleRate, 2 * analysisMaxFrequency);
-    nodes["tail_rs"] = std::make_unique<Nodes::Tail>(analysisDuration);
-    nodes["preemph"] = std::make_unique<Nodes::PreEmphasis>(preEmphasisFrequency);
-    nodes["linpred"] = std::make_unique<Nodes::LinPred>(ctx->linpredSolver.get(), linPredOrder);
-    nodes["formant"] = std::make_unique<Nodes::FormantTracker>(ctx->formantSolver.get());
-}
-
-void ContextManager::createAudioIOs()
-{
-    nodeIOs["prereqs"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
-    nodeIOs["rs_spec"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
-    nodeIOs["spec"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioSpec);
-    nodeIOs["rs_2"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
-    nodeIOs["tail_2"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
-    nodeIOs["pitch"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeFrequencies);
-    nodeIOs["invglot"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
-    nodeIOs["linpred_2"] = Nodes::makeNodeIO(2, Nodes::kNodeIoTypeIIRFilter, Nodes::kNodeIoTypeAudioSpec);
-    nodeIOs["rs"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
-    nodeIOs["tail_rs"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
-    nodeIOs["preemph"] = Nodes::makeNodeIO(1, Nodes::kNodeIoTypeAudioTime);
-    nodeIOs["linpred"] = Nodes::makeNodeIO(2, Nodes::kNodeIoTypeIIRFilter, Nodes::kNodeIoTypeAudioSpec);
-    nodeIOs["formant"] = Nodes::makeNodeIO(2, Nodes::kNodeIoTypeFrequencies, Nodes::kNodeIoTypeFrequencies);
-}
-
 void ContextManager::updateNodeParameters()
 {
-    nodes["rs_spec"]->as<Nodes::Resampler>()->setOutputSampleRate(2 * viewMaxFrequency);
-    nodes["rs"]->as<Nodes::Resampler>()->setOutputSampleRate(2 * analysisMaxFrequency);
-    nodes["linpred"]->as<Nodes::LinPred>()->setOrder(linPredOrder);
+    pipeline.setFFTSampleRate(2 * viewMaxFrequency);
+    pipeline.setFormantSampleRate(2 * analysisMaxFrequency);
+    pipeline.setFormantLpOrder(linPredOrder);
 }
 
-void ContextManager::propagateAudio()
+void ContextManager::updateTracks()
 {
-    auto t0 = Clock::now();
-
-    nodes["prereqs"]->as<Nodes::Prereqs>()->setMinimumOutputLength(
-            nodes["rs_spec"]->as<Nodes::Resampler>()->getRequiredInputLength(
-                nodes["spec"]->as<Nodes::Spectrum>()->getFFTLength()));
-
-    processAudioNode(nullptr, "prereqs");
-
-    processAudioNode("prereqs", "rs_spec");
-    processAudioNode("rs_spec", "spec");
-    
-    processAudioNode("prereqs", "rs_2");
-    processAudioNode("rs_2", "pitch");
-    processAudioNode("rs_2", "tail_2");
-    processAudioNode("tail_2", "invglot");
-    processAudioNode("tail_2", "preemph");
-    processAudioNode("preemph", "linpred_2");
-
-    processAudioNode("prereqs", "rs");
-    processAudioNode("rs", "tail_rs");
-    processAudioNode("tail_rs", "preemph");
-    processAudioNode("preemph", "linpred");
-    processAudioNode("linpred", "formant");
-
-    auto t1 = Clock::now();
-
-    durProcessing = duration_cast<microseconds>(t1 - t0);
-}
-
-void ContextManager::processAudioNode(const char *in, const std::string& nodeName)
-{
-    const Nodes::NodeIO **ins = nullptr;    
-    if (in != nullptr) {
-        ins = const_cast<decltype(ins)>(Nodes::unpack(nodeIOs[in], &ndi));
-    }
-
-    Nodes::NodeIO **outs = Nodes::unpack(nodeIOs[nodeName], &ndo);
-
-    nodes[nodeName]->process(ins, outs);
-}
-
-void ContextManager::updateNewData()
-{
-    auto ioSpectrum         = nodeIOs["spec"]   [0]->as<Nodes::IO::AudioSpec>();
-    auto ioLinpredFilter    = nodeIOs["linpred"][0]->as<Nodes::IO::IIRFilter>();
-    auto ioLinpredSpectrum  = nodeIOs["linpred"][1]->as<Nodes::IO::AudioSpec>();
-    auto ioPitch            = nodeIOs["pitch"]  [0]->as<Nodes::IO::Frequencies>();
-    auto ioFormantFreqs     = nodeIOs["formant"][0]->as<Nodes::IO::Frequencies>();
-    auto ioFormantBands     = nodeIOs["formant"][1]->as<Nodes::IO::Frequencies>();
-    auto ioTail2            = nodeIOs["tail_2"] [0]->as<Nodes::IO::AudioTime>();
-    auto ioInvglot          = nodeIOs["invglot"][0]->as<Nodes::IO::AudioTime>();
-
-    int specLength = ioSpectrum->getLength();
-    std::vector<std::array<float, 2>> specSlice(specLength);
-    for (int i = 0; i < specLength; ++i) {
-        specSlice[i][0] = (ioSpectrum->getSampleRate() * i) / (2.0f * specLength);
-        specSlice[i][1] = ioSpectrum->getConstData()[i];
-    }
-
-    int lpSpecLength = ioLinpredSpectrum->getLength();
-    std::vector<std::array<float, 2>> lpSpecSlice(lpSpecLength);
-    for (int i = 0; i < lpSpecLength; ++i) {
-        lpSpecSlice[i][0] = (ioLinpredSpectrum->getSampleRate() * i) / (2.0f * lpSpecLength);
-        lpSpecSlice[i][1] = log10(1 + ioLinpredSpectrum->getConstData()[i]);
-    }
-
-    float lpGain = ioLinpredFilter->getFFConstData()[0];
-    
-    float pitch = -1.0f;
-    std::vector<Analysis::FormantData> formants;
-
-    if (ioPitch->getLength() > 0) {
-        pitch = ioPitch->get(0);
-    }
-
-    int formantCount = ioFormantFreqs->getLength();
-    formants.resize(formantCount);
-    for (int i = 0; i < formantCount; ++i) {
-        formants[i] = {
-            .frequency = ioFormantFreqs->get(i),
-            .bandwidth = ioFormantBands->get(i),
-        };
-    }
-
-    std::vector<float> sound(ioTail2->getConstData(), ioTail2->getConstData() + ioTail2->getLength());
-    std::vector<float> glot(ioInvglot->getConstData(), ioInvglot->getConstData() + ioInvglot->getLength());
-
     spectrogramTrack.pop_front();
-    spectrogramTrack.push_back(std::move(specSlice));
+    spectrogramTrack.push_back(pipeline.getFFTSlice());
 
     lpSpecTrack.pop_front();
-    lpSpecTrack.push_back(std::move(lpSpecSlice));
+    lpSpecTrack.push_back(pipeline.getLpSpecSlice());
 
     pitchTrack.pop_front();
-    pitchTrack.push_back(pitch);
+    pitchTrack.push_back(pipeline.getPitch());
 
     formantTrack.pop_front();
-    formantTrack.push_back(std::move(formants));
+    formantTrack.push_back(pipeline.getFormants());
 
     soundTrack.pop_front();
-    soundTrack.push_back(std::move(sound));
+    soundTrack.push_back(pipeline.getSound());
 
     glotTrack.pop_front();
-    glotTrack.push_back(std::move(glot));
+    glotTrack.push_back(pipeline.getGlottalFlow());
 }
 
 void ContextManager::generateAudio(float *x, int length)
 {
-    if (outputGain > 1e-6) {
+    /*if (outputGain > 1e-6) {
         auto lpc = nodeIOs["linpred_2"][0]->as<Nodes::IO::IIRFilter>();
 
         float b = 0.07;
@@ -451,7 +327,7 @@ void ContextManager::generateAudio(float *x, int length)
         for (int i = 0; i < std::min<int>(length, output.size()); ++i) {
             x[i] = outputGain * output[i];
         }
-    }
+    }*/
 }
 
 void ContextManager::mainBody(bool processEvents)

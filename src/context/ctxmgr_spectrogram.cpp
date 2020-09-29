@@ -3,35 +3,34 @@
 using namespace Main;
 using namespace std::chrono_literals;
 
+void ContextManager::scrollSpectrogram(RenderingContext &rctx)
+{
+    Renderer::SpectrogramRenderData specRender;
+   
+    auto& slice = displayLpSpec ? lpSpecTrack.back() : spectrogramTrack.back();
+
+    for (const auto& [frequency, intensity] : slice) {
+        specRender.push_back({frequency, intensity});
+    }
+
+    rctx.renderer->scrollSpectrogram(specRender, spectrogramCount);
+}
+
 void ContextManager::renderSpectrogram(RenderingContext &rctx)
 {
     if (!isPaused) {
-        Renderer::SpectrogramRenderData specRender;
-        
-        if (displayLpSpec) { 
-            auto lpSpec = nodeIOs["linpred"][1]->as<Nodes::IO::AudioSpec>();
-            for (int i = 0; i < lpSpec->getLength(); ++i) {
-                float frequency = (i * lpSpec->getSampleRate() / 2.0f) / lpSpec->getLength();
-                specRender.push_back({frequency, lpSpec->getConstData()[i]});
-            }
-        }
-        else {
-            for (const auto& [frequency, intensity] : spectrogramTrack.back()) {
-                specRender.push_back({frequency, intensity});
-            }
-        }
-
-        rctx.renderer->scrollSpectrogram(specRender, spectrogramCount);
+        scrollSpectrogram(rctx);
     }
+
     rctx.renderer->renderSpectrogram();
 
     std::vector<Renderer::FormantTrackRenderData> formantTrackRender(numFormantsToRender);
     int n = 0;
-    for (const auto& formants : formantTrack) {
+    for (auto& formants : formantTrack) {
         int i = 0;
         if (pitchTrack[n] > 0) {
-            for (const auto& formant : formants) {
-                formantTrackRender[i].push_back(std::make_optional<Analysis::FormantData>(formant));
+            for (auto formant : formants) {
+                formantTrackRender[i].emplace_back(formant);
                 if (++i >= numFormantsToRender) break;
             }
         }
@@ -46,9 +45,9 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
     }
 
     Renderer::FrequencyTrackRenderData pitchTrackRender;
-    for (const auto& x : pitchTrack) {
+    for (auto x : pitchTrack) {
         if (x > 0)
-            pitchTrackRender.push_back(std::make_optional<float>(x));
+            pitchTrackRender.emplace_back(x); 
         else
             pitchTrackRender.emplace_back(std::nullopt);
     }
@@ -78,7 +77,7 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
             "F2: Open FFT spectrum",
 #endif
             "P: Pause/resume analysis",
-            "N: Play filtered noise",
+            "N: Toggle playing filtered noise",
             "L: Toggle spectrogram/LP spectra",
             "F: Toggle frame cursor",
             "S: Open settings window",
