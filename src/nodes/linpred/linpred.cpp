@@ -12,7 +12,7 @@ LinPred::LinPred(Analysis::LinpredSolver *solver, int order)
     : Node(NodeDescriptor {
             .inputCount = 1,
             .inputs = &kNodeIoTypeAudioTime,
-            .outputCount = 1,
+            .outputCount = 2,
             .outputs = outTypes,
         }),
       mSolver(solver),

@@ -16,14 +16,8 @@ using Clock = steady_clock;
 
 ContextManager::ContextManager(std::unique_ptr<Context>&& ctx)
     : ctx(std::move(ctx)),
-      pipeline(ctx->captureBuffer.get())
+      pipeline(this->ctx->captureBuffer.get())
 {
-}
-
-ContextManager::~ContextManager()
-{
-    if (ndi != nullptr) delete[] ndi;
-    if (ndo != nullptr) delete[] ndo;
 }
 
 void ContextManager::initialize()
@@ -106,6 +100,7 @@ void ContextManager::start()
     });
 #endif
 
+    updateNodeParameters();
     pipeline.initialize();
 
     endLoop = false;
@@ -187,7 +182,7 @@ void ContextManager::loadSettings()
     fftLength = 2048;
     fftMaxFrequency = viewMaxFrequency;
 
-    preEmphasisFrequency = 500.0f;
+    preEmphasisFrequency = 200.0f;
     linPredOrder = 10;
 
     spectrogramCount = 600;
@@ -273,7 +268,22 @@ void ContextManager::createRenderingContexts(const std::initializer_list<Renderi
 
 void ContextManager::updateNodeParameters()
 {
-    pipeline.setFFTSampleRate(2 * viewMaxFrequency);
+    fftMaxFrequency = viewMaxFrequency;
+
+    pipeline.setPitchSolver(ctx->pitchSolver.get());
+    pipeline.setInvglotSolver(ctx->invglotSolver.get());
+    pipeline.setLinpredSolver(ctx->linpredSolver.get());
+    pipeline.setFormantSolver(ctx->formantSolver.get());
+
+    pipeline.setAnalysisDuration(18ms);
+
+    pipeline.setFFTSampleRate(2 * fftMaxFrequency);
+    pipeline.setFFTSize(fftLength);
+
+    pipeline.setPreEmphasisFrequency(preEmphasisFrequency);
+
+    pipeline.setPitchAndLpSpectrumSampleRate(16'000);
+
     pipeline.setFormantSampleRate(2 * analysisMaxFrequency);
     pipeline.setFormantLpOrder(linPredOrder);
 }
@@ -284,7 +294,7 @@ void ContextManager::updateTracks()
     spectrogramTrack.push_back(pipeline.getFFTSlice());
 
     lpSpecTrack.pop_front();
-    lpSpecTrack.push_back(pipeline.getLpSpecSlice());
+    lpSpecTrack.push_back(pipeline.getLpSpectrumSlice());
 
     pitchTrack.pop_front();
     pitchTrack.push_back(pipeline.getPitch());
@@ -425,8 +435,8 @@ auto t0 = Clock::now();
     }
 
     if (!isPaused) {
-        propagateAudio();
-        updateNewData();
+        pipeline.processAll();
+        updateTracks();
     }
 
     if (isNoiseOn) {
