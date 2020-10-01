@@ -249,6 +249,7 @@ void SDL2::create()
 void SDL2::show()
 {
     SDL_ShowWindow(mWindow);
+    SDL_RaiseWindow(mWindow);
     mIsShown = true;
 }
 

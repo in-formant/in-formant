@@ -58,7 +58,8 @@ namespace Main {
 
 #if defined(ANDROID) || defined(__ANDROID__)
         void initAndroidUI();
-        void renderAndroidCommon(RenderingContext& rctx);
+        void renderAndroidCommonBefore(RenderingContext& rctx);
+        void renderAndroidCommonAfter(RenderingContext& rctx);
         void eventAndroidCommon(RenderingContext& rctx);
 #endif
 

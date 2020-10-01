@@ -65,7 +65,7 @@ void ContextManager::start()
     rctx.renderer->initialize();
     updateRendererTargetSize(rctx);
     updateRendererParameters(rctx);
-    selectedViewName = "Spectrogram";
+    selectedViewName = "FFT spectrum";
 #else
     for (const auto& [name, info] : renderingContextInfos) {
         auto& rctx = ctx->renderingContexts[name];
@@ -277,7 +277,7 @@ void ContextManager::updateNodeParameters()
     pipeline.setLinpredSolver(ctx->linpredSolver.get());
     pipeline.setFormantSolver(ctx->formantSolver.get());
 
-    pipeline.setAnalysisDuration(std::chrono::milliseconds(analysisDuration));
+    pipeline.setAnalysisDuration(milliseconds(analysisDuration));
 
     pipeline.setFFTSampleRate(2 * fftMaxFrequency);
     pipeline.setFFTSize(fftLength);
@@ -348,12 +348,12 @@ void ContextManager::generateAudio(float *x, int length)
 
 void ContextManager::mainBody(bool processEvents)
 {
-auto t0 = Clock::now();
+    auto t0 = Clock::now();
 
 #if defined(ANDROID) || defined(__ANDROID__)
     auto& rctx = ctx->renderingContexts["main"];
-        const auto& name = selectedViewName;
-        const auto& info = renderingContextInfos[name];
+    const auto& name = selectedViewName;
+    const auto& info = renderingContextInfos[name];
 #define break 
 #endif
 
@@ -424,10 +424,7 @@ auto t0 = Clock::now();
 
                 (this->*info.eventCallback)(rctx);
             }
-#if defined(ANDROID) || defined(__ANDROID__)
-#   undef break
-            eventAndroidCommon(rctx);
-#else
+#if ! ( defined(ANDROID) || defined(__ANDROID__) )
         }
 #endif
     }
@@ -467,15 +464,25 @@ auto t0 = Clock::now();
 
         if (rctx.target->isVisible()) {
             rctx.renderer->begin();
+#if defined(ANDROID) || defined(__ANDROID__)
+            renderAndroidCommonBefore(rctx);
+#endif
             (this->*info.renderCallback)(rctx);
 #if defined(ANDROID) || defined(__ANDROID__)
-            renderAndroidCommon(rctx);
+            renderAndroidCommonAfter(rctx);
 #endif
             rctx.renderer->end(); 
         }
 #if ! (defined(ANDROID) || defined(__ANDROID__) ) 
     }
 #endif
+
+    if (processEvents) {
+#if defined(ANDROID) || defined(__ANDROID__)
+#   undef break
+        eventAndroidCommon(rctx);
+#endif
+    }
 
     auto tr1 = Clock::now();
 
