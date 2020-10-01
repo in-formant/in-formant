@@ -122,7 +122,7 @@ void NanoVG::scrollSpectrogram(const SpectrogramRenderData& slice, int count)
 
     mProvider->bindFramebuffer(mSpectrogramFb2);
 
-    nvgBeginFrame(vg, count, imageHeight, 1.0f); 
+    nvgBeginFrame(vg, count, imageHeight, 1.0f);
     nvgSave(vg);
 
     nvgResetTransform(vg);

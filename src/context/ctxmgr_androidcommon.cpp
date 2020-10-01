@@ -51,16 +51,20 @@ void ContextManager::initAndroidUI()
     };
 }
 
-void ContextManager::renderAndroidCommon(RenderingContext& rctx)
+void ContextManager::renderAndroidCommonBefore(RenderingContext& rctx)
 {
     if (selectedViewName != "Spectrogram") {
         scrollSpectrogram(rctx);
     }
+}
+
+void ContextManager::renderAndroidCommonAfter(RenderingContext& rctx)
+{
 
     int rw, rh;
     rctx.target->getSizeForRenderer(&rw, &rh);
     
-    auto& font = FONT(primaryFont, uiFontSize + 3, rctx);
+    auto& font = FONT(primaryFont, 20, rctx);
 
     int em = std::get<3>(font.queryTextSize("M"));
     int cx1, cy1, cx2, cy2, dx, dy;
@@ -68,7 +72,7 @@ void ContextManager::renderAndroidCommon(RenderingContext& rctx)
     float g1 = 1.0f;
     float g2 = 0.7;
     int padding = 5;
-    int margin = 20;
+    int margin = 15;
 
     if (rh >= rw) {
         dx = 0;
