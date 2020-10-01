@@ -24,24 +24,26 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 
     rctx.renderer->renderSpectrogram();
 
-    std::vector<Renderer::FormantTrackRenderData> formantTrackRender(numFormantsToRender);
-    int n = 0;
-    for (auto& formants : formantTrack) {
-        int i = 0;
-        if (pitchTrack[n] > 0) {
-            for (auto formant : formants) {
-                formantTrackRender[i].emplace_back(formant);
-                if (++i >= numFormantsToRender) break;
+    if (displayFormantTracks) {
+        std::vector<Renderer::FormantTrackRenderData> formantTrackRender(numFormantsToRender);
+        int n = 0;
+        for (auto& formants : formantTrack) {
+            int i = 0;
+            if (pitchTrack[n] > 0) {
+                for (auto formant : formants) {
+                    formantTrackRender[i].emplace_back(formant);
+                    if (++i >= numFormantsToRender) break;
+                }
             }
+            for (int j = i; j < numFormantsToRender; ++j)
+                formantTrackRender[j].emplace_back(std::nullopt);
+            n++;
         }
-        for (int j = i; j < numFormantsToRender; ++j)
-            formantTrackRender[j].emplace_back(std::nullopt);
-        n++;
-    }
 
-    for (int i = 0; i < numFormantsToRender; ++i) {
-        const auto [r, g, b] = formantColors[i];
-        rctx.renderer->renderFormantTrack(formantTrackRender[i], r, g, b);
+        for (int i = 0; i < numFormantsToRender; ++i) {
+            const auto [r, g, b] = formantColors[i];
+            rctx.renderer->renderFormantTrack(formantTrackRender[i], r, g, b);
+        }
     }
 
     Renderer::FrequencyTrackRenderData pitchTrackRender;
@@ -53,12 +55,12 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
     }
     rctx.renderer->renderFrequencyTrack(pitchTrackRender, 6.0f, 0.0f, 1.0f, 1.0f);
  
-    auto& tickLabelFont = FONT(primaryFont, uiFontSize - 4, rctx);
+    auto& tickLabelFont = FONT(primaryFont, uiFontSize - 5, rctx);
     rctx.renderer->renderFrequencyScaleBar(tickLabelFont, tickLabelFont);
 
     if (durLoop > 0us) {
-        auto& font = FONT(primaryFont, uiFontSize - 3, rctx);
-        auto& smallerFont = FONT(primaryFont, uiFontSize - 4, rctx);
+        auto& font = FONT(primaryFont, uiFontSize - 4, rctx);
+        auto& smallerFont = FONT(primaryFont, uiFontSize - 5, rctx);
         
         int em = std::get<3>(font.queryTextSize("M"));
         int smallerEm = std::get<3>(smallerFont.queryTextSize("M"));
@@ -70,30 +72,34 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 
         y = 15;
 
+        if (displayLegends) {
 #if ! ( defined(ANDROID) || defined(__ANDROID__) ) 
-        const std::vector<std::string> keyLegends = {
+            const std::vector<std::string> keyLegends = {
 #ifndef __EMSCRIPTEN__
-            "F1: Open oscilloscope",
-            "F2: Open FFT spectrum",
+                "F1: Open oscilloscope",
+                "F2: Open FFT spectrum",
 #endif
-            "P: Pause/resume analysis",
-            "N: Toggle playing filtered noise",
-            "L: Toggle spectrogram/LP spectra",
-            "F: Toggle frame cursor",
-            "S: Open settings window",
-        };
+                "P: Pause/resume analysis",
+                "L: Toggle spectrogram/LP spectra",
+                "F: Toggle frame cursor",
+                "T: Toggle formant tracks",
+                "U: Toggle help text",
+                "N: Toggle playing filtered noise",
+                "S: Open settings window",
+            };
 #else
-        const std::array<std::string, 0> keyLegends {};
+            const std::array<std::string, 0> keyLegends {};
 #endif
 
-        for (const auto& str : keyLegends) {
-            rctx.renderer->renderText(
-                    font,
-                    str,
-                    15,   
-                    y,
-                    1.0f, 1.0f, 1.0f);
-            y += em + 10;
+            for (const auto& str : keyLegends) {
+                rctx.renderer->renderText(
+                        font,
+                        str,
+                        15,   
+                        y,
+                        1.0f, 1.0f, 1.0f);
+                y += em + 10;
+            }
         }
 
         std::vector<std::string> bottomStrings;
@@ -165,18 +171,20 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
             y += smallerEm + 10;
         }
 
-        int h;
-        rctx.target->getSize(nullptr, &h);
+        if (displayLegends) {
+            int h;
+            rctx.target->getSize(nullptr, &h);
 
-        ss.str("");
-        ss << "Loop cycle took " << (durLoop.count() / 1000.0f) << " ms";
-        rctx.renderer->
-renderText(
-                smallerFont,
-                ss.str(),
-                15,
-                h - 15 - smallerEm,
-                1.0f, 1.0f, 1.0f);
+            ss.str("");
+            ss << "Loop cycle took " << (durLoop.count() / 1000.0f) << " ms";
+            rctx.renderer->
+    renderText(
+                    smallerFont,
+                    ss.str(),
+                    15,
+                    h - 15 - smallerEm,
+                    1.0f, 1.0f, 1.0f);
+        }
     }
 }
 
@@ -210,6 +218,14 @@ void ContextManager::eventSpectrogram(RenderingContext &rctx)
 
     if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_F)) {
         useFrameCursor = !useFrameCursor;
+    }
+
+    if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_T)) {
+        displayFormantTracks = !displayFormantTracks;
+    }
+
+    if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_U)) {
+        displayLegends = !displayLegends;
     }
 }
 

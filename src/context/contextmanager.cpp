@@ -108,6 +108,8 @@ void ContextManager::start()
     displayLpSpec = false;
     useFrameCursor = false;
     isNoiseOn = false;
+    displayFormantTracks = false;
+    displayLegends = true;
 
 #if defined(__EMSCRIPTEN__)
     emscripten_set_main_loop_timing(EM_TIMING_RAF, 1);
@@ -121,9 +123,9 @@ void ContextManager::start()
     while (!endLoop) {
         mainBody();
 
-        // Locked to ~60 fps
-        if (durLoop < 16.67ms) {
-            std::this_thread::sleep_for(16.67ms - durLoop);
+        // Locked to ~50 fps
+        if (durLoop < 20ms) {
+            std::this_thread::sleep_for(20ms - durLoop);
         }
     }
 #endif
@@ -170,7 +172,7 @@ void ContextManager::loadSettings()
 {
     outputGain = 0;
     
-    analysisDuration = 18;
+    analysisDuration = 25;
     analysisMaxFrequency = 5300;
 
     viewMinFrequency = 1;
@@ -275,7 +277,7 @@ void ContextManager::updateNodeParameters()
     pipeline.setLinpredSolver(ctx->linpredSolver.get());
     pipeline.setFormantSolver(ctx->formantSolver.get());
 
-    pipeline.setAnalysisDuration(18ms);
+    pipeline.setAnalysisDuration(std::chrono::milliseconds(analysisDuration));
 
     pipeline.setFFTSampleRate(2 * fftMaxFrequency);
     pipeline.setFFTSize(fftLength);
@@ -338,6 +340,10 @@ void ContextManager::generateAudio(float *x, int length)
             x[i] = outputGain * output[i];
         }
     }*/
+
+    for (int i = 0; i < length; ++i) {
+        x[i] = 0.0f;
+    }
 }
 
 void ContextManager::mainBody(bool processEvents)
