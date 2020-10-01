@@ -81,6 +81,8 @@ namespace Main {
         bool displayLpSpec;
         bool useFrameCursor;
         bool isNoiseOn;
+        bool displayFormantTracks;
+        bool displayLegends;
 
 #if defined(ANDROID) || defined(__ANDROID__)
         std::string selectedViewName;

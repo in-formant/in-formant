@@ -74,9 +74,7 @@ int Resampler::getRequiredInLength(int outLength)
         return 0;
     }
 
-    float ioRatio = (float) mInRate / (float) (mInRate + mOutRate);
-
-    return (int) (outLength * (1 - ioRatio) / ioRatio);
+    return (int) (outLength * mInRate) / mOutRate;
 }
 
 int Resampler::getExpectedOutLength(int inLength)

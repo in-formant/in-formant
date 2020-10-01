@@ -1,5 +1,6 @@
 #include "../util/util.h"
 #include "../filter/filter.h"
+#include "../resampler/resampler.h"
 #include "../../modules/math/constants.h"
 #include "rapt.h"
 #include "pitch.h"
@@ -21,7 +22,7 @@ Pitch::RAPT::RAPT()
     vtran_c = 0.005;
     vtr_a_c = 0.5;
     vtr_s_c = 0.5;
-    vo_bias = 0.0;
+    vo_bias = -0.2;
     doubl_c = 0.35;
     a_fact  = 10000;
     n_cands = 20;
@@ -49,7 +50,7 @@ PitchResult Pitch::RAPT::solve(const float *data, int length, int sampleRate)
 
 static void subtractReferenceMean(std::vector<float>& s, int n, int K);
 
-static std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds, Module::Audio::Resampler& downsampler);
+static std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds);
 
 static std::vector<float> calculateDownsampledNCCF(const std::vector<float>& dss, const int dsn, const int dsK1, const int dsK2);
 
@@ -69,7 +70,7 @@ static std::vector<float> lpcar2rf(const std::vector<float>& ar);
 static std::vector<float> lpcrf2rr(const std::vector<float>& rf);
 
 RAPT::RAPT()
-    : downsampler(48000, 2000), lpcOrder(-1)
+    : lpcOrder(-1)
 {
 }
 
@@ -94,10 +95,19 @@ float RAPT::computeFrame(const float *data, int length, float Fs)
     const int J = std::min<int>(length, std::round(0.03f * Fs));
 
     std::vector<float> s(data, data + length);
+    
+    if (s.size() < n + K) {
+        s.resize(n + K, 0.0f);
+    }
 
     subtractReferenceMean(s, n, K);
 
-    auto dss = downsampleSignal(s, Fs, Fds, downsampler);
+    auto dss = downsampleSignal(s, Fs, Fds);
+    
+    if (dss.size() < dsn + dsK2) {
+        dss.resize(dsn + dsK2, 0.0f);
+    }
+
     auto dsNCCF = calculateDownsampledNCCF(dss, dsn, dsK1, dsK2);
     auto dsPeaks = findPeaksWithThreshold(dsNCCF, cand_tr, n_cands, true);
    
@@ -251,12 +261,9 @@ void subtractReferenceMean(std::vector<float>& s, int n, int K)
         s[j] -= mu;
 }
 
-std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds, Module::Audio::Resampler& downsampler)
+std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds)
 {
-    downsampler.setRate(Fs, Fds);
-    auto dss = downsampler.process(s.data(), s.size());
-    dss.resize(s.size() * Fds / Fs, 0.0f);
-    return dss;
+    return Analysis::resample(s, Fs, Fds);
 }
 
 std::vector<float> calculateDownsampledNCCF(const std::vector<float>& dss, const int dsn, const int dsK1, const int dsK2)

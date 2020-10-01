@@ -14,9 +14,9 @@ void ContextManager::initSettingsUI()
         { .labelText = "Max. displayed frequency: ", .field = &ContextManager::viewMaxFrequency,
             .delta = 100, .min = 4500, .max = 8000 },
         { .labelText = "Min. displayed gain: ", .field = &ContextManager::viewMinGain,
-            .delta = 5, .min = -200, .max = -15 },
+            .delta = 1, .min = -200, .max = -15 },
         { .labelText = "Max. displayed gain: ", .field = &ContextManager::viewMaxGain,
-            .delta = 5, .min = -10, .max = 80 },
+            .delta = 1, .min = -10, .max = 80 },
     };
 }
 

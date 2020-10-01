@@ -107,6 +107,8 @@ set(SOURCES
     src/analysis/invglot/invglot.h
     src/analysis/wavelet/wavelet.cpp
     src/analysis/wavelet/wavelet.h
+    src/analysis/resampler/resampler.cpp
+    src/analysis/resampler/resampler.h
     src/analysis/util/find_peaks.cpp
     src/analysis/util/find_roots.cpp
     src/analysis/util/laguerre.cpp
@@ -539,6 +541,10 @@ if(UNIX AND NOT EMSCRIPTEN)
     target_sources(speech-analysis PUBLIC src/backtrace/unix.cpp)
     target_link_libraries(speech-analysis PUBLIC dl)
     set_target_properties(speech-analysis PROPERTIES LINK_FLAGS "-pthread -static-libstdc++")
+    if(NOT ANDROID AND CMAKE_BUILD_TYPE MATCHES "^Debug$")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+        set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fsanitize=address")
+    endif()
 endif()
 
 if(WIN32)
