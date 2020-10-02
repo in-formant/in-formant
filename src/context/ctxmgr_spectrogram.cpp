@@ -120,21 +120,23 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
         ss.str("");
         ss << "Pitch: ";
         if (frequency > 0)
-            ss << (10 * std::round(frequency)) << " Hz";
+            ss << ((10.0f * std::round(frequency)) / 10.0f) << " Hz";
         else
             ss << "unvoiced";
         bottomStrings.push_back(ss.str());
 
-        auto& formants = formantTrack[iframe];
-        int i = 1;
-        for (auto it = formants.begin(); it != formants.end(); ++it) {
-            frequency = it->frequency;
+        if (displayFormantTracks) {
+            auto& formants = formantTrack[iframe];
+            int i = 1;
+            for (auto it = formants.begin(); it != formants.end(); ++it) {
+                frequency = it->frequency;
 
-            ss.str("");
-            ss << "R" << i << ": " << std::round(frequency) << " Hz";
-            bottomStrings.push_back(ss.str());
-            
-            i++;
+                ss.str("");
+                ss << "R" << i << ": " << std::round(frequency) << " Hz";
+                bottomStrings.push_back(ss.str());
+                
+                i++;
+            }
         }
 
         frequency = pitchTrack.back(); 
@@ -144,11 +146,9 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
         std::tie(tx, ty, tw, th) = smallerFont.queryTextSize("Cursor: 55555 Hz");
 
         int maxWidth = tw;
-        static int maxHeight = 0;
+        static float maxHeight = 0;
         th = bottomStrings.size() * (smallerEm + 10) - 10;
-        if (th > maxHeight) {
-            maxHeight = th;
-        }
+        maxHeight = 0.1 * th + (1 - 0.1) * maxHeight;
 
         for (const auto& str : bottomStrings) {
             const auto [tx, ty, tw, th] = smallerFont.queryTextSize(str);

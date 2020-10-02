@@ -176,11 +176,16 @@ void Pipeline::processAll()
     processArc("rs_fft", "fft");
 
     processArc("prereqs", "rs_2");
+   
     processArc("rs_2", "tail_2");
-    processArc("tail_2", "pitch");
     processArc("tail_2", "invglot");
-    processArc("rs_2", "preemph_2");
-    processArc("preemph_2", "tail_2");
+    
+    processArc("rs_2", "preemph_pitch");
+    processArc("preemph_pitch", "tail_2");
+    processArc("tail_2", "pitch");
+
+    processArc("rs_2", "preemph_linpred");
+    processArc("preemph_linpred", "tail_2");
     processArc("tail_2", "linpred_spectrum");
 
     processArc("prereqs", "rs_formant");
@@ -258,7 +263,8 @@ void Pipeline::createNodes()
     nodes["fft"]                = std::make_unique<Nodes::Spectrum>(fftSize);
     
     nodes["rs_2"]               = std::make_unique<Nodes::Resampler>(captureSampleRate, secondSampleRate);
-    nodes["preemph_2"]          = std::make_unique<Nodes::PreEmphasis>(preEmphasisFrequency);
+    nodes["preemph_linpred"]    = std::make_unique<Nodes::PreEmphasis>(preEmphasisFrequency);
+    nodes["preemph_pitch"]      = std::make_unique<Nodes::PreEmphasis>(100.0f);
     nodes["tail_2"]             = std::make_unique<Nodes::Tail>(analysisDuration.count());
     nodes["pitch"]              = std::make_unique<Nodes::PitchTracker>(pitchSolver);
     nodes["invglot"]            = std::make_unique<Nodes::InvGlot>(invglotSolver);
