@@ -22,12 +22,12 @@ Pitch::RAPT::RAPT()
     vtran_c = 0.005;
     vtr_a_c = 0.5;
     vtr_s_c = 0.5;
-    vo_bias = -0.2;
+    vo_bias = 0.0;
     doubl_c = 0.35;
     a_fact  = 10000;
     n_cands = 20;
 
-    nbFrames = 1;
+    nbFrames = 2;
 }
 
 PitchResult Pitch::RAPT::solve(const float *data, int length, int sampleRate)
