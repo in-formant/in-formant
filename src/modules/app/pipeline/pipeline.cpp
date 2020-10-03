@@ -93,7 +93,7 @@ Pipeline& Pipeline::setPreEmphasisFrequency(float value)
 {
     preEmphasisFrequency = value;
     if (wasInitializedAtLeastOnce) {
-        nodes["preemph_2"]->as<Nodes::PreEmphasis>()->setFrequency(value);
+        nodes["preemph_linpred"]->as<Nodes::PreEmphasis>()->setFrequency(value);
         nodes["preemph_formant"]->as<Nodes::PreEmphasis>()->setFrequency(value);
     }
     return *this;
