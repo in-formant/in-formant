@@ -179,9 +179,6 @@ void Pipeline::processAll()
    
     processArc("rs_2", "tail_2");
     processArc("tail_2", "invglot");
-    
-    processArc("rs_2", "preemph_pitch");
-    processArc("preemph_pitch", "tail_2");
     processArc("tail_2", "pitch");
 
     processArc("rs_2", "preemph_linpred");
@@ -264,7 +261,6 @@ void Pipeline::createNodes()
     
     nodes["rs_2"]               = std::make_unique<Nodes::Resampler>(captureSampleRate, secondSampleRate);
     nodes["preemph_linpred"]    = std::make_unique<Nodes::PreEmphasis>(preEmphasisFrequency);
-    nodes["preemph_pitch"]      = std::make_unique<Nodes::PreEmphasis>(100.0f);
     nodes["tail_2"]             = std::make_unique<Nodes::Tail>(analysisDuration.count());
     nodes["pitch"]              = std::make_unique<Nodes::PitchTracker>(pitchSolver);
     nodes["invglot"]            = std::make_unique<Nodes::InvGlot>(invglotSolver);
