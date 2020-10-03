@@ -14,8 +14,8 @@ using namespace Analysis;
 
 Pitch::RAPT::RAPT()
 {
-    F0min   = 60;
-    F0max   = 600;
+    F0min   = 70;
+    F0max   = 400;
     cand_tr = 0.3;
     lag_wt  = 0.3;
     freq_wt = 0.02;
@@ -27,7 +27,7 @@ Pitch::RAPT::RAPT()
     a_fact  = 10000;
     n_cands = 20;
 
-    nbFrames = 2;
+    nbFrames = 1;
 }
 
 PitchResult Pitch::RAPT::solve(const float *data, int length, int sampleRate)
@@ -50,7 +50,7 @@ PitchResult Pitch::RAPT::solve(const float *data, int length, int sampleRate)
 
 static void subtractReferenceMean(std::vector<float>& s, int n, int K);
 
-static std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds);
+static std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds, Module::Audio::Resampler& resampler);
 
 static std::vector<float> calculateDownsampledNCCF(const std::vector<float>& dss, const int dsn, const int dsK1, const int dsK2);
 
@@ -70,7 +70,7 @@ static std::vector<float> lpcar2rf(const std::vector<float>& ar);
 static std::vector<float> lpcrf2rr(const std::vector<float>& rf);
 
 RAPT::RAPT()
-    : lpcOrder(-1)
+    : lpcOrder(-1), resampler(48000, 2000)
 {
 }
 
@@ -102,7 +102,7 @@ float RAPT::computeFrame(const float *data, int length, float Fs)
 
     subtractReferenceMean(s, n, K);
 
-    auto dss = downsampleSignal(s, Fs, Fds);
+    auto dss = downsampleSignal(s, Fs, Fds, resampler);
     
     if (dss.size() < dsn + dsK2) {
         dss.resize(dsn + dsK2, 0.0f);
@@ -112,9 +112,10 @@ float RAPT::computeFrame(const float *data, int length, float Fs)
     auto dsPeaks = findPeaksWithThreshold(dsNCCF, cand_tr, n_cands, true);
    
     std::vector<std::pair<float, float>> peaks;
-    
+   
+    std::vector<float> nccf;
     if (dsPeaks.size() > 0) {
-        auto nccf = calculateOriginalNCCF(s, Fs, Fds, n, K, dsPeaks);
+        nccf = calculateOriginalNCCF(s, Fs, Fds, n, K, dsPeaks);
         peaks = findPeaksWithThreshold(nccf, cand_tr, n_cands, false);
     }
 
@@ -132,22 +133,30 @@ float RAPT::computeFrame(const float *data, int length, float Fs)
     Frame frm;
     frm.Fs = Fs;
     frm.cands = createCosts(peaks, vo_bias, beta);
-    frm.rms = calculateRMS(s, length / 2 - J / 2, J);
-    frm.rr = frm.rms / frames.back().rms;
+  
+    if (nbFrames > 1) {
+        frm.rms = calculateRMS(s, length / 2 - J / 2, J);
+        frm.rr = frm.rms / frames.back().rms;
+    
+        // Pre-emphasis.
+        const float alpha = expf(-7000 / Fs);
+        for (int i = s.size() - 1; i >= 1; --i) {
+            s[i] -= alpha * s[i - 1];
+        }
 
-    // Pre-emphasis.
-    const float alpha = expf(-7000 / Fs);
-    for (int i = s.size() - 1; i >= 1; --i) {
-        s[i] -= alpha * s[i - 1];
+        // Calculate AR.
+        float gain;
+        frm.ar = lpc.solve(s.data(), s.size(), lpcOrder, &gain);
+        frm.ar.insert(frm.ar.begin(), 1.0f);
+        frm.S = 0.2f / (expDistItakura(frm.ar, frames.back().ar) - 0.8f);
     }
 
-    // Calculate AR.
-    float gain;
-    frm.ar = lpc.solve(s.data(), s.size(), lpcOrder, &gain);
-    frm.ar.insert(frm.ar.begin(), 1.0f);
-    frm.S = 0.2f / (expDistItakura(frm.ar, frames.back().ar) - 0.8f);
-
-    float pitch = frm.cands[0].voiced ? frm.Fs / frm.cands[0].L : 0.0f;
+    float pitch = 0.0f;
+    
+    if (frm.cands[0].voiced) {
+        float Linterp = std::get<0>(parabolicInterpolation(nccf, frm.cands[0].L));
+        pitch = frm.Fs / Linterp;
+    }
 
     frames.pop_front();
     frames.push_back(std::move(frm));
@@ -261,9 +270,10 @@ void subtractReferenceMean(std::vector<float>& s, int n, int K)
         s[j] -= mu;
 }
 
-std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds)
+std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds, Module::Audio::Resampler& resampler)
 {
-    return Analysis::resample(s, Fs, Fds);
+    resampler.setRate(Fs, Fds);
+    return resampler.process(s.data(), s.size());
 }
 
 std::vector<float> calculateDownsampledNCCF(const std::vector<float>& dss, const int dsn, const int dsK1, const int dsK2)

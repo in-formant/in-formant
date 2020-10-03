@@ -172,16 +172,16 @@ void ContextManager::loadSettings()
 {
     outputGain = 0;
     
-    analysisDuration = 25;
+    analysisDuration = 30;
     analysisMaxFrequency = 5300;
 
     viewMinFrequency = 1;
     viewMaxFrequency = 6000;
-    viewMinGain = -75;
-    viewMaxGain = +15;
+    viewMinGain = -60;
+    viewMaxGain = +20;
     viewFrequencyScale = Renderer::FrequencyScale::Mel;
 
-    fftLength = 2048;
+    fftLength = 4096;
     fftMaxFrequency = viewMaxFrequency;
 
     preEmphasisFrequency = 200.0f;
