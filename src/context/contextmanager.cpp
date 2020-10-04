@@ -112,11 +112,9 @@ void ContextManager::start()
     displayLegends = true;
 
 #if defined(__EMSCRIPTEN__)
-    emscripten_set_main_loop_timing(EM_TIMING_RAF, 1);
     emscripten_set_main_loop_arg(
-            [](void *userdata) {
+            [] (void *userdata) {
                 auto self = static_cast<ContextManager *>(userdata);
-                
                 self->mainBody(true);
             }, this, 0, 1);
 #else
@@ -313,7 +311,11 @@ void ContextManager::updateTracks()
 
 void ContextManager::generateAudio(float *x, int length)
 {
-    /*if (outputGain > 1e-6) {
+    for (int i = 0; i < length; ++i) {
+        x[i] = 0.0f;
+    }
+
+   /* if (outputGain > 1e-6) {
         auto lpc = nodeIOs["linpred_2"][0]->as<Nodes::IO::IIRFilter>();
 
         float b = 0.07;
@@ -340,10 +342,6 @@ void ContextManager::generateAudio(float *x, int length)
             x[i] = outputGain * output[i];
         }
     }*/
-
-    for (int i = 0; i < length; ++i) {
-        x[i] = 0.0f;
-    }
 }
 
 void ContextManager::mainBody(bool processEvents)

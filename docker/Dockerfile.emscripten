@@ -13,8 +13,8 @@ RUN apt-get -y update && \
 # Install emsdk.
 RUN git clone https://github.com/emscripten-core/emsdk.git
 RUN cd /emsdk && \
-        ./emsdk install latest && \
-        ./emsdk activate latest
+        ./emsdk install 1.40.1 && \
+        ./emsdk activate 1.40.1
 
 # Build pkgconfig.
 ENV ver=0.29.2
