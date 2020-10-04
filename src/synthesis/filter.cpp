@@ -1,7 +1,7 @@
 #include "synthesis.h"
 
 std::vector<float> Synthesis::filter(
-        const float b,
+        const std::vector<float>& b,
         const std::vector<float>& a,
         const std::vector<float>& x, std::deque<float>& memory)
 {
@@ -11,7 +11,12 @@ std::vector<float> Synthesis::filter(
     std::vector<float> out(length);
 
     for (int i = 0; i < length; ++i) {
-        double val = b * x[i];
+        double val = 0.0;
+        for (int j = 0; j < b.size(); ++j) {
+            if (i - j >= 0) {
+                val += b[j] * x[i - j];
+            }
+        }
         for (int j = 1; j < nfilt; ++j) {
             val -= (a[j] * memory[j - 1]) / a[0];
         }

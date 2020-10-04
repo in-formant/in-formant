@@ -93,8 +93,8 @@ int main(int argc, char **argv)
         //.setInvglotSolver(new Analysis::Invglot::AMGIF(8))
         .setCaptureSampleRate(48000)
         .setCaptureDuration(100ms)
-        .setPlaybackBlockDuration(50ms, 150ms)
-        .setPlaybackDuration(200ms)
+        .setPlaybackBlockDuration(50ms, 100ms)
+        .setPlaybackDuration(150ms)
         .setPlaybackSampleRate(48000)
         .setPlaybackCallback(
             [](float *output, int length, void *userdata) {

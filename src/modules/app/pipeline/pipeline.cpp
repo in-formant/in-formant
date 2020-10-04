@@ -146,6 +146,11 @@ const std::vector<std::array<float, 2>>& Pipeline::getLpSpectrumSlice() const
     return lpSpecSlice;
 }
 
+const std::vector<float>& Pipeline::getLpSpectrumLPC() const
+{
+    return lpSpecLPC;
+}
+
 const std::vector<Analysis::FormantData>& Pipeline::getFormants() const
 {
     return formants;
@@ -229,6 +234,13 @@ void Pipeline::updateOutputData()
     for (int i = 0; i < lpSpecSliceLength; ++i) {
         lpSpecSlice[i][0] = (secondSampleRate * i) / (2.0f * lpSpecSliceLength);
         lpSpecSlice[i][1] = ioLpSpec->getConstData()[i];
+    }
+
+    auto ioLpFilter = nodeIOs["linpred_spectrum"][0]->as<Nodes::IO::IIRFilter>();
+    int lpSpecLpcLength = ioLpFilter->getFBOrder();
+    lpSpecLPC.resize(lpSpecLpcLength);
+    for (int i = 0; i < ioLpFilter->getFBOrder(); ++i) {
+        lpSpecLPC[i] = ioLpFilter->getFBConstData()[i];
     }
 
     auto ioPitch = nodeIOs["pitch"][0]->as<Nodes::IO::Frequencies>();
