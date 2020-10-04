@@ -80,7 +80,7 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
     out->setSampleRate(sampleRate);
 
     out->setFFOrder(1);
-    out->getFFData()[0] = 1e5 * gain;
+    out->getFFData()[0] = 2e4 * gain;
     
     out->setFBOrder(lpc.size());
     std::copy(lpc.begin(), lpc.end(), out->getFBData());

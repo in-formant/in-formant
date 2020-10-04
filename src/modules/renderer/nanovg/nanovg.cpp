@@ -36,6 +36,11 @@ void NanoVG::terminate()
         nvgDeleteImage(vg, image);
     }
 
+    if (mSpectrogramFb1 != nullptr) {
+        mProvider->deleteFramebuffer(mSpectrogramFb1);
+        mProvider->deleteFramebuffer(mSpectrogramFb2);
+    }
+
     mProvider->deleteContext(vg);
 }
 

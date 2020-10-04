@@ -22,7 +22,7 @@ case $target in
         ;;
     macos)
         tag=macos
-        extra_args="--privileged"
+        extra_args="--cap-add SYS_ADMIN --device /dev/loop0 --device /dev/loop-control"
         ;;
     android)
         tag=android
