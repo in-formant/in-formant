@@ -28,8 +28,6 @@ namespace Main {
         void selectView(const std::string& name);
 #endif
 
-        void generateAudio(float *x, int n);
-
     private:
         void loadSettings();
 
@@ -42,7 +40,7 @@ namespace Main {
         void initSettingsUI();
 
         void updateNodeParameters();
-        void updateTracks();
+        void updateWithNextFrame();
 
         void scrollSpectrogram(RenderingContext& rctx);
 
@@ -75,6 +73,7 @@ namespace Main {
         Freetype::FontFile *primaryFont;
 
         App::Pipeline pipeline;
+        App::Synthesizer synth;
 
         std::map<std::string, RenderingContextInfo> renderingContextInfos;
         bool endLoop;
@@ -104,6 +103,7 @@ namespace Main {
         int fftMaxFrequency;
 
         int preEmphasisFrequency;
+        int pitchAndLpSampleRate;
         int linPredOrder;
 
         int spectrogramCount;
