@@ -282,7 +282,7 @@ void ContextManager::updateNodeParameters()
 
     pipeline.setPreEmphasisFrequency(preEmphasisFrequency);
 
-    pipeline.setPitchAndLpSpectrumSampleRate(16'000);
+    pipeline.setPitchAndLpSpectrumSampleRate(24'000);
 
     pipeline.setFormantSampleRate(2 * analysisMaxFrequency);
     pipeline.setFormantLpOrder(linPredOrder);
@@ -315,33 +315,38 @@ void ContextManager::generateAudio(float *x, int length)
         x[i] = 0.0f;
     }
 
-   /* if (outputGain > 1e-6) {
-        auto lpc = nodeIOs["linpred_2"][0]->as<Nodes::IO::IIRFilter>();
-
-        float b = 0.07;
-        std::vector<float> a(lpc->getFBConstData(), lpc->getFBConstData() + lpc->getFBOrder());
-        a.insert(a.begin(), 1.0f);
-
+    if (outputGain > 1e-6) {
+        static Audio::Resampler noiseResampler(12'000, 24'000);
+        static Audio::Resampler outResampler(24'000, 48'000);
+        
         const float sampleRate = ctx->playbackQueue->getInSampleRate();
+        outResampler.setOutputRate(sampleRate);
 
-        static Audio::Resampler resampler(lpc->getSampleRate(), sampleRate);
-        resampler.setRate(lpc->getSampleRate(), sampleRate);
-
-        int inlen = resampler.getRequiredInLength(length);
+        int inLength = outResampler.getRequiredInLength(length);
+        int noiseLength = noiseResampler.getRequiredInLength(inLength);
 
         static float lastNoise = 0.0f;
-        auto noise = Synthesis::brownNoise(inlen, lastNoise);
+        auto noise = Synthesis::whiteNoise(noiseLength);
         lastNoise = noise.back();
 
-        static std::deque<float> memoryOut(30, 0.0f);
-        auto filtNoise = Synthesis::filter(b, a, noise, memoryOut);
+        noise = noiseResampler.process(noise.data(), noise.size());
 
-        auto output = resampler.process(filtNoise.data(), inlen);
-      
-        for (int i = 0; i < std::min<int>(length, output.size()); ++i) {
-            x[i] = outputGain * output[i];
+        std::vector<float> b {1.0f};
+        std::vector<float> a;
+        if (pipeline.getPitch() > 0) {
+            a = pipeline.getLpSpectrumLPC();
         }
-    }*/
+        a.insert(a.begin(), 1.0f);
+
+        static std::deque<float> memory(40, 0.0f);
+        auto out = Synthesis::filter(b, a, noise, memory);
+        
+        out = outResampler.process(out.data(), out.size());
+
+        for (int i = 0; i < std::min<int>(length, out.size()); ++i) {
+            x[i] += outputGain * 1e-2 * out[i];
+        }
+    }
 }
 
 void ContextManager::mainBody(bool processEvents)

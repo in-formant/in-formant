@@ -1,63 +1,51 @@
 #include "synthesis.h"
 #include "../modules/math/constants.h"
 #include <cmath>
+#include <complex>
 
-static std::pair<std::vector<double>, std::vector<double>>
-    calculateFormantFilter(const float frequency, const float bandwidth, const float sampleRate)
+static std::vector<double> poly(const std::vector<std::complex<double>>& z)
 {
-    const double r = exp(-M_PI * bandwidth / sampleRate);
-    const double wc = 2.0 * M_PI * frequency / sampleRate;
-
-    const double b0 = (1.0 - r) * sqrt(1.0 - 2.0 * r * cos(2.0 * wc) + (r * r));
-
-    const double a1 = -2.0 * r * cos(wc);
-    const double a2 = r * r;
-
-    return {{b0}, {1.0, a1, a2}};
-}
-
-static std::vector<double> conv(const std::vector<double>& x, const std::vector<double>& y)
-{
-    const int lx = x.size();
-    const int ly = y.size();
-
-    const int lw = lx + ly - 1;
-
-    std::vector<double> w(lw, 0.0);
+    if (z.size() == 0) {
+        return { 1.0 };
+    }
     
-    for (int k = 0; k < lw; ++k) {
-        int i = k;
-        for (int j = 0; j < ly; ++j) {
-            if (i >= 0 && i < lx) {
-                w[k] += x[i] * y[j];
-            }
-            i--;
+    std::vector<std::complex<double>> p(z.size() + 1);
+
+    p[0] = -z[0];
+    p[1] = 1.0;
+
+    for (int i = 1; i < z.size(); ++i) {
+        for (int j = i + 1; j >= 1; --j) {
+            p[j] = p[j - 1] - z[i] * p[j];
         }
+        p[0] = -z[i] * p[0];
     }
 
-    return w;
+    std::vector<double> pr(p.size());
+    for (int i = 0; i < p.size(); ++i) {
+        pr[i] = p[i].real();
+    }
+
+    return pr;
 }
 
 std::pair<std::vector<float>, std::vector<float>>
-Synthesis::generateVTFilter(const Nodes::IO::Frequencies *frequencies,
-                            const Nodes::IO::Frequencies *bandwidths,
+Synthesis::generateVTFilter(const std::vector<Analysis::FormantData>& formants,
                             const float Fs)
 {
-    const double gain = 2;
+    std::vector<std::complex<double>> poles(formants.size() * 2);
 
-    std::vector<double> B {gain};
-    std::vector<double> A {1.0};
-
-    for (int i = 0; i < frequencies->getLength(); ++i) {
-        auto [Bs, As] = calculateFormantFilter(
-                            frequencies->get(i),
-                            bandwidths->get(i),
-                            Fs);
+    for (int i = 0; i < formants.size(); ++i) {
+        const double r = exp(-M_PI * formants[i].bandwidth / Fs);
+        const double phi = 2.0 * M_PI * formants[i].frequency / Fs;
     
-        B = conv(B, Bs);
-        A = conv(A, As);
+        poles[i]                   = std::polar(r, phi);
+        poles[formants.size() + i] = std::conj(poles[i]);
     }
 
+    std::vector<double> B {0.1};
+    std::vector<double> A = poly(poles);
+
     return {std::vector<float>(B.begin(), B.end()),
-            std::vector<float>(A.begin(), A.end())};
+            std::vector<float>(A.rbegin(), A.rend())};
 }

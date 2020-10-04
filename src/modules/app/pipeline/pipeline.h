@@ -40,6 +40,7 @@ namespace Module::App
 
         const std::vector<std::array<float, 2>>&  getFFTSlice() const;
         const std::vector<std::array<float, 2>>&  getLpSpectrumSlice() const;
+        const std::vector<float>&                 getLpSpectrumLPC() const;
         const std::vector<Analysis::FormantData>& getFormants() const;
         const float                               getPitch() const;
         const std::vector<float>&                 getSound() const;
@@ -64,6 +65,7 @@ namespace Module::App
 
         std::vector<std::array<float, 2>> fftSlice;
         std::vector<std::array<float, 2>> lpSpecSlice;
+        std::vector<float>                lpSpecLPC;
         std::vector<Analysis::FormantData> formants;
         float pitch;
         std::vector<float> sound;
