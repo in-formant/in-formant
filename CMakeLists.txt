@@ -51,6 +51,8 @@ set(SOURCES
     src/modules/renderer/renderer.h
     src/modules/app/pipeline/pipeline.cpp
     src/modules/app/pipeline/pipeline.h
+    src/modules/app/synthesizer/synthesizer.cpp
+    src/modules/app/synthesizer/synthesizer.h
     src/modules/app/app.h
     src/modules/modules.h
     src/nodes/node/nodeio_audiotime.cpp

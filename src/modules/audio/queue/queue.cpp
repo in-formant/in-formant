@@ -17,6 +17,11 @@ Queue::~Queue()
 {
 }
 
+void Queue::setCallback(QueueCallback callback)
+{
+    mCallback = callback;
+}
+
 void Queue::setOutSampleRate(int newOutSampleRate)
 {
     mLock.lock();

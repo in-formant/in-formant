@@ -16,8 +16,10 @@ using Clock = steady_clock;
 
 ContextManager::ContextManager(std::unique_ptr<Context>&& ctx)
     : ctx(std::move(ctx)),
-      pipeline(this->ctx->captureBuffer.get())
+      pipeline(this->ctx->captureBuffer.get()),
+      synth(this->ctx->playbackQueue.get())
 {
+    this->ctx->playbackQueue->setCallback(App::Synthesizer::audioCallback);
 }
 
 void ContextManager::initialize()
@@ -102,6 +104,7 @@ void ContextManager::start()
 
     updateNodeParameters();
     pipeline.initialize();
+    synth.initialize();
 
     endLoop = false;
     isPaused = false;
@@ -183,6 +186,9 @@ void ContextManager::loadSettings()
     fftMaxFrequency = viewMaxFrequency;
 
     preEmphasisFrequency = 200.0f;
+    
+    pitchAndLpSampleRate = 16'000;
+
     linPredOrder = 10;
 
     spectrogramCount = 600;
@@ -282,13 +288,13 @@ void ContextManager::updateNodeParameters()
 
     pipeline.setPreEmphasisFrequency(preEmphasisFrequency);
 
-    pipeline.setPitchAndLpSpectrumSampleRate(24'000);
+    pipeline.setPitchAndLpSpectrumSampleRate(pitchAndLpSampleRate);
 
     pipeline.setFormantSampleRate(2 * analysisMaxFrequency);
     pipeline.setFormantLpOrder(linPredOrder);
 }
 
-void ContextManager::updateTracks()
+void ContextManager::updateWithNextFrame()
 {
     spectrogramTrack.pop_front();
     spectrogramTrack.push_back(pipeline.getFFTSlice());
@@ -307,46 +313,8 @@ void ContextManager::updateTracks()
 
     glotTrack.pop_front();
     glotTrack.push_back(pipeline.getGlottalFlow());
-}
-
-void ContextManager::generateAudio(float *x, int length)
-{
-    for (int i = 0; i < length; ++i) {
-        x[i] = 0.0f;
-    }
-
-    if (outputGain > 1e-6) {
-        static Audio::Resampler noiseResampler(12'000, 24'000);
-        static Audio::Resampler outResampler(24'000, 48'000);
-        
-        const float sampleRate = ctx->playbackQueue->getInSampleRate();
-        outResampler.setOutputRate(sampleRate);
-
-        int inLength = outResampler.getRequiredInLength(length);
-        int noiseLength = noiseResampler.getRequiredInLength(inLength);
-
-        static float lastNoise = 0.0f;
-        auto noise = Synthesis::whiteNoise(noiseLength);
-        lastNoise = noise.back();
-
-        noise = noiseResampler.process(noise.data(), noise.size());
-
-        std::vector<float> b {1.0f};
-        std::vector<float> a;
-        if (pipeline.getPitch() > 0) {
-            a = pipeline.getLpSpectrumLPC();
-        }
-        a.insert(a.begin(), 1.0f);
-
-        static std::deque<float> memory(40, 0.0f);
-        auto out = Synthesis::filter(b, a, noise, memory);
-        
-        out = outResampler.process(out.data(), out.size());
-
-        for (int i = 0; i < std::min<int>(length, out.size()); ++i) {
-            x[i] += outputGain * 1e-2 * out[i];
-        }
-    }
+    
+    synth.setFilter(pipeline.getLpSpectrumLPC(), pitchAndLpSampleRate);
 }
 
 void ContextManager::mainBody(bool processEvents)
@@ -442,17 +410,13 @@ void ContextManager::mainBody(bool processEvents)
 
     if (!isPaused) {
         pipeline.processAll();
-        updateTracks();
+        updateWithNextFrame();
     }
 
-    if (isNoiseOn) {
-        outputGain = 0.5 * outputGain + 0.5;
-    }
-    else {
-        outputGain = 0.5 * outputGain;
-    }
+    synth.setMasterGain(isNoiseOn ? 1 : 0);
+    synth.setNoiseGain(isNoiseOn ? 0.3 : 0);
 
-    ctx->playbackQueue->pushIfNeeded(this);
+    ctx->playbackQueue->pushIfNeeded(&synth);
 
     auto tr0 = Clock::now();
 

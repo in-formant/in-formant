@@ -18,6 +18,8 @@ namespace Module::Audio {
 
         void setOutSampleRate(int outSampleRate);
         
+        void setCallback(QueueCallback callback);
+
         int getInSampleRate() const;
         int getOutSampleRate() const;
 

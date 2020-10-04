@@ -99,11 +99,7 @@ int main(int argc, char **argv)
         .setPlaybackDuration(70ms)
 #endif
         .setPlaybackSampleRate(48000)
-        .setPlaybackCallback(
-            [](float *output, int length, void *userdata) {
-                auto ctxmgr = static_cast<Main::ContextManager *>(userdata);
-                ctxmgr->generateAudio(output, length);
-            });
+        .setPlaybackCallback([](auto...){});
 
     Main::ContextManager manager(ctxBuilder.build());
 
