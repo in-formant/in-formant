@@ -21,8 +21,6 @@
 using namespace Module;
 using namespace std::chrono_literals;
 
-const auto testLoopInterval = 33ms;
-
 #if ! defined(__EMSCRIPTEN__)
 static std::atomic_bool signalCaught(false);
 static std::atomic_int signalStatus;
@@ -93,8 +91,13 @@ int main(int argc, char **argv)
         //.setInvglotSolver(new Analysis::Invglot::AMGIF(8))
         .setCaptureSampleRate(48000)
         .setCaptureDuration(100ms)
-        .setPlaybackBlockDuration(50ms, 100ms)
-        .setPlaybackDuration(150ms)
+#ifdef __EMSCRIPTEN__
+        .setPlaybackBlockDuration(100ms, 300ms)
+        .setPlaybackDuration(400ms)
+#else
+        .setPlaybackBlockDuration(60ms, 70ms)
+        .setPlaybackDuration(70ms)
+#endif
         .setPlaybackSampleRate(48000)
         .setPlaybackCallback(
             [](float *output, int length, void *userdata) {
