@@ -1,3 +1,4 @@
+#include "../../../analysis/analysis.h"
 #include "synthesizer.h"
 #include <random>
 #include <iostream>
@@ -28,7 +29,8 @@ void Synthesizer::initialize()
     realFilter.resize(40, 0.0f);
     realFilter[0] = 1.0f;
 
-    filterMemory.resize(40, 0.0f);
+    filterMemoryNoise.resize(40, 0.0f);
+    filterMemoryGlot.resize(40, 0.0f);
 }
 
 void Synthesizer::setMasterGain(float value)
@@ -58,8 +60,9 @@ void Synthesizer::setGlotRd(float value)
 
 void Synthesizer::setFilter(const std::vector<float>& filt, float sampleRate)
 {
-    filter = filt;
-    filter.insert(filter.begin(), 1.0f);
+    filter.resize(filt.size() + 1);
+    filter[0] = 1.0f;
+    std::copy(filt.begin(), filt.end(), std::next(filter.begin()));
     noiseResampler.setOutputRate(sampleRate);
     outputResampler.setInputRate(sampleRate);
 }
@@ -93,7 +96,7 @@ void Synthesizer::generateAudio(int requestedLength)
 {
     static std::random_device rd;
     static std::mt19937 gen(rd());
-    static std::normal_distribution<> dis(0.0f, 0.7f);
+    static std::normal_distribution<> dis(0.0f, 1.0f);
 
     int inputLength = outputResampler.getRequiredInLength(requestedLength);
     int noiseLength = noiseResampler.getRequiredInLength(inputLength);
@@ -118,19 +121,24 @@ void Synthesizer::generateAudio(int requestedLength)
         }
     }
 
-    while (glot.size() < inputLength) {
-        auto frame = Synthesis::lfGenFrame(
-                            realGlotPitch,
-                            outputResampler.getInputRate(),
-                            realGlotRd);
-        glot.insert(glot.end(), frame.begin(), std::prev(frame.end()));
-   
-        constexpr float incrFact = 0.0025f;
-
-        for (int i = 0; i < frame.size(); ++i) {
-            realGlotPitch = incrFact * realGlotPitch + (1 - incrFact) * (glotPitch * (1.0f + 0.05f * dis(gen)));
-            realGlotRd    = incrFact * realGlotRd    + (1 - incrFact) * (glotRd + 0.2f * dis(gen));
+    float glotFs = outputResampler.getInputRate();
+    std::vector<float> pitches(inputLength);
+    std::vector<float> Rds(inputLength);
+    if (inputLength > 0) {
+        constexpr float expFact = 0.0005f;
+        pitches[0] = realGlotPitch;
+        Rds[0] = realGlotRd;
+        for (int i = 1; i < inputLength; ++i) {
+            pitches[i] = expFact * pitches[i - 1] + (1 - expFact) * (glotPitch * (1 + 0.005f * dis(gen)));
+            Rds[i]     = expFact * Rds[i - 1]     + (1 - expFact) * glotRd;
         }
+        realGlotPitch = pitches.back();
+        realGlotRd = Rds.back();
+    }
+
+    while (glot.size() < inputLength) {
+        auto frame = Synthesis::lfGenFrame(pitches[glot.size()], glotFs, Rds[glot.size()]);
+        glot.insert(glot.end(), frame.begin(), frame.end());
     }
 
     if (glot.size() > inputLength) {
@@ -139,11 +147,21 @@ void Synthesizer::generateAudio(int requestedLength)
     }
 
     std::vector<float> input(inputLength);
-    for (int i = 0; i < inputLength; ++i) {
-        input[i] = realNoiseGain * noise[i] + realGlotGain * glot[i];
-    }
 
-    auto output = Synthesis::filter({0.025f}, realFilter, input, filterMemory);
+    for (int i = 0; i < inputLength; ++i) {
+        input[i] = realNoiseGain * noise[i];
+    }
+    auto outputNoise = Synthesis::filter({1.0f}, realFilter, input, filterMemoryNoise);
+    
+    for (int i = 0; i < inputLength; ++i) {
+        input[i] = realGlotGain * glot[i];
+    }
+    auto outputGlot = Synthesis::filter({1.0f}, realFilter, input, filterMemoryGlot);
+
+    std::vector<float> output(inputLength);
+    for (int i = 0; i < inputLength; ++i) {
+        output[i] = 0.03f * (outputNoise[i] + outputGlot[i]);
+    }
 
     output = outputResampler.process(output.data(), output.size());
     outputLength = output.size();
