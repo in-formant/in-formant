@@ -10,11 +10,18 @@
 namespace Synthesis
 {
     std::vector<float> whiteNoise(int length);
-    std::vector<float> brownNoise(int length, float lastSample);
 
-    std::pair<std::vector<float>, std::vector<float>>
-                       generateVTFilter(const std::vector<Analysis::FormantData>& formants,
-                                        float Fs);
+    struct LF_State {
+        double T0;
+        double Rd;
+        double te, tp, ta;
+        double alpha, eps;
+    };
+
+    void lfRd2tetpta(LF_State& state);
+    void lfEpsAlpha(LF_State& state);
+
+    std::vector<float> lfGenFrame(float f0, float Fs, float Rd);
 
     std::vector<float> filter(
                     const std::vector<float>& b,

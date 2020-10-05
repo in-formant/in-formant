@@ -13,14 +13,3 @@ std::vector<float> Synthesis::whiteNoise(int length)
     }
     return out;
 }
-
-std::vector<float> Synthesis::brownNoise(int length, float lastSample)
-{
-    std::vector<float> out = whiteNoise(length);
-    for (int i = 0; i < length; ++i) {
-        out[i] = out[i] + 0.96 * lastSample;
-        lastSample = out[i];
-    }
-    return out;
-}
-
