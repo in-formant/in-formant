@@ -594,7 +594,7 @@ std::pair<float, float> NanoVG::convertNormCoord(float x, float y)
     };
 }
 
-intptr_t NanoVG::getContextNumber()
+uintptr_t NanoVG::getContextNumber()
 {
-    return (intptr_t) (vg);
+    return (uintptr_t) (vg);
 }

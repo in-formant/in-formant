@@ -60,7 +60,7 @@ namespace Module::Freetype {
         FontFile(FT_Library library, const std::string& filename);
         ~FontFile();
 
-        Font& with(int pointSize, intptr_t context, Module::Target::AbstractBase *target);
+        Font& with(int pointSize, uintptr_t context, Module::Target::AbstractBase *target);
 
     private:
         FT_Library mLibrary;
@@ -68,7 +68,7 @@ namespace Module::Freetype {
         FT_Byte *mData;
         int mDataSize;
 
-        std::map<std::tuple<intptr_t, int, int, int>, Font *> mFonts;
+        std::map<std::tuple<uintptr_t, int, int, int>, Font *> mFonts;
     };
 
     class Font {

@@ -1,8 +1,14 @@
 #include "synthesis.h"
+#include <ctime>
 #include <random>
 
-static std::random_device rd;
-static std::mt19937 gen(rd());
+static std::mt19937 initGen()
+{
+    std::random_device rd;
+    return std::mt19937(rd());
+}
+
+static auto gen = initGen();
 static std::uniform_real_distribution<> dis(-1.0f, 1.0f);
 
 std::vector<float> Synthesis::whiteNoise(int length)
