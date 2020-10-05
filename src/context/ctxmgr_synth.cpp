@@ -14,8 +14,8 @@ static std::array<int, 4> posGlotRd;
 constexpr float glotPitchMin = 70;
 constexpr float glotPitchMax = 600;
 
-constexpr float glotRdMin = 0.4;
-constexpr float glotRdMax = 2.7;
+constexpr float glotRdMin = 0.7;
+constexpr float glotRdMax = 2.6;
 
 void ContextManager::renderSynth(RenderingContext& rctx)
 {

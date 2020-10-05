@@ -89,8 +89,8 @@ std::vector<float> Synthesis::lfGenFrame(float f0, float Fs, float Rd)
             glot[i] = -Ee / (e * Ta) * (expf(-e * (t - Te)) - expf(-e * (T0 - Te)));
         }
 
-        if (glot[i] > normVal) {
-            normVal = glot[i];
+        if (fabsf(glot[i]) > normVal) {
+            normVal = fabsf(glot[i]);
         }
     }
 
