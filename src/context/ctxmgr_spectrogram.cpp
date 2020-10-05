@@ -84,7 +84,9 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
                 "F: Toggle frame cursor",
                 "T: Toggle formant tracks",
                 "U: Toggle help text",
+#ifdef __EMSCRIPTEN__
                 "N: Toggle playing filtered noise",
+#endif
                 "S: Open settings window",
             };
 #else

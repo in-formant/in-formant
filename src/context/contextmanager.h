@@ -54,6 +54,11 @@ namespace Main {
         void eventOscilloscope(RenderingContext& rctx);
         void eventSettings(RenderingContext& rctx);
 
+#if ! ( defined(__EMSCRIPTEN__) || defined(ANDROID) || defined(__ANDROID__) )
+        void renderSynth(RenderingContext& rctx);
+        void eventSynth(RenderingContext& rctx);
+#endif
+
 #if defined(ANDROID) || defined(__ANDROID__)
         void initAndroidUI();
         void renderAndroidCommonBefore(RenderingContext& rctx);

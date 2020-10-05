@@ -58,7 +58,7 @@
       #popup {
         position: absolute;
         min-width: 320px;
-        min-height: calc(240px + 1.2em);
+        min-height: calc(200px + 1.2em);
         border: solid 2px #44475a;
         border-radius: 6px;
         background: #282a36;
@@ -71,7 +71,7 @@
         min-width: 100%;
         min-height: 1.2em;
         line-height: 1.2em;
-        cursor: default;
+        cursor: move;
       }
 
       #popup_titlebar span {
@@ -96,9 +96,8 @@
       .hidden {
         display: none;
       }
-
-      .move-cursor {
-        cursor: move;
+      .fake-hidden {
+        display: hidden;
       }
     </style>
   </head>
@@ -107,7 +106,7 @@
       <canvas id="spectrogram" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
       <canvas id="fft_spectrum" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
       <canvas id="oscilloscope" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
-      <div id="popup" class="visible">
+      <div id="popup" class="hidden">
         <div id="popup_titlebar">
             <span>
                 Settings
@@ -149,14 +148,12 @@
 
       popupTitlebar.onmouseup = function(event) {
         popupTrack = false;
-        popupTitlebar.classList.remove('move-cursor');
       }
 
       document.body.onmousemove = function(event) {
         if (popupTrack) {
           popup.style.left = (popupTrackOffX + event.clientX) + 'px'; 
           popup.style.top = (popupTrackOffY + event.clientY) + 'px';
-          popupTitlebar.classList.add('move-cursor');
         }
       }
     </script>

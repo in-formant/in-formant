@@ -16,7 +16,15 @@ namespace Module::App
         void setMasterGain(float);
         void setNoiseGain(float);
         void setGlotGain(float);
+        void setGlotPitch(float);
+        void setGlotRd(float);
         void setFilter(const std::vector<float>&, float);
+
+        float getMasterGain() const;
+        float getNoiseGain() const;
+        float getGlotGain() const;
+        float getGlotPitch() const;
+        float getGlotRd() const;
 
         void generateAudio(int requestedLength);
 
@@ -28,15 +36,20 @@ namespace Module::App
         float masterGain;
         float noiseGain;
         float glotGain;
+        float glotPitch;
+        float glotRd;
         std::vector<float> filter;
         
         float realMasterGain;
         float realNoiseGain;
         float realGlotGain;
+        float realGlotPitch;
+        float realGlotRd;
         std::vector<float> realFilter;
 
         std::deque<float> filterMemory;
 
+        std::vector<float> glotSurplus;
         std::vector<float> surplus;
 
         Module::Audio::Resampler noiseResampler;

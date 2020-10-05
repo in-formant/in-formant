@@ -95,8 +95,8 @@ int main(int argc, char **argv)
         .setPlaybackBlockDuration(100ms, 300ms)
         .setPlaybackDuration(400ms)
 #else
-        .setPlaybackBlockDuration(60ms, 70ms)
-        .setPlaybackDuration(70ms)
+        .setPlaybackBlockDuration(70ms, 100ms)
+        .setPlaybackDuration(100ms)
 #endif
         .setPlaybackSampleRate(48000)
         .setPlaybackCallback([](auto...){});

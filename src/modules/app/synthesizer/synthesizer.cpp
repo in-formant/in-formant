@@ -1,4 +1,6 @@
 #include "synthesizer.h"
+#include <random>
+#include <iostream>
 
 using namespace Module::App;
 
@@ -14,11 +16,15 @@ void Synthesizer::initialize()
     masterGain = 0.0f;
     noiseGain = 0.3f;
     glotGain = 1.0f;
+    glotPitch = 170.0f;
+    glotRd = 1.7f;
     filter = { 1.0f };
     
     realMasterGain = 0.0f;
     realNoiseGain = 0.0f;
     realGlotGain = 0.0f;
+    realGlotPitch = 170.0f;
+    realGlotRd = 1.7f;
     realFilter.resize(40, 0.0f);
     realFilter[0] = 1.0f;
 
@@ -40,6 +46,16 @@ void Synthesizer::setGlotGain(float value)
     glotGain = value;
 }
 
+void Synthesizer::setGlotPitch(float value)
+{
+    glotPitch = value;
+}
+
+void Synthesizer::setGlotRd(float value)
+{
+    glotRd = value;
+}
+
 void Synthesizer::setFilter(const std::vector<float>& filt, float sampleRate)
 {
     filter = filt;
@@ -48,11 +64,39 @@ void Synthesizer::setFilter(const std::vector<float>& filt, float sampleRate)
     outputResampler.setInputRate(sampleRate);
 }
 
+float Synthesizer::getMasterGain() const
+{
+    return realMasterGain;
+}
+
+float Synthesizer::getNoiseGain() const
+{
+    return realNoiseGain;
+}
+
+float Synthesizer::getGlotGain() const
+{
+    return realGlotGain;
+}
+
+float Synthesizer::getGlotPitch() const
+{
+    return glotPitch;
+}
+
+float Synthesizer::getGlotRd() const
+{
+    return glotRd;
+}
+
 void Synthesizer::generateAudio(int requestedLength)
 {
-    int noiseLength = (requestedLength * noiseResampler.getInputRate())
-                                / outputResampler.getOutputRate();
-    int inputLength;
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_real_distribution<> dis(-1.0f, 1.0f);
+
+    int inputLength = outputResampler.getRequiredInLength(requestedLength);
+    int noiseLength = noiseResampler.getRequiredInLength(inputLength);
     int outputLength;
     
     auto noise = Synthesis::whiteNoise(noiseLength);
@@ -60,11 +104,39 @@ void Synthesizer::generateAudio(int requestedLength)
     noise = noiseResampler.process(noise.data(), noise.size());
     inputLength = noise.size();
 
-    //auto glot = Synthesis::generateGlottalSource();
+    std::vector<float> glot;
+    glot.reserve(inputLength);
+   
+    if (glotSurplus.size() > 0) {
+        if (glotSurplus.size() <= inputLength) {
+            glot.insert(glot.begin(), glotSurplus.begin(), glotSurplus.end());
+            glotSurplus.erase(glotSurplus.begin(), glotSurplus.end());
+        }
+        else {
+            glot.insert(glot.begin(), glotSurplus.begin(), std::next(glotSurplus.begin(), inputLength));
+            glotSurplus.erase(glotSurplus.begin(), std::next(glotSurplus.begin(), inputLength));
+        }
+    }
+
+    while (glot.size() < inputLength) {
+        auto frame = Synthesis::lfGenFrame(
+                            realGlotPitch,
+                            outputResampler.getInputRate(),
+                            realGlotRd);
+        glot.insert(glot.end(), frame.begin(), frame.end());
+    
+        realGlotPitch = 0.3f * realGlotPitch + 0.7f * (glotPitch * (1.0f + 0.05f * dis(gen)));
+        realGlotRd    = 0.3f * realGlotRd    + 0.7f * (glotRd + 0.02f * dis(gen));
+    }
+
+    if (glot.size() > inputLength) {
+        glotSurplus.insert(glotSurplus.end(), std::next(glot.begin(), inputLength), glot.end());
+        glot.resize(inputLength);
+    }
 
     std::vector<float> input(inputLength);
     for (int i = 0; i < inputLength; ++i) {
-        input[i] = realNoiseGain * noise[i]; // + realGlotGain * glot[i];
+        input[i] = realNoiseGain * noise[i] + realGlotGain * glot[i];
     }
 
     auto output = Synthesis::filter({0.025f}, realFilter, input, filterMemory);
@@ -84,9 +156,9 @@ void Synthesizer::audioCallback(float *output, int length, void *userdata)
     auto self = static_cast<Synthesizer *>(userdata);
 
     // Update the real parameters.
-    self->realMasterGain = 0.8f * self->realMasterGain + 0.2f * self->masterGain;
-    self->realNoiseGain  = 0.8f * self->realNoiseGain  + 0.2f * self->noiseGain;
-    self->realGlotGain   = 0.8f * self->realGlotGain   + 0.2f * self->glotGain;
+    self->realMasterGain = 0.4f * self->realMasterGain + 0.6f * self->masterGain;
+    self->realNoiseGain  = 0.4f * self->realNoiseGain  + 0.6f * self->noiseGain;
+    self->realGlotGain   = 0.4f * self->realGlotGain   + 0.6f * self->glotGain;
 
     for (int i = 0; i < self->realFilter.size(); ++i) {
         float filtVal = (i < self->filter.size()) ? self->filter[i] : 0.0f;
@@ -98,7 +170,7 @@ void Synthesizer::audioCallback(float *output, int length, void *userdata)
 
     // If we need to generate a bit more, then do so.
     while (self->surplus.size() < length) {
-        self->generateAudio(32);
+        self->generateAudio(256);
     }
 
     // Move the appropriate amount of samples from the surplus bank to the output buffer.

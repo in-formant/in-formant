@@ -47,7 +47,7 @@ void SDL2::initialize()
 #if RENDERER_USE_GLES
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);event subsystem thread
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 #elif RENDERER_USE_OPENGL
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -114,25 +114,24 @@ void SDL2::setSize(int width, int height)
 void SDL2::getSize(int *pWidth, int *pHeight)
 {
 #ifdef __EMSCRIPTEN__
-    if (pWidth != nullptr) {
-        *pWidth = EM_ASM_INT({
-            var canvas = document.querySelector(UTF8ToString($0));
-            if (canvas.width !== canvas.clientWidth) {
-                canvas.width = canvas.clientWidth;
-            }
-            return canvas.clientWidth;
-        }, EMSCRIPTEN_CANVAS_NAME);
-    }
+    int width = EM_ASM_INT({
+        var canvas = document.querySelector(UTF8ToString($0));
+        if (canvas.width !== canvas.clientWidth) {
+            canvas.width = canvas.clientWidth;
+        }
+        return canvas.clientWidth;
+    }, EMSCRIPTEN_CANVAS_NAME);
+    
+    int height = EM_ASM_INT({
+        var canvas = document.querySelector(UTF8ToString($0));
+        if (canvas.height !== canvas.clientHeight) {
+            canvas.height = canvas.clientHeight;
+        }
+        return canvas.clientHeight;
+    }, EMSCRIPTEN_CANVAS_NAME);
 
-    if (pHeight != nullptr) {
-        *pHeight = EM_ASM_INT({
-            var canvas = document.querySelector(UTF8ToString($0));
-            if (canvas.height !== canvas.clientHeight) {
-                canvas.height = canvas.clientHeight;
-            }
-            return canvas.clientHeight;
-        }, EMSCRIPTEN_CANVAS_NAME);
-    }
+    if (pWidth)  *pWidth  = width;
+    if (pHeight) *pHeight = height;
 #else
     SDL_GetWindowSize(mWindow, pWidth, pHeight);
 #endif
@@ -141,25 +140,24 @@ void SDL2::getSize(int *pWidth, int *pHeight)
 void SDL2::getSizeForRenderer(int *pWidth, int *pHeight)
 {
 #ifdef __EMSCRIPTEN__
-    if (pWidth != nullptr) {
-        *pWidth = EM_ASM_INT({
-            var canvas = document.querySelector(UTF8ToString($0));
-            if (canvas.width !== canvas.clientWidth) {
-                canvas.width = canvas.clientWidth;
-            }
-            return canvas.clientWidth;
-        }, EMSCRIPTEN_CANVAS_NAME);
-    }
-   
-    if (pHeight != nullptr) {
-        *pHeight = EM_ASM_INT({
-            var canvas = document.querySelector(UTF8ToString($0));
-            if (canvas.height !== canvas.clientHeight) {
-                canvas.height = canvas.clientHeight;
-            }
-            return canvas.clientHeight;
-        }, EMSCRIPTEN_CANVAS_NAME);
-    }
+    int width = EM_ASM_INT({
+        var canvas = document.querySelector(UTF8ToString($0));
+        if (canvas.width !== canvas.clientWidth) {
+            canvas.width = canvas.clientWidth;
+        }
+        return canvas.clientWidth;
+    }, EMSCRIPTEN_CANVAS_NAME);
+    
+    int height = EM_ASM_INT({
+        var canvas = document.querySelector(UTF8ToString($0));
+        if (canvas.height !== canvas.clientHeight) {
+            canvas.height = canvas.clientHeight;
+        }
+        return canvas.clientHeight;
+    }, EMSCRIPTEN_CANVAS_NAME);
+
+    if (pWidth)  *pWidth  = width;
+    if (pHeight) *pHeight = height;
 #else
     if (mRendererType == Type::OpenGL || mRendererType == Type::GLES) {
         SDL_GL_GetDrawableSize(mWindow, pWidth, pHeight);
@@ -231,8 +229,8 @@ void SDL2::create()
 
     mWindow = SDL_CreateWindow(
             mTitle.c_str(),
-            SDL_WINDOWPOS_CENTERED,
-            SDL_WINDOWPOS_CENTERED,
+            SDL_WINDOWPOS_UNDEFINED,
+            SDL_WINDOWPOS_UNDEFINED,
             mWidth,
             mHeight,
             backendFlag | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_SHOWN);

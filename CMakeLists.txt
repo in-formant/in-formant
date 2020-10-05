@@ -30,6 +30,7 @@ set(SOURCES
     src/context/ctxmgr_fftspectrum.cpp
     src/context/ctxmgr_oscilloscope.cpp
     src/context/ctxmgr_settings.cpp
+    src/context/ctxmgr_synth.cpp
     src/context/contextmanager.h
     src/backtrace/backtrace.h
     src/android_redirect_log.cpp
@@ -124,7 +125,7 @@ set(SOURCES
     src/analysis/analysis.h
     src/synthesis/noise.cpp
     src/synthesis/filter.cpp
-    src/synthesis/vtfilter.cpp
+    src/synthesis/glotLf.cpp
     src/synthesis/synthesis.h
 )
 

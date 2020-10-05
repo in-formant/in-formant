@@ -47,10 +47,13 @@ void ContextManager::start()
     ctx->audio->startCaptureStream();
 
     createRenderingContexts({
-        {"Spectrogram", &ContextManager::renderSpectrogram, &ContextManager::eventSpectrogram},
-        {"FFT spectrum", &ContextManager::renderFFTSpectrum, &ContextManager::eventFFTSpectrum},
+        {"Spectrogram",  &ContextManager::renderSpectrogram,  &ContextManager::eventSpectrogram},
+        {"FFT spectrum", &ContextManager::renderFFTSpectrum,  &ContextManager::eventFFTSpectrum},
         {"Oscilloscope", &ContextManager::renderOscilloscope, &ContextManager::eventOscilloscope},
-        {"Settings", &ContextManager::renderSettings, &ContextManager::eventSettings},
+        {"Settings",     &ContextManager::renderSettings,     &ContextManager::eventSettings},
+#if ! ( defined(__EMSCRIPTEN__) || defined(ANDROID) || defined(__ANDROID__) )
+        {"Synthesizer",  &ContextManager::renderSynth,        &ContextManager::eventSynth},
+#endif
     });
 
     primaryFont = & ctx->freetypeInstance->font("Montserrat.otf");
@@ -67,17 +70,26 @@ void ContextManager::start()
     rctx.renderer->initialize();
     updateRendererTargetSize(rctx);
     updateRendererParameters(rctx);
-    selectedViewName = "FFT spectrum";
+    selectedViewName = "Spectrogram";
 #else
     for (const auto& [name, info] : renderingContextInfos) {
         auto& rctx = ctx->renderingContexts[name];
         rctx.target->initialize();
-        rctx.target->setTitle("Speech analysis - " + info.name); 
+        rctx.target->setTitle("Speech analysis - " + info.name);
+#ifndef __EMSCRIPTEN__
         rctx.target->setSize(640, 480);
-#ifdef __EMSCRIPTEN__
+#else
+        rctx.target->setSize(320, 200);
         std::string canvasIdWithSharp = "#" + info.canvasId;
         EMSCRIPTEN_CANVAS_NAME = canvasIdWithSharp.c_str();
 #endif
+        if (name == "Settings") {
+#ifdef __EMSCRIPTEN__
+            EM_ASM({
+                document.getElementById("popup").classList.replace("hidden", "visible");
+            });
+#endif
+        }
         rctx.target->create();
         rctx.renderer->initialize();
         updateRendererTargetSize(rctx);
@@ -371,7 +383,8 @@ void ContextManager::mainBody(bool processEvents)
                     if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_S)) {
 #ifdef __EMSCRIPTEN__
                         EM_ASM({
-                            document.getElementById("popup").classList.replace("hidden", "visible");
+                            var popup = document.getElementById("popup");
+                            popup.classList.replace("hidden", "visible");
                             var canvas = document.getElementById("settings");
                             canvas.width = canvas.clientWidth;
                             canvas.height = canvas.clientHeight;
@@ -385,9 +398,11 @@ void ContextManager::mainBody(bool processEvents)
                     isPaused = !isPaused;
                 }
 
+#ifdef __EMSCRIPTEN__
                 if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_N)) {
                     isNoiseOn = !isNoiseOn;
                 }
+#endif
 
                 if (rctx.target->sizeChanged()) {
                     updateRendererTargetSize(rctx);
@@ -413,8 +428,10 @@ void ContextManager::mainBody(bool processEvents)
         updateWithNextFrame();
     }
 
+#ifdef __EMSCRIPTEN__
     synth.setMasterGain(isNoiseOn ? 1 : 0);
     synth.setNoiseGain(isNoiseOn ? 0.3 : 0);
+#endif
 
     ctx->playbackQueue->pushIfNeeded(&synth);
 
