@@ -33,21 +33,21 @@ void Synthesis::lfEpsAlpha(LF_State& state)
 
     // e is expressed by an implicit equation
     const auto fb = [&](double e) {
-        return 1.0 - exp(-e * (T0 - Te)) - e * Ta;
+        return 1.0 - expf(-e * (T0 - Te)) - e * Ta;
     };
     const auto dfb = [&](double e) {
-        return (T0 - Te) * exp(-e * (T0 - Te)) - Ta;
+        return (T0 - Te) * expf(-e * (T0 - Te)) - Ta;
     };
     const double e = fzero(fb, dfb, 1 / (Ta + 1e-13));
 
     // a is expressed by another implicit equation
     // integral{0, T0} ULF(t) dt, where ULF(t) is the LF model equation
-    const double A = (1.0 - exp(-e * (T0 - Te))) / (e * e * Ta) - (T0 - Te) * exp(-e * (T0 - Te)) / (e * Ta);
+    const double A = (1.0 - expf(-e * (T0 - Te))) / (e * e * Ta) - (T0 - Te) * expf(-e * (T0 - Te)) / (e * Ta);
     const auto fa = [&](double a) {
-        return (a * a + wg * wg) * sin(wg * Te) * A + wg * exp(-a * Te) + a * sin(wg * Te) - wg * cos(wg * Te);
+        return (a * a + wg * wg) * sinf(wg * Te) * A + wg * expf(-a * Te) + a * sinf(wg * Te) - wg * cosf(wg * Te);
     };
     const auto dfa = [&](double a) {
-        return (2 * A * a + 1) * sin(wg * Te) - wg * Te * exp(-a * Te);
+        return (2 * A * a + 1) * sinf(wg * Te) - wg * Te * expf(-a * Te);
     };
     const double a = fzero(fa, dfa, 4.42);
 
@@ -76,9 +76,9 @@ std::vector<float> Synthesis::lfGenFrame(float f0, float Fs, float Rd)
     const double e = state.eps;
 
     std::vector<float> glot(period);
+   
+    float posMax = 1e-10f;
 
-    float normVal = 1e-16;
-    
     for (int i = 0; i < period; ++i) {
         double t = (i * T0) / period;
 
@@ -89,13 +89,13 @@ std::vector<float> Synthesis::lfGenFrame(float f0, float Fs, float Rd)
             glot[i] = -Ee / (e * Ta) * (expf(-e * (t - Te)) - expf(-e * (T0 - Te)));
         }
 
-        if (fabsf(glot[i]) > normVal) {
-            normVal = fabsf(glot[i]);
+        if (glot[i] > posMax) {
+            posMax = glot[i];
         }
     }
 
     for (int i = 0; i < period; ++i) {
-        glot[i] /= normVal;
+        glot[i] /= posMax;
     }
 
     return glot;
@@ -113,13 +113,13 @@ double fzero(Func f, Func2 df, double x0)
         double y = f(x0);
         double dy = df(x0);
 
-        if (abs(dy) < eps) {
+        if (fabs(dy) < eps) {
             return x0;
         }
 
         double x1 = x0 - y / dy;
 
-        if (abs(x1 - x0) <= tol) {
+        if (fabs(x1 - x0) <= tol) {
             return x1;
         }
 
@@ -128,4 +128,3 @@ double fzero(Func f, Func2 df, double x0)
 
     return x0;
 }
-
