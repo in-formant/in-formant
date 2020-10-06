@@ -3,29 +3,58 @@
 std::vector<float> Synthesis::filter(
         const std::vector<float>& b,
         const std::vector<float>& a,
-        const std::vector<float>& x, std::deque<float>& memory)
+        const std::vector<float>& x,
+        std::vector<double>& zf)
 {
-    const int length = x.size();
-    const int nfilt = a.size();
+    const int la = a.size();
+    const int lb = b.size();
+    const int lab = std::max(la, lb);
 
-    std::vector<float> out(length);
+    std::vector<float> bp = b;
+    std::vector<float> ap = a;
+    bp.resize(lab, 0.0f);
+    ap.resize(lab, 0.0f);
 
-    for (int i = 0; i < length; ++i) {
-        double val = 0.0;
-        for (int j = 0; j < b.size(); ++j) {
-            if (i - j >= 0) {
-                val += b[j] * x[i - j];
-            }
-        }
-        for (int j = 1; j < nfilt; ++j) {
-            val -= (a[j] * memory[j - 1]) / a[0];
-        }
-        out[i] = val;
-
-        memory.pop_back();
-        memory.push_front(val);
+    for (int i = 0; i < lab; ++i) {
+        bp[i] /= a[0];
+        ap[i] /= a[0];
     }
 
-    return out;
+    const int lz = lab - 1;
+    const int lx = x.size();
+
+    std::vector<double> y(lx);
+    zf.resize(lz);
+
+    if (la > 1) {
+        for (int i = 0; i < lx; ++i) {
+            y[i] = zf[0] + bp[0] * x[i];
+
+            if (lz > 0) {
+                for (int j = 0; j < lz - 1; ++j)
+                    zf[j] = zf[j + 1] + bp[j + 1] * x[i] - ap[j + 1] * y[i];
+                zf[lz - 1] = bp[lz] * x[i] - ap[lz] * y[i];
+            }
+            else {
+                zf[0] = bp[lz] * x[i] - ap[lz] * y[i];
+            }
+        }
+    }
+    else if (lz > 0) {
+        for (int i = 0; i < lx; ++i) {
+            y[i] = zf[0] + bp[0] * x[i];
+
+            if (lz > 1) {
+                for (int j = 0; j < lz - 1; ++j)
+                    zf[j] = zf[j + 1] + bp[j + 1] * x[i];
+                zf[lz - 1] = bp[lz] * x[i];
+            }
+            else {
+                zf[0] = bp[1] * x[i];
+            }
+        }
+    }
+
+    return std::vector<float>(y.begin(), y.end());
 }
 

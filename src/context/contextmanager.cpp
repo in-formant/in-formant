@@ -326,7 +326,7 @@ void ContextManager::updateWithNextFrame()
     glotTrack.pop_front();
     glotTrack.push_back(pipeline.getGlottalFlow());
     
-    synth.setFilter(pipeline.getLpSpectrumLPC(), pitchAndLpSampleRate);
+    synth.setFormants(pipeline.getFormants(), 2 * analysisMaxFrequency);
 }
 
 void ContextManager::mainBody(bool processEvents)

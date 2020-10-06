@@ -18,7 +18,7 @@ namespace Module::App
         void setGlotGain(float);
         void setGlotPitch(float);
         void setGlotRd(float);
-        void setFilter(const std::vector<float>&, float);
+        void setFormants(const std::vector<Analysis::FormantData>&, float);
         void setFilterShift(float);
 
         float getMasterGain() const;
@@ -40,7 +40,7 @@ namespace Module::App
         float glotGain;
         float glotPitch;
         float glotRd;
-        std::vector<float> filter;
+        std::vector<Analysis::FormantData> formants;
         float filterShift;
 
         float realMasterGain;
@@ -51,14 +51,15 @@ namespace Module::App
         std::vector<float> realFilter;
         float realFilterShift;
 
-        std::array<std::deque<float>, 1> filterMemoryNoise;
-        std::array<std::deque<float>, 1> filterMemoryGlot;
+        float filterZeroGain;
+
+        std::array<std::vector<double>, 1> zfNoise;
+        std::array<std::vector<double>, 1> zfGlot;
 
         std::vector<float> glotSurplus;
         std::vector<float> surplus;
 
-        Module::Audio::Resampler noiseResampler;
-        Module::Audio::Resampler outputResampler;
+        Module::Audio::Resampler resampler;
     };
 }
 

@@ -127,6 +127,7 @@ set(SOURCES
     src/synthesis/filter.cpp
     src/synthesis/glotLf.cpp
     src/synthesis/shiftFilter.cpp
+    src/synthesis/polyFromRoots.cpp
     src/synthesis/synthesis.h
 )
 
