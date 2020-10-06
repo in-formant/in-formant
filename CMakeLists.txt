@@ -126,6 +126,7 @@ set(SOURCES
     src/synthesis/noise.cpp
     src/synthesis/filter.cpp
     src/synthesis/glotLf.cpp
+    src/synthesis/shiftFilter.cpp
     src/synthesis/synthesis.h
 )
 
@@ -547,8 +548,8 @@ if(UNIX AND NOT EMSCRIPTEN)
 endif()
 
 if(NOT ANDROID AND CMAKE_BUILD_TYPE MATCHES "^Debug$")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fsanitize=address")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize=undefined")
+    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fsanitize=address -fsanitize=undefined")
 endif()
 
 if(WIN32)

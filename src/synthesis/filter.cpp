@@ -18,7 +18,7 @@ std::vector<float> Synthesis::filter(
             }
         }
         for (int j = 1; j < nfilt; ++j) {
-            val -= a[j] * memory[j - 1];
+            val -= (a[j] * memory[j - 1]) / a[0];
         }
         out[i] = val;
 

@@ -21,19 +21,21 @@ void Synthesizer::initialize()
     glotPitch = 170.0f;
     glotRd = 1.7f;
     filter = { 1.0f };
+    filterShift = 1.0f;
     
     realMasterGain = 0.0f;
     realNoiseGain = 0.0f;
     realGlotGain = 0.0f;
     realGlotPitch = 170.0f;
     realGlotRd = 1.7f;
-    realFilter.resize(40, 0.0f);
+    realFilter.resize(100, 0.0f);
     realFilter[0] = 1.0f;
+    realFilterShift = 1.0f;
 
     for (auto& mem : filterMemoryNoise)
-        mem.resize(40, 0.0f);
+        mem.resize(100, 0.0f);
     for (auto& mem : filterMemoryGlot)
-        mem.resize(40, 0.0f);
+        mem.resize(100, 0.0f);
 }
 
 void Synthesizer::setMasterGain(float value)
@@ -70,6 +72,11 @@ void Synthesizer::setFilter(const std::vector<float>& filt, float sampleRate)
     outputResampler.setInputRate(sampleRate);
 }
 
+void Synthesizer::setFilterShift(float value)
+{
+    filterShift = value;
+}
+
 float Synthesizer::getMasterGain() const
 {
     return realMasterGain;
@@ -93,6 +100,11 @@ float Synthesizer::getGlotPitch() const
 float Synthesizer::getGlotRd() const
 {
     return glotRd;
+}
+
+float Synthesizer::getFilterShift() const
+{
+    return filterShift;
 }
 
 void Synthesizer::generateAudio(int requestedLength)
@@ -154,13 +166,16 @@ void Synthesizer::generateAudio(int requestedLength)
         glot[i] -= expf(-2.0f * M_PI * (glotFs / 2 - 100.0f) / glotFs) * glot[i - 1];
     }
 
+    // TODO: NEED TO WRITE AN ACTUAL FILTER SHIFT ROUTINE
+    auto shiftedFilter = Synthesis::frequencyShiftFilter(realFilter, glotFs, realFilterShift);
+
     std::vector<float> input(inputLength);
 
     for (int i = 0; i < inputLength; ++i) {
         input[i] = realNoiseGain * noise[i];
     }
     for (auto& mem : filterMemoryNoise) {
-        input = Synthesis::filter({1.0f}, realFilter, input, mem);
+        input = Synthesis::filter({1.0f}, shiftedFilter, input, mem);
     }
     auto outputNoise = input;
 
@@ -168,13 +183,13 @@ void Synthesizer::generateAudio(int requestedLength)
         input[i] = realGlotGain * glot[i];
     }
     for (auto& mem : filterMemoryGlot) {
-        input = Synthesis::filter({1.0f}, realFilter, input, mem);
+        input = Synthesis::filter({1.0f}, shiftedFilter, input, mem);
     }
     auto outputGlot = input;
 
     std::vector<float> output(inputLength);
     for (int i = 0; i < inputLength; ++i) {
-        output[i] = 0.03f * (outputNoise[i] + outputGlot[i]);
+        output[i] = 0.03f * (0.5f * outputNoise[i] + outputGlot[i]);
     }
 
     output = outputResampler.process(output.data(), output.size());
@@ -200,6 +215,8 @@ void Synthesizer::audioCallback(float *output, int length, void *userdata)
         float filtVal = (i < self->filter.size()) ? self->filter[i] : 0.0f;
         self->realFilter[i] = 0.05f * self->realFilter[i] + 0.95f * filtVal;
     }
+
+    self->realFilterShift = 0.2f * self->realFilterShift + 0.8f * self->filterShift;
 
     // Generate the audio.
     self->generateAudio(length);
