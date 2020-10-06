@@ -1,4 +1,5 @@
 #include "../modules/math/constants.h"
+#include "../analysis/fft/fft.h"
 #include "synthesis.h"
 #include <cmath>
 #include <map>

@@ -47,8 +47,8 @@ namespace Module::App
         float realGlotRd;
         std::vector<float> realFilter;
 
-        std::deque<float> filterMemoryNoise;
-        std::deque<float> filterMemoryGlot;
+        std::array<std::deque<float>, 2> filterMemoryNoise;
+        std::array<std::deque<float>, 2> filterMemoryGlot;
 
         std::vector<float> glotSurplus;
         std::vector<float> surplus;
