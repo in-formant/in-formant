@@ -10,12 +10,16 @@ static std::array<int, 4> posNoiseGain;
 static std::array<int, 4> posGlotGain;
 static std::array<int, 4> posGlotPitch;
 static std::array<int, 4> posGlotRd;
+static std::array<int, 4> posFilterShift;
 
 constexpr float glotPitchMin = 70;
 constexpr float glotPitchMax = 600;
 
 constexpr float glotRdMin = 0.7;
 constexpr float glotRdMax = 2.6;
+
+constexpr float filterShiftMin = 0.8;
+constexpr float filterShiftMax = 2.0;
 
 void ContextManager::renderSynth(RenderingContext& rctx)
 {
@@ -128,6 +132,24 @@ void ContextManager::renderSynth(RenderingContext& rctx)
     posGlotRd = pos;
     
     y += em + 10 + margin;
+
+    ss.str("");
+    ss << "Filter shift";
+    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
+    rctx.renderer->renderText(font, ss.str(), x, y + 5, 1.0f, 1.0f, 1.0f);
+    x2 = x + tw + margin;
+    std::tie(pos[0], pos[1], pos[2], pos[3]) =
+        rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth, false);
+    rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth * (synth.getFilterShift() - filterShiftMin) / (filterShiftMax - filterShiftMin), true);
+    rctx.renderer->renderRoundedRect(x2 + sliderWidth * (synth.getFilterShift() - filterShiftMin) / (filterShiftMax - filterShiftMin) - sliderKnobWidth / 2, y - 2, sliderKnobWidth, em + 14, 0.5f, 0.5f, 0.5f, 1.0f);
+    ss.str("");
+    ss << "x " << (std::round(synth.getFilterShift() * 10) / 10);
+    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
+    rctx.renderer->renderText(font, ss.str(), x2 + 5 + sliderWidth / 2 - tw / 2, y + 5, 1.0f, 1.0f, 1.0f);
+    
+    posFilterShift = pos;
+    
+    y += em + 10 + margin;
 }
 
 void ContextManager::eventSynth(RenderingContext& rctx)
@@ -192,6 +214,17 @@ void ContextManager::eventSynth(RenderingContext& rctx)
                 && ty >= y && ty <= y + h) {
             synth.setGlotRd(glotRdMin + (glotRdMax - glotRdMin) * (tx - x) / (float) w);
         }
+
+        pos = posFilterShift;
+        x = (pos[0] * tw) / rw;
+        y = (pos[1] * th) / rh;
+        w = (pos[2] * tw) / rw;
+        h = (pos[3] * th) / rh;
+        if (tx >= x && tx <= x + w
+                && ty >= y && ty <= y + h) {
+            synth.setFilterShift(filterShiftMin + (filterShiftMax - filterShiftMin) * (tx - x) / (float) w);
+        }
+
     }
 }
 

@@ -19,12 +19,14 @@ namespace Module::App
         void setGlotPitch(float);
         void setGlotRd(float);
         void setFilter(const std::vector<float>&, float);
+        void setFilterShift(float);
 
         float getMasterGain() const;
         float getNoiseGain() const;
         float getGlotGain() const;
         float getGlotPitch() const;
         float getGlotRd() const;
+        float getFilterShift() const;
 
         void generateAudio(int requestedLength);
 
@@ -39,16 +41,18 @@ namespace Module::App
         float glotPitch;
         float glotRd;
         std::vector<float> filter;
-        
+        float filterShift;
+
         float realMasterGain;
         float realNoiseGain;
         float realGlotGain;
         float realGlotPitch;
         float realGlotRd;
         std::vector<float> realFilter;
+        float realFilterShift;
 
-        std::array<std::deque<float>, 2> filterMemoryNoise;
-        std::array<std::deque<float>, 2> filterMemoryGlot;
+        std::array<std::deque<float>, 1> filterMemoryNoise;
+        std::array<std::deque<float>, 1> filterMemoryGlot;
 
         std::vector<float> glotSurplus;
         std::vector<float> surplus;
