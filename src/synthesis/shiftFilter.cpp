@@ -1,5 +1,7 @@
+#include "../modules/math/constants.h"
 #include "../analysis/analysis.h"
 #include "synthesis.h"
+#include <iostream>
 
 static std::vector<float> conv(const std::vector<float>& x, const std::vector<float>& y) {
     int lx = x.size();
@@ -18,10 +20,8 @@ static std::vector<float> conv(const std::vector<float>& x, const std::vector<fl
     return w;
 }
 
-std::vector<float> Synthesis::frequencyShiftFilter(const std::vector<float>& a, float Fs, float factor)
+std::pair<std::vector<float>, float> Synthesis::frequencyShiftFilter(const std::vector<Analysis::FormantData>& formants, float Fs, float factor)
 {
-    std::vector<std::complex<float>> roots = Analysis::findRoots(a);
-
     const float freqMin = 50.0f;
     const float freqMax = Fs / 2.0f - 50.0f;
     
@@ -30,15 +30,9 @@ std::vector<float> Synthesis::frequencyShiftFilter(const std::vector<float>& a, 
 
     std::vector<float> shiftedFilter { 1.0f };
 
-    for (const auto& z : roots) {
-        if (z.imag() < 0)
-            continue;
-
-        float r = std::abs(z);
-        float phi = std::arg(z);
-        
-        Analysis::FormantData formant = Analysis::calculateFormant(r, phi, Fs);
-        
+    std::vector<std::complex<float>> roots;
+   
+    for (const auto& formant : formants) {
         if (formant.frequency < freqMin || formant.frequency > freqMax)
             continue;
 
@@ -51,22 +45,28 @@ std::vector<float> Synthesis::frequencyShiftFilter(const std::vector<float>& a, 
             continue;
 
         // Re-calculate bandwidth to have the same Q factor.
-        formant.bandwidth = freqScaled / formant.frequency * formant.bandwidth;
-        formant.frequency = freqScaled;
+        float bandwidth = freqScaled / formant.frequency * formant.bandwidth;
+        float frequency = freqScaled;
 
         // Re-calculate r and phi for the new pole.
-        r = expf(-M_PI * formant.bandwidth / Fs);
-        phi = 2.0f * M_PI * formant.frequency / Fs;
+        float r = expf(-M_PI * bandwidth / Fs);
+        float phi = 2.0f * M_PI * frequency / Fs;
 
-        // Calculate the resonant filter for this formant.
-        std::vector<float> formantFilter {
-            1.0f,
-            -2.0f * r * cosf(phi),
-            r * r,
-        };
-
-        shiftedFilter = conv(shiftedFilter, formantFilter);
+        roots.push_back(std::polar(r, phi));
     }
 
-    return shiftedFilter;
+    const int npoles = roots.size();
+    for (int i = 0; i < npoles; ++i) {
+        roots.push_back(std::conj(roots[i]));
+    }
+
+    auto poly = createPolynomialFromRoots(roots);
+
+    // Evaluate polynomial at f = 0Hz
+    std::complex<float> y, dy;
+    Analysis::evaluatePolynomialWithDerivative(poly, std::polar<float>(0.98f, 2.0f * M_PI * 10.0f / Fs), &y, &dy);
+
+    float zeroGain = std::abs(1.0f / y);
+
+    return {std::move(poly), zeroGain};
 }

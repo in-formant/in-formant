@@ -6,6 +6,7 @@
 #include "../analysis/formant/formant.h"
 #include <vector>
 #include <deque>
+#include <complex>
 
 namespace Synthesis
 {
@@ -23,13 +24,15 @@ namespace Synthesis
 
     std::vector<float> lfGenFrame(float f0, float Fs, float Rd);
 
-    std::vector<float> frequencyShiftFilter(const std::vector<float>& a, float Fs, float factor);
+    std::vector<float> createPolynomialFromRoots(const std::vector<std::complex<float>>& z);
+
+    std::pair<std::vector<float>, float> frequencyShiftFilter(const std::vector<Analysis::FormantData>& formants, float Fs, float factor);
 
     std::vector<float> filter(
                     const std::vector<float>& b,
                     const std::vector<float>& a,
                     const std::vector<float>& x,
-                    std::deque<float>& memoryOut);
+                    std::vector<double>& zf);
 }
 
 #endif // SYNTHESIS_H
