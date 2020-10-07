@@ -1,6 +1,4 @@
 # How this voice analyzer and synthesizer works
-
----
  
 ## Some assumptions were made to simplify the modeling
 
@@ -39,6 +37,41 @@ Since we assumed there are no antiresonances, we can simplify this into:
 
 We can then expand that into the common form of a rational transfer function.
 
-<img src="https://latex.codecogs.com/svg.latex?\bg_white&space;\fn_cm&space;\large&space;\bg_white&space;H(z)&space;=&space;\frac&space;{1}&space;{1&space;-&space;x_1&space;z^{-1}&space;-&space;x_2&space;z^{-2}&space;-&space;\ldots&space;-&space;x_n&space;z^{-n}}" title="\large \bg_white H(z) = \frac {1} {1 - x_1 z^{-1} - x_2 z^{-2} - \ldots - x_n z^{-n}}" />
+<img src="https://latex.codecogs.com/svg.latex?\bg_white&space;\fn_cm&space;\large&space;\bg_white&space;H(z)&space;=&space;\frac&space;{1}&space;{1&space;-&space;\alpha_1&space;z^{-1}&space;-&space;\alpha_2&space;z^{-2}&space;-&space;\ldots&space;-&space;\alpha_n&space;z^{-n}}" title="\large \bg_white H(z) = \frac {1} {1 - \alpha_1 z^{-1} - \alpha_2 z^{-2} - \ldots - \alpha_n z^{-n}}" />
 
-Based on that expression, we can reformulate the formant analysis problem as such: estimate teh polynomial coefficients of the transfer function denominator.
+Based on that expression, we can reformulate the formant analysis problem as such: estimate the polynomial coefficients of the transfer function denominator.
+
+## Autoregressive model and linear prediction
+
+The previously defined transfer function can be expressed in a time-domain recursive relation.
+
+<img src="https://latex.codecogs.com/svg.latex?\fn_cm&space;\large&space;\bg_white&space;y_k&space;=&space;x_k&space;-&space;\sum_{j&space;=&space;1}^{n}&space;{\alpha_j&space;y_{k&space;-&space;j}}" title="\large \bg_white y_k = x_k - \sum_{j = 1}^{n} {\alpha_j y_{k - j}}" />
+
+We get an expression that corresponds to an autoregressive model of order n, where n is the number of poles in the filter.
+
+This is also called a linear predictive model of order n.
+
+There are several known methods to finding the coefficients of an AR(n) model: autocorrelation, covariance, least squares...
+
+In the case of formant analysis the Burg method (maximum entropy spectral analysis) is preferred for its better stability.
+
+## Relationship between the transfer function polynomial and the resonances
+
+With the linear prediction coefficients estimated, we also have our transfer function polynomial coefficients, which we now need to solve.
+
+The accuracy of the polynomial root finder is absolutely key to the accuracy of the formant estimation.
+
+In this particular implementation, the Laguerre root finding method is used for its simplicity and great accuracy. Since we're only dealing with relatively small polynomials, the tradeoff in time spent is acceptable.
+
+To help us visualize the relationship between the polynomial roots and the estimated resonances, we can plot them on a complex unit circle:
+
+<img src="https://www.ee.columbia.edu/~dpwe/e4810/matlab/pezdemo/help/images/pzplot.png" />
+
+Since we are working in the Z-domain, the argument of the polynomial roots correspond to the pole frequencies.
+
+<img src="https://latex.codecogs.com/svg.latex?\fn_cm&space;\large&space;\bg_white&space;\omega&space;=&space;\frac&space;{2&space;\pi&space;f}{f_s}&space;\Leftrightarrow&space;f&space;=&space;\frac&space;{\omega&space;f_s}{2&space;\pi}" title="\bg_white \omega = \frac {2 \pi f}{f_s} \Leftrightarrow f = \frac {\omega f_s}{2 \pi}" />
+
+And the magnitude of the polynomial roots correspond to the pole bandwidth.
+
+<img src="https://latex.codecogs.com/svg.latex?\fn_cm&space;\large&space;\bg_white&space;r&space;=&space;\text{e}&space;^&space;{-&space;\frac{\pi&space;\Delta&space;f}{f_s}}&space;\Leftrightarrow&space;\Delta&space;f&space;=&space;-\frac{f_s}{\pi}&space;\ln&space;r" title="\large \bg_white r = \text{e} ^ {- \frac{\pi \Delta f}{f_s}} \Leftrightarrow \Delta f = -\frac{f_s}{\pi} \ln r" />
+
