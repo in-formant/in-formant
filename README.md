@@ -1,4 +1,4 @@
-# speech-analysis - a real-time pitch and formant tracking software
+# InFormant - a real-time pitch and formant tracking software
 
 ## How to compile from source
 
