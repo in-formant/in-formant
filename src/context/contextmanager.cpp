@@ -65,7 +65,7 @@ void ContextManager::start()
 
     auto& rctx = ctx->renderingContexts["main"];
     rctx.target->initialize(); 
-    rctx.target->setTitle("Speech analysis for Android");
+    rctx.target->setTitle("InFormant for Android");
     rctx.target->create();
     rctx.renderer->initialize();
     updateRendererTargetSize(rctx);
@@ -75,7 +75,7 @@ void ContextManager::start()
     for (const auto& [name, info] : renderingContextInfos) {
         auto& rctx = ctx->renderingContexts[name];
         rctx.target->initialize();
-        rctx.target->setTitle("Speech analysis - " + info.name);
+        rctx.target->setTitle("InFormant - " + info.name);
 #ifndef __EMSCRIPTEN__
         rctx.target->setSize(640, 480);
 #else
@@ -110,7 +110,7 @@ void ContextManager::start()
 
 #ifdef __EMSCRIPTEN__
     EM_ASM({
-        setWindowTitle('Speech analysis for Web');
+        setWindowTitle('InFormant for Web');
     });
 #endif
 
