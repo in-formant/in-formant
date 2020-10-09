@@ -154,6 +154,12 @@ void ContextManager::renderSynth(RenderingContext& rctx)
 
 void ContextManager::eventSynth(RenderingContext& rctx)
 {
+    int iframe = 
+        useFrameCursor ? std::min(std::max<int>(std::round(specMX * spectrogramCount), 0), spectrogramCount - 1)
+                       : spectrogramCount - 1;
+
+    synth.setGlotPitch(pitchTrack[iframe] > 0 ? pitchTrack[iframe] : synth.getGlotPitch());
+
     int tw, th;
     int rw, rh;
     rctx.target->getSize(&tw, &th);
