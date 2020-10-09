@@ -78,6 +78,7 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 #ifndef __EMSCRIPTEN__
                 "F1: Open oscilloscope",
                 "F2: Open FFT spectrum",
+                "F3: Open synthesizer window",
 #endif
                 "P: Pause/resume analysis",
                 "L: Toggle spectrogram/LP spectra",
@@ -180,7 +181,7 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
             ss.str("");
             ss << "Loop cycle took " << (durLoop.count() / 1000.0f) << " ms";
             rctx.renderer->
-    renderText(
+            renderText(
                     smallerFont,
                     ss.str(),
                     15,
@@ -201,6 +202,12 @@ void ContextManager::eventSpectrogram(RenderingContext &rctx)
     }
     if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_F2)) {
         auto& target = ctx->renderingContexts["FFT spectrum"].target;
+        if (!target->isVisible()) {
+            target->show();
+        }
+    }
+    if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_F3)) {
+        auto& target = ctx->renderingContexts["Synthesizer"].target;
         if (!target->isVisible()) {
             target->show();
         }
