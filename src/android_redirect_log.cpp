@@ -7,7 +7,7 @@
 
 static int pfd[2];
 static pthread_t thr;
-static const char *tag = "SpeechAnalysis";
+static const char *tag = "InFormant";
 
 static void *thread_func(void*)
 {

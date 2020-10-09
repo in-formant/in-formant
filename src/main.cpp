@@ -46,7 +46,7 @@ int start_logger(const char *app_name);
 
 int main(int argc, char **argv)
 {
-    start_logger("SpeechAnalysis");
+    start_logger("InFormant");
 
 #if ! defined(__EMSCRIPTEN__)
     std::signal(SIGTERM, signalHandler);
