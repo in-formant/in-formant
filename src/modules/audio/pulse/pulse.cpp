@@ -19,7 +19,7 @@ void Pulse::initialize()
     mThreadedMl = pa_threaded_mainloop_new();
     pa_threaded_mainloop_start(mThreadedMl);
     mMlApi = pa_threaded_mainloop_get_api(mThreadedMl);
-    mContext = pa_context_new(mMlApi, "speech-analysis");
+    mContext = pa_context_new(mMlApi, "in-formant");
 
     pa_context_connect(mContext, nullptr, PA_CONTEXT_NOFLAGS, nullptr);
 
@@ -154,7 +154,7 @@ void Pulse::openCaptureStream(const Device *pDevice)
     pa_sample_spec ss { .format = PA_SAMPLE_FLOAT32NE, .rate = 48000, .channels = 1 };
     pa_channel_map map { .channels = 1, .map = { PA_CHANNEL_POSITION_MONO } };
 
-    mCaptureStream = pa_stream_new(mContext, "speech-analysis capture", &ss, &map);
+    mCaptureStream = pa_stream_new(mContext, "in-formant capture", &ss, &map);
 
     pa_stream_set_read_callback(
             mCaptureStream,
@@ -232,7 +232,7 @@ void Pulse::openPlaybackStream(const Device *pDevice)
     pa_sample_spec ss { .format = PA_SAMPLE_FLOAT32NE, .rate = 48000, .channels = 1 };
     pa_channel_map map { .channels = 1, .map = { PA_CHANNEL_POSITION_MONO } };
 
-    mPlaybackStream = pa_stream_new(mContext, "speech-analysis playback", &ss, &map);
+    mPlaybackStream = pa_stream_new(mContext, "in-formant playback", &ss, &map);
 
     pa_stream_set_write_callback(
             mPlaybackStream,
