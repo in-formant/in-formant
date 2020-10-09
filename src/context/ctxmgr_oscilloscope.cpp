@@ -15,40 +15,35 @@ void ContextManager::renderOscilloscope(RenderingContext &rctx)
     // Find the last zero crossing in glot.
     int glotZcr = glot.size() - 1;
 
-    for (int i = glot.size() - 1; i >= 1; --i) {
+    for (int i = glotZcr; i >= 1; --i) {
         if (glot[i - 1] * glot[i] < 0 && glot[i - 1] > 0) {
             glotZcr = i;
             break;
         }
     }
 
-    // Find the second to last zero crossing in glot.
-    int glotZcr2 = glotZcr - 3;
-    for (int i = glotZcr2; i >= 1; --i) {
-        if (glot[i - 1] * glot[i] < 0 && glot[i - 1] > 0) {
-            glotZcr2 = i;
-            break;
-        }
+    constexpr int numPeriods = 5;
+
+    int glotPeriod = pitchTrack[iframe] > 0 ? pitchAndLpSampleRate / pitchTrack[iframe] : glot.size() / numPeriods;
+    int glotLength = numPeriods * glotPeriod;
+
+    static float prevGlotLength;
+    prevGlotLength = 0.9f * prevGlotLength + 0.1f * glotLength;
+    glotLength = std::min<int>(std::floor(prevGlotLength), glot.size());
+    
+    if (glotLength > glotZcr) {
+        glotLength = glotZcr;
     }
 
-    int glotPeriod = std::max(glotZcr - glotZcr2, 10);
-    
-    static float prevGlotLength = glot.size();
-
-    int glotLength = (glotZcr / glotPeriod) * glotPeriod;
-
-    prevGlotLength = 0.08f * glotLength + 0.92f * prevGlotLength;
-    glotLength = std::floor(prevGlotLength);
-
     int soundZcr = (glotZcr * sound.size()) / glot.size();
-    int soundZcr2 = (glotZcr2 * sound.size()) / glot.size();
+    int soundPeriod = (glotPeriod * sound.size()) / glot.size();
     int soundLength = (glotLength * sound.size()) / glot.size();
 
     Renderer::GraphRenderData graphRender(soundLength);
     for (int i = 0; i < soundLength; ++i) {
         graphRender[i] = {
             .x = static_cast<float>(i),
-            .y = sound[sound.size() - soundLength + i] * 20.0f + 5.0f,
+            .y = sound[soundZcr - soundLength + i] * 20.0f + 5.0f,
         };
     }
     if (!graphRender.empty()) {
@@ -65,7 +60,7 @@ void ContextManager::renderOscilloscope(RenderingContext &rctx)
     for (int i = 0; i < glotLength; ++i) {
         graphRender[i] = {
             .x = static_cast<float>(i),
-            .y = glot[glot.size() - glotLength + i] * 2.5f - 5.0f,
+            .y = glot[glotZcr - glotLength + i] * 2.5f - 5.0f,
         };
     }
     if (!graphRender.empty()) {
