@@ -9,6 +9,7 @@ namespace Nodes
     class Spectrum : public Node {
     public:
         Spectrum(int nfft);
+        ~Spectrum();
 
         void setFFTLength(int nfft);
         int getFFTLength() const;
