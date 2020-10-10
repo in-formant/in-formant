@@ -190,11 +190,11 @@ void ContextManager::loadSettings()
 
     viewMinFrequency = 1;
     viewMaxFrequency = 6000;
-    viewMinGain = -60;
-    viewMaxGain = +20;
+    viewMinGain = -80;
+    viewMaxGain = +0;
     viewFrequencyScale = Renderer::FrequencyScale::Mel;
 
-    fftLength = 4096;
+    fftLength = 2048;
     fftMaxFrequency = viewMaxFrequency;
 
     preEmphasisFrequency = 200.0f;

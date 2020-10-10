@@ -35,9 +35,13 @@ void ContextManager::renderOscilloscope(RenderingContext &rctx)
         glotLength = glotZcr;
     }
 
-    int soundZcr = (glotZcr * sound.size()) / glot.size();
-    int soundPeriod = (glotPeriod * sound.size()) / glot.size();
-    int soundLength = (glotLength * sound.size()) / glot.size();
+    if (glot.size() == 0) {
+        glotLength = 0;
+    }
+
+    int soundZcr = glot.size() > 0 ? (glotZcr * sound.size()) / glot.size() : 0;
+    int soundPeriod = glot.size() > 0 ? (glotPeriod * sound.size()) / glot.size() : 0;
+    int soundLength = glot.size() > 0 ? (glotLength * sound.size()) / glot.size() : 0;
 
     Renderer::GraphRenderData graphRender(soundLength);
     for (int i = 0; i < soundLength; ++i) {

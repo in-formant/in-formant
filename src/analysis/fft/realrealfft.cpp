@@ -13,8 +13,8 @@ ReReFFT::ReReFFT(size_t n, fftw_r2r_kind method)
 
 ReReFFT::~ReReFFT()
 {
-    fftw_destroy_plan(mPlan);
     fftw_free(mData);
+    fftw_destroy_plan(mPlan);
 }
 
 double ReReFFT::data(int index) const

@@ -17,7 +17,8 @@ LinPred::LinPred(Analysis::LinpredSolver *solver, int order)
         }),
       mSolver(solver),
       mFFT(512, FFTW_R2HC),
-      mOrder(order)
+      mOrder(order),
+      mLastSpec(mFFT.getLength() / 2 + 1, 0.0f)
 {
 }
 
@@ -103,9 +104,20 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
     outSpec->setSampleRate(sampleRate);
     outSpec->setLength(outLength);
 
+    float max = 1e-10;
+
     for (int i = 0; i < outLength; ++i) {
-        outSpec->getData()[i] = out->getFFConstData()[0]
+        float spec = out->getFFConstData()[0]
                                 / (mFFT.data(i) * mFFT.data(i)
                                         + mFFT.data(nfft - 1 - i) * mFFT.data(nfft - 1 - i));
+        if (spec > max) {
+            max = spec;
+        }
+        outSpec->getData()[i] = spec;
+    }
+    
+    for (int i = 0; i < outLength; ++i) {
+        outSpec->getData()[i] = mLastSpec[i] = 0.2f * mLastSpec[i]
+                                                + 0.8f * outSpec->getData()[i] / max;
     }
 }

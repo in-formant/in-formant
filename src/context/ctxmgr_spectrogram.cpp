@@ -1,4 +1,5 @@
 #include "contextmanager.h"
+#include <iomanip>
 
 using namespace Main;
 using namespace std::chrono_literals;
@@ -129,13 +130,21 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
         bottomStrings.push_back(ss.str());
 
         if (displayFormantTracks) {
+            static std::vector<float> lastFormants;
+
             auto& formants = formantTrack[iframe];
             int i = 1;
-            for (auto it = formants.begin(); it != formants.end(); ++it) {
-                frequency = it->frequency;
+            for (const auto& formant : formants) {
+                if (i > lastFormants.size()) {
+                    lastFormants.resize(i, 0.0f);
+                }
+
+                frequency = lastFormants[i - 1] = 0.8f * lastFormants[i - 1] + 0.2f * formant.frequency;
 
                 ss.str("");
-                ss << "R" << i << ": " << std::round(frequency) << " Hz";
+                ss << "R" << i << ": "
+                   << std::fixed << std::setprecision(2)
+                   << (std::round(frequency / 5) / 200) << " kHz";
                 bottomStrings.push_back(ss.str());
                 
                 i++;

@@ -19,6 +19,8 @@ namespace Nodes
         Analysis::LinpredSolver *mSolver;
         Analysis::ReReFFT mFFT;
         int mOrder;
+
+        std::vector<float> mLastSpec;
     };
 }
 

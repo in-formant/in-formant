@@ -16,7 +16,7 @@ void ContextManager::renderFFTSpectrum(RenderingContext &rctx)
     for (const auto& [frequency, intensity] : spec) {
         graphRender.push_back({
             .x = frequency,
-            .y = 4.6f * log10f(1.0f + intensity) - 9.6f,
+            .y = 9.6f * (6.6f * log10f(1.0f + intensity) - 1.0f),
         });
     }
     if (graphRender.empty()) {
@@ -29,7 +29,7 @@ void ContextManager::renderFFTSpectrum(RenderingContext &rctx)
     for (const auto& [frequency, intensity] : lpSpec) {
         graphRender.push_back({
             .x = frequency,
-            .y = 6.0f * intensity - 9.6f,
+            .y = 9.6f * (6.6f * log10f(1.0f + intensity) - 1.0f),
         });
     }
     if (graphRender.empty()) {

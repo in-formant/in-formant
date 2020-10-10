@@ -3,6 +3,8 @@
 
 using namespace Nodes;
 
+constexpr int maxNfft = 16384;
+
 Spectrum::Spectrum(int nfft)
     : Node(NodeDescriptor {
             .inputCount = 1,
@@ -12,6 +14,11 @@ Spectrum::Spectrum(int nfft)
         }) ,
       mFFT(new Analysis::ReReFFT(nfft, FFTW_R2HC))
 {
+}
+
+Spectrum::~Spectrum()
+{
+    delete mFFT;
 }
 
 void Spectrum::setFFTLength(int nfft)
@@ -69,9 +76,22 @@ void Spectrum::process(const NodeIO *inputs[], NodeIO *outputs[])
     out->setSampleRate(in->getSampleRate());
     out->setLength(outLength);
 
-    for (int i = 0; i < outLength; ++i) {
-        out->getData()[i] = mFFT->data(i) * mFFT->data(i)
-                            + mFFT->data(nfft - 1 - i) * mFFT->data(nfft - 1 - i);
-    }
+    static float holdMax = 1.0f;
 
+    float max = 1.0f;
+
+    for (int i = 0; i < outLength; ++i) {
+        float spec = mFFT->data(i) * mFFT->data(i)
+                            + mFFT->data(nfft - 1 - i) * mFFT->data(nfft - 1 - i);
+        out->getData()[i] = spec;
+        if (spec > max) {
+            max = spec;
+        }
+    }
+    
+    holdMax = max = std::max(0.995f * holdMax + 0.005f * max, max);
+
+    for (int i = 0; i < outLength; ++i) {
+        out->getData()[i] /= max;
+    }
 }
