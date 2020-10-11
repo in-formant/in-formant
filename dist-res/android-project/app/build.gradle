@@ -16,8 +16,8 @@ android {
         }
         minSdkVersion 19
         targetSdkVersion 30
-        versionCode 99200001
-        versionName "2.0.1"
+        versionCode 99201003
+        versionName "2.1.3"
     }
     signingConfigs {
         release {

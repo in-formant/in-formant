@@ -256,7 +256,7 @@ void NanoVG::renderFrequencyTrack(const FrequencyTrackRenderData& track, float t
     nvgStroke(vg);
 }
 
-void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float r, float g, float b)
+void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float thick, float r, float g, float b)
 {
     float xstep = (float) mWidth / (float) track.size();
 
@@ -323,11 +323,11 @@ void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float r, fl
         }
     }
 
-    nvgStrokeWidth(vg, 3.0f);
+    nvgStrokeWidth(vg, thick + 1.0f);
     nvgStrokeColor(vg, nvgRGBAf(1, 1, 1, 0.5f));
     nvgStroke(vg);
 
-    nvgStrokeWidth(vg, 2.0f);
+    nvgStrokeWidth(vg, thick - 1.0f);
     nvgStrokeColor(vg, nvgRGBAf(0, 0, 0, 1.0f));
     nvgStroke(vg);
 

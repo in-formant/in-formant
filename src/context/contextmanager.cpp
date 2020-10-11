@@ -185,7 +185,7 @@ void ContextManager::loadSettings()
 {
     outputGain = 0;
     
-    analysisDuration = 30;
+    analysisDuration = 35;
     analysisMaxFrequency = 5300;
 
     viewMinFrequency = 1;

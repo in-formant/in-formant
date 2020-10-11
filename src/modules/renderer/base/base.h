@@ -134,7 +134,7 @@ namespace Module::Renderer {
 
         virtual void renderFrequencyTrack(const FrequencyTrackRenderData& data, float thick, float r, float g, float b) = 0;
 
-        virtual void renderFormantTrack(const FormantTrackRenderData& data, float r, float g, float b) = 0;
+        virtual void renderFormantTrack(const FormantTrackRenderData& data, float thick, float r, float g, float b) = 0;
 
         virtual void renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::Freetype::Font& minorFont) = 0;
 
