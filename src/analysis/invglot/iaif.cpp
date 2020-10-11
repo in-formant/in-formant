@@ -102,7 +102,7 @@ InvglotResult IAIF::solve(const float *xData, int length, float sampleRate)
     auto gWithPreRamp = removePreRamp(filter(one, oneMinusD, filter(Hvt2, one, xWithPreRamp)), preflt);
 
     float hpAng = (2.0f * M_PI * 40.0f) / sampleRate;
-    float lpAng = (2.0f * M_PI * 1000.0f) / sampleRate;
+    float lpAng = (2.0f * M_PI * 600.0f) / sampleRate;
 
     float hpFactor = expf(-hpAng);
     float lpFactor = lpAng / (lpAng + 1);
