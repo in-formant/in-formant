@@ -11,6 +11,9 @@
 namespace Synthesis
 {
     std::vector<float> whiteNoise(int length);
+    std::vector<float> brownNoise(int length);
+    std::vector<float> pinkNoise(int length);
+    std::vector<float> aspirateNoise(int length);
 
     struct LF_State {
         double T0;

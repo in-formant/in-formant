@@ -46,6 +46,10 @@ int start_logger(const char *app_name);
 
 int main(int argc, char **argv)
 {
+#ifdef _WIN32
+    srand(time(nullptr));
+#endif
+
     start_logger("InFormant");
 
 #if ! defined(__EMSCRIPTEN__)
