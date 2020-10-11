@@ -12,8 +12,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer")
 set(CMAKE_CXX_FLAGS_DEBUG           "-O0 -g")
-set(CMAKE_CXX_FLAGS_RELEASE         "-O2 -g0 -DNDEBUG")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g")
+set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -Ofast -g0 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -Ofast -g")
 set(CMAKE_CXX_FLAGS_MINSIZEREL      "-Os -g0 -DNDEBUG")
 
 set(CMAKE_ENABLE_EXPORTS ON)

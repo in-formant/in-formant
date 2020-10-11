@@ -107,13 +107,23 @@ float Synthesizer::getFilterShift() const
 
 void Synthesizer::generateAudio(int requestedLength)
 {
+#ifdef __WIN32
+#   define rd rand
+#else
     static std::random_device rd;
+#endif
+
+#if SIZEOF_VOID_P == 4
     static std::mt19937 gen(rd());
-    static std::normal_distribution<> dis(0.0f, 0.02f);
+#else
+    static std::mt19937_64 gen(rd());
+#endif
+
+    static std::normal_distribution<> dis(0.0f, 0.05f);
 
     int inputLength = resampler.getRequiredInLength(requestedLength);
 
-    auto noise = Synthesis::whiteNoise(inputLength);
+    auto noise = Synthesis::aspirateNoise(inputLength);
 
     std::vector<float> glot;
     glot.reserve(inputLength);
@@ -121,7 +131,7 @@ void Synthesizer::generateAudio(int requestedLength)
     if (glotSurplus.size() > 0) {
         if (glotSurplus.size() <= inputLength) {
             glot.insert(glot.begin(), glotSurplus.begin(), glotSurplus.end());
-            glotSurplus.erase(glotSurplus.begin(), glotSurplus.end());
+            glotSurplus.clear();
         }
         else {
             glot.insert(glot.begin(), glotSurplus.begin(), std::next(glotSurplus.begin(), inputLength));
@@ -133,7 +143,7 @@ void Synthesizer::generateAudio(int requestedLength)
     std::vector<float> pitches(inputLength);
     std::vector<float> Rds(inputLength);
     if (inputLength > 0) {
-        constexpr float expFact = 0.8f;
+        constexpr float expFact = 0.995f;
         pitches[0] = realGlotPitch;
         Rds[0] = realGlotRd;
         for (int i = 1; i < inputLength; ++i) {
@@ -146,11 +156,14 @@ void Synthesizer::generateAudio(int requestedLength)
 
     while (glot.size() < inputLength) {
         auto frame = Synthesis::lfGenFrame(pitches[glot.size()], glotFs, Rds[glot.size()]);
+
         glot.insert(glot.end(), frame.begin(), frame.end());
     }
 
     if (glot.size() > inputLength) {
-        glotSurplus.insert(glotSurplus.end(), std::next(glot.begin(), inputLength), glot.end());
+        if (inputLength > 0) {
+            glotSurplus.insert(glotSurplus.end(), std::next(glot.begin(), inputLength), glot.end());
+        }
         glot.resize(inputLength);
     }
 
@@ -162,33 +175,41 @@ void Synthesizer::generateAudio(int requestedLength)
     std::vector<float> input(inputLength);
 
     for (int i = 0; i < inputLength; ++i) {
-        input[i] = realNoiseGain * noise[i];
+        input[i] = noise[i];
     }
     for (auto& zf : zfNoise) {
         input = Synthesis::filter({1.0f}, realFilter, input, zf);
     }
     auto outputNoise = input;
+    float outputNoiseMax = 0.0f;
+    for (int i = 0; i < inputLength; ++i) {
+        if (fabsf(outputNoise[i]) > outputNoiseMax) {
+            outputNoiseMax = fabsf(outputNoise[i]);
+        }
+    }
 
     for (int i = 0; i < inputLength; ++i) {
-        input[i] = realGlotGain * glot[i];
+        input[i] = glot[i];
     }
     for (auto& zf : zfGlot) {
         input = Synthesis::filter({1.0f}, realFilter, input, zf);
     }
     auto outputGlot = input;
-
-    std::vector<float> output(inputLength);
-    float max = 1e-10f;
+    float outputGlotMax = 0.0f;
     for (int i = 0; i < inputLength; ++i) {
-        output[i] = 0.5f * outputNoise[i] + outputGlot[i];
-        //output[i] = realMasterGain * 0.03f * (0.5f * realNoiseGain * noise[i] + realGlotGain * glot[i]);
-        if (fabsf(output[i]) > max) {
-            max = fabsf(output[i]);
+        if (fabsf(outputGlot[i]) > outputGlotMax) {
+            outputGlotMax = fabsf(outputGlot[i]);
         }
     }
 
+    std::vector<float> output(inputLength);
     for (int i = 0; i < inputLength; ++i) {
-        output[i] = (output[i] / max) * realMasterGain * 0.5f;
+        output[i] = 0.5f * realNoiseGain * outputNoise[i] / outputNoiseMax + realGlotGain * outputGlot[i] / outputGlotMax;
+        //output[i] = realMasterGain * 0.03f * (0.5f * realNoiseGain * noise[i] + realGlotGain * glot[i]);
+    }
+
+    for (int i = 0; i < inputLength; ++i) {
+        output[i] = output[i] * realMasterGain * 0.5f;
     }
 
     output = resampler.process(output.data(), output.size());
@@ -224,6 +245,8 @@ void Synthesizer::audioCallback(float *output, int length, void *userdata)
     }
 
     // Move the appropriate amount of samples from the surplus bank to the output buffer.
-    std::copy(self->surplus.begin(), std::next(self->surplus.begin(), length), output);
-    self->surplus.erase(self->surplus.begin(), std::next(self->surplus.begin(), length));
+    if (length > 0) {
+        std::copy(self->surplus.begin(), std::next(self->surplus.begin(), length), output);
+        self->surplus.erase(self->surplus.begin(), std::next(self->surplus.begin(), length));
+    }
 }
