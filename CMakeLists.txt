@@ -202,8 +202,6 @@ set(SOXR_LIBRARIES -L${PROJECT_BINARY_DIR}/soxr/lib -lsoxr)
 
 set(NANOSVG_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/nanosvg)
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/external/lapack)
-
 ### SEARCH AUDIO MODULES 
 
 if(TRUE)
@@ -393,10 +391,10 @@ else()
     add_executable(speech-analysis ${SOURCES})
 endif()
 
-add_dependencies(speech-analysis soxr lapack)
+add_dependencies(speech-analysis soxr)
 
 target_include_directories(speech-analysis SYSTEM PUBLIC ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${SOXR_INCLUDE_DIR} ${NANOSVG_INCLUDE_DIR})
-target_link_libraries(speech-analysis PUBLIC ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} ${SOXR_LIBRARIES} blas lapack gfortran)
+target_link_libraries(speech-analysis PUBLIC ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} ${SOXR_LIBRARIES})
 
 if(LL_EXIT_FUNC)
     target_compile_definitions(speech-analysis PUBLIC -D__sa_llexit=${LL_EXIT_FUNC})

@@ -14,7 +14,7 @@ targets=("${origin}")
 real_targets=("${origin}")
 processed=()
 
-dd if=/dev/zero of=/dist/speech-analysis.dmg bs=1M count=10
+dd if=/dev/zero of=/dist/speech-analysis.dmg bs=1M count=7
 mkfs.hfsplus -v "Speech analysis" /dist/speech-analysis.dmg
 mkdir -p /dmg
 mount -o loop /dist/speech-analysis.dmg /dmg
