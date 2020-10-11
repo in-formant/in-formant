@@ -15,7 +15,7 @@ using namespace Analysis;
 Pitch::RAPT::RAPT()
 {
     F0min   = 70;
-    F0max   = 400;
+    F0max   = 500;
     cand_tr = 0.3;
     lag_wt  = 0.3;
     freq_wt = 0.02;
@@ -92,7 +92,7 @@ float RAPT::computeFrame(const float *data, int length, float Fs)
 
     const float beta = lag_wt / (Fs / F0min);
     
-    const int J = std::min<int>(length, std::round(0.03f * Fs));
+    const int J = std::round(0.03f * Fs);
 
     std::vector<float> s(data, data + length);
     
@@ -406,8 +406,16 @@ std::vector<RAPT::Cand> createCosts(const std::vector<std::pair<float, float>>& 
         i++;
     }
 
+    float maxCij = 0.0f;
+    
+    if (peaks.size() > 0) {
+        maxCij = std::get<1>(
+            *std::max_element(peaks.begin(), peaks.end(),
+                [](auto& x, auto& y) { return x.second > y.second; }));
+    }
+
     costs[i] = {
-        .localCost = vo_bias + (peaks.size() > 0 ? peaks[0].second : 0.0f),
+        .localCost = vo_bias + maxCij,
         .voiced = false
     };
 

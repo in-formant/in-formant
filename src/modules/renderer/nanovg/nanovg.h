@@ -49,7 +49,7 @@ namespace Module::Renderer {
         void scrollSpectrogram(const SpectrogramRenderData& data, int count) override;
         void renderSpectrogram() override;
         void renderFrequencyTrack(const FrequencyTrackRenderData& data, float thick, float r, float g, float b) override;
-        void renderFormantTrack(const FormantTrackRenderData& data, float r, float g, float b) override;
+        void renderFormantTrack(const FormantTrackRenderData& data, float thick, float r, float g, float b) override;
         void renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::Freetype::Font& minorFont) override;
         float renderFrequencyCursor(float mx, float my) override;
         int renderFrameCursor(float mx, float my, int count) override;

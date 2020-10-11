@@ -47,12 +47,23 @@ namespace Analysis {
             std::vector<double> mCMND;
         };
 
+        class MPM : public PitchSolver {
+        public:
+            PitchResult solve(const float *data, int length, int sampleRate) override;
+        };
+
         class RAPT : public PitchSolver, public Analysis::RAPT {
         public:
             RAPT();
             PitchResult solve(const float *data, int length, int sampleRate) override;
         private:
             std::vector<float> pitches;
+        };
+
+        class IRAPT : public PitchSolver {
+        public:
+            IRAPT();
+            PitchResult solve(const float *data, int length, int sampleRate) override;
         };
     }
 

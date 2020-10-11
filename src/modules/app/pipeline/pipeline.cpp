@@ -182,13 +182,15 @@ void Pipeline::processAll()
 
     processArc("prereqs", "rs_2");
    
-    processArc("rs_2", "tail_2");
-    processArc("tail_2", "invglot");
-    processArc("tail_2", "pitch");
+    processArc("rs_2", "tail_pitch");
+    processArc("tail_pitch", "pitch");
+
+    processArc("rs_2", "tail_invglot");
+    processArc("tail_invglot", "invglot");
 
     processArc("rs_2", "preemph_linpred");
-    processArc("preemph_linpred", "tail_2");
-    processArc("tail_2", "linpred_spectrum");
+    processArc("preemph_linpred", "tail_linpred");
+    processArc("tail_linpred", "linpred_spectrum");
 
     processArc("prereqs", "rs_formant");
     processArc("rs_formant", "preemph_formant");
@@ -257,7 +259,7 @@ void Pipeline::updateOutputData()
         };
     }
 
-    auto ioSound = nodeIOs["tail_2"][0]->as<Nodes::IO::AudioTime>();
+    auto ioSound = nodeIOs["tail_invglot"][0]->as<Nodes::IO::AudioTime>();
     sound.assign(ioSound->getConstData(), ioSound->getConstData() + ioSound->getLength());
 
     auto ioGlot = nodeIOs["invglot"][0]->as<Nodes::IO::AudioTime>();
@@ -266,21 +268,23 @@ void Pipeline::updateOutputData()
 
 void Pipeline::createNodes()
 {
-    nodes["prereqs"]            = std::make_unique<Nodes::Prereqs>(captureBuffer, analysisDuration.count(), 0);
+    nodes["prereqs"]            = std::make_unique<Nodes::Prereqs>(captureBuffer, 35, 0);
 
     nodes["rs_fft"]             = std::make_unique<Nodes::Resampler>(captureSampleRate, fftSampleRate);
     nodes["fft"]                = std::make_unique<Nodes::Spectrum>(fftSize);
     
-    nodes["rs_2"]               = std::make_unique<Nodes::Resampler>(captureSampleRate, secondSampleRate);
+    nodes["rs_2"]               = std::make_unique<Nodes::Resampler>(captureSampleRate, 48'000);
     nodes["preemph_linpred"]    = std::make_unique<Nodes::PreEmphasis>(preEmphasisFrequency);
-    nodes["tail_2"]             = std::make_unique<Nodes::Tail>(analysisDuration.count());
+    nodes["tail_pitch"]         = std::make_unique<Nodes::Tail>(35);
     nodes["pitch"]              = std::make_unique<Nodes::PitchTracker>(pitchSolver);
+    nodes["tail_invglot"]       = std::make_unique<Nodes::Tail>(35);
     nodes["invglot"]            = std::make_unique<Nodes::InvGlot>(invglotSolver);
+    nodes["tail_linpred"]       = std::make_unique<Nodes::Tail>(5);
     nodes["linpred_spectrum"]   = std::make_unique<Nodes::LinPred>(linpredSolver, lpSpecLpOrder);
     
     nodes["rs_formant"]         = std::make_unique<Nodes::Resampler>(captureSampleRate, formantSampleRate);
     nodes["preemph_formant"]    = std::make_unique<Nodes::PreEmphasis>(preEmphasisFrequency);
-    nodes["tail_formant"]       = std::make_unique<Nodes::Tail>(analysisDuration.count());
+    nodes["tail_formant"]       = std::make_unique<Nodes::Tail>(5);
     nodes["linpred_formant"]    = std::make_unique<Nodes::LinPred>(linpredSolver, formantLpOrder);
     nodes["formants"]           = std::make_unique<Nodes::FormantTracker>(formantSolver);
 }

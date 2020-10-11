@@ -1,4 +1,5 @@
 #include "contextmanager.h"
+#include "../analysis/util/util.h"
 #include <iostream>
 
 using namespace Main;
@@ -12,7 +13,6 @@ void ContextManager::renderOscilloscope(RenderingContext &rctx)
     auto& sound = soundTrack[iframe];
     auto& glot = glotTrack[iframe];
 
-    // Find the last zero crossing in glot.
     int glotZcr = glot.size() - 1;
 
     for (int i = glotZcr; i >= 1; --i) {
@@ -22,15 +22,15 @@ void ContextManager::renderOscilloscope(RenderingContext &rctx)
         }
     }
 
-    constexpr int numPeriods = 5;
+    constexpr int numPeriods = 3;
 
-    int glotPeriod = pitchTrack[iframe] > 0 ? pitchAndLpSampleRate / pitchTrack[iframe] : glot.size() / numPeriods;
+    int glotPeriod = pitchTrack[iframe] > 0 ? 48'000 / pitchTrack[iframe] : glot.size() / numPeriods;
     int glotLength = numPeriods * glotPeriod;
 
     static float prevGlotLength;
-    prevGlotLength = 0.9f * prevGlotLength + 0.1f * glotLength;
-    glotLength = std::min<int>(std::floor(prevGlotLength), glot.size());
-    
+    prevGlotLength = 0.95f * prevGlotLength + 0.05f * glotLength;
+    glotLength = std::min<int>(std::floor(prevGlotLength), glot.size());   
+
     if (glotLength > glotZcr) {
         glotLength = glotZcr;
     }

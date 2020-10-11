@@ -43,7 +43,7 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 
         for (int i = 0; i < numFormantsToRender; ++i) {
             const auto [r, g, b] = formantColors[i];
-            rctx.renderer->renderFormantTrack(formantTrackRender[i], r, g, b);
+            rctx.renderer->renderFormantTrack(formantTrackRender[i], 4.0f, r, g, b);
         }
     }
 
