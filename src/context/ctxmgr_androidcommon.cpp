@@ -21,9 +21,9 @@ void ContextManager::initAndroidUI()
             .action = [this]() { isPaused = !isPaused; },
         },
         {
-            .icon = [this]() { return isNoiseOn ? "play-circle.svg" : "pause-circle.svg"; },
-            .gray = [this]() { return isNoiseOn ? 0.7f : 1.0f; },
-            .action = [this]() { isNoiseOn = !isNoiseOn; },
+            .icon = [this]() { return displayFormantTracks ? "play-circle.svg" : "pause-circle.svg"; },
+            .gray = [this]() { return displayFormantTracks ? 0.7f : 1.0f; },
+            .action = [this]() { displayFormantTracks = !displayFormantTracks; },
         },
         {
             .icon = [this]() { return "add.svg"; },
