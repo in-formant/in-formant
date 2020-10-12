@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer")
+set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno")
 set(CMAKE_CXX_FLAGS_DEBUG           "-O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -Ofast -g0 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -Ofast -g")
@@ -92,6 +92,9 @@ set(SOURCES
     src/analysis/fft/realrealfft.cpp
     src/analysis/fft/wisdom.cpp
     src/analysis/fft/fft.h
+    src/analysis/filter/butterworth.cpp
+    src/analysis/filter/zpk2sos.cpp
+    src/analysis/filter/sosfilter.cpp
     src/analysis/filter/filter.cpp
     src/analysis/filter/filter.h
     src/analysis/pitch/amdf_m.cpp
@@ -126,6 +129,7 @@ set(SOURCES
     src/analysis/analysis.h
     src/synthesis/noise.cpp
     src/synthesis/filter.cpp
+    src/synthesis/sosfilter.cpp
     src/synthesis/glotLf.cpp
     src/synthesis/shiftFilter.cpp
     src/synthesis/polyFromRoots.cpp

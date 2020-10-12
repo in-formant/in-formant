@@ -22,7 +22,7 @@ void ContextManager::renderOscilloscope(RenderingContext &rctx)
         }
     }
 
-    constexpr int numPeriods = 3;
+    constexpr int numPeriods = 6;
 
     int glotPeriod = pitchTrack[iframe] > 0 ? 48'000 / pitchTrack[iframe] : glot.size() / numPeriods;
     int glotLength = numPeriods * glotPeriod;
@@ -47,7 +47,7 @@ void ContextManager::renderOscilloscope(RenderingContext &rctx)
     for (int i = 0; i < soundLength; ++i) {
         graphRender[i] = {
             .x = static_cast<float>(i),
-            .y = sound[soundZcr - soundLength + i] * 20.0f + 5.0f,
+            .y = sound[soundZcr - soundLength + i] * 2.5f + 5.0f,
         };
     }
     if (!graphRender.empty()) {

@@ -1,4 +1,5 @@
 #include "prereqs.h"
+#include "../../analysis/filter/filter.h"
 #include <algorithm>
 #include <iostream>
 
@@ -44,8 +45,23 @@ void Prereqs::process(const NodeIO *inputs[], NodeIO *outputs[])
         mBuffer->setLength(actualLength);
     }
 
+    static std::vector<std::array<float, 6>> hpsos;
+    static int lastSampleRate = 0;
+    static int lastLength = 0;
+
+    if (lastLength != actualLength || lastSampleRate != sampleRate) {
+        lastLength = actualLength;
+        lastSampleRate = sampleRate;
+        hpsos = Analysis::butterworth(10, 80.0f, sampleRate);
+    }
+
     out->setSampleRate(sampleRate);
     out->setLength(actualLength);
 
-    mBuffer->pull(out->getData(), actualLength);
+    std::vector<float> input(actualLength);
+    mBuffer->pull(input.data(), actualLength);
+    input = Analysis::sosfilter(hpsos, input);
+    for (int i = 0; i < actualLength; ++i) {
+        out->getData()[i] = input[i];
+    }
 }
