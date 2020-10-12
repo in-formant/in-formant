@@ -268,7 +268,7 @@ void Pipeline::updateOutputData()
 
 void Pipeline::createNodes()
 {
-    nodes["prereqs"]            = std::make_unique<Nodes::Prereqs>(captureBuffer, 35, 0);
+    nodes["prereqs"]            = std::make_unique<Nodes::Prereqs>(captureBuffer, 50, 0);
 
     nodes["rs_fft"]             = std::make_unique<Nodes::Resampler>(captureSampleRate, fftSampleRate);
     nodes["fft"]                = std::make_unique<Nodes::Spectrum>(fftSize);
@@ -277,7 +277,7 @@ void Pipeline::createNodes()
     nodes["preemph_linpred"]    = std::make_unique<Nodes::PreEmphasis>(preEmphasisFrequency);
     nodes["tail_pitch"]         = std::make_unique<Nodes::Tail>(35);
     nodes["pitch"]              = std::make_unique<Nodes::PitchTracker>(pitchSolver);
-    nodes["tail_invglot"]       = std::make_unique<Nodes::Tail>(35);
+    nodes["tail_invglot"]       = std::make_unique<Nodes::Tail>(50);
     nodes["invglot"]            = std::make_unique<Nodes::InvGlot>(invglotSolver);
     nodes["tail_linpred"]       = std::make_unique<Nodes::Tail>(5);
     nodes["linpred_spectrum"]   = std::make_unique<Nodes::LinPred>(linpredSolver, lpSpecLpOrder);

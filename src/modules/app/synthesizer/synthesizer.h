@@ -18,8 +18,9 @@ namespace Module::App
         void setGlotGain(float);
         void setGlotPitch(float);
         void setGlotRd(float);
-        void setFormants(const std::vector<Analysis::FormantData>&, float);
+        void setFormants(const std::vector<Analysis::FormantData>&);
         void setFilterShift(float);
+        void setVoiced(bool);
 
         float getMasterGain() const;
         float getNoiseGain() const;
@@ -42,19 +43,19 @@ namespace Module::App
         float glotRd;
         std::vector<Analysis::FormantData> formants;
         float filterShift;
+        bool voiced;
 
         float realMasterGain;
         float realNoiseGain;
         float realGlotGain;
         float realGlotPitch;
         float realGlotRd;
-        std::vector<float> realFilter;
+        std::vector<Analysis::FormantData> realFormants;
+        std::vector<std::array<float, 6>> realFilter;
         float realFilterShift;
 
-        float filterZeroGain;
-
-        std::array<std::vector<double>, 1> zfNoise;
-        std::array<std::vector<double>, 1> zfGlot;
+        std::vector<std::vector<double>> zfNoise;
+        std::vector<std::vector<double>> zfGlot;
 
         std::vector<float> glotSurplus;
         std::vector<float> surplus;

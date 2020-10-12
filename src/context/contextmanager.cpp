@@ -325,8 +325,6 @@ void ContextManager::updateWithNextFrame()
 
     glotTrack.pop_front();
     glotTrack.push_back(pipeline.getGlottalFlow());
-    
-    synth.setFormants(pipeline.getFormants(), 2 * analysisMaxFrequency);
 }
 
 void ContextManager::mainBody(bool processEvents)
@@ -432,7 +430,7 @@ void ContextManager::mainBody(bool processEvents)
     synth.setMasterGain(isNoiseOn ? 1 : 0);
     synth.setNoiseGain(isNoiseOn ? 0.3 : 0);
 #endif
-
+    
     ctx->playbackQueue->pushIfNeeded(&synth);
 
     auto tr0 = Clock::now();

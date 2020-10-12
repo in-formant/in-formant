@@ -158,7 +158,10 @@ void ContextManager::eventSynth(RenderingContext& rctx)
         useFrameCursor ? std::min(std::max<int>(std::round(specMX * spectrogramCount), 0), spectrogramCount - 1)
                        : spectrogramCount - 1;
 
+    float pitch = pitchTrack[iframe] > 0 ? pitchTrack[iframe] : 0.0f;
+
     synth.setGlotPitch(pitchTrack[iframe] > 0 ? pitchTrack[iframe] : synth.getGlotPitch());
+    synth.setFormants(formantTrack[iframe]);
 
     int tw, th;
     int rw, rh;
@@ -208,7 +211,8 @@ void ContextManager::eventSynth(RenderingContext& rctx)
         h = (pos[3] * th) / rh;
         if (tx >= x && tx <= x + w
                 && ty >= y && ty <= y + h) {
-            synth.setGlotPitch(glotPitchMin + (glotPitchMax - glotPitchMin) * (tx - x) / (float) w);
+            pitch = glotPitchMin + (glotPitchMax - glotPitchMin) * (tx - x) / (float) w;
+            synth.setGlotPitch(pitch);
         }
 
         pos = posGlotRd;
@@ -232,6 +236,8 @@ void ContextManager::eventSynth(RenderingContext& rctx)
         }
 
     }
+
+    synth.setVoiced(pitch > 0);
 }
 
 #endif

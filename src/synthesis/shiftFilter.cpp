@@ -20,7 +20,7 @@ static std::vector<float> conv(const std::vector<float>& x, const std::vector<fl
     return w;
 }
 
-std::pair<std::vector<float>, float> Synthesis::frequencyShiftFilter(const std::vector<Analysis::FormantData>& formants, float Fs, float factor)
+std::vector<std::array<float, 6>> Synthesis::frequencyShiftFilter(const std::vector<Analysis::FormantData>& formants, float Fs, float factor)
 {
     const float freqMin = 50.0f;
     const float freqMax = Fs / 2.0f - 50.0f;
@@ -60,13 +60,5 @@ std::pair<std::vector<float>, float> Synthesis::frequencyShiftFilter(const std::
         roots.push_back(std::conj(roots[i]));
     }
 
-    auto poly = createPolynomialFromRoots(roots);
-
-    // Evaluate polynomial at f = 0Hz
-    std::complex<float> y, dy;
-    Analysis::evaluatePolynomialWithDerivative(poly, std::polar<float>(0.98f, 2.0f * M_PI * 10.0f / Fs), &y, &dy);
-
-    float zeroGain = std::abs(1.0f / y);
-
-    return {std::move(poly), zeroGain};
+    return Analysis::zpk2sos({}, roots, 1.0f);
 }
