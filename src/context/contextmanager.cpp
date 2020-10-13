@@ -298,8 +298,6 @@ void ContextManager::updateNodeParameters()
     pipeline.setFFTSampleRate(2 * fftMaxFrequency);
     pipeline.setFFTSize(fftLength);
 
-    pipeline.setPreEmphasisFrequency(preEmphasisFrequency);
-
     pipeline.setPitchAndLpSpectrumSampleRate(pitchAndLpSampleRate);
 
     pipeline.setFormantSampleRate(2 * analysisMaxFrequency);

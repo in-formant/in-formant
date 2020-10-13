@@ -110,6 +110,7 @@ set(SOURCES
     src/analysis/formant/filteredlp.cpp
     src/analysis/formant/formant.h
     src/analysis/invglot/iaif.cpp
+    src/analysis/invglot/gfm_iaif.cpp
     src/analysis/invglot/amgif.cpp
     src/analysis/invglot/invglot.h
     src/analysis/wavelet/wavelet.cpp

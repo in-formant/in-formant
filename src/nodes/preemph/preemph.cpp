@@ -1,23 +1,18 @@
 #include "preemph.h"
 #include "../../modules/math/constants.h"
 #include <iostream>
+#include <utility>
 
 using namespace Nodes;
 
-PreEmphasis::PreEmphasis(float frequency)
+PreEmphasis::PreEmphasis()
     : Node(NodeDescriptor {
             .inputCount = 1,
             .inputs = &kNodeIoTypeAudioTime,
             .outputCount = 1,
             .outputs = &kNodeIoTypeAudioTime,
-        }),
-      mFrequency(frequency)
+        })
 {
-}
-
-void PreEmphasis::setFrequency(float frequency)
-{
-    mFrequency = frequency;
 }
 
 void PreEmphasis::process(const NodeIO *inputs[], NodeIO *outputs[])
@@ -31,16 +26,21 @@ void PreEmphasis::process(const NodeIO *inputs[], NodeIO *outputs[])
     out->setSampleRate(sampleRate);
     out->setLength(length);
 
-    float factor = expf(-(2.0f * M_PI * mFrequency) / sampleRate);
+    std::vector<float> x(in->getConstData(), in->getConstData() + length);
+    std::vector<float> a;
+    float g;
 
-    const float *x = in->getConstData();
-    float *y = out->getData();
+    do {
+        a = lpc.solve(x.data(), length, 1, &g);
+        if (g <= 0 || fabsf(a[0]) < 0.001)
+            break;
+
+        for (int i = length - 1; i >= 1; --i) {
+            x[i] += a[0] * x[i - 1];
+        }
+    } while (fabsf(a[0]) >= 0.001);
 
     for (int i = 0; i < length; ++i) {
-        y[i] = x[i];
-    }
-    
-    for (int i = length - 1; i >= 1; --i) {
-        y[i] -= factor * y[i - 1];
+        out->getData()[i] = x[i];
     }
 }

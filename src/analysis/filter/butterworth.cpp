@@ -37,7 +37,7 @@ std::vector<std::complex<float>> poly(const std::vector<std::complex<float>>& z)
     return poly;
 }
 
-std::vector<std::array<float, 6>> Analysis::butterworth(int N, float fc, float fs)
+std::vector<std::array<float, 6>> Analysis::butterworthHighpass(int N, float fc, float fs)
 {
     const float Wn = fc / (fs / 2.0f);
     const float Wo = tanf(Wn * M_PI / 2.0f);
@@ -73,6 +73,44 @@ std::vector<std::array<float, 6>> Analysis::butterworth(int N, float fc, float f
     for (int i = 0; i < Sp.size(); ++i) {
         P[i] = (1.0f + Sp[i]) / (1.0f - Sp[i]);
         Z[i] = (1.0f + Sz[i]) / (1.0f - Sz[i]);
+    }
+    
+    // Step 6. Convert to SOS.
+    
+    return zpk2sos(Z, P, G);
+}
+
+std::vector<std::array<float, 6>> Analysis::butterworthLowpass(int N, float fc, float fs)
+{
+    const float Wn = fc / (fs / 2.0f);
+    const float Wo = tanf(Wn * M_PI / 2.0f);
+
+    std::vector<std::complex<float>> p;
+
+    // Step 1. Get Butterworth analog lowpass prototype.
+    for (int i = 2 + N - 1; i <= 3 * N - 1; i += 2) {
+        p.push_back(std::polar<float>(1, (M_PI * i) / (2.0f * N)));
+    }
+
+    // Step 2. Transform to low pass filter.
+    std::complex<float> Sg = 1.0f,
+                        prodSp = 1.0f;
+
+    std::vector<std::complex<float>> Sp(p.size()), Sz(0);
+
+    for (int i = 0; i < p.size(); ++i) {
+        Sg *= Wo;
+        Sp[i] = Wo * p[i];
+        prodSp *= (1.0f - Sp[i]);
+    }
+
+    // Step 3. Transform to digital filter.
+    std::vector<std::complex<float>> P(Sp.size()), Z(0);
+   
+    float G = std::real(Sg / prodSp);
+
+    for (int i = 0; i < Sp.size(); ++i) {
+        P[i] = (1.0f + Sp[i]) / (1.0f - Sp[i]);
     }
     
     // Step 6. Convert to SOS.

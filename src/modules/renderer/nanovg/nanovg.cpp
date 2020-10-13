@@ -268,10 +268,10 @@ void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float thick
 
             float xp = i * xstep;
 
-            float y1 = frequencyToCoordinate(formant.frequency - formant.bandwidth / 2.0f);
+            float y1 = frequencyToCoordinate(formant.frequency - formant.bandwidth / 4.0f);
             float y1p = mHeight - (y1 + 1.0f) / 2.0f * mHeight;
 
-            float y2 = frequencyToCoordinate(formant.frequency + formant.bandwidth / 2.0f);
+            float y2 = frequencyToCoordinate(formant.frequency + formant.bandwidth / 4.0f);
             float y2p = mHeight - (y2 + 1.0f) / 2.0f * mHeight;
 
             float cx = xp + xstep / 2.0f;

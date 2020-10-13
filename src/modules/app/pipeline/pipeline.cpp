@@ -62,12 +62,12 @@ Pipeline& Pipeline::setFormantSolver(Analysis::FormantSolver *value)
 
 Pipeline& Pipeline::setAnalysisDuration(millis value)
 {
-    analysisDuration = value;
+    /*analysisDuration = value;
     if (wasInitializedAtLeastOnce) {
         nodes["prereqs"]->as<Nodes::Prereqs>()->setOutputDuration(value.count());
         nodes["tail_2"]->as<Nodes::Tail>()->setOutputDuration(value.count());
         nodes["tail_formant"]->as<Nodes::Tail>()->setOutputDuration(value.count());
-    }
+    }*/
     return *this;
 }
 
@@ -89,23 +89,13 @@ Pipeline& Pipeline::setFFTSize(int value)
     return *this;
 }
 
-Pipeline& Pipeline::setPreEmphasisFrequency(float value)
-{
-    preEmphasisFrequency = value;
-    if (wasInitializedAtLeastOnce) {
-        nodes["preemph_linpred"]->as<Nodes::PreEmphasis>()->setFrequency(value);
-        nodes["preemph_formant"]->as<Nodes::PreEmphasis>()->setFrequency(value);
-    }
-    return *this;
-}
-
 Pipeline& Pipeline::setPitchAndLpSpectrumSampleRate(float value)
 {
-    secondSampleRate = value;
+    secondSampleRate = 48'000;
     if (wasInitializedAtLeastOnce) {
         nodes["rs_2"]->as<Nodes::Resampler>()->setOutputSampleRate(value);
     }
-    setLpSpectrumLpOrder(2 * secondSampleRate / 2000 + 4);
+    setLpSpectrumLpOrder(48);
     return *this;
 }
 
@@ -234,7 +224,7 @@ void Pipeline::updateOutputData()
     int lpSpecSliceLength = ioLpSpec->getLength();
     lpSpecSlice.resize(lpSpecSliceLength);
     for (int i = 0; i < lpSpecSliceLength; ++i) {
-        lpSpecSlice[i][0] = (secondSampleRate * i) / (2.0f * lpSpecSliceLength);
+        lpSpecSlice[i][0] = (48'000 * i) / (2.0f * lpSpecSliceLength);
         lpSpecSlice[i][1] = ioLpSpec->getConstData()[i];
     }
 
@@ -274,17 +264,17 @@ void Pipeline::createNodes()
     nodes["fft"]                = std::make_unique<Nodes::Spectrum>(fftSize);
     
     nodes["rs_2"]               = std::make_unique<Nodes::Resampler>(captureSampleRate, 48'000);
-    nodes["preemph_linpred"]    = std::make_unique<Nodes::PreEmphasis>(preEmphasisFrequency);
+    nodes["preemph_linpred"]    = std::make_unique<Nodes::PreEmphasis>();
     nodes["tail_pitch"]         = std::make_unique<Nodes::Tail>(35);
     nodes["pitch"]              = std::make_unique<Nodes::PitchTracker>(pitchSolver);
     nodes["tail_invglot"]       = std::make_unique<Nodes::Tail>(50);
     nodes["invglot"]            = std::make_unique<Nodes::InvGlot>(invglotSolver);
-    nodes["tail_linpred"]       = std::make_unique<Nodes::Tail>(5);
+    nodes["tail_linpred"]       = std::make_unique<Nodes::Tail>(15);
     nodes["linpred_spectrum"]   = std::make_unique<Nodes::LinPred>(linpredSolver, lpSpecLpOrder);
     
     nodes["rs_formant"]         = std::make_unique<Nodes::Resampler>(captureSampleRate, formantSampleRate);
-    nodes["preemph_formant"]    = std::make_unique<Nodes::PreEmphasis>(preEmphasisFrequency);
-    nodes["tail_formant"]       = std::make_unique<Nodes::Tail>(5);
+    nodes["preemph_formant"]    = std::make_unique<Nodes::PreEmphasis>();
+    nodes["tail_formant"]       = std::make_unique<Nodes::Tail>(15);
     nodes["linpred_formant"]    = std::make_unique<Nodes::LinPred>(linpredSolver, formantLpOrder);
     nodes["formants"]           = std::make_unique<Nodes::FormantTracker>(formantSolver);
 }

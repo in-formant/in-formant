@@ -16,7 +16,7 @@ LinPred::LinPred(Analysis::LinpredSolver *solver, int order)
             .outputs = outTypes,
         }),
       mSolver(solver),
-      mFFT(512, FFTW_R2HC),
+      mFFT(1024, FFTW_R2HC),
       mOrder(order),
       mLastSpec(mFFT.getLength() / 2 + 1, 0.0f)
 {
@@ -59,10 +59,8 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
     static std::vector<float> window;
     if (window.size() != inLength) {
         constexpr float alpha = 0.2;
-        window.resize(2 * inLength);
+        window.resize(inLength);
         calcGaussian(window, alpha);
-        window.erase(window.begin(), std::next(window.begin(), inLength / 2));
-        window.erase(std::prev(window.end(), inLength / 2), window.end());
     }
 
     auto inData = std::make_unique<float[]>(inLength);
@@ -78,6 +76,7 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
             mOrder,
             &gain);
 
+    
     out->setSampleRate(sampleRate);
 
     out->setFFOrder(1);
