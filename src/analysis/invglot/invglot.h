@@ -30,6 +30,15 @@ namespace Analysis {
             float d;
         };
 
+        class GFM_IAIF : public InvglotSolver {
+        public:
+            GFM_IAIF(float d);
+            InvglotResult solve(const float *x, int length, float sampleRate) override;
+        private:
+            std::unique_ptr<LinpredSolver> lpc;
+            float d;
+        };
+
         class AMGIF : public InvglotSolver {
         public:
             AMGIF(int J);

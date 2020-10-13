@@ -11,7 +11,8 @@ namespace Analysis {
     
     std::vector<float> filter(const std::vector<float>& b, const std::vector<float>& a, const std::vector<float>& x);
 
-    std::vector<std::array<float, 6>> butterworth(int N, float fc, float fs);
+    std::vector<std::array<float, 6>> butterworthHighpass(int N, float fc, float fs);
+    std::vector<std::array<float, 6>> butterworthLowpass(int N, float fc, float fs);
 
     std::vector<std::array<float, 6>> zpk2sos(const std::vector<std::complex<float>>& z, const std::vector<std::complex<float>>& p, float k);
 

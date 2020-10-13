@@ -7,7 +7,7 @@
 using namespace Analysis::Invglot;
 using Analysis::InvglotResult;
 
-IAIF::IAIF(float d)
+GFM_IAIF::GFM_IAIF(float d)
     : d(d)
 {
     lpc = std::make_unique<LP::Burg>();
@@ -59,10 +59,28 @@ static void calcGaussian(std::vector<float>& win, float alpha)
     }
 }
 
-InvglotResult IAIF::solve(const float *xData, int length, float sampleRate)
+static std::vector<float> conv(const std::vector<float>& x, const std::vector<float>& y) {
+    int lx = x.size();
+    int ly = y.size();
+    int lw = lx + ly - 1;
+    std::vector<float> w(lw, 0.0f);
+    for (int k = 0; k < lw; ++k) {
+        int i = k;
+        for (int j = 0; j < ly; ++j) {
+            if (i >= 0 && i < lx) {
+                w[k] += x[i] * y[j];
+            }
+            i--;
+        }
+    }
+    return w;
+}
+
+InvglotResult GFM_IAIF::solve(const float *xData, int length, float sampleRate)
 {
-    const int p_gl = 2 * std::round(sampleRate / 4000);
-    const int p_vt = 2 * std::round(sampleRate / 2000) + 4;
+    const int ng = 3;
+    const int nv = std::round(sampleRate / 1000);
+    const int Lpf = nv + 1;
 
     const int lpW = std::round(0.015f * sampleRate);
 
@@ -77,39 +95,49 @@ InvglotResult IAIF::solve(const float *xData, int length, float sampleRate)
         }
     }
 
-    std::vector<float> x(xData, xData + length);
-   
+    std::vector<float> s_gvl(xData, xData + length);
+
     static std::vector<std::array<float, 6>> hpfilt;
     if (hpfilt.empty()) {
         hpfilt = Analysis::butterworthHighpass(10, 70.0f, sampleRate);
     }
+    s_gvl = sosfilter(hpfilt, s_gvl);
 
-    int preflt = p_vt + 1;
-
-    std::vector<float> xWithPreRamp(preflt + length);
-    for (int i = 0; i < preflt; ++i) {
-        xWithPreRamp[i] = 2.0f * ((float) i / (float) (preflt - 1) - 0.5f) * x[0];
+    std::vector<float> x_gvl(Lpf + length);
+    for (int i = 0; i < Lpf; ++i) {
+        x_gvl[i] = 2.0f * ((float) i / (float) (Lpf - 1) - 0.5f) * s_gvl[0];
     }
     for (int i = 0; i < length; ++i) {
-        xWithPreRamp[preflt + i] = x[i];
+        x_gvl[Lpf + i] = s_gvl[i];
+    }
+   
+    auto s_gv = filter(one, oneMinusD, s_gvl);
+    auto x_gv = filter(one, oneMinusD, x_gvl);
+    
+    auto ag1 = calculateLPC(s_gv, window, lpW, 1, lpc);
+
+    for (int i = 1; i < ng; ++i) {
+        auto x_v1x = filter(ag1, x_gv);
+        auto s_v1x = removePreRamp(x_v1x, Lpf);
+        
+        auto ag1x = calculateLPC(s_v1x, window, lpW, 1, lpc); 
+
+        ag1 = conv(ag1, ag1x);
     }
 
-    xWithPreRamp = sosfilter(hpfilt, xWithPreRamp);
-    x = removePreRamp(xWithPreRamp, preflt);
+    auto x_v1 = filter(ag1, x_gv);
+    auto s_v1 = removePreRamp(x_v1, Lpf);
+    auto av1 = calculateLPC(s_v1, window, lpW, nv, lpc);
 
-    auto Hg1 = calculateLPC(x, window, lpW, 1, lpc);
-    auto y1 = removePreRamp(filter(Hg1, one, xWithPreRamp), preflt);
+    auto x_g1 = filter(av1, x_gv);
+    auto s_g1 = removePreRamp(x_g1, Lpf);
+    auto ag = calculateLPC(s_g1, window, lpW, ng, lpc);
 
-    auto Hvt1 = calculateLPC(y1, window, lpW, p_vt, lpc);
-    auto g1 = removePreRamp(filter(one, oneMinusD, filter(Hvt1, one, xWithPreRamp)), preflt);
+    auto x_v = filter(ag, x_gv);
+    auto s_v = removePreRamp(x_v, Lpf);
+    auto av = calculateLPC(s_v, window, lpW, nv, lpc);
 
-    auto Hg2 = calculateLPC(g1, window, lpW, p_gl, lpc);
-    auto y = removePreRamp(filter(one, oneMinusD, filter(Hg2, one, xWithPreRamp)), preflt);
-
-    auto Hvt2 = calculateLPC(y, window, lpW, p_vt, lpc);
-    auto gWithPreRamp = filter(one, oneMinusD, filter(Hvt2, one, xWithPreRamp));
-
-    auto g = removePreRamp(gWithPreRamp, preflt);
+    auto g = removePreRamp(filter(av, x_gv), Lpf);
 
     float gMax = 1e-10;
     for (int i = 0; i < length; ++i) {
@@ -117,6 +145,7 @@ InvglotResult IAIF::solve(const float *xData, int length, float sampleRate)
         if (absG > gMax)
             gMax = absG;
     }
+
     for (int i = 0; i < length; ++i) {
         g[i] /= gMax;
     }
