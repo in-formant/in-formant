@@ -17,6 +17,7 @@ namespace Synthesis
 
     struct LF_State {
         double T0;
+        double Tc;
         double Rd;
         double te, tp, ta;
         double alpha, eps;
@@ -25,7 +26,7 @@ namespace Synthesis
     void lfRd2tetpta(LF_State& state);
     void lfEpsAlpha(LF_State& state);
 
-    std::vector<float> lfGenFrame(float f0, float Fs, float Rd);
+    std::vector<float> lfGenFrame(float f0, float Fs, float Rd, float tc);
 
     std::vector<float> createPolynomialFromRoots(const std::vector<std::complex<float>>& z);
 
