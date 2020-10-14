@@ -19,7 +19,7 @@ constexpr float glotPitchMax = 600;
 constexpr float glotRdMin = 0.7;
 constexpr float glotRdMax = 2.6;
 
-constexpr float glotTcMin = 0.3;
+constexpr float glotTcMin = 0.9;
 constexpr float glotTcMax = 1.0;
 
 constexpr float filterShiftMin = 0.5;
