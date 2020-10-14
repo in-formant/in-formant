@@ -53,7 +53,6 @@ namespace Analysis {
         int nbFrames;
 
     private:
-        Module::Audio::Resampler resampler;
         std::deque<Frame> frames;
     };
 

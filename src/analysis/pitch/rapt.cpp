@@ -50,7 +50,7 @@ PitchResult Pitch::RAPT::solve(const float *data, int length, int sampleRate)
 
 static void subtractReferenceMean(std::vector<float>& s, int n, int K);
 
-static std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds, Module::Audio::Resampler& resampler);
+static std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds);
 
 static std::vector<float> calculateDownsampledNCCF(const std::vector<float>& dss, const int dsn, const int dsK1, const int dsK2);
 
@@ -70,7 +70,7 @@ static std::vector<float> lpcar2rf(const std::vector<float>& ar);
 static std::vector<float> lpcrf2rr(const std::vector<float>& rf);
 
 RAPT::RAPT()
-    : lpcOrder(-1), resampler(48000, 2000)
+    : lpcOrder(-1)
 {
 }
 
@@ -102,7 +102,7 @@ float RAPT::computeFrame(const float *data, int length, float Fs)
 
     subtractReferenceMean(s, n, K);
 
-    auto dss = downsampleSignal(s, Fs, Fds, resampler);
+    auto dss = downsampleSignal(s, Fs, Fds);
     
     if (dss.size() < dsn + dsK2) {
         dss.resize(dsn + dsK2, 0.0f);
@@ -270,10 +270,20 @@ void subtractReferenceMean(std::vector<float>& s, int n, int K)
         s[j] -= mu;
 }
 
-std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds, Module::Audio::Resampler& resampler)
+std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds)
 {
-    resampler.setRate(Fs, Fds);
-    return resampler.process(s.data(), s.size());
+    size_t olen = (size_t) (s.size() * Fds / Fs + 0.5);
+    std::vector<float> out(olen);
+    size_t odone;
+
+    soxr_oneshot(Fs, Fds, 1,
+            s.data(), s.size(), nullptr,
+            out.data(), out.size(), &odone,
+            nullptr, nullptr, nullptr);
+
+    out.resize(odone);
+
+    return out;
 }
 
 std::vector<float> calculateDownsampledNCCF(const std::vector<float>& dss, const int dsn, const int dsK1, const int dsK2)

@@ -105,7 +105,7 @@ std::vector<std::array<float, 6>> Analysis::butterworthLowpass(int N, float fc, 
     }
 
     // Step 3. Transform to digital filter.
-    std::vector<std::complex<float>> P(Sp.size()), Z(0);
+    std::vector<std::complex<float>> P(Sp.size()), Z(Sp.size(), -1);
    
     float G = std::real(Sg / prodSp);
 

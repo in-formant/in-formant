@@ -18,6 +18,7 @@ namespace Module::App
         void setGlotGain(float);
         void setGlotPitch(float);
         void setGlotRd(float);
+        void setGlotTc(float);
         void setFormants(const std::vector<Analysis::FormantData>&);
         void setFilterShift(float);
         void setVoiced(bool);
@@ -27,6 +28,7 @@ namespace Module::App
         float getGlotGain() const;
         float getGlotPitch() const;
         float getGlotRd() const;
+        float getGlotTc() const;
         float getFilterShift() const;
 
         void generateAudio(int requestedLength);
@@ -41,6 +43,7 @@ namespace Module::App
         float glotGain;
         float glotPitch;
         float glotRd;
+        float glotTc;
         std::vector<Analysis::FormantData> formants;
         float filterShift;
         bool voiced;
@@ -50,6 +53,7 @@ namespace Module::App
         float realGlotGain;
         float realGlotPitch;
         float realGlotRd;
+        float realGlotTc;
         std::vector<Analysis::FormantData> realFormants;
         std::vector<std::array<float, 6>> realFilter;
         float realFilterShift;
