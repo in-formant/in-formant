@@ -423,17 +423,19 @@ void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::
                     bool shouldRenderLabel;
 
                     if (scale == FrequencyScale::Mel) {
+                        int ival = std::round(val);
                         shouldRenderLabel =
-                               ( 500 <= val && fmodf(val, 500) == 0)
-                            || ( 100 <= val && val <  500 && fmodf(val,  100) == 0)
-                            || (  10 == val);
+                               ( 500 <= ival && ival % 500 == 0)
+                            || ( 100 <= ival && ival < 500 && ival % 100 == 0)
+                            || (  10 == ival);
                     }
                     else if (scale == FrequencyScale::Logarithmic) {
+                        int ival = std::round(val);
                         shouldRenderLabel =
-                               (1000 <= val && fmodf(val, 1000) == 0)
-                            || ( 100 <= val && val < 1000 && fmodf(val, 100) == 0)
-                            || (  10 <= val && val <  100 && fmodf(val,  10) == 0)
-                            || (   1 == val);
+                               (1000 <= ival && ival % 1000 == 0)
+                            || ( 100 <= ival && ival < 1000 && ival % 100 == 0)
+                            || (  10 <= ival && ival <  100 && ival %  10 == 0)
+                            || (   1 == ival);
                     }
 
                     if (shouldRenderLabel) {
