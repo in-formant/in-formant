@@ -22,6 +22,7 @@ void Synthesizer::initialize()
     glotTc = 1.0f;
     formants = {{1000, 100}};
     filterShift = 1.0f;
+    voiced = false;
     
     realMasterGain = 0.0f;
     realNoiseGain = 0.0f;
@@ -116,6 +117,11 @@ float Synthesizer::getGlotTc() const
 float Synthesizer::getFilterShift() const
 {
     return filterShift;
+}
+
+bool Synthesizer::isVoiced() const
+{
+    return voiced;
 }
 
 void Synthesizer::generateAudio(int requestedLength)

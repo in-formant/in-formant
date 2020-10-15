@@ -5,271 +5,157 @@
 
 using namespace Main;
 
-static std::array<int, 4> posMasterGain;
-static std::array<int, 4> posNoiseGain;
-static std::array<int, 4> posGlotGain;
-static std::array<int, 4> posGlotPitch;
-static std::array<int, 4> posGlotRd;
-static std::array<int, 4> posGlotTc;
-static std::array<int, 4> posFilterShift;
-
-constexpr float glotPitchMin = 70;
-constexpr float glotPitchMax = 600;
-
-constexpr float glotRdMin = 0.7;
-constexpr float glotRdMax = 2.6;
-
-constexpr float glotTcMin = 0.9;
-constexpr float glotTcMax = 1.0;
-
-constexpr float filterShiftMin = 0.5;
-constexpr float filterShiftMax = 2.0;
-
-void ContextManager::renderSynth(RenderingContext& rctx)
+void ContextManager::initSynthUI()
 {
-    int rw, rh;
-    rctx.target->getSizeForRenderer(&rw, &rh);
- 
-    auto& font = FONT(primaryFont, uiFontSize - 3, rctx);
+    mSynthFields = {
+        {
+            .labelText = "Master gain: ",
+            .min = 0.0, .max = 1.0,
+            .value = [this]() { return synth.getMasterGain(); },
+            .update = [this](float v) { synth.setMasterGain(v); }, 
+            .barText = [this]() { return std::to_string((int) std::round(100 * synth.getMasterGain())) + " %"; },
+        },
+        {
+            .labelText = "Noise source gain: ",
+            .min = 0.0, .max = 1.0,
+            .value = [this]() { return synth.getNoiseGain(); },
+            .update = [this](float v) { synth.setNoiseGain(v); },
+            .barText = [this]() { return std::to_string((int) std::round(100 * synth.getNoiseGain())) + " %"; },
+        },
+        { 
+            .labelText = "Glottal source gain: ",
+            .min = 0.7, .max = 2.6,
+            .value = [this]() { return synth.getGlotGain(); },
+            .update = [this](float v) { synth.setGlotGain(v); },
+            .barText = [this]() { return std::to_string((int) std::round(100 * synth.getGlotGain())) + " %"; },
+        },
+        {
+            .labelText = "Glottal pitch: ",
+            .min = 60, .max = 600,
+            .value = [this]() { return synth.getGlotPitch(); },
+            .update = [this](float v) { synth.setGlotPitch(v); },
+            .barText = [this]() { return std::to_string((int) std::round(synth.getGlotPitch())) + " Hz"; },
+        },
+        {
+            .labelText = "Glottal source Rd: ",
+            .min = 0.7, .max = 2.6,
+            .value = [this]() { return synth.getGlotRd(); },
+            .update = [this](float v) { synth.setGlotRd(v); },
+            .barText = [this]() {
+                                    std::ostringstream out;
+                                    out.precision(1);
+                                    out << std::fixed
+                                        << (std::round(synth.getGlotRd() * 10) / 10);
+                                    return out.str();
+                                },
+        },
+        {
+            .labelText = "Glottal source Tc: ",
+            .min = 0.9, .max = 1.0,
+            .value = [this]() { return synth.getGlotTc(); },
+            .update = [this](float v) { synth.setGlotTc(v); },
+            .barText = [this]() {
+                                    std::ostringstream out;
+                                    out.precision(2);
+                                    out << std::fixed
+                                        << (std::round(synth.getGlotTc() * 100) / 100);
+                                    return out.str();
+                                },
+        },
+        {
+            .labelText = "Vocal tract filter shift: ",
+            .min = 0.5, .max = 2.0,
+            .value = [this]() { return synth.getFilterShift(); },
+            .update = [this](float v) { synth.setFilterShift(v); },
+            .barText = [this]() { return std::to_string((int) std::round(100 * synth.getFilterShift())) + " %"; },
+        },
+        {
+            .labelText = "Voicing: ",
+            .min = 0.0, .max = 1.0,
+            .value = [this]() { return (float) ((int) synth.isVoiced()); },
+            .update = [this](float v) { synth.setVoiced((bool) ((int) std::round(v))); },
+            .barText = [this]() { return synth.isVoiced() ? "On" : "Off"; },
+        },
+    };
+}
 
+void ContextManager::renderSynth(RenderingContext &rctx)
+{
+    auto& font = FONT(primaryFont, uiFontSize - 4, rctx);
+  
     int em = std::get<3>(font.queryTextSize("M"));
-
-    int tx, ty, tw, th;
 
     int x = 10, x2;
     int y = 10;
     int padding = 5;
     int margin = 25;
 
-    int sliderWidth = 350;
+    int sliderWidth = 300;
     int sliderKnobWidth = 16;
 
-    std::array<int, 4> pos;
+    for (auto& f : mSynthFields) { 
+        const auto [tx, ty, tw, th] = font.queryTextSize(f.labelText);
+        rctx.renderer->renderText(font, f.labelText, x, y + padding, 1.0f, 1.0f, 1.0f);
+       
+        const float val = f.value();
+        const auto valstr = f.barText();
 
-    std::stringstream ss;
-    
-    ss << "Master gain";
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x, y + 5, 1.0f, 1.0f, 1.0f);
-    x2 = x + tw + margin;
-    std::tie(pos[0], pos[1], pos[2], pos[3]) =
-        rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth, false);
-    rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth * synth.getMasterGain(), true);
-    rctx.renderer->renderRoundedRect(x2 + sliderWidth * synth.getMasterGain() - sliderKnobWidth / 2, y - 2, sliderKnobWidth, em + 14, 0.5f, 0.5f, 0.5f, 1.0f);
-    ss.str("");
-    ss << std::round(synth.getMasterGain() * 100) << "%";
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x2 + 5 + sliderWidth / 2 - tw / 2, y + 5, 1.0f, 1.0f, 1.0f);
+        const float frac = (val - f.min) / (f.max - f.min);
 
-    posMasterGain = pos;
+        x2 = x + tw + margin;
 
-    y += em + 10 + margin;
+        if (f.labelText == "Voicing: ") {
+            sliderWidth = 100;
+        }
+        else {
+            sliderWidth = 300;
+        }
+        
+        std::tie(f.x, f.y, f.w, f.h) = rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth, false);
+        rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth * frac, true);
+        rctx.renderer->renderRoundedRect(x2 + sliderWidth * frac - sliderKnobWidth / 2, y - 2, sliderKnobWidth, em + 14, 0.5f, 0.5f, 0.5f, 1.0f);
 
-    ss.str("");
-    ss << "Noise gain";
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x, y + 5, 1.0f, 1.0f, 1.0f);
-    x2 = x + tw + margin;
-    std::tie(pos[0], pos[1], pos[2], pos[3]) =
-        rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth, false);
-    rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth * synth.getNoiseGain(), true);
-    rctx.renderer->renderRoundedRect(x2 + sliderWidth * synth.getNoiseGain() - sliderKnobWidth / 2, y - 2, sliderKnobWidth, em + 14, 0.5f, 0.5f, 0.5f, 1.0f);
-    ss.str("");
-    ss << std::round(synth.getNoiseGain() * 100) << "%";
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x2 + 5 + sliderWidth / 2 - tw / 2, y + 5, 1.0f, 1.0f, 1.0f);
-
-    posNoiseGain = pos;
-
-    y += em + 10 + margin;
-
-    ss.str("");
-    ss << "Glottal source gain";
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x, y + 5, 1.0f, 1.0f, 1.0f);
-    x2 = x + tw + margin;
-    std::tie(pos[0], pos[1], pos[2], pos[3]) =
-        rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth, false);
-    rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth * synth.getGlotGain(), true);
-    rctx.renderer->renderRoundedRect(x2 + sliderWidth * synth.getGlotGain() - sliderKnobWidth / 2, y - 2, sliderKnobWidth, em + 14, 0.5f, 0.5f, 0.5f, 1.0f);
-    ss.str("");
-    ss << std::round(synth.getGlotGain() * 100) << "%";
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x2 + 5 + sliderWidth / 2 - tw / 2, y + 5, 1.0f, 1.0f, 1.0f);
+        int vsw = std::get<2>(font.queryTextSize(valstr));
+        rctx.renderer->renderText(font, valstr, x2 + padding + sliderWidth / 2 - vsw / 2, y + padding, 1.0f, 1.0f, 1.0f); 
     
-    posGlotGain = pos;
-    
-    y += em + 10 + margin;
-
-    ss.str("");
-    ss << "Glottal pitch";
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x, y + 5, 1.0f, 1.0f, 1.0f);
-    x2 = x + tw + margin;
-    std::tie(pos[0], pos[1], pos[2], pos[3]) =
-        rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth, false);
-    rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth * (synth.getGlotPitch() - glotPitchMin) / (glotPitchMax - glotPitchMin), true);
-    rctx.renderer->renderRoundedRect(x2 + sliderWidth * (synth.getGlotPitch() - glotPitchMin) / (glotPitchMax - glotPitchMin) - sliderKnobWidth / 2, y - 2, sliderKnobWidth, em + 14, 0.5f, 0.5f, 0.5f, 1.0f);
-    ss.str("");
-    ss << std::round(synth.getGlotPitch()) << " Hz";
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x2 + 5 + sliderWidth / 2 - tw / 2, y + 5, 1.0f, 1.0f, 1.0f);
-    
-    posGlotPitch = pos;
-    
-    y += em + 10 + margin;
-
-    ss.str("");
-    ss << "Glottal Rd";
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x, y + 5, 1.0f, 1.0f, 1.0f);
-    x2 = x + tw + margin;
-    std::tie(pos[0], pos[1], pos[2], pos[3]) =
-        rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth, false);
-    rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth * (synth.getGlotRd() - glotRdMin) / (glotRdMax - glotRdMin), true);
-    rctx.renderer->renderRoundedRect(x2 + sliderWidth * (synth.getGlotRd() - glotRdMin) / (glotRdMax - glotRdMin) - sliderKnobWidth / 2, y - 2, sliderKnobWidth, em + 14, 0.5f, 0.5f, 0.5f, 1.0f);
-    ss.str("");
-    ss << std::round(synth.getGlotRd() * 100) / 100;
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x2 + 5 + sliderWidth / 2 - tw / 2, y + 5, 1.0f, 1.0f, 1.0f);
-    
-    posGlotRd = pos;
-    
-    y += em + 10 + margin;
-
-    ss.str("");
-    ss << "Glottal Tc";
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x, y + 5, 1.0f, 1.0f, 1.0f);
-    x2 = x + tw + margin;
-    std::tie(pos[0], pos[1], pos[2], pos[3]) =
-        rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth, false);
-    rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth * (synth.getGlotTc() - glotTcMin) / (glotTcMax - glotTcMin), true);
-    rctx.renderer->renderRoundedRect(x2 + sliderWidth * (synth.getGlotTc() - glotTcMin) / (glotTcMax - glotTcMin) - sliderKnobWidth / 2, y - 2, sliderKnobWidth, em + 14, 0.5f, 0.5f, 0.5f, 1.0f);
-    ss.str("");
-    ss << std::round(synth.getGlotTc() * 100) / 100;
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x2 + 5 + sliderWidth / 2 - tw / 2, y + 5, 1.0f, 1.0f, 1.0f);
-    
-    posGlotTc = pos;
-    
-    y += em + 10 + margin;
-
-    ss.str("");
-    ss << "Filter shift";
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x, y + 5, 1.0f, 1.0f, 1.0f);
-    x2 = x + tw + margin;
-    std::tie(pos[0], pos[1], pos[2], pos[3]) =
-        rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth, false);
-    rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth * (synth.getFilterShift() - filterShiftMin) / (filterShiftMax - filterShiftMin), true);
-    rctx.renderer->renderRoundedRect(x2 + sliderWidth * (synth.getFilterShift() - filterShiftMin) / (filterShiftMax - filterShiftMin) - sliderKnobWidth / 2, y - 2, sliderKnobWidth, em + 14, 0.5f, 0.5f, 0.5f, 1.0f);
-    ss.str("");
-    ss << "x " << (std::round(synth.getFilterShift() * 10) / 10);
-    std::tie(tx, ty, tw, th) = font.queryTextSize(ss.str());
-    rctx.renderer->renderText(font, ss.str(), x2 + 5 + sliderWidth / 2 - tw / 2, y + 5, 1.0f, 1.0f, 1.0f);
-    
-    posFilterShift = pos;
-    
-    y += em + 10 + margin;
+        y += em + 2 * padding + margin;
+    }
 }
 
-void ContextManager::eventSynth(RenderingContext& rctx)
+void ContextManager::eventSynth(RenderingContext &rctx)
 {
     int iframe = 
         useFrameCursor ? std::min(std::max<int>(std::round(specMX * spectrogramCount), 0), spectrogramCount - 1)
                        : spectrogramCount - 1;
 
-    float pitch = pitchTrack[iframe] > 0 ? pitchTrack[iframe] : 0.0f;
-
-    synth.setGlotPitch(pitchTrack[iframe] > 0 ? pitchTrack[iframe] : synth.getGlotPitch());
     synth.setFormants(formantTrack[iframe]);
+    
+    const auto [mx, my] = rctx.target->getMousePosition();
 
     int tw, th;
     int rw, rh;
     rctx.target->getSize(&tw, &th);
     rctx.target->getSizeForRenderer(&rw, &rh);
-    
-    const auto [tx, ty] = rctx.target->getMousePosition();
-    int x, y, w, h;
-
-    std::array<int, 4> pos;
+   
+    bool settingsChanged = false;
 
     if (rctx.target->isMousePressed(SDL_BUTTON_LEFT)) {
-        pos = posMasterGain;
-        x = (pos[0] * tw) / rw;
-        y = (pos[1] * th) / rh;
-        w = (pos[2] * tw) / rw;
-        h = (pos[3] * th) / rh;
-        if (tx >= x && tx <= x + w
-                && ty >= y && ty <= y + h) {
-            synth.setMasterGain((tx - x) / (float) w);
-        }
-        
-        pos = posNoiseGain;
-        x = (pos[0] * tw) / rw;
-        y = (pos[1] * th) / rh;
-        w = (pos[2] * tw) / rw;
-        h = (pos[3] * th) / rh;
-        if (tx >= x && tx <= x + w
-                && ty >= y && ty <= y + h) {
-            synth.setNoiseGain((tx - x) / (float) w);
-        }
-        
-        pos = posGlotGain;
-        x = (pos[0] * tw) / rw;
-        y = (pos[1] * th) / rh;
-        w = (pos[2] * tw) / rw;
-        h = (pos[3] * th) / rh;
-        if (tx >= x && tx <= x + w
-                && ty >= y && ty <= y + h) {
-            synth.setGlotGain((tx - x) / (float) w);
-        }
+        for (auto& f : mSynthFields) {
+            int x = (f.x * tw) / rw;
+            int w = (f.w * tw) / rw;
+            int y = (f.y * th) / rh;
+            int h = (f.h * th) / rh;
 
-        pos = posGlotPitch;
-        x = (pos[0] * tw) / rw;
-        y = (pos[1] * th) / rh;
-        w = (pos[2] * tw) / rw;
-        h = (pos[3] * th) / rh;
-        if (tx >= x && tx <= x + w
-                && ty >= y && ty <= y + h) {
-            pitch = glotPitchMin + (glotPitchMax - glotPitchMin) * (tx - x) / (float) w;
-            synth.setGlotPitch(pitch);
+            if (mx >= x && mx < x + w
+                    && my >= y && my < y + h) {
+                float oldValue = f.value();
+                f.update(f.min + (f.max - f.min) * (mx - x) / (float) w);
+                if (oldValue != f.value()) {
+                    settingsChanged = true;
+                }
+            }
         }
-
-        pos = posGlotRd;
-        x = (pos[0] * tw) / rw;
-        y = (pos[1] * th) / rh;
-        w = (pos[2] * tw) / rw;
-        h = (pos[3] * th) / rh;
-        if (tx >= x && tx <= x + w
-                && ty >= y && ty <= y + h) {
-            synth.setGlotRd(glotRdMin + (glotRdMax - glotRdMin) * (tx - x) / (float) w);
-        }
-
-        pos = posGlotTc;
-        x = (pos[0] * tw) / rw;
-        y = (pos[1] * th) / rh;
-        w = (pos[2] * tw) / rw;
-        h = (pos[3] * th) / rh;
-        if (tx >= x && tx <= x + w
-                && ty >= y && ty <= y + h) {
-            synth.setGlotTc(glotTcMin + (glotTcMax - glotTcMin) * (tx - x) / (float) w);
-        }
-
-        pos = posFilterShift;
-        x = (pos[0] * tw) / rw;
-        y = (pos[1] * th) / rh;
-        w = (pos[2] * tw) / rw;
-        h = (pos[3] * th) / rh;
-        if (tx >= x && tx <= x + w
-                && ty >= y && ty <= y + h) {
-            synth.setFilterShift(filterShiftMin + (filterShiftMax - filterShiftMin) * (tx - x) / (float) w);
-        }
-
     }
-
-    synth.setVoiced(pitch > 0);
 }
 
 #endif
