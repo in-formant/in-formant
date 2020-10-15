@@ -38,6 +38,7 @@ namespace Main {
         void createRenderingContexts(const std::initializer_list<RenderingContextInfo>& infos);
 
         void initSettingsUI();
+        void initSynthUI();
 
         void updateNodeParameters();
         void updateWithNextFrame();
@@ -121,6 +122,7 @@ namespace Main {
         float specMX, specMY;
 
         std::vector<SettingsUIField> mSettingFields;
+        std::vector<SettingsUIField> mSynthFields;
 
         std::deque<std::vector<std::array<float, 2>>>  spectrogramTrack;
         std::deque<std::vector<std::array<float, 2>>>  lpSpecTrack;
@@ -148,9 +150,10 @@ namespace Main {
     
     struct SettingsUIField {
         std::string labelText;
-        int ContextManager::*field;
-        int delta, min, max;
-
+        float min, max;
+        std::function<float ()>       value;
+        std::function<void (float)>   update;
+        std::function<std::string ()> barText;
         int x, y, w, h;
         bool isFocused;
     };

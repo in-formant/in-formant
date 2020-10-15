@@ -5,64 +5,105 @@ using namespace Main;
 void ContextManager::initSettingsUI()
 {
     mSettingFields = {
-        { .labelText = "LP order: ", .field = &ContextManager::linPredOrder,         
-            .delta = 1, .min = 4, .max = 30 },
-        { .labelText = "Max. formant frequency: ", .field = &ContextManager::analysisMaxFrequency,
-            .delta = 100, .min = 2500, .max = 8000 },
-        { .labelText = "Min. displayed frequency: ", .field = &ContextManager::viewMinFrequency,
-            .delta = 10, .min = 1, .max = 1000 },
-        { .labelText = "Max. displayed frequency: ", .field = &ContextManager::viewMaxFrequency,
-            .delta = 100, .min = 4500, .max = 8000 },
-        { .labelText = "Min. displayed gain: ", .field = &ContextManager::viewMinGain,
-            .delta = 1, .min = -200, .max = -15 },
-        { .labelText = "Max. displayed gain: ", .field = &ContextManager::viewMaxGain,
-            .delta = 1, .min = -10, .max = 80 },
+        {
+            .labelText = "Max. formant frequency: ",
+            .min = 3000, .max = 7000,
+            .value = [this]() { return analysisMaxFrequency; },
+            .update = [this](float v) { analysisMaxFrequency = v; linPredOrder = std::round(v / 500); }, 
+            .barText = [this]() { return std::to_string((int) analysisMaxFrequency) + " Hz / LPO: " + std::to_string(linPredOrder); },
+        },
+        {
+            .labelText = "Min. spec. frequency: ",
+            .min = 1, .max = 1000,
+            .value = [this]() { return viewMinFrequency; },
+            .update = [this](float v) { viewMinFrequency = v; },
+            .barText = [this]() { return std::to_string((int) viewMinFrequency) + " Hz"; },
+        },
+        { 
+            .labelText = "Max. spec. frequency: ",
+            .min = 4000, .max = 12000,
+            .value = [this]() { return viewMaxFrequency; },
+            .update = [this](float v) { viewMaxFrequency = v; },
+            .barText = [this]() { return std::to_string((int) viewMaxFrequency) + " Hz"; },
+        },
+        {
+            .labelText = "Min. spec. gain: ",
+            .min = -200, .max = -15,
+            .value = [this]() { return viewMinGain; },
+            .update = [this](float v) { viewMinGain = v; },
+            .barText = [this]() { return std::to_string((int) viewMinGain) + " dB"; },
+        },
+        {
+            .labelText = "Max. spec. gain: ",
+            .min = -10, .max = 80,
+            .value = [this]() { return viewMaxGain; },
+            .update = [this](float v) { viewMaxGain = v; },
+            .barText = [this]() { return std::to_string((int) viewMaxGain) + " dB"; },
+        },
     };
 }
 
 void ContextManager::renderSettings(RenderingContext &rctx)
 {
-    auto& font = FONT(primaryFont, uiFontSize - 3, rctx);
+    auto& font = FONT(primaryFont, uiFontSize - 4, rctx);
   
-    int x0 = 10;
-    int y0 = 10;
+    int em = std::get<3>(font.queryTextSize("M"));
 
-    int defaultWidth = 80;
+    int x = 10, x2;
+    int y = 10;
+    int padding = 5;
+    int margin = 25;
+
+    int sliderWidth = 300;
+    int sliderKnobWidth = 16;
 
     for (auto& f : mSettingFields) { 
         const auto [tx, ty, tw, th] = font.queryTextSize(f.labelText);
-        rctx.renderer->renderText(font, f.labelText, x0, y0 - th - ty + 5, 1.0f, 1.0f, 1.0f);
-        
-        const auto valstr = std::to_string(this->*f.field);
-        std::tie(f.x, f.y, f.w, f.h) = rctx.renderer->renderInputBox(font, valstr, x0 + tw + 15, y0, defaultWidth, f.isFocused);
+        rctx.renderer->renderText(font, f.labelText, x, y + padding, 1.0f, 1.0f, 1.0f);
+       
+        const float val = f.value();
+        const auto valstr = f.barText();
 
-        y0 += f.h + 15;
+        const float frac = (val - f.min) / (f.max - f.min);
+
+        x2 = x + tw + margin;
+
+        std::tie(f.x, f.y, f.w, f.h) = rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth, false);
+        rctx.renderer->renderInputBox(font, "", x2, y, sliderWidth * frac, true);
+        rctx.renderer->renderRoundedRect(x2 + sliderWidth * frac - sliderKnobWidth / 2, y - 2, sliderKnobWidth, em + 14, 0.5f, 0.5f, 0.5f, 1.0f);
+
+        int vsw = std::get<2>(font.queryTextSize(valstr));
+        rctx.renderer->renderText(font, valstr, x2 + padding + sliderWidth / 2 - vsw / 2, y + padding, 1.0f, 1.0f, 1.0f); 
+    
+        y += em + 2 * padding + margin;
     }
 }
 
 void ContextManager::eventSettings(RenderingContext &rctx)
 {
     const auto [mx, my] = rctx.target->getMousePosition();
-    
+
+    int tw, th;
+    int rw, rh;
+    rctx.target->getSize(&tw, &th);
+    rctx.target->getSizeForRenderer(&rw, &rh);
+   
     bool settingsChanged = false;
 
-    for (auto& f : mSettingFields) {
-        if (mx >= f.x && mx < f.x + f.w
-                && my >= f.y && my < f.y + f.h) {
-            f.isFocused = true;
-        }
-        else {
-            f.isFocused = false;
-        }
+    if (rctx.target->isMousePressed(SDL_BUTTON_LEFT)) {
+        for (auto& f : mSettingFields) {
+            int x = (f.x * tw) / rw;
+            int w = (f.w * tw) / rw;
+            int y = (f.y * th) / rh;
+            int h = (f.h * th) / rh;
 
-        if (f.isFocused) {
-            if (rctx.target->isKeyPressed(SDL_SCANCODE_UP)) {
-                (this->*f.field) = std::min(std::max((this->*f.field / f.delta + 1) * f.delta, f.min), f.max);
-                settingsChanged = true;
-            }
-            else if (rctx.target->isKeyPressed(SDL_SCANCODE_DOWN)) {
-                (this->*f.field) = std::min(std::max((this->*f.field / f.delta - 1) * f.delta, f.min), f.max);
-                settingsChanged = true;
+            if (mx >= x && mx < x + w
+                    && my >= y && my < y + h) {
+                float oldValue = f.value();
+                f.update(f.min + (f.max - f.min) * (mx - x) / (float) w);
+                if (oldValue != f.value()) {
+                    settingsChanged = true;
+                }
             }
         }
     }

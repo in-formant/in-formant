@@ -30,7 +30,8 @@ namespace Module::App
         float getGlotRd() const;
         float getGlotTc() const;
         float getFilterShift() const;
-
+        bool isVoiced() const;
+        
         void generateAudio(int requestedLength);
 
         static void audioCallback(float *, int, void *);
