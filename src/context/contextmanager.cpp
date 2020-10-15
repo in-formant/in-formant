@@ -187,7 +187,7 @@ void ContextManager::loadSettings()
     outputGain = 0;
     
     analysisDuration = 35;
-    analysisMaxFrequency = 5300;
+    analysisMaxFrequency = 3800;
 
     viewMinFrequency = 1;
     viewMaxFrequency = 6000;
@@ -202,7 +202,8 @@ void ContextManager::loadSettings()
     
     pitchAndLpSampleRate = 16'000;
 
-    linPredOrder = 10;
+    linPredOrder = 8;
+    linPredOrderOffset = -1;
 
     spectrogramCount = 600;
 
