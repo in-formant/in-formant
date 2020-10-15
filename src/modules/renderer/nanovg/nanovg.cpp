@@ -385,22 +385,42 @@ void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::
         float delta = hiLog - loLog, steps = fabsf(delta);
         float step = delta >= 0 ? 10 : 0.1;
         float rMin = std::min(min, max), rMax = std::max(min, max);
-        float start, end, mstep;
+        float start, end, sstep, mstep;
         
         decade = startDecade;
         if (delta > 0) {
             start = 10;
             end = 100;
-            mstep = 1;
+            sstep = 1;
         }
         else {
             start = 100;
             end = 10;
-            mstep = -1;
+            sstep = -1;
         }
         steps++;
         for (int i = 0; i <= steps; ++i) {
-            for (int f = start; f != (int) end; f += mstep) {
+            if (startDecade <= 10) {
+                if (decade < 100) {
+                    mstep = 100 * sstep;
+                }
+                else if (decade < 1000) {
+                    mstep = 10 * sstep;
+                }
+                else {
+                    mstep = sstep;
+                }
+            }
+            else {
+                if (decade < 1000) {
+                    mstep = 10 * sstep;
+                }
+                else {
+                    mstep = sstep;
+                }
+            }
+
+            for (int f = start; f <= (int) end; f += mstep) {
                 val = decade * f / 10;
                 if (val >= rMin && val < rMax) {
                     float y = frequencyToCoordinate(val);
