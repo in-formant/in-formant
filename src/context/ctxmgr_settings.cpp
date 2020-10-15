@@ -9,8 +9,17 @@ void ContextManager::initSettingsUI()
             .labelText = "Max. formant frequency: ",
             .min = 3000, .max = 7000,
             .value = [this]() { return analysisMaxFrequency; },
-            .update = [this](float v) { analysisMaxFrequency = v; linPredOrder = std::round(v / 500); }, 
-            .barText = [this]() { return std::to_string((int) analysisMaxFrequency) + " Hz / LPO: " + std::to_string(linPredOrder); },
+            .update = [this](float v) { analysisMaxFrequency = v; linPredOrder = std::round(v / 500) + linPredOrderOffset; }, 
+            .barText = [this]() { return std::to_string((int) analysisMaxFrequency) + " Hz / LPO: " + std::to_string(linPredOrder + linPredOrderOffset); },
+        },
+        {
+            .labelText = "LP order offset: ",
+            .min = -2, .max = 2,
+            .value = [this]() { return linPredOrderOffset; },
+            .update = [this](float v) { linPredOrderOffset = std::round(v); },
+            .barText = [this]() { return (linPredOrderOffset == 0 ? "" :
+                                            linPredOrderOffset > 0 ? "+" : "-")
+                                    + std::to_string(std::abs(linPredOrderOffset)); }
         },
         {
             .labelText = "Min. spec. frequency: ",

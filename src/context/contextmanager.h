@@ -111,6 +111,7 @@ namespace Main {
         int preEmphasisFrequency;
         int pitchAndLpSampleRate;
         int linPredOrder;
+        int linPredOrderOffset;
 
         int spectrogramCount;
 
