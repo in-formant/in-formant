@@ -93,7 +93,7 @@ Pipeline& Pipeline::setPitchAndLpSpectrumSampleRate(float value)
 {
     secondSampleRate = 48'000;
     if (wasInitializedAtLeastOnce) {
-        nodes["rs_2"]->as<Nodes::Resampler>()->setOutputSampleRate(value);
+        nodes["rs_2"]->as<Nodes::Resampler>()->setOutputSampleRate(secondSampleRate);
     }
     setLpSpectrumLpOrder(48);
     return *this;
