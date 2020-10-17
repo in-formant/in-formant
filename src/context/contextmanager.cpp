@@ -60,7 +60,7 @@ void ContextManager::start()
 
     initSettingsUI();
 
-#if ! ( defined(ANDROID) || defined(__ANDROID__) )
+#if ! ( defined(ANDROID) || defined(__ANDROID__) || defined(__EMSCRIPTEN__) )
     initSynthUI();
 #endif
 
