@@ -28,8 +28,6 @@ std::vector<std::array<double, 6>> Synthesis::frequencyShiftFilter(const std::ve
     const double melMin = 2595.0f * log10f(1.0f + freqMin / 700.0f);
     const double melMax = 2595.0f * log10f(1.0f + freqMax / 700.0f);
 
-    std::vector<double> shiftedFilter { 1.0f };
-
     std::vector<std::complex<double>> roots;
    
     for (const auto& formant : formants) {
