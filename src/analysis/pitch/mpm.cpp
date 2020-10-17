@@ -107,18 +107,18 @@ acorr_r(std::vector<T> &audio_buffer)
 }
 
 Analysis::PitchResult
-Analysis::Pitch::MPM::solve(const float *data, int length, int sample_rate)
+Analysis::Pitch::MPM::solve(const double *data, int length, int sample_rate)
 {
-    using T = float;
+    using T = double;
 
     std::vector<T> audio_buffer(data, data + length);
 
 	acorr_r(audio_buffer);
 
-        float max = 0.02;
+        double max = 0.02;
         for (int i = 0; i < length; ++i) {
-            if (fabsf(audio_buffer[i]) > max) {
-                max = fabsf(audio_buffer[i]);
+            if (fabs(audio_buffer[i]) > max) {
+                max = fabs(audio_buffer[i]);
             }
         }
 
@@ -153,7 +153,7 @@ Analysis::Pitch::MPM::solve(const float *data, int length, int sample_rate)
 		}
 	}
 
-	T pitch_estimate = ((float) sample_rate / period);
+	T pitch_estimate = ((double) sample_rate / period);
 
 	return (pitch_estimate > MPM_LOWER_PITCH_CUTOFF)
                     ? Analysis::PitchResult { .pitch = pitch_estimate, .voiced = true }

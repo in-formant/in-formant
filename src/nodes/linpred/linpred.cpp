@@ -27,19 +27,19 @@ void LinPred::setOrder(int order)
     mOrder = order;
 }
 
-inline float G(float x, int L, float alpha)
+inline double G(double x, int L, double alpha)
 {
     const int N = L - 1;
-    const float k = (x - N / 2.0f) / (2 * L * alpha);
+    const double k = (x - N / 2.0f) / (2 * L * alpha);
     return expf(-(k * k));
 }
 
-static void calcGaussian(std::vector<float>& win, float alpha)
+static void calcGaussian(std::vector<double>& win, double alpha)
 {
     const int L = win.size();
     
-    float Gmh = G(-0.5f, L, alpha);
-    float GmhpLpGmhmL = G(-0.5f + L, L, alpha) - G(-0.5f - L, L, alpha);
+    double Gmh = G(-0.5f, L, alpha);
+    double GmhpLpGmhmL = G(-0.5f + L, L, alpha) - G(-0.5f - L, L, alpha);
 
     for (int n = 0; n < L; ++n) {
         win[n] = G(n, L, alpha) - (Gmh * (G(n + L, L, alpha) + G(n - L, L, alpha))) / GmhpLpGmhmL;
@@ -56,21 +56,21 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
 
     int inLength = in->getLength();
 
-    static std::vector<float> window;
+    static std::vector<double> window;
     if (window.size() != inLength) {
-        constexpr float alpha = 0.2;
+        constexpr double alpha = 0.2;
         window.resize(inLength);
         calcGaussian(window, alpha);
     }
 
-    auto inData = std::make_unique<float[]>(inLength);
+    auto inData = std::make_unique<double[]>(inLength);
 
     for (int i = 0; i < inLength; ++i) {
         inData[i] = in->getConstData()[i] * window[i];
     }
 
-    float gain;
-    std::vector<float> lpc = mSolver->solve(
+    double gain;
+    std::vector<double> lpc = mSolver->solve(
             inData.get(),
             inLength,
             mOrder,
@@ -103,10 +103,10 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
     outSpec->setSampleRate(sampleRate);
     outSpec->setLength(outLength);
 
-    float max = 1e-10;
+    double max = 1e-10;
 
     for (int i = 0; i < outLength; ++i) {
-        float spec = out->getFFConstData()[0]
+        double spec = out->getFFConstData()[0]
                                 / (mFFT.data(i) * mFFT.data(i)
                                         + mFFT.data(nfft - 1 - i) * mFFT.data(nfft - 1 - i));
         if (spec > max) {

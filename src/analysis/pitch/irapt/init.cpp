@@ -4,9 +4,9 @@
 
 using namespace Analysis;
 
-static std::vector<float> fir1();
+static std::vector<double> fir1();
 
-IRAPT_Cfg Analysis::initCfg(float sampleRate)
+IRAPT_Cfg Analysis::initCfg(double sampleRate)
 {
     IRAPT_Cfg cfg;
 
@@ -35,7 +35,7 @@ IRAPT_Cfg Analysis::initCfg(float sampleRate)
 
     cfg.f0_max_step = 23;
 
-    float F = cfg.FD + cfg.FD / 4;
+    double F = cfg.FD + cfg.FD / 4;
     while (F <= cfg.fs_f0 / 2 - cfg.FD) {
         cfg.f0_freq_lines.push_back(F);
         F += cfg.FD / 2;

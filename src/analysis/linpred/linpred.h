@@ -8,20 +8,20 @@ namespace Analysis {
     class LinpredSolver {
     public:
         virtual ~LinpredSolver() {}
-        virtual std::vector<float> solve(const float *x, int length, int lpcOrder, float *gain) = 0;
+        virtual std::vector<double> solve(const double *x, int length, int lpcOrder, double *gain) = 0;
     };
 
     namespace LP {
         class Autocorr : public LinpredSolver {
         public:
-            std::vector<float> solve(const float *x, int length, int lpcOrder, float *gain) override;
+            std::vector<double> solve(const double *x, int length, int lpcOrder, double *gain) override;
         private:
             std::vector<double> r, a, rc;
         };
 
         class Burg : public LinpredSolver {
         public:
-            std::vector<float> solve(const float *x, int length, int lpcOrder, float *gain) override;
+            std::vector<double> solve(const double *x, int length, int lpcOrder, double *gain) override;
         private:
             std::vector<double> b1, b2, aa;
         };

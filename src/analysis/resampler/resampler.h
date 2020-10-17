@@ -5,7 +5,7 @@
 
 namespace Analysis
 {
-    std::vector<float> resample(const std::vector<float>& x, float srcFs, float dstFs);
+    std::vector<double> resample(const std::vector<double>& x, double srcFs, double dstFs);
 }
 
 #endif // ANALYSIS_RESAMPLER_H

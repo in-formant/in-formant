@@ -53,7 +53,7 @@ void Queue::pushIfNeeded(void *userdata)
         pushSize = mMaxInLength;
     }
     
-    auto inputArray = std::make_unique<float[]>(pushSize);
+    auto inputArray = std::make_unique<double[]>(pushSize);
     
     mCallback(inputArray.get(), pushSize, userdata);
     
@@ -68,7 +68,7 @@ void Queue::pull(float *pOut, int outLength)
   
     int pullSize = mResampler.getRequiredInLength(outLength);
 
-    auto preResampleData = std::make_unique<float[]>(pullSize);
+    auto preResampleData = std::make_unique<double[]>(pullSize);
 
     int pullCopyLength;
     if (pullSize > mDeque.size()) {

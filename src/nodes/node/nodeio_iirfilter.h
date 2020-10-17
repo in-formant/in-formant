@@ -13,22 +13,22 @@ namespace Nodes::IO {
         void setSampleRate(int sampleRate);
         void setFFOrder(int ffOrder);
         void setFBOrder(int fbOrder);
-        float *getFFData();
-        float *getFBData();
+        double *getFFData();
+        double *getFBData();
 
         int getSampleRate() const;
         int getFFOrder() const;
         int getFBOrder() const;
-        const float *getFFConstData() const;
-        const float *getFBConstData() const;
+        const double *getFFConstData() const;
+        const double *getFBConstData() const;
 
     private:
         int mSampleRate;
         int mFFOrder;
         int mFBOrder;
 
-        float *mFF;
-        float *mFB;
+        double *mFF;
+        double *mFB;
     };
 
 }

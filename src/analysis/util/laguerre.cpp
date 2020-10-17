@@ -53,7 +53,7 @@ std::vector<std::complex<double>> Analysis::laguerreDeflate(const std::vector<st
     return Q;
 }
 
-std::vector<std::complex<float>> Analysis::laguerreSolve(const std::vector<float>& realP)
+std::vector<std::complex<double>> Analysis::laguerreSolve(const std::vector<double>& realP)
 {
     std::vector<std::complex<double>> P(realP.rbegin(), realP.rend());
     auto Pi = P;
@@ -71,5 +71,5 @@ std::vector<std::complex<float>> Analysis::laguerreSolve(const std::vector<float
         R[i] = laguerreRoot(P, R[i], 1e-12);
     }
 
-    return std::vector<std::complex<float>>(R.begin(), R.end());
+    return std::vector<std::complex<double>>(R.begin(), R.end());
 }

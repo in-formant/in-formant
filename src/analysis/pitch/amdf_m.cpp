@@ -6,14 +6,14 @@
 using Analysis::PitchResult;
 using namespace Analysis::Pitch;
 
-AMDF_M::AMDF_M(float minPitch, float maxPitch, float alpha)
+AMDF_M::AMDF_M(double minPitch, double maxPitch, double alpha)
     : mMinPitch(minPitch),
       mMaxPitch(maxPitch),
       mAlpha(alpha)
 {
 }
 
-PitchResult AMDF_M::solve(const float *data, int length, int sampleRate)
+PitchResult AMDF_M::solve(const double *data, int length, int sampleRate)
 {
     const int maxShift = length;
 
@@ -23,14 +23,14 @@ PitchResult AMDF_M::solve(const float *data, int length, int sampleRate)
     // Calculate the AMDF.
     mAMDF.resize(maxShift);
     
-    float Vmax = 0.0f;
-    float Vmin = std::numeric_limits<float>::max();
+    double Vmax = 0.0f;
+    double Vmin = std::numeric_limits<double>::max();
 
     for (int i = 0; i < maxShift; ++i) {
-        float sum = 0.0f;
+        double sum = 0.0f;
 
         for (int j = 0; j < maxShift - i; ++j) {
-            sum += fabsf(data[j] - data[i + j]);
+            sum += fabs(data[j] - data[i + j]);
         }
 
         mAMDF[i] = sum / (maxShift - i);
@@ -44,7 +44,7 @@ PitchResult AMDF_M::solve(const float *data, int length, int sampleRate)
     }
 
     // Convert to 1-bit AMDF.
-    const float theta = mAlpha * (Vmax + Vmin);
+    const double theta = mAlpha * (Vmax + Vmin);
 
     m1bAMDF.resize(maxShift / 32 + 1);
 
@@ -90,15 +90,15 @@ PitchResult AMDF_M::solve(const float *data, int length, int sampleRate)
         return {.pitch = 0.0f, .voiced = false};
     }
 
-    const float actualCutoff = mAlpha * m1bACF[0];
+    const double actualCutoff = mAlpha * m1bACF[0];
 
-    float pitch = 0.0f;
+    double pitch = 0.0f;
 
     for (const int pos : maxPositions) {
         int i = minPeriod + pos;
 
         if (m1bACF[i] >= actualCutoff) {
-            pitch = (float) sampleRate / (float) i;
+            pitch = (double) sampleRate / (double) i;
 
             if (pitch >= mMinPitch && pitch <= mMaxPitch)
                 return {.pitch = pitch, .voiced = true};

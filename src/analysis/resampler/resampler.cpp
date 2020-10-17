@@ -2,13 +2,13 @@
 #include "../fft/fft.h"
 #include <cmath>
 
-std::vector<float> Analysis::resample(const std::vector<float>& x, float srcFs, float dstFs)
+std::vector<double> Analysis::resample(const std::vector<double>& x, double srcFs, double dstFs)
 {
     const int n = x.size();
 
     std::vector<double> z(n);
 
-    float upFactor = dstFs / srcFs;
+    double upFactor = dstFs / srcFs;
     
     if (upFactor < 1) {
         constexpr int antiTurnAround = 1000;
@@ -42,7 +42,7 @@ std::vector<float> Analysis::resample(const std::vector<float>& x, float srcFs, 
 
     const int numberOfSamples = std::round(n * dstFs / srcFs);
     
-    std::vector<float> y(numberOfSamples);
+    std::vector<double> y(numberOfSamples);
 
     for (int i = 0; i < numberOfSamples; ++i) {
         double index = (i * srcFs) / dstFs;

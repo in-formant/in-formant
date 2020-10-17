@@ -12,7 +12,7 @@
 
 using namespace Analysis;
 
-PitchResult Pitch::IRAPT::solve(const float *data, int length, int sampleRate)
+PitchResult Pitch::IRAPT::solve(const double *data, int length, int sampleRate)
 {
     irapt1();
 }

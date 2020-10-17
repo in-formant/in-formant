@@ -3,7 +3,7 @@
 
 using namespace Analysis::LP;
 
-std::vector<float> Burg::solve(const float *x, int length, int lpcOrder, float *pGain)
+std::vector<double> Burg::solve(const double *x, int length, int lpcOrder, double *pGain)
 {
     int n = length, m = lpcOrder;
 
@@ -59,7 +59,7 @@ end:
         xms = 0.0;
     }
 
-    std::vector<float> lpc(a.size());
+    std::vector<double> lpc(a.size());
     for (int i = 0; i < a.size(); ++i) {
         lpc[i] = -a[i];
     }

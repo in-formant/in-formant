@@ -1,8 +1,9 @@
 #ifndef AUDIO_RESAMPLER_H
 #define AUDIO_RESAMPLER_H
 
-#include <soxr.h>
 #include <vector>
+#include <memory>
+#include <CDSPResampler.h>
 
 namespace Module::Audio {
 
@@ -11,7 +12,6 @@ namespace Module::Audio {
         static constexpr int chMono = 1;
 
         Resampler(int inRate, int outRate);
-        ~Resampler();
 
         constexpr int getNumChannels() const { return chMono; }
 
@@ -31,20 +31,14 @@ namespace Module::Audio {
         int getDelay() const;
 
         void clear();
-        std::vector<float> process(const float *pIn, int inLength);
+        std::vector<double> process(double *pIn, int inLength);
         
     private:
         void createResampler();
 
-        soxr_io_spec_t mSoxrIoSpec;
-        soxr_quality_spec_t mSoxrQualitySpec;
-        soxr_runtime_spec_t mSoxrRuntimeSpec;
-        soxr_t mSoxr;
+        std::shared_ptr<r8b::CDSPResampler> mResampler;
 
         int mInRate, mOutRate;
-
-        soxr_error_t err;
-        void checkError();
     };
 
 }

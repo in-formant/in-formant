@@ -2,12 +2,12 @@
 
 using namespace Analysis::LP;
 
-std::vector<float> Autocorr::solve(const float *x, int length, int lpcOrder, float *pGain)
+std::vector<double> Autocorr::solve(const double *x, int length, int lpcOrder, double *pGain)
 {
     const int n = length;
     const int m = lpcOrder;
     
-    float gain;
+    double gain;
 
     r.resize(m + 2, 0.0);
     a.resize(m + 2, 0.0);
@@ -52,7 +52,7 @@ std::vector<float> Autocorr::solve(const float *x, int length, int lpcOrder, flo
 
 end:
 
-    std::vector<float> lpc(m);
+    std::vector<double> lpc(m);
     
     i--;
     for (int j = 1; j <= i; ++j) {

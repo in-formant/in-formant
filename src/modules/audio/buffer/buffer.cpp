@@ -23,9 +23,9 @@ void Buffer::setSampleRate(int newSampleRate)
     Resampler rsx(mSampleRate, newSampleRate);
    
     int newLength = rsx.getExpectedOutLength(mLength);
-    auto newArray = std::make_unique<float[]>(newLength);
+    auto newArray = std::make_unique<double[]>(newLength);
 
-    auto array = std::make_unique<float[]>(mLength);
+    auto array = std::make_unique<double[]>(mLength);
     std::copy(mData.begin(), mData.end(), array.get());
 
     auto outVec = rsx.process(array.get(), mLength);
@@ -52,7 +52,7 @@ void Buffer::setLength(int newLength)
         return;
     }
 
-    auto array = std::make_unique<float[]>(mLength);
+    auto array = std::make_unique<double[]>(mLength);
     std::copy(mData.begin(), mData.end(), array.get());
     
     // Copy old buffer to new buffer.
@@ -86,7 +86,7 @@ int Buffer::getLength() const
     return mLength;
 }
 
-void Buffer::pull(float *pOut, int outLength)
+void Buffer::pull(double *pOut, int outLength)
 {
     mLock.lock();
 

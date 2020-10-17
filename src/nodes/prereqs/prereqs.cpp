@@ -45,7 +45,7 @@ void Prereqs::process(const NodeIO *inputs[], NodeIO *outputs[])
         mBuffer->setLength(actualLength);
     }
 
-    static std::vector<std::array<float, 6>> hpsos;
+    static std::vector<std::array<double, 6>> hpsos;
     static int lastSampleRate = 0;
     static int lastLength = 0;
 
@@ -58,7 +58,7 @@ void Prereqs::process(const NodeIO *inputs[], NodeIO *outputs[])
     out->setSampleRate(sampleRate);
     out->setLength(actualLength);
 
-    std::vector<float> input(actualLength);
+    std::vector<double> input(actualLength);
     mBuffer->pull(input.data(), actualLength);
     input = Analysis::sosfilter(hpsos, input);
     for (int i = 0; i < actualLength; ++i) {

@@ -14,7 +14,6 @@ do
     mkdir -p $tmp/app/libs/$android_abi
 
     cp -v /build/$target/libspeech-analysis.so $tmp/app/libs/$android_abi
-    cp -v /build/$target/soxr/lib/libsoxr.so $tmp/app/libs/$android_abi
     cp -v /build/$target/freetype/libfreetype.so $tmp/app/libs/$android_abi
     cp -vL /usr/$target/lib/libhidapi.so $tmp/app/libs/$android_abi
     cp -vL /usr/$target/lib/libSDL2.so $tmp/app/libs/$android_abi

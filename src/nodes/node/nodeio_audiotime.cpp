@@ -22,7 +22,7 @@ void AudioTime::setLength(int length)
     mLength = length;
 }
 
-float *AudioTime::getData()
+double *AudioTime::getData()
 {
     return mData.data();
 }
@@ -37,7 +37,7 @@ int AudioTime::getLength() const
     return mLength;
 }
 
-const float *AudioTime::getConstData() const
+const double *AudioTime::getConstData() const
 {
     return mData.data();
 }

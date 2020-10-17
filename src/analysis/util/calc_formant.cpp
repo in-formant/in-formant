@@ -1,10 +1,10 @@
 #include "util.h"
 #include "../../modules/math/constants.h"
 
-Analysis::FormantData Analysis::calculateFormant(float r, float phi, float sampleRate)
+Analysis::FormantData Analysis::calculateFormant(double r, double phi, double sampleRate)
 {
     return {
-        .frequency = (float) (fabsf(phi) * sampleRate / (2.0f * M_PI)),
-        .bandwidth = (float) (-logf(r) * sampleRate / M_PI), 
+        .frequency = (double) (fabs(phi) * sampleRate / (2.0f * M_PI)),
+        .bandwidth = (double) (-log(r) * sampleRate / M_PI), 
     };
 }

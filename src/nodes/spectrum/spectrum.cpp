@@ -48,8 +48,8 @@ void Spectrum::process(const NodeIO *inputs[], NodeIO *outputs[])
         const int N = inLength - 1;
 
         for (int j = 0; j < inLength; ++j) {
-            float sample = in->getConstData()[j];
-            float window = 0.5f - 0.5f * cosf((2.0f * M_PI * j) / N);
+            double sample = in->getConstData()[j];
+            double window = 0.5f - 0.5f * cosf((2.0f * M_PI * j) / N);
 
             int i = nfft / 2 - inLength / 2 + j;
 
@@ -62,8 +62,8 @@ void Spectrum::process(const NodeIO *inputs[], NodeIO *outputs[])
         for (int j = 0; j < nfft; ++j) {
             int i = inLength / 2 - nfft / 2 + j;
             
-            float sample = in->getConstData()[i];
-            float window = 0.5f - 0.5f * cosf((2.0f * M_PI * j) / N);
+            double sample = in->getConstData()[i];
+            double window = 0.5f - 0.5f * cosf((2.0f * M_PI * j) / N);
 
             mFFT->data(j) = sample * window;
         }
@@ -76,12 +76,12 @@ void Spectrum::process(const NodeIO *inputs[], NodeIO *outputs[])
     out->setSampleRate(in->getSampleRate());
     out->setLength(outLength);
 
-    static float holdMax = 1.0f;
+    static double holdMax = 1.0f;
 
-    float max = 1.0f;
+    double max = 1.0f;
 
     for (int i = 0; i < outLength; ++i) {
-        float spec = mFFT->data(i) * mFFT->data(i)
+        double spec = mFFT->data(i) * mFFT->data(i)
                             + mFFT->data(nfft - 1 - i) * mFFT->data(nfft - 1 - i);
         out->getData()[i] = spec;
         if (spec > max) {

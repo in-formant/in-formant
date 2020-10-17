@@ -23,8 +23,8 @@ VectorXcf poly(const VectorXcf& z) {
     return poly;
 }
 
-std::vector<std::complex<float>> poly(const std::vector<std::complex<float>>& z) {
-    std::vector<std::complex<float>> poly(z.size() + 1, 1.0f);
+std::vector<std::complex<double>> poly(const std::vector<std::complex<double>>& z) {
+    std::vector<std::complex<double>> poly(z.size() + 1, 1.0);
 
     poly[0] = 1.0;
 
@@ -37,42 +37,42 @@ std::vector<std::complex<float>> poly(const std::vector<std::complex<float>>& z)
     return poly;
 }
 
-std::vector<std::array<float, 6>> Analysis::butterworthHighpass(int N, float fc, float fs)
+std::vector<std::array<double, 6>> Analysis::butterworthHighpass(int N, double fc, double fs)
 {
-    const float Wn = fc / (fs / 2.0f);
-    const float Wo = tanf(Wn * M_PI / 2.0f);
+    const double Wn = fc / (fs / 2.0);
+    const double Wo = tanf(Wn * M_PI / 2.0);
 
-    std::vector<std::complex<float>> p;
+    std::vector<std::complex<double>> p;
 
     // Step 1. Get Butterworth analog lowpass prototype.
     for (int i = 2 + N - 1; i <= 3 * N - 1; i += 2) {
-        p.push_back(std::polar<float>(1, (M_PI * i) / (2.0f * N)));
+        p.push_back(std::polar<double>(1, (M_PI * i) / (2.0 * N)));
     }
 
     // Step 2. Transform to high pass filter.
-    std::complex<float> Sg = 1.0f,
-                        prodSp = 1.0f,
-                        prodSz = 1.0f;
+    std::complex<double> Sg = 1.0,
+                        prodSp = 1.0,
+                        prodSz = 1.0;
 
-    std::vector<std::complex<float>> Sp(p.size()), Sz(p.size());
+    std::vector<std::complex<double>> Sp(p.size()), Sz(p.size());
 
     for (int i = 0; i < p.size(); ++i) {
         Sg *= -p[i];
         Sp[i] = Wo / p[i];
-        Sz[i] = 0.0f;
-        prodSp *= (1.0f - Sp[i]);
-        prodSz *= (1.0f - Sz[i]);
+        Sz[i] = 0.0;
+        prodSp *= (1.0 - Sp[i]);
+        prodSz *= (1.0 - Sz[i]);
     }
-    Sg = 1.0f / Sg;
+    Sg = 1.0 / Sg;
 
     // Step 3. Transform to digital filter.
-    std::vector<std::complex<float>> P(Sp.size()), Z(Sp.size());
+    std::vector<std::complex<double>> P(Sp.size()), Z(Sp.size());
     
-    float G = std::real(Sg * prodSz / prodSp);
+    double G = std::real(Sg * prodSz / prodSp);
 
     for (int i = 0; i < Sp.size(); ++i) {
-        P[i] = (1.0f + Sp[i]) / (1.0f - Sp[i]);
-        Z[i] = (1.0f + Sz[i]) / (1.0f - Sz[i]);
+        P[i] = (1.0 + Sp[i]) / (1.0 - Sp[i]);
+        Z[i] = (1.0 + Sz[i]) / (1.0 - Sz[i]);
     }
     
     // Step 6. Convert to SOS.
@@ -80,37 +80,37 @@ std::vector<std::array<float, 6>> Analysis::butterworthHighpass(int N, float fc,
     return zpk2sos(Z, P, G);
 }
 
-std::vector<std::array<float, 6>> Analysis::butterworthLowpass(int N, float fc, float fs)
+std::vector<std::array<double, 6>> Analysis::butterworthLowpass(int N, double fc, double fs)
 {
-    const float Wn = fc / (fs / 2.0f);
-    const float Wo = tanf(Wn * M_PI / 2.0f);
+    const double Wn = fc / (fs / 2.0);
+    const double Wo = tanf(Wn * M_PI / 2.0);
 
-    std::vector<std::complex<float>> p;
+    std::vector<std::complex<double>> p;
 
     // Step 1. Get Butterworth analog lowpass prototype.
     for (int i = 2 + N - 1; i <= 3 * N - 1; i += 2) {
-        p.push_back(std::polar<float>(1, (M_PI * i) / (2.0f * N)));
+        p.push_back(std::polar<double>(1, (M_PI * i) / (2.0 * N)));
     }
 
     // Step 2. Transform to low pass filter.
-    std::complex<float> Sg = 1.0f,
-                        prodSp = 1.0f;
+    std::complex<double> Sg = 1.0,
+                        prodSp = 1.0;
 
-    std::vector<std::complex<float>> Sp(p.size()), Sz(0);
+    std::vector<std::complex<double>> Sp(p.size()), Sz(0);
 
     for (int i = 0; i < p.size(); ++i) {
         Sg *= Wo;
         Sp[i] = Wo * p[i];
-        prodSp *= (1.0f - Sp[i]);
+        prodSp *= (1.0 - Sp[i]);
     }
 
     // Step 3. Transform to digital filter.
-    std::vector<std::complex<float>> P(Sp.size()), Z(Sp.size(), -1);
+    std::vector<std::complex<double>> P(Sp.size()), Z(Sp.size(), -1);
    
-    float G = std::real(Sg / prodSp);
+    double G = std::real(Sg / prodSp);
 
     for (int i = 0; i < Sp.size(); ++i) {
-        P[i] = (1.0f + Sp[i]) / (1.0f - Sp[i]);
+        P[i] = (1.0 + Sp[i]) / (1.0 - Sp[i]);
     }
     
     // Step 6. Convert to SOS.

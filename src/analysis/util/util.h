@@ -8,22 +8,22 @@
 
 namespace Analysis {
 
-    std::vector<int> findPeaks(const float *data, int length, int sign = +1);
+    std::vector<int> findPeaks(const double *data, int length, int sign = +1);
 
-    std::pair<float, float> parabolicInterpolation(const std::vector<float>& array, int x);
+    std::pair<double, double> parabolicInterpolation(const std::vector<double>& array, int x);
     
-    std::vector<std::complex<float>> findRoots(const std::vector<float>& p);
+    std::vector<std::complex<double>> findRoots(const std::vector<double>& p);
 
-    FormantData calculateFormant(float r, float phi, float sampleRate);
+    FormantData calculateFormant(double r, double phi, double sampleRate);
 
     void sortFormants(std::vector<FormantData>& formants);
 
-    void polishComplexRoot(const std::vector<float>& p, std::complex<float> *root, int maxIt);
-    void polishRealRoot(const std::vector<float>& p, float *root, int maxIt);
-    void polishRoots(const std::vector<float>& p, std::vector<std::complex<float>>& roots);
+    void polishComplexRoot(const std::vector<double>& p, std::complex<double> *root, int maxIt);
+    void polishRealRoot(const std::vector<double>& p, double *root, int maxIt);
+    void polishRoots(const std::vector<double>& p, std::vector<std::complex<double>>& roots);
 
-    void evaluatePolynomialWithDerivative(const std::vector<float>& p, float x, float *y, float *dy);
-    void evaluatePolynomialWithDerivative(const std::vector<float>& p, const std::complex<float>& x, std::complex<float> *y, std::complex<float> *dy);
+    void evaluatePolynomialWithDerivative(const std::vector<double>& p, double x, double *y, double *dy);
+    void evaluatePolynomialWithDerivative(const std::vector<double>& p, const std::complex<double>& x, std::complex<double> *y, std::complex<double> *dy);
     
     std::vector<std::complex<double>> evaluatePolynomialDerivatives(const std::vector<std::complex<double>>& p, const std::complex<double>& x, int numberOfDerivatives);
 

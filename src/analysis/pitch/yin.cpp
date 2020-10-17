@@ -17,13 +17,13 @@ pow2roundup (int x)
     return x+1;
 }
 
-Yin::Yin(float threshold)
+Yin::Yin(double threshold)
     : mThreshold(threshold),
       mFFT(nullptr)
 {
 }
 
-PitchResult Yin::solve(const float *data, int length, int sampleRate) 
+PitchResult Yin::solve(const double *data, int length, int sampleRate) 
 {
     int nfft = pow2roundup(length);
 
@@ -75,7 +75,7 @@ PitchResult Yin::solve(const float *data, int length, int sampleRate)
         return {.pitch = 0.0f, .voiced = false};
     }
     else {
-        float pitch = (float) sampleRate / (float) k;
+        double pitch = (double) sampleRate / (double) k;
         return {.pitch = pitch, .voiced = true};
     }
 }
