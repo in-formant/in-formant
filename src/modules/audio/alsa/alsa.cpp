@@ -236,7 +236,7 @@ void Alsa::captureThreadLoop()
         
         int frameCount = snd_pcm_avail(mCaptureHandle);
         if (frameCount < 0) {
-            std::cout << "Audio::ALSA] Capture stream query failed: " << snd_strerror(frameCount) << std::endl;
+            //std::cout << "Audio::ALSA] Capture stream query failed: " << snd_strerror(frameCount) << std::endl;
         }
         else if (frameCount > 0) {
             array.resize(frameCount);
@@ -274,7 +274,7 @@ void Alsa::playbackThreadLoop()
         
         int frameCount = snd_pcm_avail(mPlaybackHandle);
         if (frameCount < 0) {
-            std::cout << "Audio::ALSA] Playback stream query failed: " << snd_strerror(frameCount) << std::endl;
+            //std::cout << "Audio::ALSA] Playback stream query failed: " << snd_strerror(frameCount) << std::endl;
         }
         else {
             array.resize(frameCount);

@@ -147,7 +147,7 @@ void SigActionHandler(int sig, siginfo_t* info, void* ucontext) {
         UnwindBacktraceWithSkipping(&backtrace_state);
         PrintBacktrace(&backtrace_state);
 
-        __sa_llexit(EXIT_FAILURE);
+        _Exit(EXIT_FAILURE);
     }
 }
 
