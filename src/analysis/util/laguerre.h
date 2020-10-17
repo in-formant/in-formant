@@ -10,7 +10,7 @@ namespace Analysis {
 
     std::vector<std::complex<double>> laguerreDeflate(const std::vector<std::complex<double>>& P, const std::complex<double>& root);
 
-    std::vector<std::complex<float>> laguerreSolve(const std::vector<float>& P);
+    std::vector<std::complex<double>> laguerreSolve(const std::vector<double>& P);
 
 }
 

@@ -32,7 +32,7 @@ AMGIF::AMGIF(int J)
     std::cout << "Time to compute C : " << (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1'000'000.0) << "s" << std::endl;
 }
 
-InvglotResult AMGIF::solve(const float *data, int length, float sampleRate)
+InvglotResult AMGIF::solve(const double *data, int length, double sampleRate)
 {
     auto pFloat = iaif.solve(data, length, sampleRate).glotSig;
     

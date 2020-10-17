@@ -17,7 +17,7 @@ void Frequencies::setLength(int length)
     mLength = length;
 }
 
-void Frequencies::set(int index, float frequency)
+void Frequencies::set(int index, double frequency)
 {
     mData.at(index) = frequency;
 }
@@ -27,7 +27,7 @@ int Frequencies::getLength() const
     return mLength;
 }
 
-const float Frequencies::get(int index) const
+const double Frequencies::get(int index) const
 {
     return mData.at(index);
 }

@@ -39,32 +39,32 @@ void Synthesizer::initialize()
     resampler.setOutputRate(playbackQueue->getInSampleRate());
 }
 
-void Synthesizer::setMasterGain(float value)
+void Synthesizer::setMasterGain(double value)
 {
     masterGain = value;
 }
 
-void Synthesizer::setNoiseGain(float value)
+void Synthesizer::setNoiseGain(double value)
 {
     noiseGain = value;
 }
 
-void Synthesizer::setGlotGain(float value)
+void Synthesizer::setGlotGain(double value)
 {
     glotGain = value;
 }
 
-void Synthesizer::setGlotPitch(float value)
+void Synthesizer::setGlotPitch(double value)
 {
     glotPitch = value;
 }
 
-void Synthesizer::setGlotRd(float value)
+void Synthesizer::setGlotRd(double value)
 {
     glotRd = value;
 }
 
-void Synthesizer::setGlotTc(float value)
+void Synthesizer::setGlotTc(double value)
 {
     glotTc = value;
 }
@@ -74,7 +74,7 @@ void Synthesizer::setFormants(const std::vector<Analysis::FormantData>& value)
     formants = value;
 }
 
-void Synthesizer::setFilterShift(float value)
+void Synthesizer::setFilterShift(double value)
 {
     filterShift = value;
 }
@@ -84,37 +84,37 @@ void Synthesizer::setVoiced(bool value)
     voiced = value;
 }
 
-float Synthesizer::getMasterGain() const
+double Synthesizer::getMasterGain() const
 {
     return realMasterGain;
 }
 
-float Synthesizer::getNoiseGain() const
+double Synthesizer::getNoiseGain() const
 {
     return realNoiseGain;
 }
 
-float Synthesizer::getGlotGain() const
+double Synthesizer::getGlotGain() const
 {
     return realGlotGain;
 }
 
-float Synthesizer::getGlotPitch() const
+double Synthesizer::getGlotPitch() const
 {
     return glotPitch;
 }
 
-float Synthesizer::getGlotRd() const
+double Synthesizer::getGlotRd() const
 {
     return glotRd;
 }
 
-float Synthesizer::getGlotTc() const
+double Synthesizer::getGlotTc() const
 {
     return glotTc;
 }
 
-float Synthesizer::getFilterShift() const
+double Synthesizer::getFilterShift() const
 {
     return filterShift;
 }
@@ -144,7 +144,7 @@ void Synthesizer::generateAudio(int requestedLength)
 
     auto noise = Synthesis::aspirateNoise(inputLength);
 
-    std::vector<float> glot;
+    std::vector<double> glot;
     glot.reserve(inputLength);
    
     if (glotSurplus.size() > 0) {
@@ -158,12 +158,12 @@ void Synthesizer::generateAudio(int requestedLength)
         }
     }
 
-    float glotFs = resampler.getInputRate();
-    std::vector<float> pitches(inputLength);
-    std::vector<float> Rds(inputLength);
-    std::vector<float> tcs(inputLength);
+    double glotFs = resampler.getInputRate();
+    std::vector<double> pitches(inputLength);
+    std::vector<double> Rds(inputLength);
+    std::vector<double> tcs(inputLength);
     if (inputLength > 0) {
-        constexpr float expFact = 0.997f;
+        constexpr double expFact = 0.997f;
         pitches[0] = realGlotPitch;
         Rds[0] = realGlotRd;
         tcs[0] = realGlotTc;
@@ -191,7 +191,7 @@ void Synthesizer::generateAudio(int requestedLength)
     }
 
     // Anti-alias glot.
-    static std::vector<std::array<float, 6>> lpsos;
+    static std::vector<std::array<double, 6>> lpsos;
     static int lastSampleRate = 0;
 
     if (lpsos.empty() || lastSampleRate != glotFs) {
@@ -202,25 +202,25 @@ void Synthesizer::generateAudio(int requestedLength)
     static std::vector<std::vector<double>> lpglotmem(20, std::vector<double>(4, 0.0f));
     glot = Synthesis::sosfilter(lpsos, glot, lpglotmem);
 
-    std::vector<float> input(inputLength);
+    std::vector<double> input(inputLength);
 
     auto outputNoise = Synthesis::sosfilter(realFilter, noise, zfNoise);
-    float outputNoiseMax = 0.0f;
+    double outputNoiseMax = 0.0f;
     for (int i = 0; i < inputLength; ++i) {
-        if (fabsf(outputNoise[i]) > outputNoiseMax) {
-            outputNoiseMax = fabsf(outputNoise[i]);
+        if (fabs(outputNoise[i]) > outputNoiseMax) {
+            outputNoiseMax = fabs(outputNoise[i]);
         }
     }
 
     auto outputGlot = Synthesis::sosfilter(realFilter, glot, zfGlot);
-    float outputGlotMax = 0.0f;
+    double outputGlotMax = 0.0f;
     for (int i = 0; i < inputLength; ++i) {
-        if (fabsf(outputGlot[i]) > outputGlotMax) {
-            outputGlotMax = fabsf(outputGlot[i]);
+        if (fabs(outputGlot[i]) > outputGlotMax) {
+            outputGlotMax = fabs(outputGlot[i]);
         }
     }
 
-    std::vector<float> output(inputLength);
+    std::vector<double> output(inputLength);
     for (int i = 0; i < inputLength; ++i) {
         if (voiced) {
             output[i] = 0.5f * realNoiseGain * outputNoise[i] / outputNoiseMax + realGlotGain * outputGlot[i] / outputGlotMax;
@@ -240,7 +240,7 @@ void Synthesizer::generateAudio(int requestedLength)
     surplus.insert(surplus.end(), output.begin(), output.end());
 }
 
-void Synthesizer::audioCallback(float *output, int length, void *userdata)
+void Synthesizer::audioCallback(double *output, int length, void *userdata)
 {
     auto self = static_cast<Synthesizer *>(userdata);
 
@@ -250,7 +250,7 @@ void Synthesizer::audioCallback(float *output, int length, void *userdata)
     self->realGlotGain   = 0.1f * self->realGlotGain   + 0.9f * self->glotGain;
     self->realFilterShift = 0.2f * self->realFilterShift + 0.8f * self->filterShift;
 
-    static float formantCount = 0;
+    static double formantCount = 0;
 
     if (formantCount == 0) {
         formantCount = self->formants.size();

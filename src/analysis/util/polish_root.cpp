@@ -1,16 +1,16 @@
 #include "util.h"
 #include <climits>
 
-void Analysis::polishComplexRoot(const std::vector<float>& p, std::complex<float> *root, int maxIt)
+void Analysis::polishComplexRoot(const std::vector<double>& p, std::complex<double> *root, int maxIt)
 {
-    std::complex<float> zbest = *root;
-    float ymin = HUGE_VALF;
+    std::complex<double> zbest = *root;
+    double ymin = HUGE_VALF;
 
     for (int iter = 1; iter <= maxIt; ++iter) {
-        std::complex<float> y, dy;
+        std::complex<double> y, dy;
         evaluatePolynomialWithDerivative(p, *root, &y, &dy);
-        const float fabsy = std::abs(y);
-        if (fabsy > ymin || fabsf(fabsy - ymin) < 1e-6) {
+        const double fabsy = std::abs(y);
+        if (fabsy > ymin || fabs(fabsy - ymin) < 1e-6) {
             *root = zbest;
             return;
         }
@@ -19,42 +19,42 @@ void Analysis::polishComplexRoot(const std::vector<float>& p, std::complex<float
         if (std::abs(dy) == 0.0f) {
             return;
         }
-        std::complex<float> dz = y / dy;
+        std::complex<double> dz = y / dy;
         *root -= dz;
     }
 }
 
-void Analysis::polishRealRoot(const std::vector<float>& p, float *root, int maxIt)
+void Analysis::polishRealRoot(const std::vector<double>& p, double *root, int maxIt)
 {
-    float xbest = *root;
-    float ymin = HUGE_VALF;
+    double xbest = *root;
+    double ymin = HUGE_VALF;
 
     for (int iter = 1; iter <= maxIt; ++iter) {
-        float y, dy;
+        double y, dy;
         evaluatePolynomialWithDerivative(p, *root, &y, &dy);
-        const float fabsy = fabsf(y);
-        if (fabsy > ymin || fabsf(fabsy - ymin) < 1e-6) {
+        const double fabsy = fabs(y);
+        if (fabsy > ymin || fabs(fabsy - ymin) < 1e-6) {
             *root = xbest;
             return;
         }
         ymin = fabsy;
         xbest = *root;
-        if (fabsf(dy) == 0.0f) {
+        if (fabs(dy) == 0.0f) {
             return;
         }
-        float dx = y / dy;
+        double dx = y / dy;
         *root -= dx;
     }
 }
 
-void Analysis::polishRoots(const std::vector<float> &p, std::vector<std::complex<float>>& roots)
+void Analysis::polishRoots(const std::vector<double> &p, std::vector<std::complex<double>>& roots)
 {
     constexpr int maxIt = 80;
 
     int i = 0;
     while (i < roots.size()) {
-        float im = roots[i].imag();
-        float re = roots[i].real();
+        double im = roots[i].imag();
+        double re = roots[i].real();
 
         if (im != 0.0f) {
             polishComplexRoot(p, &roots[i], maxIt);

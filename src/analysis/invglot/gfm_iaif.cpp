@@ -7,13 +7,13 @@
 using namespace Analysis::Invglot;
 using Analysis::InvglotResult;
 
-GFM_IAIF::GFM_IAIF(float d)
+GFM_IAIF::GFM_IAIF(double d)
     : d(d)
 {
     lpc = std::make_unique<LP::Burg>();
 }
 
-static void applyWindow(const std::vector<float>& w, const std::vector<float>& x, std::vector<float>& y)
+static void applyWindow(const std::vector<double>& w, const std::vector<double>& x, std::vector<double>& y)
 {
     y.resize(x.size());
     for (int i = 0; i < x.size(); ++i) {
@@ -21,10 +21,10 @@ static void applyWindow(const std::vector<float>& w, const std::vector<float>& x
     }
 }
 
-static std::vector<float> calculateLPC(const std::vector<float>& x, const std::vector<float>& w, int len, int order, std::unique_ptr<Analysis::LinpredSolver>& lpc)
+static std::vector<double> calculateLPC(const std::vector<double>& x, const std::vector<double>& w, int len, int order, std::unique_ptr<Analysis::LinpredSolver>& lpc)
 {
-    static std::vector<float> lpcIn;
-    static float gain;
+    static std::vector<double> lpcIn;
+    static double gain;
 
     lpcIn.resize(len);
     for (int i = 0; i < len; ++i) {
@@ -35,35 +35,35 @@ static std::vector<float> calculateLPC(const std::vector<float>& x, const std::v
     return a;
 }
 
-static std::vector<float> removePreRamp(const std::vector<float>& x, int preflt)
+static std::vector<double> removePreRamp(const std::vector<double>& x, int preflt)
 {
-    return std::vector<float>(std::next(x.begin(), preflt), x.end());
+    return std::vector<double>(std::next(x.begin(), preflt), x.end());
 }
 
-inline float G(float x, int L, float alpha)
+inline double G(double x, int L, double alpha)
 {
     const int N = L - 1;
-    const float k = (x - N / 2.0f) / (2 * L * alpha);
+    const double k = (x - N / 2.0f) / (2 * L * alpha);
     return expf(-(k * k));
 }
 
-static void calcGaussian(std::vector<float>& win, float alpha)
+static void calcGaussian(std::vector<double>& win, double alpha)
 {
     const int L = win.size();
     
-    float Gmh = G(-0.5f, L, alpha);
-    float GmhpLpGmhmL = G(-0.5f + L, L, alpha) - G(-0.5f - L, L, alpha);
+    double Gmh = G(-0.5f, L, alpha);
+    double GmhpLpGmhmL = G(-0.5f + L, L, alpha) - G(-0.5f - L, L, alpha);
 
     for (int n = 0; n < L; ++n) {
         win[n] = G(n, L, alpha) - (Gmh * (G(n + L, L, alpha) + G(n - L, L, alpha))) / GmhpLpGmhmL;
     }
 }
 
-static std::vector<float> conv(const std::vector<float>& x, const std::vector<float>& y) {
+static std::vector<double> conv(const std::vector<double>& x, const std::vector<double>& y) {
     int lx = x.size();
     int ly = y.size();
     int lw = lx + ly - 1;
-    std::vector<float> w(lw, 0.0f);
+    std::vector<double> w(lw, 0.0f);
     for (int k = 0; k < lw; ++k) {
         int i = k;
         for (int j = 0; j < ly; ++j) {
@@ -76,7 +76,7 @@ static std::vector<float> conv(const std::vector<float>& x, const std::vector<fl
     return w;
 }
 
-InvglotResult GFM_IAIF::solve(const float *xData, int length, float sampleRate)
+InvglotResult GFM_IAIF::solve(const double *xData, int length, double sampleRate)
 {
     const int ng = 3;
     const int nv = std::round(sampleRate / 1000);
@@ -84,28 +84,28 @@ InvglotResult GFM_IAIF::solve(const float *xData, int length, float sampleRate)
 
     const int lpW = std::round(0.015f * sampleRate);
 
-    std::vector<float> one({1.0f});
-    std::vector<float> oneMinusD({1.0f, -d});
+    std::vector<double> one({1.0f});
+    std::vector<double> oneMinusD({1.0f, -d});
 
-    static std::vector<float> window;
+    static std::vector<double> window;
     if (window.size() != lpW) {
         window.resize(lpW);
         for (int i = 0; i < lpW; ++i) {
-            window[i] = 0.5f - 0.5f * cosf((2.0f * M_PI * i) / (float) (length - 1));
+            window[i] = 0.5f - 0.5f * cosf((2.0f * M_PI * i) / (double) (length - 1));
         }
     }
 
-    std::vector<float> s_gvl(xData, xData + length);
+    std::vector<double> s_gvl(xData, xData + length);
 
-    static std::vector<std::array<float, 6>> hpfilt;
+    static std::vector<std::array<double, 6>> hpfilt;
     if (hpfilt.empty()) {
         hpfilt = Analysis::butterworthHighpass(10, 70.0f, sampleRate);
     }
     s_gvl = sosfilter(hpfilt, s_gvl);
 
-    std::vector<float> x_gvl(Lpf + length);
+    std::vector<double> x_gvl(Lpf + length);
     for (int i = 0; i < Lpf; ++i) {
-        x_gvl[i] = 2.0f * ((float) i / (float) (Lpf - 1) - 0.5f) * s_gvl[0];
+        x_gvl[i] = 2.0f * ((double) i / (double) (Lpf - 1) - 0.5f) * s_gvl[0];
     }
     for (int i = 0; i < length; ++i) {
         x_gvl[Lpf + i] = s_gvl[i];
@@ -139,9 +139,9 @@ InvglotResult GFM_IAIF::solve(const float *xData, int length, float sampleRate)
 
     auto g = removePreRamp(filter(av, x_gv), Lpf);
 
-    float gMax = 1e-10;
+    double gMax = 1e-10;
     for (int i = 0; i < length; ++i) {
-        float absG = fabsf(g[i]);
+        double absG = fabs(g[i]);
         if (absG > gMax)
             gMax = absG;
     }

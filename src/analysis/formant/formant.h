@@ -6,8 +6,8 @@
 namespace Analysis {
 
     struct FormantData {
-        float frequency;
-        float bandwidth;
+        double frequency;
+        double bandwidth;
     };
 
     struct FormantResult {
@@ -17,18 +17,18 @@ namespace Analysis {
     class FormantSolver {
     public:
         virtual ~FormantSolver() {}
-        virtual FormantResult solve(const float *lpc, int lpcOrder, float sampleRate) = 0;
+        virtual FormantResult solve(const double *lpc, int lpcOrder, double sampleRate) = 0;
     };
 
     namespace Formant {
         class SimpleLP : public FormantSolver {
         public:
-            FormantResult solve(const float *lpc, int lpcOrder, float sampleRate) override;
+            FormantResult solve(const double *lpc, int lpcOrder, double sampleRate) override;
         };
 
         class FilteredLP : public FormantSolver {
         public:
-            FormantResult solve(const float *lpc, int lpcOrder, float sampleRate) override;
+            FormantResult solve(const double *lpc, int lpcOrder, double sampleRate) override;
         };
     };
 

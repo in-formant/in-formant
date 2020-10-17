@@ -5,6 +5,7 @@
 #include "../linpred/linpred.h"
 #include <deque>
 #include <vector>
+#include <memory>
 
 namespace Analysis {
 
@@ -12,40 +13,40 @@ namespace Analysis {
     public:
         RAPT();
 
-        float computeFrame(const float *data, int length, float sampleRate);
-        std::vector<float> computePath();
+        double computeFrame(const double *data, int length, double sampleRate);
+        std::vector<double> computePath();
 
-        float F0min;    // minimum F0 to search for (Hz)                | 50
-        float F0max;    // maximum F0 to search for (Hz)                | 500
-        float cand_tr;  // minimum acceptable peak value in NCCF        | 0.3
-        float lag_wt;   // linear lag taper factor for NCCF             | 0.3
-        float freq_wt;  // cost factor for F0 change                    | 0.02
-        float vtran_c;  // fixed voicing-state transition cost          | 0.005
-        float vtr_a_c;  // delta amplitude modulated transition cost    | 0.5
-        float vtr_s_c;  // delta spectrum modulated transition cost     | 0.5
-        float vo_bias;  // bias to encourage voiced hypotheses          | 0.0
-        float doubl_c;  // cost of exact F0 doubling of halving         | 0.35
-        float a_fact;   // term to decrease PHI of weak signals         | 10000
+        double F0min;    // minimum F0 to search for (Hz)                | 50
+        double F0max;    // maximum F0 to search for (Hz)                | 500
+        double cand_tr;  // minimum acceptable peak value in NCCF        | 0.3
+        double lag_wt;   // linear lag taper factor for NCCF             | 0.3
+        double freq_wt;  // cost factor for F0 change                    | 0.02
+        double vtran_c;  // fixed voicing-state transition cost          | 0.005
+        double vtr_a_c;  // delta amplitude modulated transition cost    | 0.5
+        double vtr_s_c;  // delta spectrum modulated transition cost     | 0.5
+        double vo_bias;  // bias to encourage voiced hypotheses          | 0.0
+        double doubl_c;  // cost of exact F0 doubling of halving         | 0.35
+        double a_fact;   // term to decrease PHI of weak signals         | 10000
         int   n_cands;  // max. number of hypotheses at each frame      | 20
 
         struct Cand {
-            float localCost; // local cost of candidate for dynamic programming
+            double localCost; // local cost of candidate for dynamic programming
             bool voiced;     // suspected voiced candidate or not
-            float L;         // lag of peak for voiced candidate
-            float C;         // value of peak
-            float rms;       // RMS of candidate
+            double L;         // lag of peak for voiced candidate
+            double C;         // value of peak
+            double rms;       // RMS of candidate
         };
     
         struct Frame {
             std::vector<Cand> cands;
            
-            float Fs;
+            double Fs;
 
-            float rms;
-            float rr;
+            double rms;
+            double rr;
 
-            std::vector<float> ar;
-            float S;
+            std::vector<double> ar;
+            double S;
         };
 
         LP::Autocorr lpc;
@@ -54,8 +55,8 @@ namespace Analysis {
 
     private:
         std::deque<Frame> frames;
+        std::shared_ptr<r8b::CDSPResampler> resampler;
     };
-
 }
 
 #endif // ANALYSIS_PITCH_RAPT_H

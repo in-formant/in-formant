@@ -10,10 +10,10 @@
 
 namespace Synthesis
 {
-    std::vector<float> whiteNoise(int length);
-    std::vector<float> brownNoise(int length);
-    std::vector<float> pinkNoise(int length);
-    std::vector<float> aspirateNoise(int length);
+    std::vector<double> whiteNoise(int length);
+    std::vector<double> brownNoise(int length);
+    std::vector<double> pinkNoise(int length);
+    std::vector<double> aspirateNoise(int length);
 
     struct LF_State {
         double T0;
@@ -26,21 +26,21 @@ namespace Synthesis
     void lfRd2tetpta(LF_State& state);
     void lfEpsAlpha(LF_State& state);
 
-    std::vector<float> lfGenFrame(float f0, float Fs, float Rd, float tc);
+    std::vector<double> lfGenFrame(double f0, double Fs, double Rd, double tc);
 
-    std::vector<float> createPolynomialFromRoots(const std::vector<std::complex<float>>& z);
+    std::vector<double> createPolynomialFromRoots(const std::vector<std::complex<double>>& z);
 
-    std::vector<std::array<float, 6>> frequencyShiftFilter(const std::vector<Analysis::FormantData>& formants, float Fs, float factor);
+    std::vector<std::array<double, 6>> frequencyShiftFilter(const std::vector<Analysis::FormantData>& formants, double Fs, double factor);
 
-    std::vector<float> filter(
-                    const std::vector<float>& b,
-                    const std::vector<float>& a,
-                    const std::vector<float>& x,
+    std::vector<double> filter(
+                    const std::vector<double>& b,
+                    const std::vector<double>& a,
+                    const std::vector<double>& x,
                     std::vector<double>& zf);
 
-    std::vector<float> sosfilter(
-                    const std::vector<std::array<float, 6>>& sos,
-                    const std::vector<float>& x,
+    std::vector<double> sosfilter(
+                    const std::vector<std::array<double, 6>>& sos,
+                    const std::vector<double>& x,
                     std::vector<std::vector<double>>& zf);
 }
 

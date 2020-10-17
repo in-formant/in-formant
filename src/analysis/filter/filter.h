@@ -7,16 +7,16 @@
 
 namespace Analysis {
 
-    std::vector<float> filter(const std::vector<float>& a, const std::vector<float>& x);
+    std::vector<double> filter(const std::vector<double>& a, const std::vector<double>& x);
     
-    std::vector<float> filter(const std::vector<float>& b, const std::vector<float>& a, const std::vector<float>& x);
+    std::vector<double> filter(const std::vector<double>& b, const std::vector<double>& a, const std::vector<double>& x);
 
-    std::vector<std::array<float, 6>> butterworthHighpass(int N, float fc, float fs);
-    std::vector<std::array<float, 6>> butterworthLowpass(int N, float fc, float fs);
+    std::vector<std::array<double, 6>> butterworthHighpass(int N, double fc, double fs);
+    std::vector<std::array<double, 6>> butterworthLowpass(int N, double fc, double fs);
 
-    std::vector<std::array<float, 6>> zpk2sos(const std::vector<std::complex<float>>& z, const std::vector<std::complex<float>>& p, float k);
+    std::vector<std::array<double, 6>> zpk2sos(const std::vector<std::complex<double>>& z, const std::vector<std::complex<double>>& p, double k);
 
-    std::vector<float> sosfilter(const std::vector<std::array<float, 6>>& sos, const std::vector<float>& x);
+    std::vector<double> sosfilter(const std::vector<std::array<double, 6>>& sos, const std::vector<double>& x);
 
 }
 

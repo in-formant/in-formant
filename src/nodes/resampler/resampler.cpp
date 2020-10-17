@@ -37,8 +37,9 @@ void Resampler::process(const NodeIO *inputs[], NodeIO *outputs[])
 
     int inLength = in->getLength();
 
-    mResampler.clear();
-    auto outVec = mResampler.process(in->getConstData(), inLength);
+    std::vector<double> invec(in->getConstData(), in->getConstData() + inLength);
+   
+    auto outVec = mResampler.process(invec.data(), inLength);
 
     out->setSampleRate(mResampler.getOutputRate());
     out->setLength(outVec.size());

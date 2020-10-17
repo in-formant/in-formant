@@ -8,7 +8,7 @@
 
 namespace Module::Audio {
 
-    using QueueCallback = std::function<void(float*, int, void*)>;
+    using QueueCallback = std::function<void(double*, int, void*)>;
 
     class Queue {
     public:
@@ -34,7 +34,7 @@ namespace Module::Audio {
         Resampler mResampler;
         QueueCallback mCallback;
         
-        std::deque<float> mDeque;
+        std::deque<double> mDeque;
         
         std::mutex mLock;
     };

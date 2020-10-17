@@ -10,24 +10,15 @@
 using namespace Module::Audio;
 
 Resampler::Resampler(int inRate, int outRate)
-    : mSoxrIoSpec(soxr_io_spec(SOXR_FLOAT32_I, SOXR_FLOAT32_I)),
-      mSoxrQualitySpec(soxr_quality_spec(RESAMPLER_QUALITY, 0)),
-      mSoxrRuntimeSpec(soxr_runtime_spec(1)),
-      mInRate(inRate),
+    : mInRate(inRate),
       mOutRate(outRate)
 {
     createResampler();
 }
 
-Resampler::~Resampler()
-{
-    soxr_delete(mSoxr);
-}
-
 void Resampler::setInputRate(int newInRate)
 {
     if (mInRate != newInRate) {
-        soxr_delete(mSoxr);
         mInRate = newInRate;
         createResampler();
     }
@@ -36,7 +27,6 @@ void Resampler::setInputRate(int newInRate)
 void Resampler::setOutputRate(int newOutRate)
 {
     if (mOutRate != newOutRate) {
-        soxr_delete(mSoxr);
         mOutRate = newOutRate;
         createResampler();
     }
@@ -45,7 +35,6 @@ void Resampler::setOutputRate(int newOutRate)
 void Resampler::setRate(int newInRate, int newOutRate)
 {
     if (mInRate != newInRate || mOutRate != newOutRate) {
-        soxr_delete(mSoxr);
         mInRate = newInRate;
         mOutRate = newOutRate;
         createResampler();
@@ -74,7 +63,7 @@ int Resampler::getRequiredInLength(int outLength)
         return 0;
     }
 
-    return (int) (outLength * mInRate) / mOutRate;
+    return (int) (((outLength - 0.5f) * mInRate) / mOutRate);
 }
 
 int Resampler::getExpectedOutLength(int inLength)
@@ -82,56 +71,35 @@ int Resampler::getExpectedOutLength(int inLength)
     if (inLength == 0) {
         return 0;
     }
-    
-    float ioRatio = (float) mOutRate / (float) (mInRate + mOutRate);
 
-    return (int) ((ioRatio * inLength) / (1 - ioRatio));
+    return (int) ((mOutRate * inLength) / mInRate + 0.5f);
 }
 
 int Resampler::getDelay() const
 {
-    return soxr_delay(mSoxr);
+    return mResampler->getLatency() + mResampler->getLatencyFrac();
 }
 
 void Resampler::clear()
 {
-    soxr_clear(mSoxr);
+    mResampler->clear();
 }
 
-std::vector<float> Resampler::process(const float *pIn, int inLength)
+std::vector<double> Resampler::process(double *pIn, int inLength)
 {
     if (inLength == 0) {
         return {0.0f};
     }
 
-    size_t outDone = 0;
-    int outLength = getExpectedOutLength(inLength);
-
-    std::vector<float> out(outLength);
-
-    err = soxr_process(mSoxr,
-                    pIn, inLength, nullptr,
-                    out.data(), outLength, &outDone);
-    checkError();
-    
-    out.resize(outDone);
-
+    std::vector<double> out((inLength * mOutRate) / mInRate);
+    mResampler->oneshot(pIn, inLength,
+                        out.data(), out.size());
     return out;
 }
 
 void Resampler::createResampler()
 {
-    std::cout << "Creating resampler: " << mInRate << " to " << mOutRate << std::endl;
-
-    mSoxr = soxr_create(mInRate, mOutRate, 1, &err, &mSoxrIoSpec, &mSoxrQualitySpec, &mSoxrRuntimeSpec);
-    checkError();
-    
-    std::cout << "Audio::Resampler] Using engine " << soxr_engine(mSoxr) << std::endl;
+    std::cout << "Audio::Resampler] Created " << mInRate << " --> " << mOutRate << std::endl;
+    mResampler.reset(new r8b::CDSPResampler(mInRate, mOutRate, 16384));
 }
 
-void Resampler::checkError()
-{
-    if (err) {
-        throw std::runtime_error(std::string("Audio::Resampler] ") + soxr_strerror(err));
-    }
-}

@@ -1,9 +1,9 @@
 #include "util.h"
 
-void Analysis::evaluatePolynomialWithDerivative(const std::vector<float>& poly, const float x, float *y, float *dy)
+void Analysis::evaluatePolynomialWithDerivative(const std::vector<double>& poly, const double x, double *y, double *dy)
 {
-    float p = poly[poly.size() - 1];
-    float dp = 0.0f;
+    double p = poly[poly.size() - 1];
+    double dp = 0.0f;
 
     for (int i = poly.size() - 1; i >= 0; --i) {
         dp = dp * x + p;
@@ -14,10 +14,10 @@ void Analysis::evaluatePolynomialWithDerivative(const std::vector<float>& poly, 
     *dy = dp;
 }
 
-void Analysis::evaluatePolynomialWithDerivative(const std::vector<float>& poly, const std::complex<float>& z, std::complex<float> *y, std::complex<float> *dy)
+void Analysis::evaluatePolynomialWithDerivative(const std::vector<double>& poly, const std::complex<double>& z, std::complex<double> *y, std::complex<double> *dy)
 {
-    std::complex<float> p = poly[poly.size() - 1];
-    std::complex<float> dp = 0.0f;
+    std::complex<double> p = poly[poly.size() - 1];
+    std::complex<double> dp = 0.0f;
 
     for (int i = poly.size() - 1; i >= 0; --i) {
         dp = dp * z + p;

@@ -11,36 +11,36 @@
 namespace Analysis {
 
     struct PitchResult {
-        float pitch;
+        double pitch;
         bool voiced;
     };
 
     class PitchSolver {
     public:
         virtual ~PitchSolver() {}
-        virtual PitchResult solve(const float *data, int length, int sampleRate) = 0;
+        virtual PitchResult solve(const double *data, int length, int sampleRate) = 0;
     };
 
     namespace Pitch {
         class AMDF_M : public PitchSolver {
         public:
-            AMDF_M(float minPitch, float maxPitch, float alpha);
-            PitchResult solve(const float *data, int length, int sampleRate) override;
+            AMDF_M(double minPitch, double maxPitch, double alpha);
+            PitchResult solve(const double *data, int length, int sampleRate) override;
         private:
-            float mMinPitch;
-            float mMaxPitch;
-            float mAlpha;
-            std::vector<float> mAMDF;
+            double mMinPitch;
+            double mMaxPitch;
+            double mAlpha;
+            std::vector<double> mAMDF;
             std::vector<uint32_t> m1bAMDF;
-            std::vector<float> m1bACF;
+            std::vector<double> m1bACF;
         };
 
         class Yin : public PitchSolver {
         public:
-            Yin(float threshold);
-            PitchResult solve(const float *data, int length, int sampleRate) override;
+            Yin(double threshold);
+            PitchResult solve(const double *data, int length, int sampleRate) override;
         private:
-            float mThreshold;
+            double mThreshold;
             std::shared_ptr<ComplexFFT> mFFT;
             std::vector<double> mAutocorrelation;
             std::vector<double> mDifference;
@@ -49,21 +49,21 @@ namespace Analysis {
 
         class MPM : public PitchSolver {
         public:
-            PitchResult solve(const float *data, int length, int sampleRate) override;
+            PitchResult solve(const double *data, int length, int sampleRate) override;
         };
 
         class RAPT : public PitchSolver, public Analysis::RAPT {
         public:
             RAPT();
-            PitchResult solve(const float *data, int length, int sampleRate) override;
+            PitchResult solve(const double *data, int length, int sampleRate) override;
         private:
-            std::vector<float> pitches;
+            std::vector<double> pitches;
         };
 
         class IRAPT : public PitchSolver {
         public:
             IRAPT();
-            PitchResult solve(const float *data, int length, int sampleRate) override;
+            PitchResult solve(const double *data, int length, int sampleRate) override;
         };
     }
 

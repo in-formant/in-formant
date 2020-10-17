@@ -1,6 +1,6 @@
 #include "synthesis.h"
 
-std::vector<float> Synthesis::createPolynomialFromRoots(const std::vector<std::complex<float>>& z)
+std::vector<double> Synthesis::createPolynomialFromRoots(const std::vector<std::complex<double>>& z)
 {
     std::vector<std::complex<double>> poly(z.size() + 1, 0.0);
 
@@ -14,7 +14,7 @@ std::vector<float> Synthesis::createPolynomialFromRoots(const std::vector<std::c
         }
     }
 
-    std::vector<float> polyr(poly.size());
+    std::vector<double> polyr(poly.size());
     for (int i = 0; i < poly.size(); ++i) {
         polyr[i] = poly[i].real();
     }

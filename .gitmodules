@@ -10,3 +10,7 @@
 	path = external/freetype
 	url = https://git.sv.nongnu.org/r/freetype/freetype2.git
 	branch = VER-2-10-2
+[submodule "r8brain-free-src"]
+	path = external/r8brain-free-src
+	url = https://github.com/avaneev/r8brain-free-src
+	branch = master

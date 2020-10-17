@@ -59,7 +59,10 @@ void ContextManager::start()
     primaryFont = & ctx->freetypeInstance->font("Montserrat.otf");
 
     initSettingsUI();
+
+#if ! ( defined(ANDROID) || defined(__ANDROID__) )
     initSynthUI();
+#endif
 
 #if defined(ANDROID) || defined(__ANDROID__)
     initAndroidUI();

@@ -27,7 +27,7 @@ void IIRFilter::setFFOrder(int order)
     }
 
     delete[] mFF;
-    mFF = new float[order];
+    mFF = new double[order];
     mFFOrder = order;
 }
 
@@ -38,16 +38,16 @@ void IIRFilter::setFBOrder(int order)
     }
 
     delete[] mFB;
-    mFB = new float[order];
+    mFB = new double[order];
     mFBOrder = order;
 }
 
-float *IIRFilter::getFFData()
+double *IIRFilter::getFFData()
 {
     return mFF;
 }
 
-float *IIRFilter::getFBData()
+double *IIRFilter::getFBData()
 {
     return mFB;
 }
@@ -67,12 +67,12 @@ int IIRFilter::getFBOrder() const
     return mFBOrder;
 }
 
-const float *IIRFilter::getFFConstData() const
+const double *IIRFilter::getFFConstData() const
 {
     return mFF;
 }
 
-const float *IIRFilter::getFBConstData() const
+const double *IIRFilter::getFBConstData() const
 {
     return mFB;
 }

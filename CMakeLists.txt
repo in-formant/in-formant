@@ -12,8 +12,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno")
 set(CMAKE_CXX_FLAGS_DEBUG           "-O0 -g")
-set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -Ofast -g0 -DNDEBUG")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -Ofast -g")
+set(CMAKE_CXX_FLAGS_RELEASE         "-O2 -g0 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g")
 set(CMAKE_CXX_FLAGS_MINSIZEREL      "-Os -g0 -DNDEBUG")
 
 set(CMAKE_ENABLE_EXPORTS ON)
@@ -135,6 +135,7 @@ set(SOURCES
     src/synthesis/shiftFilter.cpp
     src/synthesis/polyFromRoots.cpp
     src/synthesis/synthesis.h
+    external/r8brain-free-src/r8bbase.cpp
 )
 
 set(GL_SHADER_SOURCES
@@ -172,38 +173,7 @@ check_low_level_exit(
     NAMES _Exit _exit
 )
 
-include(ExternalProject)
-if(ANDROID)
-    set(SOXR_EXTRA_ARGS
-        -DBUILD_SHARED_LIBS=ON)
-    set(SOXR_CMAKE $ENV{cross}cmake)
-elseif(EMSCRIPTEN)
-    set(SOXR_EXTRA_ARGS
-        -DBUILD_SHARED_LIBS=OFF
-        -DCMAKE_MODULE_PATH=/emsdk/upstream/emscripten/cmake/Modules)
-    set(SOXR_CMAKE emcmake cmake)
-elseif(APPLE)
-    set(SOXR_EXTRA_ARGS
-        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
-else()
-    set(SOXR_EXTRA_ARGS
-        -DBUILD_SHARED_LIBS=ON)
-    set(SOXR_CMAKE $ENV{cross}cmake)
-endif()
-ExternalProject_Add(
-    soxr
-    SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/soxr
-    CMAKE_COMMAND ${SOXR_CMAKE}
-    CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/soxr
-        -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=OFF -DWITH_OPENMP=OFF -DWITH_LSR_BINDINGS=OFF
-        -DWITH_VR32=OFF -DWITH_CR32=ON -DWITH_CR64=OFF -DWITH_CR32S=ON
-        -DWITH_PFFFT=ON -DWITH_AVFFT=ON 
-        -DWITH_DEV_TRACE=OFF -Wno-dev
-        ${SOXR_EXTRA_ARGS}
-)
-set(SOXR_INCLUDE_DIR ${PROJECT_BINARY_DIR}/soxr/include)
-set(SOXR_LIBRARIES -L${PROJECT_BINARY_DIR}/soxr/lib -lsoxr)
+set(SOXR_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/r8brain-free-src)
 
 set(NANOSVG_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/nanosvg)
 
@@ -396,8 +366,6 @@ else()
     add_executable(speech-analysis ${SOURCES})
 endif()
 
-add_dependencies(speech-analysis soxr)
-
 target_include_directories(speech-analysis SYSTEM PUBLIC ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${SOXR_INCLUDE_DIR} ${NANOSVG_INCLUDE_DIR})
 target_link_libraries(speech-analysis PUBLIC ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} ${SOXR_LIBRARIES})
 
@@ -554,7 +522,7 @@ if(UNIX AND NOT EMSCRIPTEN)
     set_target_properties(speech-analysis PROPERTIES LINK_FLAGS "-pthread -static-libstdc++")
 endif()
 
-if(NOT ANDROID AND CMAKE_BUILD_TYPE MATCHES "^Debug$")
+if(NOT ANDROID AND NOT WIN32 AND CMAKE_BUILD_TYPE MATCHES "^Debug$")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize=undefined")
     set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fsanitize=address -fsanitize=undefined")
 endif()

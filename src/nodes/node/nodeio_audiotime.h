@@ -11,17 +11,17 @@ namespace Nodes::IO {
         
         void setSampleRate(int sampleRate);
         void setLength(int length);
-        float *getData();
+        double *getData();
 
         int getSampleRate() const;
         int getLength() const;
-        const float *getConstData() const;
+        const double *getConstData() const;
 
     private:
         int mSampleRate;
         int mLength;
 
-        std::vector<float> mData;
+        std::vector<double> mData;
     };
 
 }

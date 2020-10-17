@@ -42,6 +42,6 @@ void NodePassthru::process(const NodeIO *inputs[], NodeIO *outputs[])
     out->setSampleRate(in->getSampleRate());
     out->setLength(in->getLength());
 
-    memcpy(out->getData(), in->getConstData(), in->getLength() * sizeof(float));
+    memcpy(out->getData(), in->getConstData(), in->getLength() * sizeof(double));
 }
 

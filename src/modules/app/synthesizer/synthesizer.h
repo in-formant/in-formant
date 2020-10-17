@@ -13,57 +13,57 @@ namespace Module::App
 
         void initialize();
 
-        void setMasterGain(float);
-        void setNoiseGain(float);
-        void setGlotGain(float);
-        void setGlotPitch(float);
-        void setGlotRd(float);
-        void setGlotTc(float);
+        void setMasterGain(double);
+        void setNoiseGain(double);
+        void setGlotGain(double);
+        void setGlotPitch(double);
+        void setGlotRd(double);
+        void setGlotTc(double);
         void setFormants(const std::vector<Analysis::FormantData>&);
-        void setFilterShift(float);
+        void setFilterShift(double);
         void setVoiced(bool);
 
-        float getMasterGain() const;
-        float getNoiseGain() const;
-        float getGlotGain() const;
-        float getGlotPitch() const;
-        float getGlotRd() const;
-        float getGlotTc() const;
-        float getFilterShift() const;
+        double getMasterGain() const;
+        double getNoiseGain() const;
+        double getGlotGain() const;
+        double getGlotPitch() const;
+        double getGlotRd() const;
+        double getGlotTc() const;
+        double getFilterShift() const;
         bool isVoiced() const;
         
         void generateAudio(int requestedLength);
 
-        static void audioCallback(float *, int, void *);
+        static void audioCallback(double *, int, void *);
 
     private:
         Module::Audio::Queue *playbackQueue;
 
-        float masterGain;
-        float noiseGain;
-        float glotGain;
-        float glotPitch;
-        float glotRd;
-        float glotTc;
+        double masterGain;
+        double noiseGain;
+        double glotGain;
+        double glotPitch;
+        double glotRd;
+        double glotTc;
         std::vector<Analysis::FormantData> formants;
-        float filterShift;
+        double filterShift;
         bool voiced;
 
-        float realMasterGain;
-        float realNoiseGain;
-        float realGlotGain;
-        float realGlotPitch;
-        float realGlotRd;
-        float realGlotTc;
+        double realMasterGain;
+        double realNoiseGain;
+        double realGlotGain;
+        double realGlotPitch;
+        double realGlotRd;
+        double realGlotTc;
         std::vector<Analysis::FormantData> realFormants;
-        std::vector<std::array<float, 6>> realFilter;
-        float realFilterShift;
+        std::vector<std::array<double, 6>> realFilter;
+        double realFilterShift;
 
         std::vector<std::vector<double>> zfNoise;
         std::vector<std::vector<double>> zfGlot;
 
-        std::vector<float> glotSurplus;
-        std::vector<float> surplus;
+        std::vector<double> glotSurplus;
+        std::vector<double> surplus;
 
         Module::Audio::Resampler resampler;
     };

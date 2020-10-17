@@ -2,18 +2,18 @@
 #include <algorithm>
 #include <iostream>
 
-static std::pair<std::vector<std::complex<float>>, std::vector<float>> cplxreal(const std::vector<std::complex<float>>& z_)
+static std::pair<std::vector<std::complex<double>>, std::vector<double>> cplxreal(const std::vector<std::complex<double>>& z_)
 {
-    float tol = 100.0f * std::numeric_limits<float>::epsilon();
+    double tol = 100.0f * std::numeric_limits<double>::epsilon();
     
-    std::vector<std::complex<float>> z(z_.begin(), z_.end());
+    std::vector<std::complex<double>> z(z_.begin(), z_.end());
     std::sort(z.begin(), z.end(), [](auto& x, auto& y) { return x.real() < y.real(); });
 
-    std::vector<std::complex<float>> cplx;
-    std::vector<float> real;
+    std::vector<std::complex<double>> cplx;
+    std::vector<double> real;
 
     for (const auto& x : z) {
-        if (fabsf(x.imag()) / (std::abs(x) + std::numeric_limits<float>::min()) <= tol) {
+        if (fabs(x.imag()) / (std::abs(x) + std::numeric_limits<double>::min()) <= tol) {
             real.push_back(x.real());
         }
         else {
@@ -22,13 +22,13 @@ static std::pair<std::vector<std::complex<float>>, std::vector<float>> cplxreal(
     }
 
     const int m = cplx.size();
-    std::vector<std::complex<float>> zc;
+    std::vector<std::complex<double>> zc;
 
     for (int i = 0; i < m; i += 2) {
-        float v = std::numeric_limits<float>::max();
+        double v = std::numeric_limits<double>::max();
         int idx;
         for (int k = i + 1; k < m; ++k) {
-            float vk = std::abs(z[k] - std::conj(z[i]));
+            double vk = std::abs(z[k] - std::conj(z[i]));
             if (vk < v) {
                 v = vk;
                 idx = k;
@@ -48,10 +48,10 @@ static std::pair<std::vector<std::complex<float>>, std::vector<float>> cplxreal(
     return { std::move(zc), std::move(real) };
 }
 
-std::vector<std::array<float, 6>> Analysis::zpk2sos(
-        const std::vector<std::complex<float>>& z,
-        const std::vector<std::complex<float>>& p,
-        float k)
+std::vector<std::array<double, 6>> Analysis::zpk2sos(
+        const std::vector<std::complex<double>>& z,
+        const std::vector<std::complex<double>>& p,
+        double k)
 {
     auto [zc, zr] = cplxreal(z);
     auto [pc, pr] = cplxreal(p);
@@ -64,7 +64,7 @@ std::vector<std::array<float, 6>> Analysis::zpk2sos(
 
     // Pair up real zeroes.
     int nzrsec;
-    std::vector<float> zrms, zrp;
+    std::vector<double> zrms, zrp;
     if (nzr > 0) {
         if (nzr % 2 == 1) {
             zr.push_back(0.0f);
@@ -84,7 +84,7 @@ std::vector<std::array<float, 6>> Analysis::zpk2sos(
 
     // Pair up real poles.
     int nprsec;
-    std::vector<float> prms, prp;
+    std::vector<double> prms, prp;
     if (npr > 0) {
         if (npr % 2 == 1) {
             pr.push_back(0.0f);
@@ -104,21 +104,21 @@ std::vector<std::array<float, 6>> Analysis::zpk2sos(
 
     const int nsecs = std::max(nzc + nzrsec, npc + nprsec);
 
-    std::vector<float> zcm2r(nzc), zca2(nzc);
+    std::vector<double> zcm2r(nzc), zca2(nzc);
     for (int i = 0; i < nzc; ++i) {
         zcm2r[i] = -2.0f * zc[i].real();
-        float a = std::abs(zc[i]);
+        double a = std::abs(zc[i]);
         zca2[i] = a * a;
     }
 
-    std::vector<float> pcm2r(npc), pca2(npc);
+    std::vector<double> pcm2r(npc), pca2(npc);
     for (int i = 0; i < npc; ++i) {
         pcm2r[i] = -2.0f * pc[i].real();
-        float a = std::abs(pc[i]);
+        double a = std::abs(pc[i]);
         pca2[i] = a * a;
     }
 
-    std::vector<std::array<float, 6>> sos(nsecs);
+    std::vector<std::array<double, 6>> sos(nsecs);
     
     for (int i = 0; i < nsecs; ++i) {
         sos[i][0] = 1.0f;

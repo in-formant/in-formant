@@ -11,14 +11,14 @@ namespace Nodes::IO {
         Frequencies();
 
         void setLength(int length);
-        void set(int index, float frequency);
+        void set(int index, double frequency);
 
         int getLength() const;
-        const float get(int index) const;
+        const double get(int index) const;
 
     private:
         int mLength;
-        std::vector<float> mData;
+        std::vector<double> mData;
     };
 
 }

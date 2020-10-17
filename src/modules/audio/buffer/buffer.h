@@ -19,14 +19,14 @@ namespace Module::Audio {
         int getDuration() const;
         int getLength() const;
 
-        void pull(float *pOut, int outLength);
+        void pull(double *pOut, int outLength);
         void push(const float *pIn, int inLength);
 
     private:
         int mSampleRate;
 
         int mLength;
-        std::deque<float> mData;
+        std::deque<double> mData;
 
         std::mutex mLock;
     };

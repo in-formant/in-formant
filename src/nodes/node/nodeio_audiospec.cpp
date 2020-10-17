@@ -22,7 +22,7 @@ void AudioSpec::setLength(int length)
     mLength = length;
 }
 
-float *AudioSpec::getData()
+double *AudioSpec::getData()
 {
     return mData.data();
 }
@@ -37,7 +37,7 @@ int AudioSpec::getLength() const
     return mLength;
 }
 
-const float *AudioSpec::getConstData() const
+const double *AudioSpec::getConstData() const
 {
     return mData.data();
 }

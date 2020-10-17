@@ -30,9 +30,9 @@ Pitch::RAPT::RAPT()
     nbFrames = 1;
 }
 
-PitchResult Pitch::RAPT::solve(const float *data, int length, int sampleRate)
+PitchResult Pitch::RAPT::solve(const double *data, int length, int sampleRate)
 {
-    float f0 = computeFrame(data, length, sampleRate);
+    double f0 = computeFrame(data, length, sampleRate);
 
     if (f0 != 0.0f) {
         return {
@@ -48,53 +48,53 @@ PitchResult Pitch::RAPT::solve(const float *data, int length, int sampleRate)
     }
 }
 
-static void subtractReferenceMean(std::vector<float>& s, int n, int K);
+static void subtractReferenceMean(std::vector<double>& s, int n, int K);
 
-static std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds);
+static std::vector<double> downsampleSignal(const std::vector<double>& s, const double Fs, const double Fds, std::shared_ptr<r8b::CDSPResampler>& resampler);
 
-static std::vector<float> calculateDownsampledNCCF(const std::vector<float>& dss, const int dsn, const int dsK1, const int dsK2);
+static std::vector<double> calculateDownsampledNCCF(const std::vector<double>& dss, const int dsn, const int dsK1, const int dsK2);
 
-static std::vector<std::pair<float, float>> findPeaksWithThreshold(const std::vector<float>& nccf, const float cand_tr, const int n_cands, const bool paraInterp);
+static std::vector<std::pair<double, double>> findPeaksWithThreshold(const std::vector<double>& nccf, const double cand_tr, const int n_cands, const bool paraInterp);
 
-static std::vector<float> calculateOriginalNCCF(const std::vector<float>& s, const float Fs, const float Fds, const int n, const int K, const std::vector<std::pair<float, float>>& dsPeaks);
+static std::vector<double> calculateOriginalNCCF(const std::vector<double>& s, const double Fs, const double Fds, const int n, const int K, const std::vector<std::pair<double, double>>& dsPeaks);
 
-static std::vector<RAPT::Cand> createCosts(const std::vector<std::pair<float, float>>& peaks, const float vo_bias, const float beta);
+static std::vector<RAPT::Cand> createCosts(const std::vector<std::pair<double, double>>& peaks, const double vo_bias, const double beta);
 
-static float calculateRMS(const std::vector<float>& s, const int start, const int length);
+static double calculateRMS(const std::vector<double>& s, const int start, const int length);
 
-static float expDistItakura(const std::vector<float>& ar1, const std::vector<float>& ar2);
+static double expDistItakura(const std::vector<double>& ar1, const std::vector<double>& ar2);
 
-static std::vector<float> lpcar2ra(const std::vector<float>& ar);
-static std::vector<float> lpcar2rr(const std::vector<float>& ar);
-static std::vector<float> lpcar2rf(const std::vector<float>& ar);
-static std::vector<float> lpcrf2rr(const std::vector<float>& rf);
+static std::vector<double> lpcar2ra(const std::vector<double>& ar);
+static std::vector<double> lpcar2rr(const std::vector<double>& ar);
+static std::vector<double> lpcar2rf(const std::vector<double>& ar);
+static std::vector<double> lpcrf2rr(const std::vector<double>& rf);
 
 RAPT::RAPT()
-    : lpcOrder(-1)
+    : lpcOrder(-1), resampler(nullptr)
 {
 }
 
-float RAPT::computeFrame(const float *data, int length, float Fs)
+double RAPT::computeFrame(const double *data, int length, double Fs)
 {
     if (lpcOrder < 0) {
         lpcOrder = 2 + std::round(Fs / 1000);
     }
 
-    const float w = 0.0075;
+    const double w = 0.0075;
 
     const int n = std::round(w * Fs);
     const int K = std::round(Fs / F0min);
 
-    const float Fds = std::round(Fs / std::round(Fs / (4.0 * F0max)));
+    const double Fds = std::round(Fs / std::round(Fs / (4.0 * F0max)));
     const int dsn = std::round(w * Fds);
     const int dsK1 = std::round(Fds / F0max);
     const int dsK2 = std::round(Fds / F0min);
 
-    const float beta = lag_wt / (Fs / F0min);
+    const double beta = lag_wt / (Fs / F0min);
     
     const int J = std::round(0.03f * Fs);
 
-    std::vector<float> s(data, data + length);
+    std::vector<double> s(data, data + length);
     
     if (s.size() < n + K) {
         s.resize(n + K, 0.0f);
@@ -102,7 +102,7 @@ float RAPT::computeFrame(const float *data, int length, float Fs)
 
     subtractReferenceMean(s, n, K);
 
-    auto dss = downsampleSignal(s, Fs, Fds);
+    auto dss = downsampleSignal(s, Fs, Fds, resampler);
     
     if (dss.size() < dsn + dsK2) {
         dss.resize(dsn + dsK2, 0.0f);
@@ -111,9 +111,9 @@ float RAPT::computeFrame(const float *data, int length, float Fs)
     auto dsNCCF = calculateDownsampledNCCF(dss, dsn, dsK1, dsK2);
     auto dsPeaks = findPeaksWithThreshold(dsNCCF, cand_tr, n_cands, true);
    
-    std::vector<std::pair<float, float>> peaks;
+    std::vector<std::pair<double, double>> peaks;
    
-    std::vector<float> nccf;
+    std::vector<double> nccf;
     if (dsPeaks.size() > 0) {
         nccf = calculateOriginalNCCF(s, Fs, Fds, n, K, dsPeaks);
         peaks = findPeaksWithThreshold(nccf, cand_tr, n_cands, false);
@@ -139,22 +139,22 @@ float RAPT::computeFrame(const float *data, int length, float Fs)
         frm.rr = frm.rms / frames.back().rms;
     
         // Pre-emphasis.
-        const float alpha = expf(-7000 / Fs);
+        const double alpha = expf(-7000 / Fs);
         for (int i = s.size() - 1; i >= 1; --i) {
             s[i] -= alpha * s[i - 1];
         }
 
         // Calculate AR.
-        float gain;
+        double gain;
         frm.ar = lpc.solve(s.data(), s.size(), lpcOrder, &gain);
         frm.ar.insert(frm.ar.begin(), 1.0f);
         frm.S = 0.2f / (expDistItakura(frm.ar, frames.back().ar) - 0.8f);
     }
 
-    float pitch = 0.0f;
+    double pitch = 0.0f;
     
     if (frm.cands[0].voiced) {
-        float Linterp = std::get<0>(parabolicInterpolation(nccf, frm.cands[0].L));
+        double Linterp = std::get<0>(parabolicInterpolation(nccf, frm.cands[0].L));
         pitch = frm.Fs / Linterp;
     }
 
@@ -164,9 +164,9 @@ float RAPT::computeFrame(const float *data, int length, float Fs)
     return pitch;
 }
 
-std::vector<float> RAPT::computePath()
+std::vector<double> RAPT::computePath()
 {
-    static std::vector<std::vector<std::vector<float>>> transitionMatrices;
+    static std::vector<std::vector<std::vector<double>>> transitionMatrices;
 
     transitionMatrices.resize(nbFrames);
 
@@ -177,8 +177,8 @@ std::vector<float> RAPT::computePath()
         auto& mat = transitionMatrices[i];
         mat.resize(nj);
 
-        const float rri = frames[i].rr;
-        const float Si = frames[i].S;
+        const double rri = frames[i].rr;
+        const double Si = frames[i].S;
         
         for (int j = 0; j < nj; ++j) {
             auto& row = mat[j];
@@ -191,7 +191,7 @@ std::vector<float> RAPT::computePath()
                 const auto& ck = frames[i - 1].cands[k];
 
                 if (cj.voiced && ck.voiced) { // Voiced to voiced
-                    float xi = fabsf(logf(cj.L / ck.L));
+                    double xi = fabsf(logf(cj.L / ck.L));
                     row[k] = freq_wt * std::min((double) xi, (doubl_c + fabs(xi - M_LN2)));
                 }
                 else if (!cj.voiced && ck.voiced) { // Voiced to unvoiced
@@ -207,7 +207,7 @@ std::vector<float> RAPT::computePath()
         }
     }
 
-    static std::vector<std::vector<float>> D;
+    static std::vector<std::vector<double>> D;
     static std::vector<std::vector<int>> ks;
     
     D.resize(nbFrames + 1);
@@ -220,10 +220,10 @@ std::vector<float> RAPT::computePath()
         ks[i].resize(frames[i].cands.size());
 
         for (int j = 0; j < frames[i].cands.size(); ++j) {
-            float min = HUGE_VALF;
+            double min = HUGE_VALF;
             int kmin;
             for (int k = 0; k < D[i].size(); ++k) {
-                float val = D[i][k] + i > 0 ? transitionMatrices[i][j][k] : 0.0f;
+                double val = D[i][k] + i > 0 ? transitionMatrices[i][j][k] : 0.0f;
                 if (val < min) {
                     min = val;
                     kmin = k;
@@ -235,7 +235,7 @@ std::vector<float> RAPT::computePath()
         }
     }
 
-    std::vector<float> pitches(nbFrames);
+    std::vector<double> pitches(nbFrames);
  
     const int nj = D[1].size();
 
@@ -260,43 +260,44 @@ std::vector<float> RAPT::computePath()
 
 // utility functions.
 
-void subtractReferenceMean(std::vector<float>& s, int n, int K)
+void subtractReferenceMean(std::vector<double>& s, int n, int K)
 {
-    float mu = 0.0f;
+    double mu = 0.0f;
     for (int j = 0; j < n; ++j)
         mu += s[j];
-    mu /= (float) n;
+    mu /= (double) n;
     for (int j = 0; j < s.size(); ++j) 
         s[j] -= mu;
 }
 
-std::vector<float> downsampleSignal(const std::vector<float>& s, const float Fs, const float Fds)
+std::vector<double> downsampleSignal(const std::vector<double>& s, const double Fs, const double Fds, std::shared_ptr<r8b::CDSPResampler>& resampler)
 {
-    size_t olen = (size_t) (s.size() * Fds / Fs + 0.5);
-    std::vector<float> out(olen);
-    size_t odone;
+    static double lastFs(0), lastFds(0);
 
-    soxr_oneshot(Fs, Fds, 1,
-            s.data(), s.size(), nullptr,
-            out.data(), out.size(), &odone,
-            nullptr, nullptr, nullptr);
+    if (!resampler || lastFs != Fs || lastFds != Fds) {
+        lastFs = Fs;
+        lastFds = Fds;
+        resampler.reset(new r8b::CDSPResampler(Fs, Fds, 16384));
+    }
 
-    out.resize(odone);
+    std::vector<double> out((s.size() * Fds) / Fs);
+    resampler->oneshot(const_cast<double *>(s.data()), s.size(),
+                        out.data(), out.size());
 
     return out;
 }
 
-std::vector<float> calculateDownsampledNCCF(const std::vector<float>& dss, const int dsn, const int dsK1, const int dsK2)
+std::vector<double> calculateDownsampledNCCF(const std::vector<double>& dss, const int dsn, const int dsK1, const int dsK2)
 {
-    std::vector<float> dsNCCF(dsK2 + 1, 0.0f);
+    std::vector<double> dsNCCF(dsK2 + 1, 0.0f);
 
-    float dse0;
+    double dse0;
     for (int l = 0; l < dsn; ++l) {
         dse0 += dss[l] * dss[l];
     }
 
     for (int k = dsK1; k <= dsK2; ++k) {
-        float p, q;
+        double p, q;
         p = q = 0.0f;
 
         for (int j = 0; j < dsn; ++j) {
@@ -315,20 +316,20 @@ std::vector<float> calculateDownsampledNCCF(const std::vector<float>& dss, const
     return dsNCCF;
 }
 
-std::vector<std::pair<float, float>> findPeaksWithThreshold(const std::vector<float>& nccf, const float cand_tr, const int n_cands, const bool paraInterp)
+std::vector<std::pair<double, double>> findPeaksWithThreshold(const std::vector<double>& nccf, const double cand_tr, const int n_cands, const bool paraInterp)
 {
-    float max = -HUGE_VALF;
+    double max = -HUGE_VALF;
     for (int i = 0; i < nccf.size(); ++i) {
         if (nccf[i] > max) {
             max = nccf[i];
         }
     }
 
-    float threshold = cand_tr * max;
+    double threshold = cand_tr * max;
 
     auto allPeaks = findPeaks(nccf.data(), nccf.size());
 
-    std::vector<std::pair<float, float>> peaks;
+    std::vector<std::pair<double, double>> peaks;
 
     for (const int& k : allPeaks) {
         if (k >= 0 && k < nccf.size() && nccf[k] > threshold) {
@@ -351,7 +352,7 @@ std::vector<std::pair<float, float>> findPeaksWithThreshold(const std::vector<fl
     return peaks;
 }
 
-std::vector<float> calculateOriginalNCCF(const std::vector<float>& s, const float Fs, const float Fds, const int n, const int K, const std::vector<std::pair<float, float>>& dsPeaks)
+std::vector<double> calculateOriginalNCCF(const std::vector<double>& s, const double Fs, const double Fds, const int n, const int K, const std::vector<std::pair<double, double>>& dsPeaks)
 {
     std::set<int> lagsToCalculate;
     for (const auto& [dsk, y] : dsPeaks) {
@@ -369,12 +370,12 @@ std::vector<float> calculateOriginalNCCF(const std::vector<float>& s, const floa
         }
     }
     
-    std::vector<float> nccf(K + 1, 0.0f);
+    std::vector<double> nccf(K + 1, 0.0f);
 
-    float e0;
+    double e0;
     {
         int j = 0;
-        float v = 0.0f;
+        double v = 0.0f;
         for (int l = j; l < j + n; ++l) {
             v += s[l] * s[l];
         }
@@ -382,7 +383,7 @@ std::vector<float> calculateOriginalNCCF(const std::vector<float>& s, const floa
     }
 
     for (const int& k : lagsToCalculate) {
-        float p, q;
+        double p, q;
         p = q = 0.0f;
 
         for (int j = 0; j < n; ++j) {
@@ -401,7 +402,7 @@ std::vector<float> calculateOriginalNCCF(const std::vector<float>& s, const floa
     return nccf;
 }
 
-std::vector<RAPT::Cand> createCosts(const std::vector<std::pair<float, float>>& peaks, const float vo_bias, const float beta)
+std::vector<RAPT::Cand> createCosts(const std::vector<std::pair<double, double>>& peaks, const double vo_bias, const double beta)
 {
     std::vector<RAPT::Cand> costs(peaks.size() + 1);
     
@@ -416,7 +417,7 @@ std::vector<RAPT::Cand> createCosts(const std::vector<std::pair<float, float>>& 
         i++;
     }
 
-    float maxCij = 0.0f;
+    double maxCij = 0.0f;
     
     if (peaks.size() > 0) {
         maxCij = std::get<1>(
@@ -435,7 +436,7 @@ std::vector<RAPT::Cand> createCosts(const std::vector<std::pair<float, float>>& 
     return costs;
 }
 
-float calculateRMS(const std::vector<float>& s, const int start, const int length)
+double calculateRMS(const std::vector<double>& s, const int start, const int length)
 {
     double sum = 0.0;
 
@@ -448,21 +449,21 @@ float calculateRMS(const std::vector<float>& s, const int start, const int lengt
         sum += v * v;
     }
 
-    return (float) sqrt(sum / length);
+    return (double) sqrt(sum / length);
 }
 
-float expDistItakura(const std::vector<float>& ar1, const std::vector<float>& ar2)
+double expDistItakura(const std::vector<double>& ar1, const std::vector<double>& ar2)
 {
     // d = 2 * sum ( lpcar2rr (ar1) * m2 ) * (ar1[0] / ar2[0]) ^ 2
     
-    float denom = (ar1[0] * ar1[0]) / (ar2[0] * ar2[0]);
+    double denom = (ar1[0] * ar1[0]) / (ar2[0] * ar2[0]);
 
     auto m2 = lpcar2ra(ar2);
     m2[0] /= 2.0f;
     
     auto rr1 = lpcar2rr(ar1);
 
-    float numer = 0.0f;
+    double numer = 0.0f;
 
     for (int i = 0; i < m2.size(); ++i) {
         numer += m2[i] * rr1[i];
@@ -471,11 +472,11 @@ float expDistItakura(const std::vector<float>& ar1, const std::vector<float>& ar
     return 2.0f * numer / denom;
 }
 
-std::vector<float> lpcar2ra(const std::vector<float>& ar)
+std::vector<double> lpcar2ra(const std::vector<double>& ar)
 {
     const int p = ar.size();
     
-    std::vector<float> ra(p);
+    std::vector<double> ra(p);
 
     for (int i = 0; i < p; ++i) {
         ra[i] = 0.0f;
@@ -487,15 +488,15 @@ std::vector<float> lpcar2ra(const std::vector<float>& ar)
     return ra;
 }
 
-std::vector<float> lpcar2rr(const std::vector<float>& ar)
+std::vector<double> lpcar2rr(const std::vector<double>& ar)
 {
-    float k = 1.0f / (ar[0] * ar[0]);
+    double k = 1.0f / (ar[0] * ar[0]);
 
     if (ar.size() == 1) {
         return { k };
     }
     else {
-        std::vector<float> rr = lpcrf2rr(lpcar2rf(ar));
+        std::vector<double> rr = lpcrf2rr(lpcar2rf(ar));
         for (int i = 0; i < rr.size(); ++i) {
             rr[i] *= k;
         }
@@ -503,17 +504,17 @@ std::vector<float> lpcar2rr(const std::vector<float>& ar)
     }
 }
 
-std::vector<float> lpcar2rf(const std::vector<float>& ar)
+std::vector<double> lpcar2rf(const std::vector<double>& ar)
 {
     const int p = ar.size();
 
-    std::vector<float> rf = ar;
+    std::vector<double> rf = ar;
     
     for (int j = p - 2; j >= 1; --j) {
-        float k = rf[j + 1];
-        float d = 1.0f / (1.0f - k * k); 
+        double k = rf[j + 1];
+        double d = 1.0f / (1.0f - k * k); 
         
-        std::vector<float> temp = rf;
+        std::vector<double> temp = rf;
         for (int i = 1; i <= j; ++i) {
             temp[i] = (rf[i] - k * rf[j + 1 - i]) * d;
         }
@@ -523,22 +524,22 @@ std::vector<float> lpcar2rf(const std::vector<float>& ar)
     return rf;
 }
 
-std::vector<float> lpcrf2rr(const std::vector<float>& rf)
+std::vector<double> lpcrf2rr(const std::vector<double>& rf)
 {
     const int p1 = rf.size();
     const int p0 = p1 - 1;
 
     if (p0 > 0) {
-        std::vector<float> a;
+        std::vector<double> a;
         a.push_back(rf[1]);
 
-        std::vector<float> rr(p1, 0.0f);
+        std::vector<double> rr(p1, 0.0f);
         rr[0] = 1.0f;
         rr[1] = -a[0];
 
-        float e = a[0] * a[0] - 1.0f;
+        double e = a[0] * a[0] - 1.0f;
         for (int n = 1; n < p0; ++n) {
-            float k = rf[n + 1];
+            double k = rf[n + 1];
             rr[n + 1] = k * e;
             for (int j = n - 1; j >= 1; --j) {
                 rr[n + 1] -= rr[j] * a[n - 1 - j];
@@ -550,7 +551,7 @@ std::vector<float> lpcrf2rr(const std::vector<float>& rf)
             e *= (1.0f - k * k);
         }
         
-        float r0 = rr[0];
+        double r0 = rr[0];
         for (int i = 1; i < a.size(); ++i) {
             r0 += rr[i] * a[i - 1];
         }
