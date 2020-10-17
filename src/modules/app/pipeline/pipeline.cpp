@@ -178,14 +178,14 @@ void Pipeline::processAll()
     processArc("rs_2", "tail_invglot");
     processArc("tail_invglot", "invglot");
 
-    processArc("rs_2", "preemph_linpred");
-    processArc("preemph_linpred", "tail_linpred");
-    processArc("tail_linpred", "linpred_spectrum");
+    processArc("rs_2", "tail_linpred");
+    processArc("tail_linpred", "preemph_linpred");
+    processArc("preemph_linpred", "linpred_spectrum");
 
     processArc("prereqs", "rs_formant");
-    processArc("rs_formant", "preemph_formant");
-    processArc("preemph_formant", "tail_formant");
-    processArc("tail_formant", "linpred_formant");
+    processArc("rs_formant", "tail_formant");
+    processArc("tail_formant", "preemph_formant");
+    processArc("preemph_formant", "linpred_formant");
     processArc("linpred_formant", "formants");
     
     updateOutputData();

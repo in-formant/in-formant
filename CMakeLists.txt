@@ -136,6 +136,7 @@ set(SOURCES
     src/synthesis/polyFromRoots.cpp
     src/synthesis/synthesis.h
     external/r8brain-free-src/r8bbase.cpp
+    external/r8brain-free-src/pffft.cpp
 )
 
 set(GL_SHADER_SOURCES
@@ -369,9 +370,7 @@ endif()
 target_include_directories(speech-analysis SYSTEM PUBLIC ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${SOXR_INCLUDE_DIR} ${NANOSVG_INCLUDE_DIR})
 target_link_libraries(speech-analysis PUBLIC ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} ${SOXR_LIBRARIES})
 
-if(LL_EXIT_FUNC)
-    target_compile_definitions(speech-analysis PUBLIC -D__sa_llexit=${LL_EXIT_FUNC})
-endif()
+target_compile_definitions(speech-analysis PUBLIC -DR8B_PFFFT=1)
 
 if(RENDERER_USE_OPENGL OR RENDERER_USE_VULKAN)
     if(RENDERER_USE_OPENGL)
