@@ -24,7 +24,7 @@ void ContextManager::initSynthUI()
         },
         { 
             .labelText = "Glottal source gain: ",
-            .min = 0.7, .max = 2.6,
+            .min = 0.0, .max = 1.0,
             .value = [this]() { return synth.getGlotGain(); },
             .update = [this](float v) { synth.setGlotGain(v); },
             .barText = [this]() { return std::to_string((int) std::round(100 * synth.getGlotGain())) + " %"; },
