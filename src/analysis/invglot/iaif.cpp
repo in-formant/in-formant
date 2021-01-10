@@ -61,7 +61,7 @@ static void calcGaussian(std::vector<double>& win, double alpha)
 
 InvglotResult IAIF::solve(const double *xData, int length, double sampleRate)
 {
-    const int p_gl = 2 * std::round(sampleRate / 4000);
+    const int p_gl = 2;
     const int p_vt = 2 * std::round(sampleRate / 2000) + 4;
 
     const int lpW = std::round(0.015f * sampleRate);
@@ -81,7 +81,7 @@ InvglotResult IAIF::solve(const double *xData, int length, double sampleRate)
    
     static std::vector<std::array<double, 6>> hpfilt;
     if (hpfilt.empty()) {
-        hpfilt = Analysis::butterworthHighpass(10, 70.0f, sampleRate);
+        hpfilt = Analysis::butterworthHighpass(8, 70.0f, sampleRate);
     }
 
     int preflt = p_vt + 1;
@@ -107,9 +107,7 @@ InvglotResult IAIF::solve(const double *xData, int length, double sampleRate)
     auto y = removePreRamp(filter(one, oneMinusD, filter(Hg2, one, xWithPreRamp)), preflt);
 
     auto Hvt2 = calculateLPC(y, window, lpW, p_vt, lpc);
-    auto gWithPreRamp = filter(one, oneMinusD, filter(Hvt2, one, xWithPreRamp));
-
-    auto g = removePreRamp(gWithPreRamp, preflt);
+    auto g = removePreRamp(filter(one, oneMinusD, filter(Hvt2, one, xWithPreRamp)), preflt);
 
     double gMax = 1e-10;
     for (int i = 0; i < length; ++i) {

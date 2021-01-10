@@ -1,5 +1,6 @@
 FROM ubuntu:focal AS build
 ENV container docker
+RUN chmod 1777 /tmp
 
 SHELL ["/bin/bash", "-c"]
 

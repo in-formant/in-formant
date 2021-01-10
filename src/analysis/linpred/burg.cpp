@@ -63,6 +63,13 @@ end:
     for (int i = 0; i < a.size(); ++i) {
         lpc[i] = -a[i];
     }
+    
+    double g = .99;
+    double damp = g;
+    for(int j=0;j<a.size();j++){
+        lpc[j]*=damp;
+        damp*=g;
+    }
 
     *pGain = xms;
 

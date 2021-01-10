@@ -4,6 +4,7 @@
 
 std::vector<std::complex<double>> Analysis::findRoots(const std::vector<double>& p)
 {
-    return Analysis::laguerreSolve(p);
+    auto roots = Analysis::laguerreSolve(p);
+    return roots;
 }
 

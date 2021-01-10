@@ -101,7 +101,7 @@ void ContextManager::start()
 #ifdef __EMSCRIPTEN__
         saveModuleCtx(info.canvasId);
 #endif
-        if (name == "Settings") {
+        if (name != "Spectrogram") {
             rctx.target->hide();
 #ifdef __EMSCRIPTEN__
             EM_ASM({
@@ -140,9 +140,9 @@ void ContextManager::start()
     while (!endLoop) {
         mainBody();
 
-        // Locked to ~50 fps
-        if (durLoop < 20ms) {
-            std::this_thread::sleep_for(20ms - durLoop);
+        // Locked to ~60 fps
+        if (durLoop < 16.67ms) {
+            std::this_thread::sleep_for(16.67ms - durLoop);
         }
     }
 #endif
@@ -190,7 +190,7 @@ void ContextManager::loadSettings()
     outputGain = 0;
     
     analysisDuration = 35;
-    analysisMaxFrequency = 3800;
+    analysisMaxFrequency = 4000;
 
     viewMinFrequency = 1;
     viewMaxFrequency = 6000;
@@ -203,12 +203,12 @@ void ContextManager::loadSettings()
 
     preEmphasisFrequency = 200.0f;
     
-    pitchAndLpSampleRate = 16'000;
+    pitchAndLpSampleRate = 32'000;
 
     linPredOrder = 8;
-    linPredOrderOffset = -1;
+    linPredOrderOffset = +2;
 
-    spectrogramCount = 600;
+    spectrogramCount = 400;
 
     numFormantsToRender = 4;
     formantColors = {
@@ -230,6 +230,7 @@ void ContextManager::loadSettings()
     formantTrack.resize(spectrogramCount);
     soundTrack.resize(spectrogramCount);
     glotTrack.resize(spectrogramCount);
+    glotInstTrack.resize(spectrogramCount);
 }
 
 void ContextManager::updateRendererTargetSize(RenderingContext& rctx)
@@ -328,6 +329,9 @@ void ContextManager::updateWithNextFrame()
 
     glotTrack.pop_front();
     glotTrack.push_back(pipeline.getGlottalFlow());
+
+    glotInstTrack.pop_front();
+    glotInstTrack.push_back(pipeline.getGlottalInstants());
 }
 
 void ContextManager::mainBody(bool processEvents)

@@ -75,7 +75,6 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
             inLength,
             mOrder,
             &gain);
-
     
     out->setSampleRate(sampleRate);
 

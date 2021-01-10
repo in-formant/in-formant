@@ -1,5 +1,6 @@
 #include "formant.h"
 #include "../util/util.h"
+#include "../../modules/math/constants.h"
 
 using namespace Analysis::Formant;
 using Analysis::FormantResult;
@@ -14,13 +15,15 @@ FormantResult SimpleLP::solve(const double *lpc, int lpcOrder, double sampleRate
 
     FormantResult result;
 
+    const double phiDelta = 2.0 * 50.0 * M_PI / sampleRate;
+
     for (const auto& z : roots) {
         if (z.imag() < 0) continue;
 
         double r = std::abs(z);
         double phi = std::arg(z);
 
-        if (r > 1.0f) {
+        if (r < 0.7f || r > 1.0f || phi < phiDelta || phi > M_PI - phiDelta) {
             continue;
         }
 
