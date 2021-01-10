@@ -31,14 +31,15 @@ void PreEmphasis::process(const NodeIO *inputs[], NodeIO *outputs[])
     double g;
     
     do {
-        a = lpc.solve(x.data(), length, 1, &g);
+        //a = lpc.solve(x.data(), length, 1, &g);
+        a = { 0.68 };
         if (g <= 0 || fabs(a[0]) < 0.001)
             break;
 
         for (int i = length - 1; i >= 1; --i) {
             x[i] += a[0] * x[i - 1];
         }
-    } while (fabs(a[0]) >= 0.001);
+    } while (false); // (fabs(a[0]) >= 0.001);
 
     for (int i = 0; i < length; ++i) {
         out->getData()[i] = x[i];

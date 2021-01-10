@@ -45,6 +45,7 @@ namespace Module::App
         const float                               getPitch() const;
         const std::vector<float>&                 getSound() const;
         const std::vector<float>&                 getGlottalFlow() const;
+        const std::vector<float>&                 getGlottalInstants() const;
 
         void processAll();
 
@@ -70,6 +71,7 @@ namespace Module::App
         float pitch;
         std::vector<float> sound;
         std::vector<float> glot;
+        std::vector<float> glotInst;
 
         bool wasInitializedAtLeastOnce;
 

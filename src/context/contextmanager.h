@@ -131,6 +131,7 @@ namespace Main {
         std::deque<std::vector<Analysis::FormantData>> formantTrack;
         std::deque<std::vector<float>>                 soundTrack;
         std::deque<std::vector<float>>                 glotTrack;
+        std::deque<std::vector<float>>                 glotInstTrack;
 
         std::chrono::microseconds durProcessing;
         std::chrono::microseconds durRendering;

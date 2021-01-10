@@ -30,6 +30,17 @@ namespace Analysis {
         public:
             FormantResult solve(const double *lpc, int lpcOrder, double sampleRate) override;
         };
+        
+        struct KarmaState;
+
+        class Karma : public FormantSolver {
+        public:
+            Karma();
+            ~Karma();
+            FormantResult solve(const double *lpc, int lpcOrder, double sampleRate) override;
+        private:
+            KarmaState *state;
+        };
     };
 
 };

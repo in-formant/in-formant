@@ -268,16 +268,21 @@ void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float thick
 
             float xp = i * xstep;
 
-            float y1 = frequencyToCoordinate(formant.frequency - formant.bandwidth / 4.0f);
-            float y1p = mHeight - (y1 + 1.0f) / 2.0f * mHeight;
+            //float y1 = frequencyToCoordinate(formant.frequency - formant.bandwidth / 4.0f);
+            //float y1p = mHeight - (y1 + 1.0f) / 2.0f * mHeight;
 
-            float y2 = frequencyToCoordinate(formant.frequency + formant.bandwidth / 4.0f);
-            float y2p = mHeight - (y2 + 1.0f) / 2.0f * mHeight;
+            //float y2 = frequencyToCoordinate(formant.frequency + formant.bandwidth / 4.0f);
+            //float y2p = mHeight - (y2 + 1.0f) / 2.0f * mHeight;
+
+            float y = frequencyToCoordinate(formant.frequency);
+            float yp = mHeight - (y + 1.0) / 2.0f * mHeight;
 
             float cx = xp + xstep / 2.0f;
-            float cy = (y1p + y2p) / 2.0f;
+            //float cy = (y1p + y2p) / 2.0f;
+            float cy = yp;
             float rx = xstep + 0.5f;
-            float ry = std::max(fabsf(y1p - y2p) / 2.0f, 4.0f);
+            //float ry = std::max(fabsf(y1p - y2p) / 2.0f, 4.0f);
+            float ry = 8.0f;
 
             nvgBeginPath(vg);
             nvgEllipse(vg, cx, cy, rx, ry);
@@ -288,7 +293,7 @@ void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float thick
         }
     }
 
-    nvgBeginPath(vg);
+    /*nvgBeginPath(vg);
     nvgLineCap(vg, NVG_ROUND);
     nvgLineJoin(vg, NVG_ROUND);
 
@@ -329,7 +334,7 @@ void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float thick
 
     nvgStrokeWidth(vg, thick - 1.0f);
     nvgStrokeColor(vg, nvgRGBAf(0, 0, 0, 1.0f));
-    nvgStroke(vg);
+    nvgStroke(vg);*/
 
 }
 

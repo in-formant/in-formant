@@ -91,11 +91,11 @@ Pipeline& Pipeline::setFFTSize(int value)
 
 Pipeline& Pipeline::setPitchAndLpSpectrumSampleRate(float value)
 {
-    secondSampleRate = 48'000;
+    secondSampleRate = value;
     if (wasInitializedAtLeastOnce) {
         nodes["rs_2"]->as<Nodes::Resampler>()->setOutputSampleRate(secondSampleRate);
     }
-    setLpSpectrumLpOrder(48);
+    setLpSpectrumLpOrder(2 * (secondSampleRate / 2000) + 2);
     return *this;
 }
 
@@ -161,6 +161,11 @@ const std::vector<float>& Pipeline::getGlottalFlow() const
     return glot;
 }
 
+const std::vector<float>& Pipeline::getGlottalInstants() const
+{
+    return glotInst;
+}
+
 void Pipeline::processAll()
 {
     updatePrereqsForFFT();
@@ -224,7 +229,7 @@ void Pipeline::updateOutputData()
     int lpSpecSliceLength = ioLpSpec->getLength();
     lpSpecSlice.resize(lpSpecSliceLength);
     for (int i = 0; i < lpSpecSliceLength; ++i) {
-        lpSpecSlice[i][0] = (48'000 * i) / (2.0f * lpSpecSliceLength);
+        lpSpecSlice[i][0] = (secondSampleRate * i) / (2.0f * lpSpecSliceLength);
         lpSpecSlice[i][1] = ioLpSpec->getConstData()[i];
     }
 
@@ -254,6 +259,9 @@ void Pipeline::updateOutputData()
 
     auto ioGlot = nodeIOs["invglot"][0]->as<Nodes::IO::AudioTime>();
     glot.assign(ioGlot->getConstData(), ioGlot->getConstData() + ioGlot->getLength());
+
+    auto ioGlotInst = nodeIOs["invglot"][1]->as<Nodes::IO::AudioTime>();
+    glotInst.assign(ioGlotInst->getConstData(), ioGlotInst->getConstData() + ioGlotInst->getLength());
 }
 
 void Pipeline::createNodes()
@@ -263,18 +271,18 @@ void Pipeline::createNodes()
     nodes["rs_fft"]             = std::make_unique<Nodes::Resampler>(captureSampleRate, fftSampleRate);
     nodes["fft"]                = std::make_unique<Nodes::Spectrum>(fftSize);
     
-    nodes["rs_2"]               = std::make_unique<Nodes::Resampler>(captureSampleRate, 48'000);
+    nodes["rs_2"]               = std::make_unique<Nodes::Resampler>(captureSampleRate, secondSampleRate);
     nodes["preemph_linpred"]    = std::make_unique<Nodes::PreEmphasis>();
     nodes["tail_pitch"]         = std::make_unique<Nodes::Tail>(35);
     nodes["pitch"]              = std::make_unique<Nodes::PitchTracker>(pitchSolver);
     nodes["tail_invglot"]       = std::make_unique<Nodes::Tail>(50);
     nodes["invglot"]            = std::make_unique<Nodes::InvGlot>(invglotSolver);
-    nodes["tail_linpred"]       = std::make_unique<Nodes::Tail>(15);
+    nodes["tail_linpred"]       = std::make_unique<Nodes::Tail>(20);
     nodes["linpred_spectrum"]   = std::make_unique<Nodes::LinPred>(linpredSolver, lpSpecLpOrder);
     
     nodes["rs_formant"]         = std::make_unique<Nodes::Resampler>(captureSampleRate, formantSampleRate);
     nodes["preemph_formant"]    = std::make_unique<Nodes::PreEmphasis>();
-    nodes["tail_formant"]       = std::make_unique<Nodes::Tail>(15);
+    nodes["tail_formant"]       = std::make_unique<Nodes::Tail>(20);
     nodes["linpred_formant"]    = std::make_unique<Nodes::LinPred>(linpredSolver, formantLpOrder);
     nodes["formants"]           = std::make_unique<Nodes::FormantTracker>(formantSolver);
 }

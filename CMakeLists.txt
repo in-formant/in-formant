@@ -10,11 +10,20 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno")
+set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -mtune=generic")
 set(CMAKE_CXX_FLAGS_DEBUG           "-O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE         "-O2 -g0 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g")
 set(CMAKE_CXX_FLAGS_MINSIZEREL      "-Os -g0 -DNDEBUG")
+
+if(ANDROID)
+elseif(WIN32 OR APPLE OR UNIX)
+    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i686 -msse")
+    elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=x86-64 -msse")
+    endif()
+endif()
 
 set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -111,10 +120,28 @@ set(SOURCES
     src/analysis/formant/formant.h
     src/analysis/invglot/iaif.cpp
     src/analysis/invglot/gfm_iaif.cpp
-    src/analysis/invglot/amgif.cpp
+    #src/analysis/invglot/amgif.cpp
     src/analysis/invglot/invglot.h
-    src/analysis/wavelet/wavelet.cpp
     src/analysis/wavelet/wavelet.h
+    src/analysis/wavelet/wavelets.cpp
+    src/analysis/wavelet/wavelets.h
+    src/analysis/wavelet/common.cpp
+    src/analysis/wavelet/common.h
+    src/analysis/wavelet/coeffs.cpp
+    src/analysis/wavelet/coeffs.h
+    src/analysis/wavelet/convolution.cpp
+    src/analysis/wavelet/convolution.h
+    src/analysis/wavelet/wt.cpp
+    src/analysis/wavelet/wt.h
+    src/analysis/gci/sigma.cpp
+    src/analysis/gci/sigma.h
+    src/analysis/gci/xewgrdel.cpp
+    src/analysis/gmm/GMM.cpp
+    src/analysis/gmm/GMM.h
+    src/analysis/gmm/Kmeans.cpp
+    src/analysis/gmm/Kmeans.h
+    src/analysis/gmm/Matrix.cpp
+    src/analysis/gmm/Matrix.h
     src/analysis/resampler/resampler.cpp
     src/analysis/resampler/resampler.h
     src/analysis/util/find_peaks.cpp
@@ -126,6 +153,7 @@ set(SOURCES
     src/analysis/util/calc_formant.cpp
     src/analysis/util/sort_formants.cpp
     src/analysis/util/parabolic_interpolation.cpp
+    src/analysis/util/zerocros.cpp
     src/analysis/util/util.h
     src/analysis/analysis.h
     src/synthesis/noise.cpp
@@ -367,10 +395,10 @@ else()
     add_executable(speech-analysis ${SOURCES})
 endif()
 
-target_include_directories(speech-analysis SYSTEM PUBLIC ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${SOXR_INCLUDE_DIR} ${NANOSVG_INCLUDE_DIR})
+target_include_directories(speech-analysis SYSTEM PUBLIC ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${SOXR_INCLUDE_DIR} ${NANOSVG_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/external/armadillo/include)
 target_link_libraries(speech-analysis PUBLIC ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} ${SOXR_LIBRARIES})
 
-target_compile_definitions(speech-analysis PUBLIC -DR8B_PFFFT=1)
+target_compile_definitions(speech-analysis PUBLIC -DR8B_PFFFT=1 -DARMA_DONT_USE_WRAPPER)
 
 if(RENDERER_USE_OPENGL OR RENDERER_USE_VULKAN)
     if(RENDERER_USE_OPENGL)

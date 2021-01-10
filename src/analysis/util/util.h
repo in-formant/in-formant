@@ -10,6 +10,8 @@ namespace Analysis {
 
     std::vector<int> findPeaks(const double *data, int length, int sign = +1);
 
+    std::pair<std::vector<double>, std::vector<double>> findZerocros(const std::vector<double>& y, char m);
+
     std::pair<double, double> parabolicInterpolation(const std::vector<double>& array, int x);
     
     std::vector<std::complex<double>> findRoots(const std::vector<double>& p);

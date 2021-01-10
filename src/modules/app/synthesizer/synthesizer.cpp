@@ -196,7 +196,7 @@ void Synthesizer::generateAudio(int requestedLength)
 
     if (lpsos.empty() || lastSampleRate != glotFs) {
         lastSampleRate = glotFs;
-        lpsos = Analysis::butterworthLowpass(15, 12000, glotFs);
+        lpsos = Analysis::butterworthLowpass(8, 16000, glotFs);
     }
 
     static std::vector<std::vector<double>> lpglotmem(20, std::vector<double>(4, 0.0f));

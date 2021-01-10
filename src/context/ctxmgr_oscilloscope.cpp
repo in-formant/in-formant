@@ -12,6 +12,7 @@ void ContextManager::renderOscilloscope(RenderingContext &rctx)
 
     auto& sound = soundTrack[iframe];
     auto& glot = glotTrack[iframe];
+    auto& glotInst = glotInstTrack[iframe];
 
     int glotZcr = glot.size() - 1;
 
@@ -60,6 +61,21 @@ void ContextManager::renderOscilloscope(RenderingContext &rctx)
     }
 
     graphRender.resize(glotLength);
+
+    for (int i = 0; i < glotLength; ++i) {
+        graphRender[i] = {
+            .x = static_cast<float>(i),
+            .y = glotInst[glotZcr - glotLength + i] * 2.5f - 5.0f,
+        };
+    }
+    if (!graphRender.empty()) {
+        rctx.renderer->renderGraph(graphRender, 0, glotLength - 1, 2.0f, 0.0f, 1.0f, 1.0f);
+    } 
+    else {
+        graphRender.push_back({.x = 0.0f, .y = -5.0f});
+        graphRender.push_back({.x = 1.0f, .y = -5.0f});
+        rctx.renderer->renderGraph(graphRender, 0, 1, 2.0f, 0.0f, 1.0f, 1.0f);
+    }
 
     for (int i = 0; i < glotLength; ++i) {
         graphRender[i] = {
