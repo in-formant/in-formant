@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
 Terminal=false
-Exec=speech-analysis
-Name=Speech analysis
+Exec=in-formant
+Name=InFormant
 Comment=Real-time formant tracking and voice analysis software
-Icon=speech-analysis
+Icon=in-formant
 Categories=Utility;Audio;Science;

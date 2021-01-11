@@ -201,7 +201,8 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 }
 
 void ContextManager::eventSpectrogram(RenderingContext &rctx)
-{ 
+{
+/* 
 #ifndef __EMSCRIPTEN__
     if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_F1)) {
         auto& target = ctx->renderingContexts["Oscilloscope"].target;
@@ -245,5 +246,6 @@ void ContextManager::eventSpectrogram(RenderingContext &rctx)
     if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_U)) {
         displayLegends = !displayLegends;
     }
+*/
 }
 

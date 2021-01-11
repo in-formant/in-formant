@@ -139,6 +139,7 @@ void ContextManager::eventSynth(RenderingContext &rctx)
    
     bool settingsChanged = false;
 
+    /*
     if (rctx.target->isMousePressed(SDL_BUTTON_LEFT)) {
         for (auto& f : mSynthFields) {
             int x = (f.x * tw) / rw;
@@ -156,6 +157,7 @@ void ContextManager::eventSynth(RenderingContext &rctx)
             }
         }
     }
+    */
 }
 
 #endif

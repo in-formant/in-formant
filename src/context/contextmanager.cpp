@@ -355,7 +355,6 @@ void ContextManager::mainBody(bool processEvents)
 #endif
 
             rctx.target->processEvents();
-
             if (rctx.target->isVisible()) {
 #ifndef __EMSCRIPTEN__
                 if (rctx.target->shouldQuit()) {
@@ -364,6 +363,7 @@ void ContextManager::mainBody(bool processEvents)
                 }
 #endif
 
+/*
                 if ((rctx.target->isKeyPressedOnce(SDL_SCANCODE_ESCAPE)
                         || rctx.target->shouldClose())
 #ifdef __EMSCRIPTEN__
@@ -408,6 +408,7 @@ void ContextManager::mainBody(bool processEvents)
                     isNoiseOn = !isNoiseOn;
                 }
 #endif
+                */
 
                 if (rctx.target->sizeChanged()) {
                     updateRendererTargetSize(rctx);

@@ -12,6 +12,10 @@
 #include <csignal>
 #include <thread>
 
+#include <QGuiApplication>
+#include <QQmlEngine>
+#include <QQuickView>
+
 #if defined(__APPLE__)
 #   include <mach-o/dyld.h>
 #   include <unistd.h>
@@ -69,15 +73,11 @@ int main(int argc, char **argv)
     chdir(dirname(exePath.data()));
 #endif
     
-    constexpr int testToneFrequency = 200;
-
-    int sineTime = 0;
-
-    auto ctxBuilder = Main::ContextBuilder<
+    /*auto ctxBuilder = Main::ContextBuilder<
 #if defined(ANDROID) || defined(__ANDROID__)
             Audio::Oboe,
 #elif defined(__linux__)
-            Audio::Alsa,
+            Audio::PortAudio,
 #elif defined(_WIN32) || defined(__APPLE__)
             Audio::PortAudio,
 #elif defined(__EMSCRIPTEN__)
@@ -107,12 +107,25 @@ int main(int argc, char **argv)
         .setPlaybackSampleRate(48000)
         .setPlaybackCallback([](auto...){});
 
-    Main::ContextManager manager(ctxBuilder.build());
+    Main::ContextManager manager(ctxBuilder.build());*/
 
-    manager.initialize();
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QCoreApplication::setOrganizationName("InFormant");
+
+    QGuiApplication app(argc, argv);
+
+    QQuickView view;
+    view.connect(view.engine(), &QQmlEngine::quit, &app, &QCoreApplication::quit);
+    view.setSource(QUrl("qrc:/main.qml"));
+    if (view.status() == QQuickView::Error)
+        return -1;
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
+    view.show();
+
+    /*manager.initialize();
     manager.start();
-    manager.terminate();
+    manager.terminate();*/
 
-    return 0;
+    return app.exec();
 }
 
