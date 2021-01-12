@@ -177,7 +177,13 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(Eigen3 REQUIRED eigen3)
 pkg_check_modules(FFTW REQUIRED fftw3)
 
-find_package(Qt5 COMPONENTS Quick Qml Core REQUIRED)
+find_package(Qt5 5.12.10 COMPONENTS Quick Qml Gui Core REQUIRED)
+foreach(c Qml Gui Core)
+    if(${Qt5${c}_FOUND})
+        get_target_property(Qt5${c}_LIBRARY_FILE ${Qt5${c}_LIBRARIES} LOCATION)
+        message(STATUS "Found Qt5${c}: ${Qt5${c}_LIBRARY_FILE}")
+    endif()
+endforeach()
 find_package(Qt5QuickCompiler REQUIRED)
 qtquick_compiler_add_resources(RESOURCES_OBJ ${RESOURCES})
 
@@ -299,7 +305,7 @@ else()
 endif()
 
 target_include_directories(in-formant SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${R8BRAIN_INCLUDE_DIR} ${NANOSVG_INCLUDE_DIR} ${ARMADILLO_INCLUDE_DIR})
-target_link_libraries(in-formant PRIVATE ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} Qt5::Quick Qt5::Qml Qt5::Core)
+target_link_libraries(in-formant PRIVATE ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} Qt5::Quick Qt5::Qml Qt5::Gui Qt5::Core)
 
 target_compile_definitions(in-formant PRIVATE -DR8B_PFFFT=1 -DARMA_DONT_USE_WRAPPER)
 
