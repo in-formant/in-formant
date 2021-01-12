@@ -47,14 +47,16 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
         }
     }
 
-    Renderer::FrequencyTrackRenderData pitchTrackRender;
-    for (auto x : pitchTrack) {
-        if (x > 0)
-            pitchTrackRender.emplace_back(x); 
-        else
-            pitchTrackRender.emplace_back(std::nullopt);
+    if (displayPitchTracks) {
+        Renderer::FrequencyTrackRenderData pitchTrackRender;
+        for (auto x : pitchTrack) {
+            if (x > 0)
+                pitchTrackRender.emplace_back(x); 
+            else
+                pitchTrackRender.emplace_back(std::nullopt);
+        }
+        rctx.renderer->renderFrequencyTrack(pitchTrackRender, 6.0f, 0.0f, 1.0f, 1.0f);
     }
-    rctx.renderer->renderFrequencyTrack(pitchTrackRender, 6.0f, 0.0f, 1.0f, 1.0f);
  
     auto& tickLabelFont = FONT(primaryFont, uiFontSize - 5, rctx);
     rctx.renderer->renderFrequencyScaleBar(tickLabelFont, tickLabelFont);
@@ -73,39 +75,6 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
 
         y = 15;
 
-        if (displayLegends) {
-#if ! ( defined(ANDROID) || defined(__ANDROID__) ) 
-            const std::vector<std::string> keyLegends = {
-#ifndef __EMSCRIPTEN__
-                "F1: Open oscilloscope",
-                "F2: Open FFT spectrum",
-                "F3: Open synthesizer window",
-#endif
-                "P: Pause/resume analysis",
-                "L: Toggle spectrogram/LP spectra",
-                "F: Toggle frame cursor",
-                "T: Toggle formant tracks",
-                "U: Toggle help text",
-#ifdef __EMSCRIPTEN__
-                "N: Toggle playing filtered noise",
-#endif
-                "S: Open settings window",
-            };
-#else
-            const std::array<std::string, 0> keyLegends {};
-#endif
-
-            for (const auto& str : keyLegends) {
-                rctx.renderer->renderText(
-                        font,
-                        str,
-                        15,   
-                        y,
-                        1.0f, 1.0f, 1.0f);
-                y += em + 10;
-            }
-        }
-
         std::vector<std::string> bottomStrings;
         float frequency;
 
@@ -119,15 +88,17 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
             useFrameCursor ? rctx.renderer->renderFrameCursor(specMX, specMY, spectrogramCount)
                            : spectrogramCount - 1;
 
-        frequency = pitchTrack[iframe];
+        if (displayPitchTracks) {
+            frequency = pitchTrack[iframe];
 
-        ss.str("");
-        ss << "Pitch: ";
-        if (frequency > 0)
-            ss << ((10.0f * std::round(frequency)) / 10.0f) << " Hz";
-        else
-            ss << "unvoiced";
-        bottomStrings.push_back(ss.str());
+            ss.str("");
+            ss << "Pitch: ";
+            if (frequency > 0)
+                ss << ((10.0f * std::round(frequency)) / 10.0f) << " Hz";
+            else
+                ss << "unvoiced";
+            bottomStrings.push_back(ss.str());
+        }
 
         if (displayFormantTracks) {
             static std::vector<float> lastFormants;
@@ -223,29 +194,14 @@ void ContextManager::eventSpectrogram(RenderingContext &rctx)
         }
     }
 #endif
-
+*/
     const auto [mx, my] = rctx.target->getMousePosition();
     int mw, mh;
     rctx.target->getSize(&mw, &mh);
 
-    specMX = (float) mx / (float) mw;
-    specMY = (float) my / (float) mh;
-
-    if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_L)) {
-        displayLpSpec = !displayLpSpec;
+    if (rctx.target->isMousePressed(0)) {
+        specMX = (float) mx / (float) mw;
+        specMY = (float) my / (float) mh;
     }
-
-    if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_F)) {
-        useFrameCursor = !useFrameCursor;
-    }
-
-    if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_T)) {
-        displayFormantTracks = !displayFormantTracks;
-    }
-
-    if (rctx.target->isKeyPressedOnce(SDL_SCANCODE_U)) {
-        displayLegends = !displayLegends;
-    }
-*/
 }
 

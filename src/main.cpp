@@ -5,7 +5,7 @@
 #include "context/context.h"
 #include "context/contextbuilder.h"
 #include "context/contextmanager.h"
-#include "gui/canvas.h"
+#include "gui/gui.h"
 #include <iostream>
 #include <atomic>
 #include <memory>
@@ -19,9 +19,7 @@
 #   include <libgen.h>
 #endif
 
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QQuickView>
+#include <QApplication>
 
 using namespace Module;
 using namespace std::chrono_literals;
@@ -43,7 +41,7 @@ static void signalHandler(int signal) {
         break;
     }
 
-    _Exit(EXIT_SUCCESS);
+    qGuiApp->quit(); 
 }
 #endif
 
@@ -73,18 +71,18 @@ int main(int argc, char **argv)
     }
     chdir(dirname(exePath.data()));
 #endif
-    
-    /*auto ctxBuilder = Main::ContextBuilder<
+
+    auto ctxBuilder = Main::ContextBuilder<
 #if defined(ANDROID) || defined(__ANDROID__)
             Audio::Oboe,
 #elif defined(__linux__)
-            Audio::PortAudio,
+            Audio::Alsa,
 #elif defined(_WIN32) || defined(__APPLE__)
             Audio::PortAudio,
 #elif defined(__EMSCRIPTEN__)
             Audio::WebAudio,
 #endif
-            Target::SDL2,
+            Target::Qt5Quick,
             Renderer::Type::NanoVG>();
 
     ctxBuilder
@@ -108,23 +106,8 @@ int main(int argc, char **argv)
         .setPlaybackSampleRate(48000)
         .setPlaybackCallback([](auto...){});
 
-    Main::ContextManager manager(ctxBuilder.build());*/
+    pManager = std::make_unique<Main::ContextManager>(ctxBuilder.build());
 
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    QCoreApplication::setOrganizationName("InFormant");
-
-    QGuiApplication app(argc, argv);
-
-    qmlRegisterType<Gui::Canvas>("IfCanvas", 1, 0, "IfCanvas");
-
-    QQmlApplicationEngine engine;
-    engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml");
-    engine.load(QUrl("qrc:/main.qml"));
-
-    /*manager.initialize();
-    manager.start();
-    manager.terminate();*/
-
-    return app.exec();
+    return Gui::runApp(argc, argv);
 }
 

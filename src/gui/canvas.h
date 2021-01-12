@@ -13,13 +13,23 @@ namespace Gui
         QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override;
         void render() override;
         void synchronize(QQuickFramebufferObject *item) override;
+
+    private:
+        void connectEvents();
+        
+        QQuickFramebufferObject *mItem;
     };
 
     class Canvas : public QQuickFramebufferObject
     {
+        Q_OBJECT
+
     public:
         Canvas(QQuickItem *parent = nullptr);
         QQuickFramebufferObject::Renderer *createRenderer() const override;
+
+    public slots:
+        void terminate();
     };
 
 }

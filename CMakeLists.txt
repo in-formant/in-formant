@@ -28,9 +28,11 @@ endif()
 set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(CMAKE_AUTOMOC ON)
+
 set(SOURCES
     src/main.cpp
-    #[[src/context/context.h
+    src/context/context.h
     src/context/contextbuilder.h
     src/context/contextmanager.cpp
     src/context/ctxmgr_spectrogram.cpp
@@ -38,9 +40,11 @@ set(SOURCES
     src/context/ctxmgr_oscilloscope.cpp
     src/context/ctxmgr_settings.cpp
     src/context/ctxmgr_synth.cpp
-    src/context/contextmanager.h]]
+    src/context/contextmanager.h
+    src/gui/gui.h
     src/gui/canvas.h
     src/gui/canvas.cpp
+    src/gui/app.cpp
     src/backtrace/backtrace.h
     src/android_redirect_log.cpp
     src/modules/audio/base/base.cpp
@@ -177,8 +181,8 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(Eigen3 REQUIRED eigen3)
 pkg_check_modules(FFTW REQUIRED fftw3)
 
-find_package(Qt5 5.12.10 COMPONENTS Quick Qml Gui Core REQUIRED)
-foreach(c Qml Gui Core)
+find_package(Qt5 5.12 COMPONENTS Quick QuickControls2 Qml Widgets Gui Core REQUIRED)
+foreach(c Quick QuickControls2 Qml Widgets Gui Core)
     if(${Qt5${c}_FOUND})
         get_target_property(Qt5${c}_LIBRARY_FILE ${Qt5${c}_LIBRARIES} LOCATION)
         message(STATUS "Found Qt5${c}: ${Qt5${c}_LIBRARY_FILE}")
@@ -254,15 +258,12 @@ endif()
 
 ### SEARCH TARGET MODULES
 
-pkg_check_modules(sdl2 QUIET sdl2)
-if(sdl2_FOUND)
-    message(STATUS "Including target module: sdl2")
-    set(TARGET_USE_SDL2 TRUE)
-    list(APPEND SOURCES
-        src/modules/target/sdl2/sdl2.cpp
-        src/modules/target/sdl2/sdl2.h
-    )
-endif()
+message(STATUS "Including target module: qt5quick")
+set(TARGET_USE_QT5QUICK TRUE)
+list(APPEND SOURCES
+    src/modules/target/qt5quick/qt5quick.cpp
+    src/modules/target/qt5quick/qt5quick.h
+)
 
 ### SEARCH RENDERER MODULES 
 
@@ -279,6 +280,11 @@ list(APPEND SOURCES
 if(TARGET_USE_SDL2)
     list(APPEND SOURCES
         src/modules/target/sdl2/sdl2_nanovg.cpp
+    )
+endif()
+if(TARGET_USE_QT5QUICK)
+    list(APPEND SOURCES
+        src/modules/target/qt5quick/q5q_nanovg.cpp
     )
 endif()
 
@@ -305,7 +311,7 @@ else()
 endif()
 
 target_include_directories(in-formant SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${R8BRAIN_INCLUDE_DIR} ${NANOSVG_INCLUDE_DIR} ${ARMADILLO_INCLUDE_DIR})
-target_link_libraries(in-formant PRIVATE ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} Qt5::Quick Qt5::Qml Qt5::Gui Qt5::Core)
+target_link_libraries(in-formant PRIVATE ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} Qt5::Quick Qt5::QuickControls2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
 
 target_compile_definitions(in-formant PRIVATE -DR8B_PFFFT=1 -DARMA_DONT_USE_WRAPPER)
 
@@ -347,6 +353,10 @@ if(TARGET_USE_SDL2)
     target_compile_definitions(in-formant PRIVATE -DTARGET_USE_SDL2=1)
 endif()
 
+if(TARGET_USE_QT5QUICK)
+    target_compile_definitions(in-formant PRIVATE -DTARGET_USE_QT5QUICK=1)
+endif()
+
 if(RENDERER_USE_NVG)
     target_include_directories(in-formant SYSTEM PRIVATE ${NVG_DIR}/src)
     target_link_libraries(in-formant PRIVATE nanovg)
@@ -374,8 +384,8 @@ if(RENDERER_USE_NVG)
         target_include_directories(in-formant SYSTEM PRIVATE ${OPENGL_INCLUDE_DIRS})
         target_link_libraries(in-formant PRIVATE ${OPENGL_LIBRARIES})
 
-        target_sources(in-formant PRIVATE $ENV{GLEW_SOURCE_FILE})
-        target_compile_definitions(in-formant PRIVATE -DGLEW_STATIC -DGLEW_NO_GLU)
+        #target_sources(in-formant PRIVATE $ENV{GLEW_SOURCE_FILE})
+        #target_compile_definitions(in-formant PRIVATE -DGLEW_STATIC -DGLEW_NO_GLU)
     endif()
 endif()
 

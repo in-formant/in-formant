@@ -78,6 +78,7 @@ void Queue::pull(float *pOut, int outLength)
     else {
         pullCopyLength = pullSize;
     }
+
     auto pullEndIt = std::next(mDeque.begin(), pullCopyLength);
 
     std::copy(mDeque.begin(), pullEndIt, preResampleData.get());

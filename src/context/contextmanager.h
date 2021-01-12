@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <memory>
 #include <vector>
+#include <QObject>
 
 namespace Main {
 
@@ -16,7 +17,9 @@ namespace Main {
     struct RenderingContextInfo;
     struct SettingsUIField;
 
-    class ContextManager {
+    class ContextManager : public QObject {
+        Q_OBJECT
+
     public:
         ContextManager(std::unique_ptr<Context>&& ctx);
 
@@ -27,6 +30,15 @@ namespace Main {
 #if defined(ANDROID) || defined(__ANDROID__)
         void selectView(const std::string& name);
 #endif
+
+        void mainBody(bool processEvents = true);
+
+        void requestClose();
+        void togglePaused();
+        void setDisplayLpSpec(bool flag);
+        void setUseFrameCursor(bool flag);
+        void setDisplayFormantTracks(bool flag);
+        void setDisplayPitchTracks(bool flag);
 
     private:
         void loadSettings();
@@ -67,8 +79,6 @@ namespace Main {
         void eventAndroidCommon(RenderingContext& rctx);
 #endif
 
-        void mainBody(bool processEvents = true);
-
 #ifdef __EMSCRIPTEN__
         void changeModuleCanvas(const std::string& id);
         void saveModuleCtx(const std::string& id);
@@ -88,6 +98,7 @@ namespace Main {
         bool useFrameCursor;
         bool isNoiseOn;
         bool displayFormantTracks;
+        bool displayPitchTracks;
         bool displayLegends;
 
 #if defined(ANDROID) || defined(__ANDROID__)

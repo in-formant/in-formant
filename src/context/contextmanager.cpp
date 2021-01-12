@@ -28,7 +28,7 @@ void ContextManager::initialize()
     ctx->audio->refreshDevices();
 
 #if defined(ANDROID) || defined(__ANDROID__)
-    Target::SDL2::prepareAssets();
+    //Target::SDL2::prepareAssets();
 #endif
 
     durProcessing = 0us;
@@ -48,12 +48,12 @@ void ContextManager::start()
 
     createRenderingContexts({
         {"Spectrogram",  &ContextManager::renderSpectrogram,  &ContextManager::eventSpectrogram},
-        {"FFT spectrum", &ContextManager::renderFFTSpectrum,  &ContextManager::eventFFTSpectrum},
+       /* {"FFT spectrum", &ContextManager::renderFFTSpectrum,  &ContextManager::eventFFTSpectrum},
         {"Oscilloscope", &ContextManager::renderOscilloscope, &ContextManager::eventOscilloscope},
         {"Settings",     &ContextManager::renderSettings,     &ContextManager::eventSettings},
 #if ! ( defined(__EMSCRIPTEN__) || defined(ANDROID) || defined(__ANDROID__) )
-        {"Synthesizer",  &ContextManager::renderSynth,        &ContextManager::eventSynth},
-#endif
+        {"Synthesizer",  &ContextManager::renderSynth,        &ContextManager::eventSynth}, 
+#endif */
     });
 
     primaryFont = & ctx->freetypeInstance->font("Montserrat.otf");
@@ -128,8 +128,10 @@ void ContextManager::start()
     useFrameCursor = false;
     isNoiseOn = false;
     displayFormantTracks = false;
+    displayPitchTracks = false;
     displayLegends = true;
 
+    /*
 #if defined(__EMSCRIPTEN__)
     emscripten_set_main_loop_arg(
             [] (void *userdata) {
@@ -146,6 +148,7 @@ void ContextManager::start()
         }
     }
 #endif
+    */
 }
 
 void ContextManager::terminate()
@@ -269,7 +272,7 @@ void ContextManager::updateAllRendererParameters()
 
 void ContextManager::createRenderingContexts(const std::initializer_list<RenderingContextInfo>& infos)
 {
-    RenderingContextBuilder<Target::SDL2> builder(ctx->rendererType);
+    RenderingContextBuilder<Target::Qt5Quick> builder(ctx->rendererType);
 #if defined(ANDROID) || defined(__ANDROID__)
     ctx->renderingContexts["main"] = builder.build();
 #endif
@@ -503,3 +506,33 @@ void ContextManager::saveModuleCtx(const std::string& id)
     }, id.c_str());
 }
 #endif
+
+void ContextManager::requestClose()
+{
+    endLoop = true;
+}
+
+void ContextManager::togglePaused()
+{
+    isPaused = !isPaused;
+}
+
+void ContextManager::setDisplayLpSpec(bool flag)
+{
+    displayLpSpec = flag;
+}
+
+void ContextManager::setUseFrameCursor(bool flag)
+{
+    useFrameCursor = flag;
+}
+
+void ContextManager::setDisplayFormantTracks(bool flag)
+{
+    displayFormantTracks = flag;
+}
+
+void ContextManager::setDisplayPitchTracks(bool flag)
+{
+    displayPitchTracks = flag;
+}

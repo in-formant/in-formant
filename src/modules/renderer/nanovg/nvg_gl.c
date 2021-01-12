@@ -8,7 +8,7 @@
 #    include <GLES3/gl3.h>
 #    define NANOVG_GLES3_IMPLEMENTATION
 #  else
-#    include <GL/glew.h>
+#    include <GL/gl.h>
 #    define NANOVG_GL3_IMPLEMENTATION
 #  endif
 #  include <nanovg_gl.h>

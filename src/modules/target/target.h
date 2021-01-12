@@ -7,4 +7,8 @@
 #   include "sdl2/sdl2.h"
 #endif
 
+#ifdef TARGET_USE_QT5QUICK
+#   include "qt5quick/qt5quick.h"
+#endif
+
 #endif // MODULES_TARGET_H

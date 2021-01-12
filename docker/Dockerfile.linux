@@ -14,6 +14,7 @@ RUN apt-get update -y && \
             wget \
             make \
             libasound-dev \
+            libpulse-dev \
             libpng-dev \
             libxcomposite-dev \
             libxcb-glx0-dev \
@@ -113,7 +114,7 @@ RUN apt-get update -y && \
 
 CMD cd /build && \
         export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64 && \
-        export PKG_CONFIG_PATH=/usr/lib64/pkgconfig:/usr/share/pkgconfig:/usr/local/pkgconfig:/usr/local/lib64/pkgconfig:/usr/local/share/pkgconfig && \
+        export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig:/usr/local/pkgconfig:/usr/local/lib64/pkgconfig:/usr/local/share/pkgconfig && \
         export GLEW_SOURCE_FILE=/usr/local/src/glew.c && \
         cmake \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
