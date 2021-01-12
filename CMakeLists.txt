@@ -39,6 +39,8 @@ set(SOURCES
     src/context/ctxmgr_settings.cpp
     src/context/ctxmgr_synth.cpp
     src/context/contextmanager.h]]
+    src/gui/canvas.h
+    src/gui/canvas.cpp
     src/backtrace/backtrace.h
     src/android_redirect_log.cpp
     src/modules/audio/base/base.cpp

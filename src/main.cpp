@@ -5,6 +5,7 @@
 #include "context/context.h"
 #include "context/contextbuilder.h"
 #include "context/contextmanager.h"
+#include "gui/canvas.h"
 #include <iostream>
 #include <atomic>
 #include <memory>
@@ -12,15 +13,15 @@
 #include <csignal>
 #include <thread>
 
-#include <QGuiApplication>
-#include <QQmlEngine>
-#include <QQuickView>
-
 #if defined(__APPLE__)
 #   include <mach-o/dyld.h>
 #   include <unistd.h>
 #   include <libgen.h>
 #endif
+
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QQuickView>
 
 using namespace Module;
 using namespace std::chrono_literals;
@@ -42,7 +43,7 @@ static void signalHandler(int signal) {
         break;
     }
 
-    exit(EXIT_SUCCESS);
+    _Exit(EXIT_SUCCESS);
 }
 #endif
 
@@ -114,13 +115,11 @@ int main(int argc, char **argv)
 
     QGuiApplication app(argc, argv);
 
-    QQuickView view;
-    view.connect(view.engine(), &QQmlEngine::quit, &app, &QCoreApplication::quit);
-    view.setSource(QUrl("qrc:/main.qml"));
-    if (view.status() == QQuickView::Error)
-        return -1;
-    view.setResizeMode(QQuickView::SizeRootObjectToView);
-    view.show();
+    qmlRegisterType<Gui::Canvas>("IfCanvas", 1, 0, "IfCanvas");
+
+    QQmlApplicationEngine engine;
+    engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml");
+    engine.load(QUrl("qrc:/main.qml"));
 
     /*manager.initialize();
     manager.start();

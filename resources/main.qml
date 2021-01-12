@@ -1,7 +1,23 @@
 import QtQuick 2.12
+import QtQuick.Controls 2.12
+import IfCanvas 1.0
 
-Rectangle {
-    id: root
-    width: 640; height: 320
-    color: "#646464"
+ApplicationWindow {
+    visible: true
+
+    menuBar: MenuBar {
+    }
+
+    header: ToolBar {
+    }
+
+    footer: TabBar {
+    }
+
+    StackView {
+        anchors.fill: parent
+
+        IfCanvas {
+        }
+    }
 }
