@@ -1,7 +1,8 @@
 import QtQuick 2.12
+import QtQuick.Controls 2.12
 
-Rectangle {
-    id: root
+ApplicationWindow {
+    visible: true
     width: 640; height: 320
     color: "#646464"
 }

@@ -12,15 +12,15 @@
 #include <csignal>
 #include <thread>
 
-#include <QGuiApplication>
-#include <QQmlEngine>
-#include <QQuickView>
-
 #if defined(__APPLE__)
 #   include <mach-o/dyld.h>
 #   include <unistd.h>
 #   include <libgen.h>
 #endif
+
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QQuickView>
 
 using namespace Module;
 using namespace std::chrono_literals;
@@ -114,13 +114,9 @@ int main(int argc, char **argv)
 
     QGuiApplication app(argc, argv);
 
-    QQuickView view;
-    view.connect(view.engine(), &QQmlEngine::quit, &app, &QCoreApplication::quit);
-    view.setSource(QUrl("qrc:/main.qml"));
-    if (view.status() == QQuickView::Error)
-        return -1;
-    view.setResizeMode(QQuickView::SizeRootObjectToView);
-    view.show();
+    QQmlApplicationEngine engine;
+    engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml");
+    engine.load(QUrl("qrc:/main.qml"));
 
     /*manager.initialize();
     manager.start();
