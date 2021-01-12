@@ -1,6 +1,7 @@
 FROM ubuntu:16.04 AS build
 
-ARG QT_EMAIL QT_PW
+ARG QT_EMAIL
+ARG QT_PW
 ENV QT_EMAIL=$QT_EMAIL QT_PW=$QT_PW
 
 RUN apt-get update -y && \
@@ -43,13 +44,14 @@ RUN chmod +x qt-unified-linux-x64-4.0.1-online.run && \
         ./qt-unified-linux-x64-4.0.1-online.run in \
             --no-default-installations \
             --root /opt/Qt5 \
-            --auto-answer telemetry-question=Yes,AssociateCommonFiletypes=Yes \
+            --auto-answer telemetry-question=Yes,AssociateCommonFiletypes=Yes,installationError=Retry,installationErrorWithRetry=Retry,DownloadError=Retry,archiveDownloadError=Retry,stopProcessesForUpdates=Retry \
             --default-answer \
             --accept-licenses \
             --accept-obligations \
             --email $QT_EMAIL \
             --pw $QT_PW \
             --confirm-command \
+            --set-temp-repository https://master.qt.io/online/qtsdkrepository/linux_x64/desktop/qt5_51210,https://master.qt.io/online/qtsdkrepository/linux_x64/desktop/qt5_51210_src_doc_examples,https://master.qt.io/online/qtsdkrepository/linux_x64/desktop/tools_generic,https://master.qt.io/online/qtsdkrepository/linux_x64/desktop/tools_qtcreator,https://master.qt.io/online/qtsdkrepository/linux_x64/desktop/licenses \
             qt.qt5.51210.gcc_64 \
         && \
         rm -f ~/.local/share/Qt/qtlicenses.ini ~/.local/share/Qt/qtaccount.ini

@@ -5,6 +5,11 @@ set -e
 tmp=/AppDir
 
 qt_prefix=/opt/Qt5/5.12.10/gcc_64
+qt_additional_libs=(
+    $qt_prefix/lib/libQt5Quick.so.5
+    $qt_prefix/lib/libQt5QuickControls2.so.5
+    $qt_prefix/lib/libQt5QuickTemplates2.so.5
+)
 qt_platform_plugin=$qt_prefix/plugins/platforms/libqxcb.so
 qt_qml_plugins=(
     $qt_prefix/qml/QtQuick.2
@@ -39,7 +44,8 @@ for file in /build/in-formant $qt_platform_plugin; do
 done
 
 cp -v $qt_platform_plugin $tmp/usr/bin/platforms
-cp -rv $qt_qml_plugins $tmp/usr/bin
+cp -v ${qt_additional_libs[@]} $tmp/usr/lib
+cp -rv ${qt_qml_plugins[@]} $tmp/usr/bin
 cp -v /src/dist-res/in-formant.desktop $tmp/usr/share/applications
 cp -v /src/dist-res/in-formant.png $tmp/usr/share/icons/hicolor/256x256
 cp -v /src/dist-res/AppRun $tmp/AppRun
