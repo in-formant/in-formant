@@ -2,8 +2,7 @@
 #define AUDIO_RESAMPLER_H
 
 #include <vector>
-#include <memory>
-#include <CDSPResampler.h>
+#include <speex_resampler.h>
 
 namespace Module::Audio {
 
@@ -12,6 +11,7 @@ namespace Module::Audio {
         static constexpr int chMono = 1;
 
         Resampler(int inRate, int outRate);
+        virtual ~Resampler();
 
         constexpr int getNumChannels() const { return chMono; }
 
@@ -36,7 +36,7 @@ namespace Module::Audio {
     private:
         void createResampler();
 
-        std::shared_ptr<r8b::CDSPResampler> mResampler;
+        SpeexResamplerState *mResampler;
 
         int mInRate, mOutRate;
     };

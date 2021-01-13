@@ -34,6 +34,6 @@ void Tail::process(const NodeIO *inputs[], NodeIO *outputs[])
     out->setLength(outLength);
 
     for (int i = 0; i < outLength; ++i) {
-        out->getData()[i] = in->getConstData()[inLength - outLength + i];
+        out->getData()[i] = in->getConstData()[inLength / 2 - outLength / 2 + i];
     }
 }

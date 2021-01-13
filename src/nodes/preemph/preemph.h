@@ -13,7 +13,7 @@ namespace Nodes
         void process(const NodeIO *inputs[], NodeIO *outputs[]) override;
 
     private:
-        Analysis::LP::Burg lpc;
+        Analysis::LP::Autocorr lpc;
     };
 }
 

@@ -5,13 +5,13 @@
 #include "../linpred/linpred.h"
 #include <deque>
 #include <vector>
-#include <memory>
 
 namespace Analysis {
 
     class RAPT {
     public:
         RAPT();
+        virtual ~RAPT();
 
         double computeFrame(const double *data, int length, double sampleRate);
         std::vector<double> computePath();
@@ -55,7 +55,7 @@ namespace Analysis {
 
     private:
         std::deque<Frame> frames;
-        std::shared_ptr<r8b::CDSPResampler> resampler;
+        SpeexResamplerState *resampler;
     };
 }
 

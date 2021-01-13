@@ -28,13 +28,13 @@ Analysis::findZerocros(const std::vector<double>& y, char m)
 
     s.resize(f.size());
 
-    for (int i = 0; i < f.size(); ++i) {
+    for (int i = 0; i < (int) f.size(); ++i) {
         s[i] = y[i + 1] - y[i];
     }
 
     std::vector<double> t(f.size());
 
-    for (int i = 0; i < f.size(); ++i) {
+    for (int i = 0; i < (int) f.size(); ++i) {
         t[i] = f[i] - y[f[i]] / s[i];
     }
 

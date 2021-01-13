@@ -19,9 +19,26 @@ ApplicationWindow {
     footer: TabBar {
     }
 
-    ColumnLayout {
-        id: layout
+    RowLayout {
         anchors.fill: parent
+    
+        ColumnLayout {
+            Layout.fillHeight: true
+
+            Switch {
+                text: "Pitch track"
+                objectName: "pitchTrack"                
+                signal togglePitchTrack(toggled: bool)
+                onToggled: this.togglePitchTrack(checked)
+            }
+
+            Switch {
+                text: "Formant tracks"
+                objectName: "formantTracks"
+                signal toggleFormantTracks(toggled: bool)
+                onToggled: this.toggleFormantTracks(checked)
+            }
+        }
 
         IfCanvas {
             Layout.fillWidth: true

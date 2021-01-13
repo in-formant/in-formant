@@ -11,10 +11,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -mtune=generic")
-set(CMAKE_CXX_FLAGS_DEBUG           "-O0 -g")
+set(CMAKE_CXX_FLAGS_DEBUG           "-Og -g")
 set(CMAKE_CXX_FLAGS_RELEASE         "-O2 -g0 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g")
 set(CMAKE_CXX_FLAGS_MINSIZEREL      "-Os -g0 -DNDEBUG")
+
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG    "-fuse-ld=gold")
 
 if(ANDROID)
 elseif(WIN32 OR APPLE OR UNIX)
@@ -140,14 +142,6 @@ set(SOURCES
     src/analysis/gci/sigma.cpp
     src/analysis/gci/sigma.h
     src/analysis/gci/xewgrdel.cpp
-    src/analysis/gmm/GMM.cpp
-    src/analysis/gmm/GMM.h
-    src/analysis/gmm/Kmeans.cpp
-    src/analysis/gmm/Kmeans.h
-    src/analysis/gmm/Matrix.cpp
-    src/analysis/gmm/Matrix.h
-    src/analysis/resampler/resampler.cpp
-    src/analysis/resampler/resampler.h
     src/analysis/util/find_peaks.cpp
     src/analysis/util/find_roots.cpp
     src/analysis/util/laguerre.cpp
@@ -167,8 +161,8 @@ set(SOURCES
     src/synthesis/shiftFilter.cpp
     src/synthesis/polyFromRoots.cpp
     src/synthesis/synthesis.h
-    external/r8brain-free-src/r8bbase.cpp
-    external/r8brain-free-src/pffft.cpp
+    external/speex/speex_resampler.h
+    external/speex/speex_resampler.c
 )
 
 set(RESOURCES
@@ -191,7 +185,7 @@ endforeach()
 find_package(Qt5QuickCompiler REQUIRED)
 qtquick_compiler_add_resources(RESOURCES_OBJ ${RESOURCES})
 
-set(R8BRAIN_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/r8brain-free-src)
+set(SPEEX_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/speex)
 set(NANOSVG_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/nanosvg)
 set(ARMADILLO_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/armadillo/include)
 
@@ -310,10 +304,10 @@ else()
     add_executable(in-formant ${SOURCES} ${RESOURCES_OBJ})
 endif()
 
-target_include_directories(in-formant SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${R8BRAIN_INCLUDE_DIR} ${NANOSVG_INCLUDE_DIR} ${ARMADILLO_INCLUDE_DIR})
+target_include_directories(in-formant SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${SPEEX_INCLUDE_DIR} ${NANOSVG_INCLUDE_DIR} ${ARMADILLO_INCLUDE_DIR})
 target_link_libraries(in-formant PRIVATE ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} Qt5::Quick Qt5::QuickControls2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
 
-target_compile_definitions(in-formant PRIVATE -DR8B_PFFFT=1 -DARMA_DONT_USE_WRAPPER)
+target_compile_definitions(in-formant PRIVATE -DARMA_DONT_USE_WRAPPER)
 
 if(AUDIO_USE_DUMMY)
     target_compile_definitions(in-formant PRIVATE -DAUDIO_USE_DUMMY=1)

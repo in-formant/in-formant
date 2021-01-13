@@ -1,7 +1,3 @@
-[submodule "soxr"]
-	path = external/soxr
-	url = https://git.code.sf.net/p/soxr/code
-	branch = 0.1.3
 [submodule "oboe"]
 	path = external/oboe
 	url = https://github.com/google/oboe

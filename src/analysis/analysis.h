@@ -6,7 +6,6 @@
 #include "linpred/linpred.h"
 #include "formant/formant.h"
 #include "invglot/invglot.h"
-#include "resampler/resampler.h"
 #include "util/util.h"
 
 #endif // ANALYSIS_H

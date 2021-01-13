@@ -146,7 +146,7 @@ const std::vector<Analysis::FormantData>& Pipeline::getFormants() const
     return formants;
 }
 
-const float Pipeline::getPitch() const
+float Pipeline::getPitch() const
 {
     return pitch;
 }
@@ -273,16 +273,16 @@ void Pipeline::createNodes()
     
     nodes["rs_2"]               = std::make_unique<Nodes::Resampler>(captureSampleRate, secondSampleRate);
     nodes["preemph_linpred"]    = std::make_unique<Nodes::PreEmphasis>();
-    nodes["tail_pitch"]         = std::make_unique<Nodes::Tail>(35);
+    nodes["tail_pitch"]         = std::make_unique<Nodes::Tail>(30);
     nodes["pitch"]              = std::make_unique<Nodes::PitchTracker>(pitchSolver);
     nodes["tail_invglot"]       = std::make_unique<Nodes::Tail>(50);
     nodes["invglot"]            = std::make_unique<Nodes::InvGlot>(invglotSolver);
-    nodes["tail_linpred"]       = std::make_unique<Nodes::Tail>(20);
+    nodes["tail_linpred"]       = std::make_unique<Nodes::Tail>(15);
     nodes["linpred_spectrum"]   = std::make_unique<Nodes::LinPred>(linpredSolver, lpSpecLpOrder);
     
     nodes["rs_formant"]         = std::make_unique<Nodes::Resampler>(captureSampleRate, formantSampleRate);
     nodes["preemph_formant"]    = std::make_unique<Nodes::PreEmphasis>();
-    nodes["tail_formant"]       = std::make_unique<Nodes::Tail>(20);
+    nodes["tail_formant"]       = std::make_unique<Nodes::Tail>(15);
     nodes["linpred_formant"]    = std::make_unique<Nodes::LinPred>(linpredSolver, formantLpOrder);
     nodes["formants"]           = std::make_unique<Nodes::FormantTracker>(formantSolver);
 }

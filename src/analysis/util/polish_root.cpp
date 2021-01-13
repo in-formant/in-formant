@@ -52,13 +52,13 @@ void Analysis::polishRoots(const std::vector<double> &p, std::vector<std::comple
     constexpr int maxIt = 80;
 
     int i = 0;
-    while (i < roots.size()) {
+    while (i < (int) roots.size()) {
         double im = roots[i].imag();
         double re = roots[i].real();
 
         if (im != 0.0f) {
             polishComplexRoot(p, &roots[i], maxIt);
-            if (i < roots.size() && im == -roots[i + 1].imag() && re == roots[i + 1].real()) {
+            if (i < (int) roots.size() && im == -roots[i + 1].imag() && re == roots[i + 1].real()) {
                 roots[i + 1] = std::conj(roots[i]);
                 i++;
             }

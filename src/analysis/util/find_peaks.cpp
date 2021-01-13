@@ -7,7 +7,7 @@ static void diff(std::vector<double> in, std::vector<double>& out)
 {
     out = std::vector<double>(in.size()-1);
 
-    for(int i=1; i<in.size(); ++i)
+    for(int i=1; i<(int)in.size(); ++i)
         out[i-1] = in[i] - in[i-1];
 }
 
@@ -15,20 +15,20 @@ static void vectorProduct(std::vector<double> a, std::vector<double> b, std::vec
 {
     out = std::vector<double>(a.size());
 
-    for(int i=0; i<a.size(); ++i)
+    for(int i=0; i<(int)a.size(); ++i)
         out[i] = a[i] * b[i];
 }
 
 static void findIndicesLessThan(std::vector<double> in, double threshold, std::vector<int>& indices)
 {
-    for(int i=0; i<in.size(); ++i)
+    for(int i=0; i<(int)in.size(); ++i)
         if(in[i]<threshold)
             indices.push_back(i+1);
 }
 
 static void selectElements(std::vector<double> in, std::vector<int> indices, std::vector<double>& out)
 {
-    for(int i=0; i<indices.size(); ++i)
+    for(int i=0; i<(int)indices.size(); ++i)
         out.push_back(in[indices[i]]);
 }
 
@@ -42,7 +42,7 @@ static void signVector(std::vector<double> in, std::vector<int>& out, int sign)
 {
     out = std::vector<int>(in.size());
 
-    for(int i=0; i<in.size(); ++i)
+    for(int i=0; i<(int)in.size(); ++i)
     {
         if(sign*in[i]>0)
             out[i]=1;

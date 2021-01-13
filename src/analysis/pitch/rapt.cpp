@@ -1,6 +1,5 @@
 #include "../util/util.h"
 #include "../filter/filter.h"
-#include "../resampler/resampler.h"
 #include "../../modules/math/constants.h"
 #include "rapt.h"
 #include "pitch.h"
@@ -50,7 +49,7 @@ PitchResult Pitch::RAPT::solve(const double *data, int length, int sampleRate)
 
 static void subtractReferenceMean(std::vector<double>& s, int n, int K);
 
-static std::vector<double> downsampleSignal(const std::vector<double>& s, const double Fs, const double Fds, std::shared_ptr<r8b::CDSPResampler>& resampler);
+static std::vector<double> downsampleSignal(const std::vector<double>& s, const double Fs, const double Fds, SpeexResamplerState **resampler);
 
 static std::vector<double> calculateDownsampledNCCF(const std::vector<double>& dss, const int dsn, const int dsK1, const int dsK2);
 
@@ -72,6 +71,13 @@ static std::vector<double> lpcrf2rr(const std::vector<double>& rf);
 RAPT::RAPT()
     : lpcOrder(-1), resampler(nullptr)
 {
+}
+
+RAPT::~RAPT()
+{
+    if (resampler != nullptr) {
+        speex_resampler_destroy(resampler);
+    }
 }
 
 double RAPT::computeFrame(const double *data, int length, double Fs)
@@ -102,12 +108,12 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
 
     subtractReferenceMean(s, n, K);
 
-    auto dss = downsampleSignal(s, Fs, Fds, resampler);
+    auto dss = downsampleSignal(s, Fs, Fds, &resampler);
     
     if (dss.size() < dsn + dsK2) {
         dss.resize(dsn + dsK2, 0.0f);
     }
-
+    
     auto dsNCCF = calculateDownsampledNCCF(dss, dsn, dsK1, dsK2);
     auto dsPeaks = findPeaksWithThreshold(dsNCCF, cand_tr, n_cands, true);
    
@@ -270,21 +276,35 @@ void subtractReferenceMean(std::vector<double>& s, int n, int K)
         s[j] -= mu;
 }
 
-std::vector<double> downsampleSignal(const std::vector<double>& s, const double Fs, const double Fds, std::shared_ptr<r8b::CDSPResampler>& resampler)
+std::vector<double> downsampleSignal(const std::vector<double>& s, const double Fs, const double Fds, SpeexResamplerState **resampler)
 {
     static double lastFs(0), lastFds(0);
 
-    if (!resampler || lastFs != Fs || lastFds != Fds) {
+    if (*resampler == nullptr || lastFs != Fs || lastFds != Fds) {
         lastFs = Fs;
         lastFds = Fds;
-        resampler.reset(new r8b::CDSPResampler(Fs, Fds, 16384));
+        if (*resampler != nullptr) {
+            speex_resampler_destroy(*resampler);
+        }
+        *resampler = speex_resampler_init(1, Fs, Fds, 9, nullptr);
     }
+  
+    speex_resampler_reset_mem(*resampler);
+    speex_resampler_skip_zeros(*resampler);
 
-    std::vector<double> out((s.size() * Fds) / Fs);
-    resampler->oneshot(const_cast<double *>(s.data()), s.size(),
-                        out.data(), out.size());
+    int latency = speex_resampler_get_input_latency(*resampler);
 
-    return out;
+    spx_uint32_t inLen = s.size() + latency;
+    spx_uint32_t outLen = (inLen * Fds) / Fs;
+    
+    std::vector<float> fin(inLen);
+    std::vector<float> fout(outLen);
+    std::copy(s.begin(), s.end(), fin.begin());
+
+    speex_resampler_process_float(*resampler, 0, fin.data(), &inLen, fout.data(), &outLen);
+    fout.resize(outLen);
+
+    return std::vector<double>(fout.begin(), fout.end());
 }
 
 std::vector<double> calculateDownsampledNCCF(const std::vector<double>& dss, const int dsn, const int dsK1, const int dsK2)

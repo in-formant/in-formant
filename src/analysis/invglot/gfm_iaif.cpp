@@ -13,6 +13,7 @@ GFM_IAIF::GFM_IAIF(double d)
     lpc = std::make_unique<LP::Burg>();
 }
 
+/*
 static void applyWindow(const std::vector<double>& w, const std::vector<double>& x, std::vector<double>& y)
 {
     y.resize(x.size());
@@ -20,6 +21,7 @@ static void applyWindow(const std::vector<double>& w, const std::vector<double>&
         y[i] = x[i] * w[i];
     }
 }
+*/
 
 static std::vector<double> calculateLPC(const std::vector<double>& x, const std::vector<double>& w, int len, int order, std::unique_ptr<Analysis::LinpredSolver>& lpc)
 {
@@ -47,6 +49,7 @@ inline double G(double x, int L, double alpha)
     return expf(-(k * k));
 }
 
+/*
 static void calcGaussian(std::vector<double>& win, double alpha)
 {
     const int L = win.size();
@@ -58,6 +61,7 @@ static void calcGaussian(std::vector<double>& win, double alpha)
         win[n] = G(n, L, alpha) - (Gmh * (G(n + L, L, alpha) + G(n - L, L, alpha))) / GmhpLpGmhmL;
     }
 }
+*/
 
 static std::vector<double> conv(const std::vector<double>& x, const std::vector<double>& y) {
     int lx = x.size();

@@ -10,7 +10,8 @@ Font::Font(FT_Library library,
             const FT_Byte *fileData,
             int fileDataSize,
             int pointSize, int hdpi, int vdpi)
-    : mAttachment(nullptr)
+    : mAttachment(nullptr),
+      mAttachmentDeleter(nullptr)
 {
     FT_Error err;
 
@@ -82,7 +83,9 @@ Font::Font(FT_Library library,
 
 Font::~Font()
 {
-    mAttachmentDeleter(mAttachment);
+    if (mAttachmentDeleter != nullptr && mAttachment != nullptr) {
+        mAttachmentDeleter(mAttachment);
+    }
     FT_Done_Face(mFace);
 }
 

@@ -6,7 +6,7 @@ std::vector<double> Synthesis::createPolynomialFromRoots(const std::vector<std::
 
     poly[0] = 1.0;
 
-    for (int j = 0; j < z.size(); ++j) {
+    for (int j = 0; j < (int) z.size(); ++j) {
         std::complex<double> zj = z[j];
 
         for (int i = j; i >= 0; --i) {
@@ -15,7 +15,7 @@ std::vector<double> Synthesis::createPolynomialFromRoots(const std::vector<std::
     }
 
     std::vector<double> polyr(poly.size());
-    for (int i = 0; i < poly.size(); ++i) {
+    for (int i = 0; i < (int) poly.size(); ++i) {
         polyr[i] = poly[i].real();
     }
     return polyr;

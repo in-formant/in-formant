@@ -32,13 +32,14 @@ namespace Main {
 #endif
 
         void mainBody(bool processEvents = true);
-
+    
+    public slots:
         void requestClose();
         void togglePaused();
         void setDisplayLpSpec(bool flag);
         void setUseFrameCursor(bool flag);
         void setDisplayFormantTracks(bool flag);
-        void setDisplayPitchTracks(bool flag);
+        void setDisplayPitchTrack(bool flag);
 
     private:
         void loadSettings();
@@ -98,7 +99,7 @@ namespace Main {
         bool useFrameCursor;
         bool isNoiseOn;
         bool displayFormantTracks;
-        bool displayPitchTracks;
+        bool displayPitchTrack;
         bool displayLegends;
 
 #if defined(ANDROID) || defined(__ANDROID__)

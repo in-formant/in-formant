@@ -57,10 +57,6 @@ namespace Module::Target {
     signals:
         void requestClose();
         void togglePause();
-        void displayLpSpec(bool);
-        void useFrameCursor(bool);
-        void displayFormantTracks(bool);
-        void displayPitchTracks(bool);
 
     private:
         QMutex mMutex;

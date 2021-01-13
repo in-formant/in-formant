@@ -10,10 +10,18 @@
 using namespace Module::Audio;
 
 Resampler::Resampler(int inRate, int outRate)
-    : mInRate(inRate),
+    : mResampler(nullptr),
+      mInRate(inRate),
       mOutRate(outRate)
 {
     createResampler();
+}
+
+Resampler::~Resampler()
+{
+    if (mResampler != nullptr) {
+        speex_resampler_destroy(mResampler);
+    }
 }
 
 void Resampler::setInputRate(int newInRate)
@@ -72,17 +80,12 @@ int Resampler::getExpectedOutLength(int inLength)
         return 0;
     }
 
-    return (int) ((mOutRate * inLength) / mInRate + 0.5f);
+    return (inLength * mOutRate + mInRate - 1) / mInRate;
 }
 
 int Resampler::getDelay() const
 {
-    return mResampler->getLatency() + mResampler->getLatencyFrac();
-}
-
-void Resampler::clear()
-{
-    mResampler->clear();
+    return speex_resampler_get_output_latency(mResampler);
 }
 
 std::vector<double> Resampler::process(double *pIn, int inLength)
@@ -91,15 +94,27 @@ std::vector<double> Resampler::process(double *pIn, int inLength)
         return {0.0f};
     }
 
-    std::vector<double> out((inLength * mOutRate) / mInRate);
-    mResampler->oneshot(pIn, inLength,
-                        out.data(), out.size());
-    return out;
+    speex_resampler_reset_mem(mResampler);
+    speex_resampler_skip_zeros(mResampler);
+   
+    spx_uint32_t inLen = inLength;
+    spx_uint32_t outLen = (inLen * mOutRate + mInRate - 1) / mInRate;
+    
+    std::vector<float> fin(pIn, pIn + inLen);
+    std::vector<float> fout(outLen);
+
+    speex_resampler_process_float(mResampler, 0, fin.data(), &inLen, fout.data(), &outLen);
+    fout.resize(outLen);
+
+    return std::vector<double>(fout.begin(), fout.end());
 }
 
 void Resampler::createResampler()
 {
     std::cout << "Audio::Resampler] Created " << mInRate << " --> " << mOutRate << std::endl;
-    mResampler.reset(new r8b::CDSPResampler(mInRate, mOutRate, 16384));
+    if (mResampler != nullptr) {
+        speex_resampler_destroy(mResampler);
+    }
+    mResampler = speex_resampler_init(chMono, mInRate, mOutRate, 7, nullptr);
 }
 

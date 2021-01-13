@@ -8,8 +8,13 @@ using namespace Module::App;
 
 Synthesizer::Synthesizer(Module::Audio::Queue *playbackQueue)
     : playbackQueue(playbackQueue),
-      resampler(32'000, 48'000)
+      resampler(new Module::Audio::Resampler(32'000, 48'000))
 {
+}
+
+Synthesizer::~Synthesizer()
+{
+    delete resampler;
 }
 
 void Synthesizer::initialize()
@@ -36,7 +41,7 @@ void Synthesizer::initialize()
     zfNoise.resize(20, std::vector<double>(4, 0.0f));
     zfGlot.resize(20, std::vector<double>(4, 0.0f));
 
-    resampler.setOutputRate(playbackQueue->getInSampleRate());
+    resampler->setOutputRate(playbackQueue->getInSampleRate());
 }
 
 void Synthesizer::setMasterGain(double value)
@@ -140,7 +145,7 @@ void Synthesizer::generateAudio(int requestedLength)
 
     static std::normal_distribution<> dis(0.0f, 0.05f);
 
-    int inputLength = resampler.getRequiredInLength(requestedLength);
+    int inputLength = resampler->getRequiredInLength(requestedLength);
 
     auto noise = Synthesis::aspirateNoise(inputLength);
 
@@ -158,7 +163,7 @@ void Synthesizer::generateAudio(int requestedLength)
         }
     }
 
-    double glotFs = resampler.getInputRate();
+    double glotFs = resampler->getInputRate();
     std::vector<double> pitches(inputLength);
     std::vector<double> Rds(inputLength);
     std::vector<double> tcs(inputLength);
@@ -235,7 +240,7 @@ void Synthesizer::generateAudio(int requestedLength)
         output[i] = output[i] * realMasterGain * 0.7f;
     }
 
-    output = resampler.process(output.data(), output.size());
+    output = resampler->process(output.data(), output.size());
 
     surplus.insert(surplus.end(), output.begin(), output.end());
 }
@@ -268,7 +273,7 @@ void Synthesizer::audioCallback(double *output, int length, void *userdata)
         }
     }
 
-    self->realFilter = Synthesis::frequencyShiftFilter(self->realFormants, self->resampler.getInputRate(), self->realFilterShift);
+    self->realFilter = Synthesis::frequencyShiftFilter(self->realFormants, self->resampler->getInputRate(), self->realFilterShift);
 
     // Generate the audio.
     self->generateAudio(length);

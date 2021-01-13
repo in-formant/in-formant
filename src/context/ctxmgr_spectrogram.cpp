@@ -47,7 +47,7 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
         }
     }
 
-    if (displayPitchTracks) {
+    if (displayPitchTrack) {
         Renderer::FrequencyTrackRenderData pitchTrackRender;
         for (auto x : pitchTrack) {
             if (x > 0)
@@ -88,7 +88,7 @@ void ContextManager::renderSpectrogram(RenderingContext &rctx)
             useFrameCursor ? rctx.renderer->renderFrameCursor(specMX, specMY, spectrogramCount)
                            : spectrogramCount - 1;
 
-        if (displayPitchTracks) {
+        if (displayPitchTrack) {
             frequency = pitchTrack[iframe];
 
             ss.str("");

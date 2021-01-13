@@ -22,7 +22,7 @@ SIGMA::xewgrdel(const std::vector<double>& u, double fs, double gwlen, double fw
     }
 
     std::vector<double> u2(u.size());
-    for (int i = 0; i < u.size(); ++i) {
+    for (int i = 0; i < (int) u.size(); ++i) {
         u2[i] = u[i] * u[i];
     }
 
@@ -35,7 +35,7 @@ SIGMA::xewgrdel(const std::vector<double>& u, double fs, double gwlen, double fw
             10 * eps);
     
     std::vector<double> y(u.size() - gw);
-    for (int i = gw; i < u.size(); ++i) {
+    for (int i = gw; i < (int) u.size(); ++i) {
         y[i - gw] = yn[i] / yd[i];
     }
     
@@ -55,7 +55,7 @@ SIGMA::xewgrdel(const std::vector<double>& u, double fs, double gwlen, double fw
 
         // Low pass filter
         y = Analysis::filter(daw, y);
-        for (int i = 0; i < y.size(); ++i) {
+        for (int i = 0; i < (int) y.size(); ++i) {
             y[i] /= sum;
         }
 

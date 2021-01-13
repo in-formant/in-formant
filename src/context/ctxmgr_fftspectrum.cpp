@@ -41,5 +41,6 @@ void ContextManager::renderFFTSpectrum(RenderingContext &rctx)
 
 void ContextManager::eventFFTSpectrum(RenderingContext &rctx)
 {
+    (void) rctx;
 }
 

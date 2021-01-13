@@ -128,7 +128,7 @@ void ContextManager::start()
     useFrameCursor = false;
     isNoiseOn = false;
     displayFormantTracks = false;
-    displayPitchTracks = false;
+    displayPitchTrack = false;
     displayLegends = true;
 
     /*
@@ -193,12 +193,12 @@ void ContextManager::loadSettings()
     outputGain = 0;
     
     analysisDuration = 35;
-    analysisMaxFrequency = 4000;
+    analysisMaxFrequency = 5200;  
 
     viewMinFrequency = 1;
     viewMaxFrequency = 6000;
-    viewMinGain = -80;
-    viewMaxGain = +0;
+    viewMinGain = -120;
+    viewMaxGain = -10;
     viewFrequencyScale = Renderer::FrequencyScale::Mel;
 
     fftLength = 2048;
@@ -208,10 +208,10 @@ void ContextManager::loadSettings()
     
     pitchAndLpSampleRate = 32'000;
 
-    linPredOrder = 8;
-    linPredOrderOffset = +2;
+    linPredOrder = 11;
+    linPredOrderOffset = -1;
 
-    spectrogramCount = 400;
+    spectrogramCount = 500;
 
     numFormantsToRender = 4;
     formantColors = {
@@ -532,7 +532,7 @@ void ContextManager::setDisplayFormantTracks(bool flag)
     displayFormantTracks = flag;
 }
 
-void ContextManager::setDisplayPitchTracks(bool flag)
+void ContextManager::setDisplayPitchTrack(bool flag)
 {
-    displayPitchTracks = flag;
+    displayPitchTrack = flag;
 }

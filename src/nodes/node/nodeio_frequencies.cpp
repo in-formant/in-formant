@@ -27,7 +27,7 @@ int Frequencies::getLength() const
     return mLength;
 }
 
-const double Frequencies::get(int index) const
+double Frequencies::get(int index) const
 {
     return mData.at(index);
 }

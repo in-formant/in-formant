@@ -41,7 +41,7 @@ static void signalHandler(int signal) {
         break;
     }
 
-    qGuiApp->quit(); 
+    qApp->quit(); 
 }
 #endif
 
@@ -56,9 +56,9 @@ int main(int argc, char **argv)
     start_logger("InFormant");
 
 #if ! defined(__EMSCRIPTEN__)
-    std::signal(SIGTERM, signalHandler);
+    /*std::signal(SIGTERM, signalHandler);
     std::signal(SIGINT, signalHandler);
-    registerCrashHandler();
+    registerCrashHandler();*/
 #endif
 
 #if defined(__APPLE__)

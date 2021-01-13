@@ -14,7 +14,7 @@ namespace Nodes::IO {
         void set(int index, double frequency);
 
         int getLength() const;
-        const double get(int index) const;
+        double get(int index) const;
 
     private:
         int mLength;

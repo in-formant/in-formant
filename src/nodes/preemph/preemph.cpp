@@ -27,19 +27,26 @@ void PreEmphasis::process(const NodeIO *inputs[], NodeIO *outputs[])
     out->setLength(length);
 
     std::vector<double> x(in->getConstData(), in->getConstData() + length);
+    
+    /*
     std::vector<double> a;
     double g;
     
     do {
-        //a = lpc.solve(x.data(), length, 1, &g);
-        a = { 0.68 };
+        a = lpc.solve(x.data(), length, 1, &g);
         if (g <= 0 || fabs(a[0]) < 0.001)
             break;
 
         for (int i = length - 1; i >= 1; --i) {
             x[i] += a[0] * x[i - 1];
         }
-    } while (false); // (fabs(a[0]) >= 0.001);
+    } while (fabs(a[0]) >= 0.001);
+    */
+
+    double factor = exp(-(2.0 * M_PI * 100.0) / sampleRate);
+    for (int i = length - 1; i >= 1; --i) {
+        x[i] -= factor * x[i - 1];
+    }
 
     for (int i = 0; i < length; ++i) {
         out->getData()[i] = x[i];

@@ -1,6 +1,5 @@
 #include "sigma.h"
 #include "../wavelet/wavelet.h"
-#include "../gmm/GMM.h"
 #include <list>
 #include <armadillo>
 #include <iostream>
@@ -29,7 +28,7 @@ std::vector<double> SIGMA::analyse(const std::vector<double>& lx, double fs)
     // Calculate multiscale product
     int dlen = Wt::swt_buffer_length(lx.size());
     std::vector<double> mp(dlen, 1.0);
-    for (int k = 1; k * dlen < swc.size(); ++k) {
+    for (int k = 1; k * dlen < (int) swc.size(); ++k) {
         for (int i = 0; i < dlen; ++i) {
             mp[i] *= swc[k * dlen + i];
         }
@@ -40,7 +39,7 @@ std::vector<double> SIGMA::analyse(const std::vector<double>& lx, double fs)
     std::vector<double> pmp(mp);
     std::vector<double> crnmp(mp.size());
     std::vector<double> crpmp(mp.size());
-    for (int i = 0; i < mp.size(); ++i) {
+    for (int i = 0; i < (int) mp.size(); ++i) {
         // Half-wave rectify on negative half of mp for GCI
         if (nmp[i] > 0)
             nmp[i] = 0;
@@ -84,7 +83,7 @@ std::vector<double> SIGMA::analyse(const std::vector<double>& lx, double fs)
         int lbnd = std::round(gcic[i] - nr);
         int ubnd = lbnd + mngrdellen - 1;
 
-        if (lbnd >= 0 && ubnd < ngrdel.size()) {
+        if (lbnd >= 0 && ubnd < (int) ngrdel.size()) {
             double sum = 0.0;
             double min = HUGE_VAL;
             double mean = 0.0;
@@ -115,7 +114,7 @@ std::vector<double> SIGMA::analyse(const std::vector<double>& lx, double fs)
    
     // If the candidate belongs to the chosen cluster then keep 
     for (int i = 0; i < snfv; ++i) {
-        if (ngmm.assign(nfv.col(i), arma::eucl_dist) == I) {
+        if (ngmm.assign(nfv.col(i), arma::eucl_dist) == (arma::uword) I) {
             int k = std::max(0, std::min((int) gci.size() - 1, (int) std::round(gcic[i])));
             gci[k] = 1.0;
         }
@@ -126,7 +125,7 @@ std::vector<double> SIGMA::analyse(const std::vector<double>& lx, double fs)
     if (gci.size() > 2) {
         // If a gci is separated from all others by more than Tmax, delete
         std::list<int> fgci;
-        for (int i = 0; i < gci.size(); ++i) {
+        for (int i = 0; i < (int) gci.size(); ++i) {
             if (gci[i] > 0) {
                 fgci.push_back(i);
             }

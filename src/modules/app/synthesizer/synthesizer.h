@@ -10,6 +10,7 @@ namespace Module::App
     class Synthesizer {
     public:
         Synthesizer(Module::Audio::Queue *);
+        virtual ~Synthesizer();
 
         void initialize();
 
@@ -65,7 +66,7 @@ namespace Module::App
         std::vector<double> glotSurplus;
         std::vector<double> surplus;
 
-        Module::Audio::Resampler resampler;
+        Module::Audio::Resampler *resampler;
     };
 }
 

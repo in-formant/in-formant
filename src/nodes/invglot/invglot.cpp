@@ -35,8 +35,8 @@ void InvGlot::process(const NodeIO *inputs[], NodeIO *outputs[])
         dg[i] = result.glotSig[i] - result.glotSig[i - 1];
     dg[0] = dg[1];
 
-    auto gci = SIGMA::analyse(dg, in->getSampleRate());
+    //auto gci = SIGMA::analyse(dg, in->getSampleRate());
     out2->setSampleRate(in->getSampleRate());
-    out2->setLength(gci.size());
-    std::copy(gci.begin(), gci.end(), out2->getData());
+    out2->setLength(0);//gci.size());
+    //std::copy(gci.begin(), gci.end(), out2->getData());
 }

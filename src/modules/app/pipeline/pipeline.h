@@ -42,7 +42,7 @@ namespace Module::App
         const std::vector<std::array<float, 2>>&  getLpSpectrumSlice() const;
         const std::vector<float>&                 getLpSpectrumLPC() const;
         const std::vector<Analysis::FormantData>& getFormants() const;
-        const float                               getPitch() const;
+        float                                     getPitch() const;
         const std::vector<float>&                 getSound() const;
         const std::vector<float>&                 getGlottalFlow() const;
         const std::vector<float>&                 getGlottalInstants() const;
