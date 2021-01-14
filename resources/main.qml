@@ -20,6 +20,7 @@ ApplicationWindow {
     }
 
     RowLayout {
+        id: rowLayout
         anchors.fill: parent
     
         ColumnLayout {
@@ -28,14 +29,14 @@ ApplicationWindow {
             Switch {
                 text: "Pitch track"
                 objectName: "pitchTrack"                
-                signal togglePitchTrack(toggled: bool)
+                signal togglePitchTrack(bool toggled)
                 onToggled: this.togglePitchTrack(checked)
             }
 
             Switch {
                 text: "Formant tracks"
                 objectName: "formantTracks"
-                signal toggleFormantTracks(toggled: bool)
+                signal toggleFormantTracks(bool toggled)
                 onToggled: this.toggleFormantTracks(checked)
             }
         }
@@ -43,6 +44,8 @@ ApplicationWindow {
         IfCanvas {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.minimumWidth: 320
+            Layout.minimumHeight: 240
         }
     }
 }

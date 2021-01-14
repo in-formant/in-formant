@@ -3,6 +3,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
+#include <QQuickView>
 
 QMutex mutex;
 
@@ -22,6 +23,8 @@ int Gui::runApp(int argc, char **argv)
     QQmlApplicationEngine engine;
     engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml");
     engine.load(QUrl("qrc:/main.qml"));
+    
+    static_cast<QQuickView *>(engine.rootObjects().first())->setResizeMode(QQuickView::SizeRootObjectToView);
 
     pManagerMutex->lock();
     pManager->initialize();
