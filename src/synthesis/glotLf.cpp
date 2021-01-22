@@ -59,7 +59,7 @@ void Synthesis::lfEpsAlpha(LF_State& state)
 
 std::vector<double> Synthesis::lfGenFrame(double f0, double Fs, double Rd, double tc)
 { 
-    const double Ee = 1.0f;
+    const double Ee = 1.0;
     
     LF_State state;
     state.Rd = Rd;
@@ -81,7 +81,7 @@ std::vector<double> Synthesis::lfGenFrame(double f0, double Fs, double Rd, doubl
 
     std::vector<double> glot(period);
    
-    double posMax = 1e-10f;
+    double posMax = 1e-10;
 
     for (int i = 0; i < period; ++i) {
         double t = (i * T0) / period;
@@ -93,7 +93,7 @@ std::vector<double> Synthesis::lfGenFrame(double f0, double Fs, double Rd, doubl
             glot[i] = -Ee / (e * Ta) * (expf(-e * (t - Te)) - expf(-e * (Tc - Te)));
         }
         else {
-            glot[i] = 0.0f;
+            glot[i] = 0.0;
         }
 
         if (glot[i] > posMax) {

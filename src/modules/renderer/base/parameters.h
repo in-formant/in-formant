@@ -19,10 +19,10 @@ namespace Module::Renderer {
     private:                                                \
         type m_##field;
 
-    DEFINE_PROPERTY(float,          minFreq,        getMinFrequency,    setMinFrequency)
-    DEFINE_PROPERTY(float,          maxFreq,        getMaxFrequency,    setMaxFrequency)
-    DEFINE_PROPERTY(float,          minGain,        getMinGain,         setMinGain)
-    DEFINE_PROPERTY(float,          maxGain,        getMaxGain,         setMaxGain)
+    DEFINE_PROPERTY(double,          minFreq,        getMinFrequency,    setMinFrequency)
+    DEFINE_PROPERTY(double,          maxFreq,        getMaxFrequency,    setMaxFrequency)
+    DEFINE_PROPERTY(double,          minGain,        getMinGain,         setMinGain)
+    DEFINE_PROPERTY(double,          maxGain,        getMaxGain,         setMaxGain)
     DEFINE_PROPERTY(FrequencyScale, frequencyScale, getFrequencyScale,  setFrequencyScale)
 
 #undef DEFINE_PROPERTY

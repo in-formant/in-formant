@@ -1,5 +1,4 @@
 #include "freetype.h"
-#include "../target/base/base.h"
 #include <fstream>
 #include <memory>
 
@@ -49,11 +48,8 @@ FontFile::~FontFile()
     delete[] mData;
 }
 
-Font& FontFile::with(int pointSize, uintptr_t context, Module::Target::AbstractBase *target)
+Font& FontFile::with(int pointSize, uintptr_t context, int horizontalDPI, int verticalDPI)
 { 
-    float horizontalDPI, verticalDPI;
-    target->getDisplayDPI(&horizontalDPI, &verticalDPI, nullptr);
-
     auto key = std::make_tuple(context, horizontalDPI, verticalDPI, pointSize);
 
     auto it = mFonts.find(key);

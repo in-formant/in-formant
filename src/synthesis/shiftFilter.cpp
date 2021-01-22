@@ -7,7 +7,7 @@ static std::vector<double> conv(const std::vector<double>& x, const std::vector<
     int lx = x.size();
     int ly = y.size();
     int lw = lx + ly - 1;
-    std::vector<double> w(lw, 0.0f);
+    std::vector<double> w(lw, 0.0);
     for (int k = 0; k < lw; ++k) {
         int i = k;
         for (int j = 0; j < ly; ++j) {
@@ -22,11 +22,11 @@ static std::vector<double> conv(const std::vector<double>& x, const std::vector<
 
 std::vector<std::array<double, 6>> Synthesis::frequencyShiftFilter(const std::vector<Analysis::FormantData>& formants, double Fs, double factor)
 {
-    const double freqMin = 50.0f;
-    const double freqMax = Fs / 2.0f - 50.0f;
+    const double freqMin = 50.0;
+    const double freqMax = Fs / 2.0 - 50.0;
     
-    const double melMin = 2595.0f * log10f(1.0f + freqMin / 700.0f);
-    const double melMax = 2595.0f * log10f(1.0f + freqMax / 700.0f);
+    const double melMin = 2595.0 * log10f(1.0 + freqMin / 700.0);
+    const double melMax = 2595.0 * log10f(1.0 + freqMax / 700.0);
 
     std::vector<std::complex<double>> roots;
    
@@ -36,8 +36,8 @@ std::vector<std::array<double, 6>> Synthesis::frequencyShiftFilter(const std::ve
 
         // We shift the pole frequency in the Mel frequency space.
         
-        double melScaled = factor * 2595.0f * log10f(1.0f + formant.frequency / 700.0f);
-        double freqScaled = 700.0f * (powf(10.0f, melScaled / 2595.0f) - 1.0f);
+        double melScaled = factor * 2595.0 * log10f(1.0 + formant.frequency / 700.0);
+        double freqScaled = 700.0 * (powf(10.0, melScaled / 2595.0) - 1.0);
 
         if (freqScaled < freqMin || freqScaled > freqMax)
             continue;
@@ -48,7 +48,7 @@ std::vector<std::array<double, 6>> Synthesis::frequencyShiftFilter(const std::ve
 
         // Re-calculate r and phi for the new pole.
         double r = expf(-M_PI * bandwidth / Fs);
-        double phi = 2.0f * M_PI * frequency / Fs;
+        double phi = 2.0 * M_PI * frequency / Fs;
 
         roots.push_back(std::polar(r, phi));
     }
@@ -58,5 +58,5 @@ std::vector<std::array<double, 6>> Synthesis::frequencyShiftFilter(const std::ve
         roots.push_back(std::conj(roots[i]));
     }
 
-    return Analysis::zpk2sos({}, roots, 1.0f);
+    return Analysis::zpk2sos({}, roots, 1.0);
 }

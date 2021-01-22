@@ -141,7 +141,7 @@ Analysis::Pitch::MPM::solve(const double *data, int length, int sample_rate)
 	}
 
 	if (estimates.empty())
-		return { .pitch = 0.0f, .voiced = false };
+		return { .pitch = 0.0, .voiced = false };
 
 	T actual_cutoff = MPM_CUTOFF * highest_amplitude;
 	T period = 0;
@@ -157,5 +157,5 @@ Analysis::Pitch::MPM::solve(const double *data, int length, int sample_rate)
 
 	return (pitch_estimate > MPM_LOWER_PITCH_CUTOFF)
                     ? Analysis::PitchResult { .pitch = pitch_estimate, .voiced = true }
-                    : Analysis::PitchResult { .pitch = 0.0f, .voiced = false };
+                    : Analysis::PitchResult { .pitch = 0.0, .voiced = false };
 }

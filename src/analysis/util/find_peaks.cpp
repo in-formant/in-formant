@@ -67,7 +67,7 @@ std::vector<int> Analysis::findPeaks(const double *data, int length, int sign)
 
     std::vector<double> dx;
     diff(x0, dx);
-    replace(dx.begin(), dx.end(), 0.0f, -2.2204e-16f);
+    replace(dx.begin(), dx.end(), 0.0, -2.2204e-16);
     std::vector<double> dx0(dx.begin(), dx.end()-1);
     std::vector<double> dx1(dx.begin()+1, dx.end());
     std::vector<double> dx2;
@@ -82,8 +82,7 @@ std::vector<int> Analysis::findPeaks(const double *data, int length, int sign)
     std::vector<int> indAux(ind.begin(), ind.end());
     selectElements(x0, indAux, x);
     x.insert(x.begin(), x0[0]);
-    x.insert(x.end(), x0[x0.size()-1]);;
-
+    x.insert(x.end(), x0[x0.size()-1]);
 
     ind.insert(ind.begin(), 0);
     ind.insert(ind.end(), len0);

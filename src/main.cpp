@@ -2,10 +2,7 @@
 #include "nodes/nodes.h"
 #include "analysis/analysis.h"
 #include "backtrace/backtrace.h"
-#include "context/context.h"
-#include "context/contextbuilder.h"
 #include "context/contextmanager.h"
-#include "gui/gui.h"
 #include <iostream>
 #include <atomic>
 #include <memory>
@@ -47,6 +44,9 @@ static void signalHandler(int signal) {
 
 int start_logger(const char *app_name);
 
+int Main::argc;
+char **Main::argv;
+
 int main(int argc, char **argv)
 {
 #ifdef _WIN32
@@ -72,42 +72,17 @@ int main(int argc, char **argv)
     chdir(dirname(exePath.data()));
 #endif
 
-    auto ctxBuilder = Main::ContextBuilder<
-#if defined(ANDROID) || defined(__ANDROID__)
-            Audio::Oboe,
-#elif defined(__linux__)
-            Audio::Alsa,
-#elif defined(_WIN32) || defined(__APPLE__)
-            Audio::PortAudio,
-#elif defined(__EMSCRIPTEN__)
-            Audio::WebAudio,
-#endif
-            Target::Qt5Quick,
-            Renderer::Type::NanoVG>();
+    Main::argc = argc;
+    Main::argv = argv;
 
-    ctxBuilder
-        //.setPitchSolver(new Analysis::Pitch::Yin(0.4f))
-        .setPitchSolver(new Analysis::Pitch::RAPT)
-        //.setPitchSolver(new Analysis::Pitch::MPM)
-        .setLinpredSolver(new Analysis::LP::Burg)
-        .setFormantSolver(new Analysis::Formant::FilteredLP)
-        .setInvglotSolver(new Analysis::Invglot::IAIF(0.99f))
-        //.setInvglotSolver(new Analysis::Invglot::GFM_IAIF(0.99f))
-        //.setInvglotSolver(new Analysis::Invglot::AMGIF(8))
-        .setCaptureSampleRate(48000)
-        .setCaptureDuration(100ms)
-#ifdef __EMSCRIPTEN__
-        .setPlaybackBlockDuration(100ms, 300ms)
-        .setPlaybackDuration(400ms)
-#else
-        .setPlaybackBlockDuration(10ms, 25ms)
-        .setPlaybackDuration(50ms)
-#endif
-        .setPlaybackSampleRate(48000)
-        .setPlaybackCallback([](auto...){});
+    auto contextManager = std::make_unique<Main::ContextManager>(
+            48'000,     // captureSampleRate
+            100ms,      // captureDuration
+            10ms, 25ms, // playbackBlock(Min/Max)Duration
+            50ms,       // playbackDuration
+            48'000      // playbackSampleRate
+    );
 
-    pManager = std::make_unique<Main::ContextManager>(ctxBuilder.build());
-
-    return Gui::runApp(argc, argv);
+    return contextManager->exec();
 }
 

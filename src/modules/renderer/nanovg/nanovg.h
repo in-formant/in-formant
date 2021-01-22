@@ -45,26 +45,26 @@ namespace Module::Renderer {
 
         void test() override;
  
-        void renderGraph(const GraphRenderData& data, float pmin, float pmax, float thick, float r, float g, float b) override;
+        void renderGraph(const GraphRenderData& data, double pmin, double pmax, double thick, double r, double g, double b) override;
         void scrollSpectrogram(const SpectrogramRenderData& data, int count) override;
         void renderSpectrogram() override;
-        void renderFrequencyTrack(const FrequencyTrackRenderData& data, float thick, float r, float g, float b) override;
-        void renderFormantTrack(const FormantTrackRenderData& data, float thick, float r, float g, float b) override;
+        void renderFrequencyTrack(const FrequencyTrackRenderData& data, double thick, double r, double g, double b) override;
+        void renderFormantTrack(const FormantTrackRenderData& data, double thick, double r, double g, double b) override;
         void renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::Freetype::Font& minorFont) override;
-        float renderFrequencyCursor(float mx, float my) override;
-        int renderFrameCursor(float mx, float my, int count) override;
+        double renderFrequencyCursor(double mx, double my) override;
+        int renderFrameCursor(double mx, double my, int count) override;
         
-        void renderRoundedRect(float x, float y, float w, float h, float r, float g, float b, float a) override;
-        void renderSVG(const std::string& path, float dpi, float x, float y, float w, float h) override;
+        void renderRoundedRect(double x, double y, double w, double h, double r, double g, double b, double a) override;
+        void renderSVG(const std::string& path, double dpi, double x, double y, double w, double h) override;
 
-        void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, float r, float g, float b) override;
+        void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, double r, double g, double b) override;
 
-        std::tuple<float, float, float, float> renderInputBox(Module::Freetype::Font& font, const std::string& content, int x, int y, int w, bool isFocused) override;
+        std::tuple<double, double, double, double> renderInputBox(Module::Freetype::Font& font, const std::string& content, int x, int y, int w, bool isFocused) override;
 
         uintptr_t getContextNumber() override;
 
     private:
-        std::pair<float, float> convertNormCoord(float x, float y);
+        std::pair<double, double> convertNormCoord(double x, double y);
 
         NvgProvider *mProvider;
         

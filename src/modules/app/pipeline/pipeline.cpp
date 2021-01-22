@@ -71,7 +71,7 @@ Pipeline& Pipeline::setAnalysisDuration(millis value)
     return *this;
 }
 
-Pipeline& Pipeline::setFFTSampleRate(float value)
+Pipeline& Pipeline::setFFTSampleRate(double value)
 {
     fftSampleRate = value;
     if (wasInitializedAtLeastOnce) {
@@ -89,7 +89,7 @@ Pipeline& Pipeline::setFFTSize(int value)
     return *this;
 }
 
-Pipeline& Pipeline::setPitchAndLpSpectrumSampleRate(float value)
+Pipeline& Pipeline::setPitchAndLpSpectrumSampleRate(double value)
 {
     secondSampleRate = value;
     if (wasInitializedAtLeastOnce) {
@@ -108,7 +108,7 @@ Pipeline& Pipeline::setLpSpectrumLpOrder(int value)
     return *this;
 }
 
-Pipeline& Pipeline::setFormantSampleRate(float value)
+Pipeline& Pipeline::setFormantSampleRate(double value)
 {
     formantSampleRate = value;
     if (wasInitializedAtLeastOnce) {
@@ -126,17 +126,17 @@ Pipeline& Pipeline::setFormantLpOrder(int value)
     return *this;
 }
 
-const std::vector<std::array<float, 2>>& Pipeline::getFFTSlice() const
+const std::vector<std::array<double, 2>>& Pipeline::getFFTSlice() const
 {
     return fftSlice;
 }
 
-const std::vector<std::array<float, 2>>& Pipeline::getLpSpectrumSlice() const
+const std::vector<std::array<double, 2>>& Pipeline::getLpSpectrumSlice() const
 {
     return lpSpecSlice;
 }
 
-const std::vector<float>& Pipeline::getLpSpectrumLPC() const
+const std::vector<double>& Pipeline::getLpSpectrumLPC() const
 {
     return lpSpecLPC;
 }
@@ -146,22 +146,22 @@ const std::vector<Analysis::FormantData>& Pipeline::getFormants() const
     return formants;
 }
 
-float Pipeline::getPitch() const
+double Pipeline::getPitch() const
 {
     return pitch;
 }
 
-const std::vector<float>& Pipeline::getSound() const
+const std::vector<double>& Pipeline::getSound() const
 {
     return sound;
 }
 
-const std::vector<float>& Pipeline::getGlottalFlow() const
+const std::vector<double>& Pipeline::getGlottalFlow() const
 {
     return glot;
 }
 
-const std::vector<float>& Pipeline::getGlottalInstants() const
+const std::vector<double>& Pipeline::getGlottalInstants() const
 {
     return glotInst;
 }
@@ -221,7 +221,7 @@ void Pipeline::updateOutputData()
     int fftSliceLength = ioFFT->getLength();
     fftSlice.resize(fftSliceLength);
     for (int i = 0; i < fftSliceLength; ++i) {
-        fftSlice[i][0] = (fftSampleRate * i) / (2.0f * fftSliceLength);
+        fftSlice[i][0] = (fftSampleRate * i) / (2.0 * fftSliceLength);
         fftSlice[i][1] = ioFFT->getConstData()[i];
     }
     
@@ -229,7 +229,7 @@ void Pipeline::updateOutputData()
     int lpSpecSliceLength = ioLpSpec->getLength();
     lpSpecSlice.resize(lpSpecSliceLength);
     for (int i = 0; i < lpSpecSliceLength; ++i) {
-        lpSpecSlice[i][0] = (secondSampleRate * i) / (2.0f * lpSpecSliceLength);
+        lpSpecSlice[i][0] = (secondSampleRate * i) / (2.0 * lpSpecSliceLength);
         lpSpecSlice[i][1] = ioLpSpec->getConstData()[i];
     }
 
@@ -241,7 +241,7 @@ void Pipeline::updateOutputData()
     }
 
     auto ioPitch = nodeIOs["pitch"][0]->as<Nodes::IO::Frequencies>();
-    pitch = (ioPitch->getLength() > 0) ? ioPitch->get(0) : -1.0f;
+    pitch = (ioPitch->getLength() > 0) ? ioPitch->get(0) : -1.0;
 
     auto ioFormantF = nodeIOs["formants"][0]->as<Nodes::IO::Frequencies>();
     auto ioFormantB = nodeIOs["formants"][1]->as<Nodes::IO::Frequencies>();

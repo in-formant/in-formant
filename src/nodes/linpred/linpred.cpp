@@ -18,7 +18,7 @@ LinPred::LinPred(Analysis::LinpredSolver *solver, int order)
       mSolver(solver),
       mFFT(1024, FFTW_R2HC),
       mOrder(order),
-      mLastSpec(mFFT.getLength() / 2 + 1, 0.0f)
+      mLastSpec(mFFT.getLength() / 2 + 1, 0.0)
 {
 }
 
@@ -30,7 +30,7 @@ void LinPred::setOrder(int order)
 inline double G(double x, int L, double alpha)
 {
     const int N = L - 1;
-    const double k = (x - N / 2.0f) / (2 * L * alpha);
+    const double k = (x - N / 2.0) / (2 * L * alpha);
     return expf(-(k * k));
 }
 
@@ -38,8 +38,8 @@ static void calcGaussian(std::vector<double>& win, double alpha)
 {
     const int L = win.size();
     
-    double Gmh = G(-0.5f, L, alpha);
-    double GmhpLpGmhmL = G(-0.5f + L, L, alpha) - G(-0.5f - L, L, alpha);
+    double Gmh = G(-0.5, L, alpha);
+    double GmhpLpGmhmL = G(-0.5 + L, L, alpha) - G(-0.5 - L, L, alpha);
 
     for (int n = 0; n < L; ++n) {
         win[n] = G(n, L, alpha) - (Gmh * (G(n + L, L, alpha) + G(n - L, L, alpha))) / GmhpLpGmhmL;
@@ -89,7 +89,7 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
     int nfft = mFFT.getLength();
     int outLength = nfft / 2 + 1;
 
-    mFFT.data(0) = 1.0f;
+    mFFT.data(0) = 1.0;
 
     for (int i = 0; i < lpc.size(); ++i)
         mFFT.data(i + 1) = lpc[i];
@@ -115,7 +115,7 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
     }
     
     for (int i = 0; i < outLength; ++i) {
-        outSpec->getData()[i] = mLastSpec[i] = 0.2f * mLastSpec[i]
-                                                + 0.8f * outSpec->getData()[i] / max;
+        outSpec->getData()[i] = mLastSpec[i] = 0.2 * mLastSpec[i]
+                                                + 0.8 * outSpec->getData()[i] / max;
     }
 }

@@ -10,11 +10,6 @@
 #include <climits>
 #include <string>
 #include <vector>
-#include "../../optional.hpp"
-
-namespace std {
-    using namespace experimental;
-}
 
 namespace Module::Target {
     class AbstractBase;
@@ -61,7 +56,7 @@ namespace Module::Freetype {
         FontFile(FT_Library library, const std::string& filename);
         ~FontFile();
 
-        Font& with(int pointSize, uintptr_t context, Module::Target::AbstractBase *target);
+        Font& with(int pointSize, uintptr_t context, int horizontalDPI, int verticalDPI);
 
     private:
         FT_Library mLibrary;
@@ -82,7 +77,7 @@ namespace Module::Freetype {
         GlyphRenderData prepareCharRender(char character);
         TextRenderData prepareTextRender(const std::string& text);
 
-        std::tuple<float, float, float, float> queryTextSize(const std::string& text);
+        std::tuple<double, double, double, double> queryTextSize(const std::string& text);
 
         void setAttachment(void *p, void(*deleter)(void *)) {
             mAttachment = p;

@@ -34,19 +34,26 @@ set(CMAKE_AUTOMOC ON)
 
 set(SOURCES
     src/main.cpp
-    src/context/context.h
-    src/context/contextbuilder.h
-    src/context/contextmanager.cpp
-    src/context/ctxmgr_spectrogram.cpp
-    src/context/ctxmgr_fftspectrum.cpp
-    src/context/ctxmgr_oscilloscope.cpp
-    src/context/ctxmgr_settings.cpp
-    src/context/ctxmgr_synth.cpp
+    src/fixedsizevector.h
+    src/context/solvermakers.h
+    src/context/solvermakers.cpp
+    src/context/config.h
+    src/context/config.cpp
     src/context/contextmanager.h
-    src/gui/gui.h
+    src/context/contextmanager.cpp
+    src/context/audiocontext.h
+    src/context/audiocontext.cpp
+    src/context/rendercontext.h
+    src/context/rendercontext.cpp
+    src/context/rendercontextprovider.cpp
+    src/context/guicontext.h
+    src/context/guicontext.cpp
+    src/context/datastore.h
+    src/context/datastore.cpp
+    src/context/views/views.h
+    src/context/views/spectrogram.cpp
     src/gui/canvas.h
     src/gui/canvas.cpp
-    src/gui/app.cpp
     src/backtrace/backtrace.h
     src/android_redirect_log.cpp
     src/modules/audio/base/base.cpp
@@ -58,9 +65,6 @@ set(SOURCES
     src/modules/audio/resampler/resampler.cpp
     src/modules/audio/resampler/resampler.h
     src/modules/audio/audio.h
-    src/modules/target/base/base.cpp
-    src/modules/target/base/base.h
-    src/modules/target/target.h
     src/modules/renderer/base/base.cpp
     src/modules/renderer/base/parameters.h
     src/modules/renderer/base/base.h
@@ -112,7 +116,7 @@ set(SOURCES
     src/analysis/filter/sosfilter.cpp
     src/analysis/filter/filter.cpp
     src/analysis/filter/filter.h
-    src/analysis/pitch/amdf_m.cpp
+    #src/analysis/pitch/amdf_m.cpp
     src/analysis/pitch/yin.cpp
     src/analysis/pitch/mpm.cpp
     src/analysis/pitch/rapt.cpp
@@ -163,6 +167,7 @@ set(SOURCES
     src/synthesis/synthesis.h
     external/speex/speex_resampler.h
     external/speex/speex_resampler.c
+    src/tomlplusplus.cpp
 )
 
 set(RESOURCES
@@ -175,8 +180,8 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(Eigen3 REQUIRED eigen3)
 pkg_check_modules(FFTW REQUIRED fftw3)
 
-find_package(Qt5 5.12 COMPONENTS Quick QuickControls2 Qml Widgets Gui Core REQUIRED)
-foreach(c Quick QuickControls2 Qml Widgets Gui Core)
+find_package(Qt5 5.12 COMPONENTS Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core REQUIRED)
+foreach(c Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core)
     if(${Qt5${c}_FOUND})
         get_target_property(Qt5${c}_LIBRARY_FILE ${Qt5${c}_LIBRARIES} LOCATION)
         message(STATUS "Found Qt5${c}: ${Qt5${c}_LIBRARY_FILE}")
@@ -188,6 +193,7 @@ qtquick_compiler_add_resources(RESOURCES_OBJ ${RESOURCES})
 set(SPEEX_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/speex)
 set(NANOSVG_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/nanosvg)
 set(ARMADILLO_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/armadillo/include)
+set(TOMLPP_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/tomlplusplus/include)
 
 ### SEARCH AUDIO MODULES 
 
@@ -250,15 +256,6 @@ if(EMSCRIPTEN)
         src/modules/audio/webaudio/webaudio.h)
 endif()
 
-### SEARCH TARGET MODULES
-
-message(STATUS "Including target module: qt5quick")
-set(TARGET_USE_QT5QUICK TRUE)
-list(APPEND SOURCES
-    src/modules/target/qt5quick/qt5quick.cpp
-    src/modules/target/qt5quick/qt5quick.h
-)
-
 ### SEARCH RENDERER MODULES 
 
 message(STATUS "Including renderer module: nanovg")
@@ -304,10 +301,10 @@ else()
     add_executable(in-formant ${SOURCES} ${RESOURCES_OBJ})
 endif()
 
-target_include_directories(in-formant SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${SPEEX_INCLUDE_DIR} ${NANOSVG_INCLUDE_DIR} ${ARMADILLO_INCLUDE_DIR})
-target_link_libraries(in-formant PRIVATE ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} Qt5::Quick Qt5::QuickControls2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
+target_include_directories(in-formant SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${SPEEX_INCLUDE_DIR} ${NANOSVG_INCLUDE_DIR} ${ARMADILLO_INCLUDE_DIR} ${TOMLPP_INCLUDE_DIR})
+target_link_libraries(in-formant PRIVATE ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
 
-target_compile_definitions(in-formant PRIVATE -DARMA_DONT_USE_WRAPPER)
+target_compile_definitions(in-formant PRIVATE -DARMA_DONT_USE_WRAPPER -DTOML_HEADER_ONLY=0)
 
 if(AUDIO_USE_DUMMY)
     target_compile_definitions(in-formant PRIVATE -DAUDIO_USE_DUMMY=1)
@@ -339,16 +336,6 @@ endif()
 
 if(AUDIO_USE_WEBAUDIO)
     target_compile_definitions(in-formant PRIVATE -DAUDIO_USE_WEBAUDIO=1)
-endif()
-
-if(TARGET_USE_SDL2)
-    target_include_directories(in-formant SYSTEM PRIVATE ${sdl2_INCLUDE_DIRS})
-    target_link_libraries(in-formant PRIVATE ${sdl2_LDFLAGS})
-    target_compile_definitions(in-formant PRIVATE -DTARGET_USE_SDL2=1)
-endif()
-
-if(TARGET_USE_QT5QUICK)
-    target_compile_definitions(in-formant PRIVATE -DTARGET_USE_QT5QUICK=1)
 endif()
 
 if(RENDERER_USE_NVG)

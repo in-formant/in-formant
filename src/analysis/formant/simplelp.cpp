@@ -8,7 +8,7 @@ using Analysis::FormantResult;
 FormantResult SimpleLP::solve(const double *lpc, int lpcOrder, double sampleRate)
 {
     std::vector<double> polynomial(lpcOrder + 1);
-    polynomial[0] = 1.0f;
+    polynomial[0] = 1.0;
     std::copy(lpc, lpc + lpcOrder, std::next(polynomial.begin()));
     
     std::vector<std::complex<double>> roots = findRoots(polynomial);
@@ -23,7 +23,7 @@ FormantResult SimpleLP::solve(const double *lpc, int lpcOrder, double sampleRate
         double r = std::abs(z);
         double phi = std::arg(z);
 
-        if (r < 0.7f || r > 1.0f || phi < phiDelta || phi > M_PI - phiDelta) {
+        if (r < 0.7 || r > 1.0 || phi < phiDelta || phi > M_PI - phiDelta) {
             continue;
         }
 

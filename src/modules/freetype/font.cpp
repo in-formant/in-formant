@@ -123,22 +123,22 @@ TextRenderData Font::prepareTextRender(const std::string& text)
     return std::move(data);
 }
 
-std::tuple<float, float, float, float> Font::queryTextSize(const std::string& text)
+std::tuple<double, double, double, double> Font::queryTextSize(const std::string& text)
 {
     TextRenderData textRenderData = prepareTextRender(text);
 
-    float xmin(HUGE_VALF), xmax(-HUGE_VALF);
-    float ymin(HUGE_VALF), ymax(-HUGE_VALF);
+    double xmin(HUGE_VALF), xmax(-HUGE_VALF);
+    double ymin(HUGE_VALF), ymax(-HUGE_VALF);
 
     int x0 = 0;
     int y0 = 0;
 
     for (const auto& glyphRenderData : textRenderData.glyphs) {
-        float x = x0 + glyphRenderData.left;
-        float y = y0 - glyphRenderData.top;
+        double x = x0 + glyphRenderData.left;
+        double y = y0 - glyphRenderData.top;
 
-        float w = glyphRenderData.width;
-        float h = glyphRenderData.height;
+        double w = glyphRenderData.width;
+        double h = glyphRenderData.height;
 
         x0 += glyphRenderData.advanceX >> 6;
 
@@ -149,8 +149,8 @@ std::tuple<float, float, float, float> Font::queryTextSize(const std::string& te
         ymax = std::max(y + h, ymax);
     }
     
-    float textWidth = xmax - xmin;
-    float textHeight = ymax - ymin;
+    double textWidth = xmax - xmin;
+    double textHeight = ymax - ymin;
     
     return {xmin, ymin, textWidth, textHeight};
 }

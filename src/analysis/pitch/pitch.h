@@ -22,6 +22,7 @@ namespace Analysis {
     };
 
     namespace Pitch {
+        /*
         class AMDF_M : public PitchSolver {
         public:
             AMDF_M(double minPitch, double maxPitch, double alpha);
@@ -34,6 +35,7 @@ namespace Analysis {
             std::vector<uint32_t> m1bAMDF;
             std::vector<double> m1bACF;
         };
+        */
 
         class Yin : public PitchSolver {
         public:
@@ -60,11 +62,13 @@ namespace Analysis {
             std::vector<double> pitches;
         };
 
+        /*
         class IRAPT : public PitchSolver {
         public:
             IRAPT();
             PitchResult solve(const double *data, int length, int sampleRate) override;
         };
+        */
     }
 
 }

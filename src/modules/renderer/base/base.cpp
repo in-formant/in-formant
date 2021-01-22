@@ -8,7 +8,7 @@
 
 using namespace Module::Renderer;
 
-static constexpr float cmap[256][3] = {
+static constexpr double cmap[256][3] = {
   {0.001462, 0.000466, 0.013866},
   {0.002258, 0.001295, 0.018331},
   {0.003279, 0.002305, 0.023708},
@@ -335,22 +335,22 @@ Parameters *AbstractBase::getParameters()
     return mParameters;
 }
 
-float AbstractBase::frequencyToCoordinate(float frequency) const
+double AbstractBase::frequencyToCoordinate(double frequency) const
 {
     static std::map<
-            std::tuple<FrequencyScale, float, float>,
-            std::map<float, float>> mappings;
+            std::tuple<FrequencyScale, double, double>,
+            std::map<double, double>> mappings;
 
     FrequencyScale scale = mParameters->getFrequencyScale();
-    float minFrequency = mParameters->getMinFrequency();
-    float maxFrequency = mParameters->getMaxFrequency();
+    double minFrequency = mParameters->getMinFrequency();
+    double maxFrequency = mParameters->getMaxFrequency();
 
-    float transMin, transMax, transVal;
+    double transMin, transMax, transVal;
     
     auto key = std::make_tuple(scale, minFrequency, maxFrequency);
     auto it1 = mappings.find(key);
     if (it1 == mappings.end()) {
-        mappings.emplace(key, std::map<float, float>());
+        mappings.emplace(key, std::map<double, double>());
         it1 = mappings.find(key);
     }
 
@@ -368,39 +368,39 @@ float AbstractBase::frequencyToCoordinate(float frequency) const
             transVal = frequency;
             break;
         case FrequencyScale::Logarithmic:
-            transMin = log10f(10.0f + minFrequency);
-            transMax = log10f(10.0f + maxFrequency);
-            transVal = log10f(10.0f + frequency);
+            transMin = log10f(10.0 + minFrequency);
+            transMax = log10f(10.0 + maxFrequency);
+            transVal = log10f(10.0 + frequency);
             break;
         case FrequencyScale::Mel:
-            transMin = 2595.0f * log10f(1.0f + minFrequency / 700.0f);
-            transMax = 2595.0f * log10f(1.0f + maxFrequency / 700.0f);
-            transVal = 2595.0f * log10f(1.0f + frequency / 700.0f);
+            transMin = 2595.0 * log10f(1.0 + minFrequency / 700.0);
+            transMax = 2595.0 * log10f(1.0 + maxFrequency / 700.0);
+            transVal = 2595.0 * log10f(1.0 + frequency / 700.0);
             break;
         }
 
-        float coord = 2.0f * (transVal - transMin) / (transMax - transMin) - 1.0f;
+        double coord = 2.0 * (transVal - transMin) / (transMax - transMin) - 1.0;
         map.emplace(frequency, coord);
         return coord;
     }
 }
 
-float AbstractBase::coordinateToFrequency(float y) const
+double AbstractBase::coordinateToFrequency(double y) const
 {
     static std::map<
-            std::tuple<FrequencyScale, float, float>,
-            std::map<float, float>> mappings;
+            std::tuple<FrequencyScale, double, double>,
+            std::map<double, double>> mappings;
 
     FrequencyScale scale = mParameters->getFrequencyScale();
-    float minFrequency = mParameters->getMinFrequency();
-    float maxFrequency = mParameters->getMaxFrequency();
+    double minFrequency = mParameters->getMinFrequency();
+    double maxFrequency = mParameters->getMaxFrequency();
 
-    float transMin, transMax, transVal;
+    double transMin, transMax, transVal;
     
     auto key = std::make_tuple(scale, minFrequency, maxFrequency);
     auto it1 = mappings.find(key);
     if (it1 == mappings.end()) {
-        mappings.emplace(key, std::map<float, float>());
+        mappings.emplace(key, std::map<double, double>());
         it1 = mappings.find(key);
     }
 
@@ -417,29 +417,29 @@ float AbstractBase::coordinateToFrequency(float y) const
             transMax = maxFrequency;
             break;
         case FrequencyScale::Logarithmic:
-            transMin = log10f(10.0f + minFrequency);
-            transMax = log10f(10.0f + maxFrequency);
+            transMin = log10f(10.0 + minFrequency);
+            transMax = log10f(10.0 + maxFrequency);
             break;
         case FrequencyScale::Mel:
-            transMin = 2595.0f * log10f(1.0f + minFrequency / 700.0f);
-            transMax = 2595.0f * log10f(1.0f + maxFrequency / 700.0f);
+            transMin = 2595.0 * log10f(1.0 + minFrequency / 700.0);
+            transMax = 2595.0 * log10f(1.0 + maxFrequency / 700.0);
             break;
         }
 
-        float coord = 2.0f * (transVal - transMin) / (transMax - transMin) - 1.0f;
+        double coord = 2.0 * (transVal - transMin) / (transMax - transMin) - 1.0;
 
-        transVal = (y + 1.0f) / 2.0f * (transMax - transMin) + transMin;
+        transVal = (y + 1.0) / 2.0 * (transMax - transMin) + transMin;
 
-        float frequency;
+        double frequency;
         switch (scale) {
         case FrequencyScale::Linear:
             frequency = transVal;
             break;
         case FrequencyScale::Logarithmic:
-            frequency = powf(10.0f, transVal) - 10.0f;
+            frequency = powf(10.0, transVal) - 10.0;
             break;
         case FrequencyScale::Mel:
-            frequency = 700.0f * (powf(10.0f, transVal / 2595.0f) - 1.0f);
+            frequency = 700.0 * (powf(10.0, transVal / 2595.0) - 1.0);
             break;
         }
 
@@ -449,15 +449,15 @@ float AbstractBase::coordinateToFrequency(float y) const
 }
 
 
-void AbstractBase::gainToColor(float gain, float *r, float *g, float *b) const
+void AbstractBase::gainToColor(double gain, double *r, double *g, double *b) const
 {
-    float minGain = mParameters->getMinGain();
-    float maxGain = mParameters->getMaxGain();
+    double minGain = mParameters->getMinGain();
+    double maxGain = mParameters->getMaxGain();
 
-    float a = clamp((gain - minGain) / (maxGain - minGain), 0.0f, 1.0f);
+    double a = clamp((gain - minGain) / (maxGain - minGain), 0.0, 1.0);
 
     int leftIndex = std::floor(a * 255);
-    float frac = a * 255 - leftIndex;
+    double frac = a * 255 - leftIndex;
 
     if (leftIndex < 0 || leftIndex > 254) {
         *r = cmap[leftIndex][0];

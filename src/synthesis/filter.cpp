@@ -12,8 +12,8 @@ std::vector<double> Synthesis::filter(
 
     std::vector<double> bp = b;
     std::vector<double> ap = a;
-    bp.resize(lab, 0.0f);
-    ap.resize(lab, 0.0f);
+    bp.resize(lab, 0.0);
+    ap.resize(lab, 0.0);
 
     for (int i = 0; i < lab; ++i) {
         bp[i] /= a[0];

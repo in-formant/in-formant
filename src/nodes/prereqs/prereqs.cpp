@@ -52,7 +52,7 @@ void Prereqs::process(const NodeIO *inputs[], NodeIO *outputs[])
     if (lastLength != actualLength || lastSampleRate != sampleRate) {
         lastLength = actualLength;
         lastSampleRate = sampleRate;
-        hpsos = Analysis::butterworthHighpass(4, 80.0f, sampleRate);
+        hpsos = Analysis::butterworthHighpass(4, 80.0, sampleRate);
     }
 
     out->setSampleRate(sampleRate);

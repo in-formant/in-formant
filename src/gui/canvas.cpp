@@ -1,62 +1,64 @@
-#include "gui.h"
+#include "../context/rendercontext.h"
+#include "canvas.h"
 #include <QQuickWindow>
 #include <QOpenGLContext>
 #include <QTimer>
 #include <QScreen>
 #include <chrono>
 
-using namespace std::chrono_literals;
 using namespace Gui;
 
-using Module::Target::Qt5Quick;
-using Main::ContextManager;
-
 Canvas::Canvas(QQuickItem *parent)
-    : QQuickFramebufferObject(parent)
+    : QQuickFramebufferObject(parent),
+      mRenderContext(nullptr)
 {
-    setObjectName("IfCanvas");
+    setObjectName("ifCanvas");
     setMirrorVertically(true);
     setAcceptHoverEvents(true);
     setAcceptedMouseButtons(Qt::AllButtons);
 }
 
-void Canvas::terminate()
-{
-    pManagerMutex->lock();
-    pManager->terminate();
-    pManagerMutex->unlock();
-}
-
 QQuickFramebufferObject::Renderer *Canvas::createRenderer() const
 {
-    return new CanvasRenderer;
+    return new CanvasRenderer(mRenderContext);
+}
+
+void Canvas::setRenderContext(Main::RenderContext *renderContext)
+{
+    mRenderContext = renderContext;
+}
+
+CanvasRenderer::CanvasRenderer(Main::RenderContext *renderContext)
+    : mRenderContext(renderContext)
+{
 }
 
 QOpenGLFramebufferObject *CanvasRenderer::createFramebufferObject(const QSize &size)
 {
     QOpenGLFramebufferObjectFormat format;
     format.setAttachment(QOpenGLFramebufferObject::NoAttachment);
-    format.setSamples(4);
+    format.setSamples(2);
     return new QOpenGLFramebufferObject(size, format);
 }
 
 void CanvasRenderer::render()
 {
-    pManagerMutex->lock();
-
     mItem->window()->resetOpenGLState();
 
     static bool initialized = false;
     if (!initialized) {
         initialized = true;
         framebufferObject()->bind();
-        pManager->start();
-        connectEvents();
+        mRenderContext->setWidth(mItem->width());
+        mRenderContext->setHeight(mItem->height());
+        mRenderContext->setDevicePixelRatio(mItem->window()->devicePixelRatio());
+        mRenderContext->setDPI(mItem->window()->screen()->physicalDotsPerInchX(),
+                               mItem->window()->screen()->physicalDotsPerInchY());
+        mRenderContext->initialize();
+        printf("Render context initialized\n");
     }
-
-    pManager->mainBody();
-
-    pManagerMutex->unlock();
+   
+    mRenderContext->render();
 }
 
 void CanvasRenderer::synchronize(QQuickFramebufferObject *item)
@@ -66,6 +68,7 @@ void CanvasRenderer::synchronize(QQuickFramebufferObject *item)
 
 void CanvasRenderer::connectEvents()
 {
+    /*
     QObject::connect(mItem, &QQuickItem::widthChanged, [=]() { pTarget->qtSetWidth(mItem->width()); });
     QObject::connect(mItem, &QQuickItem::heightChanged, [=]() { pTarget->qtSetHeight(mItem->height()); });
     QObject::connect(mItem->window(), &QWindow::screenChanged, pTarget, &Qt5Quick::qtSetDpi);
@@ -93,20 +96,21 @@ void CanvasRenderer::connectEvents()
     
     QObject::connect(pTarget, &Qt5Quick::requestClose, qApp, &QCoreApplication::quit);
     QObject::connect(pTarget, &Qt5Quick::togglePause, pManager.get(), &ContextManager::togglePaused);
+    */
 
-    auto updateTimer = new QTimer;
+    /*auto updateTimer = new QTimer;
     updateTimer->setInterval(16ms);
     updateTimer->setTimerType(Qt::PreciseTimer);
     QObject::connect(updateTimer, &QTimer::timeout, mItem, &QQuickItem::update);
     updateTimer->moveToThread(qApp->thread());
     updateTimer->setParent(mItem);
-    QMetaObject::invokeMethod(updateTimer, "start", Q_ARG(int, 0));
+    QMetaObject::invokeMethod(updateTimer, "start", Q_ARG(int, 0));*/
 
-    QObject::connect(qApp, &QCoreApplication::aboutToQuit, [=]() {
+    /*QObject::connect(qApp, &QCoreApplication::aboutToQuit, [=]() {
                 updateTimer->stop();
                 pManagerMutex->lock();
                 pManager->terminate();
                 pManagerMutex->unlock();
-            });
+            });*/
 }
 

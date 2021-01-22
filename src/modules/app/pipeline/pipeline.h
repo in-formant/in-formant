@@ -27,25 +27,25 @@ namespace Module::App
 
         Pipeline& setAnalysisDuration(millis);
 
-        Pipeline& setFFTSampleRate(float);
+        Pipeline& setFFTSampleRate(double);
         Pipeline& setFFTSize(int);
 
-        Pipeline& setPreEmphasisFrequency(float);
+        Pipeline& setPreEmphasisFrequency(double);
         
-        Pipeline& setPitchAndLpSpectrumSampleRate(float);
+        Pipeline& setPitchAndLpSpectrumSampleRate(double);
         Pipeline& setLpSpectrumLpOrder(int);
 
-        Pipeline& setFormantSampleRate(float);
+        Pipeline& setFormantSampleRate(double);
         Pipeline& setFormantLpOrder(int);
 
-        const std::vector<std::array<float, 2>>&  getFFTSlice() const;
-        const std::vector<std::array<float, 2>>&  getLpSpectrumSlice() const;
-        const std::vector<float>&                 getLpSpectrumLPC() const;
+        const std::vector<std::array<double, 2>>&  getFFTSlice() const;
+        const std::vector<std::array<double, 2>>&  getLpSpectrumSlice() const;
+        const std::vector<double>&                 getLpSpectrumLPC() const;
         const std::vector<Analysis::FormantData>& getFormants() const;
-        float                                     getPitch() const;
-        const std::vector<float>&                 getSound() const;
-        const std::vector<float>&                 getGlottalFlow() const;
-        const std::vector<float>&                 getGlottalInstants() const;
+        double                                     getPitch() const;
+        const std::vector<double>&                 getSound() const;
+        const std::vector<double>&                 getGlottalFlow() const;
+        const std::vector<double>&                 getGlottalInstants() const;
 
         void processAll();
 
@@ -64,19 +64,19 @@ namespace Module::App
 
         Nodes::NodeIO **ndi, **ndo;
 
-        std::vector<std::array<float, 2>> fftSlice;
-        std::vector<std::array<float, 2>> lpSpecSlice;
-        std::vector<float>                lpSpecLPC;
+        std::vector<std::array<double, 2>> fftSlice;
+        std::vector<std::array<double, 2>> lpSpecSlice;
+        std::vector<double>                lpSpecLPC;
         std::vector<Analysis::FormantData> formants;
-        float pitch;
-        std::vector<float> sound;
-        std::vector<float> glot;
-        std::vector<float> glotInst;
+        double pitch;
+        std::vector<double> sound;
+        std::vector<double> glot;
+        std::vector<double> glotInst;
 
         bool wasInitializedAtLeastOnce;
 
         millis analysisDuration;
-        float captureSampleRate;
+        double captureSampleRate;
 
         Module::Audio::Buffer *captureBuffer;
         Analysis::PitchSolver *pitchSolver;
@@ -84,15 +84,15 @@ namespace Module::App
         Analysis::LinpredSolver *linpredSolver;
         Analysis::FormantSolver *formantSolver;
 
-        float fftSampleRate;
+        double fftSampleRate;
         int fftSize;
 
-        float preEmphasisFrequency;
+        double preEmphasisFrequency;
         
-        float secondSampleRate;
+        double secondSampleRate;
         int lpSpecLpOrder;
 
-        float formantSampleRate;
+        double formantSampleRate;
         int formantLpOrder;
     };
 }

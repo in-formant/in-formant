@@ -16,7 +16,7 @@ void Analysis::polishComplexRoot(const std::vector<double>& p, std::complex<doub
         }
         ymin = fabsy;
         zbest = *root;
-        if (std::abs(dy) == 0.0f) {
+        if (std::abs(dy) == 0.0) {
             return;
         }
         std::complex<double> dz = y / dy;
@@ -39,7 +39,7 @@ void Analysis::polishRealRoot(const std::vector<double>& p, double *root, int ma
         }
         ymin = fabsy;
         xbest = *root;
-        if (fabs(dy) == 0.0f) {
+        if (fabs(dy) == 0.0) {
             return;
         }
         double dx = y / dy;
@@ -56,7 +56,7 @@ void Analysis::polishRoots(const std::vector<double> &p, std::vector<std::comple
         double im = roots[i].imag();
         double re = roots[i].real();
 
-        if (im != 0.0f) {
+        if (im != 0.0) {
             polishComplexRoot(p, &roots[i], maxIt);
             if (i < (int) roots.size() && im == -roots[i + 1].imag() && re == roots[i + 1].real()) {
                 roots[i + 1] = std::conj(roots[i]);

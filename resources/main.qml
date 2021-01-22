@@ -20,24 +20,27 @@ ApplicationWindow {
     }
 
     RowLayout {
-        id: rowLayout
         anchors.fill: parent
     
         ColumnLayout {
             Layout.fillHeight: true
+    
+            Switch {
+                text: "Spectrogram"
+                checked: config.viewShowSpectrogram
+                onToggled: config.viewShowSpectrogram = checked
+            }
 
             Switch {
                 text: "Pitch track"
-                objectName: "pitchTrack"                
-                signal togglePitchTrack(bool toggled)
-                onToggled: this.togglePitchTrack(checked)
+                checked: config.viewShowPitch
+                onToggled: config.viewShowPitch = checked
             }
 
             Switch {
                 text: "Formant tracks"
-                objectName: "formantTracks"
-                signal toggleFormantTracks(bool toggled)
-                onToggled: this.toggleFormantTracks(checked)
+                checked: config.viewShowFormants
+                onToggled: config.viewShowFormants = checked
             }
         }
 

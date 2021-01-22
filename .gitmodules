@@ -10,3 +10,6 @@
 	path = external/r8brain-free-src
 	url = https://github.com/avaneev/r8brain-free-src
 	branch = master
+[submodule "external/tomlplusplus"]
+	path = external/tomlplusplus
+	url = https://github.com/marzer/tomlplusplus

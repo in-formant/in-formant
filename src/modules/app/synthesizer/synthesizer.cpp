@@ -10,6 +10,7 @@ Synthesizer::Synthesizer(Module::Audio::Queue *playbackQueue)
     : playbackQueue(playbackQueue),
       resampler(new Module::Audio::Resampler(32'000, 48'000))
 {
+    playbackQueue->setCallback(App::Synthesizer::audioCallback);
 }
 
 Synthesizer::~Synthesizer()
@@ -19,27 +20,27 @@ Synthesizer::~Synthesizer()
 
 void Synthesizer::initialize()
 {
-    masterGain = 0.0f;
-    noiseGain = 0.3f;
-    glotGain = 1.0f;
-    glotPitch = 170.0f;
-    glotRd = 1.7f;
-    glotTc = 1.0f;
+    masterGain = 0.0;
+    noiseGain = 0.3;
+    glotGain = 1.0;
+    glotPitch = 170.0;
+    glotRd = 1.7;
+    glotTc = 1.0;
     formants = {{1000, 100}};
-    filterShift = 1.0f;
+    filterShift = 1.0;
     voiced = false;
     
-    realMasterGain = 0.0f;
-    realNoiseGain = 0.0f;
-    realGlotGain = 0.0f;
-    realGlotPitch = 170.0f;
-    realGlotRd = 1.7f;
-    realGlotTc = 1.0f;
-    realFilterShift = 1.0f;
+    realMasterGain = 0.0;
+    realNoiseGain = 0.0;
+    realGlotGain = 0.0;
+    realGlotPitch = 170.0;
+    realGlotRd = 1.7;
+    realGlotTc = 1.0;
+    realFilterShift = 1.0;
     realFilter.clear();
 
-    zfNoise.resize(20, std::vector<double>(4, 0.0f));
-    zfGlot.resize(20, std::vector<double>(4, 0.0f));
+    zfNoise.resize(20, std::vector<double>(4, 0.0));
+    zfGlot.resize(20, std::vector<double>(4, 0.0));
 
     resampler->setOutputRate(playbackQueue->getInSampleRate());
 }
@@ -143,7 +144,7 @@ void Synthesizer::generateAudio(int requestedLength)
     static std::mt19937_64 gen(rd());
 #endif
 
-    static std::normal_distribution<> dis(0.0f, 0.05f);
+    static std::normal_distribution<> dis(0.0, 0.05);
 
     int inputLength = resampler->getRequiredInLength(requestedLength);
 
@@ -168,7 +169,7 @@ void Synthesizer::generateAudio(int requestedLength)
     std::vector<double> Rds(inputLength);
     std::vector<double> tcs(inputLength);
     if (inputLength > 0) {
-        constexpr double expFact = 0.997f;
+        constexpr double expFact = 0.997;
         pitches[0] = realGlotPitch;
         Rds[0] = realGlotRd;
         tcs[0] = realGlotTc;
@@ -204,13 +205,13 @@ void Synthesizer::generateAudio(int requestedLength)
         lpsos = Analysis::butterworthLowpass(8, 16000, glotFs);
     }
 
-    static std::vector<std::vector<double>> lpglotmem(20, std::vector<double>(4, 0.0f));
+    static std::vector<std::vector<double>> lpglotmem(20, std::vector<double>(4, 0.0));
     glot = Synthesis::sosfilter(lpsos, glot, lpglotmem);
 
     std::vector<double> input(inputLength);
 
     auto outputNoise = Synthesis::sosfilter(realFilter, noise, zfNoise);
-    double outputNoiseMax = 0.0f;
+    double outputNoiseMax = 0.0;
     for (int i = 0; i < inputLength; ++i) {
         if (fabs(outputNoise[i]) > outputNoiseMax) {
             outputNoiseMax = fabs(outputNoise[i]);
@@ -218,7 +219,7 @@ void Synthesizer::generateAudio(int requestedLength)
     }
 
     auto outputGlot = Synthesis::sosfilter(realFilter, glot, zfGlot);
-    double outputGlotMax = 0.0f;
+    double outputGlotMax = 0.0;
     for (int i = 0; i < inputLength; ++i) {
         if (fabs(outputGlot[i]) > outputGlotMax) {
             outputGlotMax = fabs(outputGlot[i]);
@@ -228,16 +229,16 @@ void Synthesizer::generateAudio(int requestedLength)
     std::vector<double> output(inputLength);
     for (int i = 0; i < inputLength; ++i) {
         if (voiced) {
-            output[i] = 0.5f * realNoiseGain * outputNoise[i] / outputNoiseMax + realGlotGain * outputGlot[i] / outputGlotMax;
+            output[i] = 0.5 * realNoiseGain * outputNoise[i] / outputNoiseMax + realGlotGain * outputGlot[i] / outputGlotMax;
         }
         else {
-            output[i] = 0.7f * realNoiseGain * outputNoise[i] / outputNoiseMax;
+            output[i] = 0.7 * realNoiseGain * outputNoise[i] / outputNoiseMax;
         }
-        //output[i] = realMasterGain * 0.03f * (0.5f * realNoiseGain * noise[i] + realGlotGain * glot[i]);
+        //output[i] = realMasterGain * 0.03 * (0.5 * realNoiseGain * noise[i] + realGlotGain * glot[i]);
     }
 
     for (int i = 0; i < inputLength; ++i) {
-        output[i] = output[i] * realMasterGain * 0.7f;
+        output[i] = output[i] * realMasterGain * 0.7;
     }
 
     output = resampler->process(output.data(), output.size());
@@ -250,10 +251,10 @@ void Synthesizer::audioCallback(double *output, int length, void *userdata)
     auto self = static_cast<Synthesizer *>(userdata);
 
     // Update the real parameters.
-    self->realMasterGain = 0.1f * self->realMasterGain + 0.9f * self->masterGain;
-    self->realNoiseGain  = 0.1f * self->realNoiseGain  + 0.9f * self->noiseGain;
-    self->realGlotGain   = 0.1f * self->realGlotGain   + 0.9f * self->glotGain;
-    self->realFilterShift = 0.2f * self->realFilterShift + 0.8f * self->filterShift;
+    self->realMasterGain = 0.1 * self->realMasterGain + 0.9 * self->masterGain;
+    self->realNoiseGain  = 0.1 * self->realNoiseGain  + 0.9 * self->noiseGain;
+    self->realGlotGain   = 0.1 * self->realGlotGain   + 0.9 * self->glotGain;
+    self->realFilterShift = 0.2 * self->realFilterShift + 0.8 * self->filterShift;
 
     static double formantCount = 0;
 
@@ -261,15 +262,15 @@ void Synthesizer::audioCallback(double *output, int length, void *userdata)
         formantCount = self->formants.size();
     }
     else {
-        formantCount = 0.4f * formantCount + 0.6f * self->formants.size();
+        formantCount = 0.4 * formantCount + 0.6 * self->formants.size();
     }
 
     self->realFormants.resize(std::round(formantCount));
 
     for (int i = 0; i < self->formants.size(); ++i) {
         if (i < std::round(formantCount)) {
-            self->realFormants[i].frequency = 0.4f * self->realFormants[i].frequency + 0.6f * self->formants[i].frequency;
-            self->realFormants[i].bandwidth = 0.2f * self->realFormants[i].bandwidth + 0.8f * self->formants[i].bandwidth;
+            self->realFormants[i].frequency = 0.4 * self->realFormants[i].frequency + 0.6 * self->formants[i].frequency;
+            self->realFormants[i].bandwidth = 0.2 * self->realFormants[i].bandwidth + 0.8 * self->formants[i].bandwidth;
         }
     }
 

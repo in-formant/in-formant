@@ -4,16 +4,6 @@
 #include "../../freetype/freetype.h"
 #include "../../../analysis/formant/formant.h"
 
-#ifdef RENDERER_USE_VULKAN
-#   define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
-#   define VULKAN_HPP_TYPESAFE_CONVERSION 1
-#   include <vulkan/vulkan.hpp>
-#endif
-
-#ifdef RENDERER_USE_SDL2
-#   include <SDL2/SDL.h>
-#endif
-
 #include <nanosvg.h>
 #include <nanosvgrast.h>
 
@@ -38,43 +28,7 @@
 namespace Module::Renderer {
 
     enum class Type {
-        OpenGL,
-        GLES,
-        Vulkan,
-        SDL2,
         NanoVG,
-    };
-
-    class OpenGLProvider {
-#if RENDERER_USE_OPENGL || RENDERER_USE_GLES
-    public:
-        virtual ~OpenGLProvider() {}
-
-        virtual void createContext() = 0;
-        virtual void deleteContext() = 0;
-
-        virtual void makeCurrent() = 0;
-        virtual void swapTarget() = 0;
-#endif
-    };
-
-    class VulkanProvider {
-#ifdef RENDERER_USE_VULKAN
-    public:
-        virtual ~VulkanProvider() {}
-
-        virtual std::vector<const char *> getRequiredExtensions() = 0;
-        virtual void createSurface(VkInstance instance, VkSurfaceKHR *surface) = 0;
-#endif
-    };
-
-    class SDL2Provider {
-#ifdef RENDERER_USE_SDL2
-    public:
-        virtual ~SDL2Provider() {}
-        
-        virtual SDL_Renderer *createRenderer(uint32_t flags) = 0;
-#endif
     };
     
     class NvgProvider {
@@ -97,18 +51,18 @@ namespace Module::Renderer {
     class Parameters;
 
     struct GraphRenderDataPoint {
-        float x;
-        float y;
+        double x;
+        double y;
     };
     using GraphRenderData = std::vector<GraphRenderDataPoint>;
 
     struct SpectrogramRenderDataPoint {
-        float frequency;
-        float intensity;
+        double frequency;
+        double intensity;
     };
     using SpectrogramRenderData = std::vector<SpectrogramRenderDataPoint>;
 
-    using FrequencyTrackRenderData = std::vector<std::optional<float>>;
+    using FrequencyTrackRenderData = std::vector<std::optional<double>>;
 
     using FormantTrackRenderData = std::vector<std::optional<Analysis::FormantData>>;
 
@@ -126,29 +80,29 @@ namespace Module::Renderer {
 
         virtual void test() = 0;
 
-        virtual void renderGraph(const GraphRenderData& data, float pmin, float pmax, float thick, float r, float g, float b) = 0;
+        virtual void renderGraph(const GraphRenderData& data, double pmin, double pmax, double thick, double r, double g, double b) = 0;
        
         virtual void scrollSpectrogram(const SpectrogramRenderData& data, int count) = 0;
 
         virtual void renderSpectrogram() = 0;
 
-        virtual void renderFrequencyTrack(const FrequencyTrackRenderData& data, float thick, float r, float g, float b) = 0;
+        virtual void renderFrequencyTrack(const FrequencyTrackRenderData& data, double thick, double r, double g, double b) = 0;
 
-        virtual void renderFormantTrack(const FormantTrackRenderData& data, float thick, float r, float g, float b) = 0;
+        virtual void renderFormantTrack(const FormantTrackRenderData& data, double thick, double r, double g, double b) = 0;
 
         virtual void renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::Freetype::Font& minorFont) = 0;
 
-        virtual float renderFrequencyCursor(float mx, float my) = 0;
+        virtual double renderFrequencyCursor(double mx, double my) = 0;
         
-        virtual int renderFrameCursor(float mx, float my, int count) = 0;
+        virtual int renderFrameCursor(double mx, double my, int count) = 0;
 
-        virtual void renderRoundedRect(float x, float y, float w, float h, float r, float g, float b, float a) = 0;
+        virtual void renderRoundedRect(double x, double y, double w, double h, double r, double g, double b, double a) = 0;
 
-        virtual void renderSVG(const std::string& path, float dpi, float x, float y, float w, float h) = 0;
+        virtual void renderSVG(const std::string& path, double dpi, double x, double y, double w, double h) = 0;
 
-        virtual void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, float r, float g, float b) = 0;
+        virtual void renderText(Module::Freetype::Font& font, const std::string& text, int x, int y, double r, double g, double b) = 0;
 
-        virtual std::tuple<float, float, float, float> renderInputBox(Module::Freetype::Font& font, const std::string& content, int x, int y, int w, bool isFocused) = 0;
+        virtual std::tuple<double, double, double, double> renderInputBox(Module::Freetype::Font& font, const std::string& content, int x, int y, int w, bool isFocused) = 0;
 
         virtual uintptr_t getContextNumber() = 0;
 
@@ -168,9 +122,9 @@ namespace Module::Renderer {
         bool hasWindowSizeChanged() const;
         void resetWindowSizeChanged();
 
-        float frequencyToCoordinate(float frequency) const;
-        float coordinateToFrequency(float y) const;
-        void gainToColor(float gain, float *r, float *g, float *b) const;
+        double frequencyToCoordinate(double frequency) const;
+        double coordinateToFrequency(double y) const;
+        void gainToColor(double gain, double *r, double *g, double *b) const;
 
     private:
         Type mType;
@@ -187,7 +141,6 @@ namespace Module::Renderer {
     };
 }
 
-#include "../../target/base/base.h"
 #include "parameters.h"
 
 template<typename Tx, typename Tlo, typename Thi>

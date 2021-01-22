@@ -4,7 +4,7 @@
 
 static std::pair<std::vector<std::complex<double>>, std::vector<double>> cplxreal(const std::vector<std::complex<double>>& z_)
 {
-    double tol = 100.0f * std::numeric_limits<double>::epsilon();
+    double tol = 100.0 * std::numeric_limits<double>::epsilon();
     
     std::vector<std::complex<double>> z(z_.begin(), z_.end());
     std::sort(z.begin(), z.end(), [](auto& x, auto& y) { return x.real() < y.real(); });
@@ -67,7 +67,7 @@ std::vector<std::array<double, 6>> Analysis::zpk2sos(
     std::vector<double> zrms, zrp;
     if (nzr > 0) {
         if (nzr % 2 == 1) {
-            zr.push_back(0.0f);
+            zr.push_back(0.0);
             nzr++;
         }
         nzrsec = nzr / 2;
@@ -87,7 +87,7 @@ std::vector<std::array<double, 6>> Analysis::zpk2sos(
     std::vector<double> prms, prp;
     if (npr > 0) {
         if (npr % 2 == 1) {
-            pr.push_back(0.0f);
+            pr.push_back(0.0);
             npr++;
         }
         nprsec = npr / 2;
@@ -106,14 +106,14 @@ std::vector<std::array<double, 6>> Analysis::zpk2sos(
 
     std::vector<double> zcm2r(nzc), zca2(nzc);
     for (int i = 0; i < nzc; ++i) {
-        zcm2r[i] = -2.0f * zc[i].real();
+        zcm2r[i] = -2.0 * zc[i].real();
         double a = std::abs(zc[i]);
         zca2[i] = a * a;
     }
 
     std::vector<double> pcm2r(npc), pca2(npc);
     for (int i = 0; i < npc; ++i) {
-        pcm2r[i] = -2.0f * pc[i].real();
+        pcm2r[i] = -2.0 * pc[i].real();
         double a = std::abs(pc[i]);
         pca2[i] = a * a;
     }
@@ -121,8 +121,8 @@ std::vector<std::array<double, 6>> Analysis::zpk2sos(
     std::vector<std::array<double, 6>> sos(nsecs);
     
     for (int i = 0; i < nsecs; ++i) {
-        sos[i][0] = 1.0f;
-        sos[i][3] = 1.0f;
+        sos[i][0] = 1.0;
+        sos[i][3] = 1.0;
     }
 
     const int nzrl = nzc + nzrsec;
@@ -138,7 +138,7 @@ std::vector<std::array<double, 6>> Analysis::zpk2sos(
             sos[i][2] = zrp[i - nzc];
         }
         else {
-            sos[i][1] = sos[i][2] = 0.0f;
+            sos[i][1] = sos[i][2] = 0.0;
         }
 
         if (i < npc) {
@@ -150,7 +150,7 @@ std::vector<std::array<double, 6>> Analysis::zpk2sos(
             sos[i][5] = prp[i - npc];
         }
         else {
-            sos[i][4] = sos[i][5] = 0.0f;
+            sos[i][4] = sos[i][5] = 0.0;
         }
     }
 

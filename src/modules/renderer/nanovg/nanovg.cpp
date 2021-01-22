@@ -53,7 +53,7 @@ void NanoVG::begin()
 
     mProvider->beforeBeginFrame();
 
-    nvgBeginFrame(vg, mWidth, mHeight, (float) drawableWidth / (float) mWidth);
+    nvgBeginFrame(vg, mWidth, mHeight, (double) drawableWidth / (double) mWidth);
 
     nvgBeginPath(vg);
     nvgRect(vg, 0, 0, mWidth, mHeight);
@@ -72,10 +72,10 @@ void NanoVG::test()
 {
 }
 
-void NanoVG::renderGraph(const GraphRenderData& graph, float pmin, float pmax, float thick, float r, float g, float b)
+void NanoVG::renderGraph(const GraphRenderData& graph, double pmin, double pmax, double thick, double r, double g, double b)
 {
-    float xi, yi;
-    float xip, yip;
+    double xi, yi;
+    double xip, yip;
     
     nvgBeginPath(vg);
     nvgLineCap(vg, NVG_ROUND);
@@ -84,8 +84,8 @@ void NanoVG::renderGraph(const GraphRenderData& graph, float pmin, float pmax, f
     const auto& p0 = graph.front();
     const auto& pend = graph.back();
 
-    xi = -0.9f;
-    yi = p0.y / 10.0f;
+    xi = -0.9;
+    yi = p0.y / 10.0;
 
     std::tie(xip, yip) = convertNormCoord(xi, yi);
 
@@ -94,8 +94,8 @@ void NanoVG::renderGraph(const GraphRenderData& graph, float pmin, float pmax, f
     for (int i = 1; i < graph.size(); ++i) {
         const auto& p = graph[i];
 
-        xi = 0.9 * (2.0f * (p.x - pmin) / (pmax - pmin) - 1.0f); 
-        yi = p.y / 10.0f;
+        xi = 0.9 * (2.0 * (p.x - pmin) / (pmax - pmin) - 1.0); 
+        yi = p.y / 10.0;
 
         std::tie(xip, yip) = convertNormCoord(xi, yi);
 
@@ -127,7 +127,7 @@ void NanoVG::scrollSpectrogram(const SpectrogramRenderData& slice, int count)
 
     mProvider->bindFramebuffer(mSpectrogramFb2);
 
-    nvgBeginFrame(vg, count, imageHeight, 1.0f);
+    nvgBeginFrame(vg, count, imageHeight, 1.0);
     nvgSave(vg);
 
     nvgResetTransform(vg);
@@ -143,37 +143,37 @@ void NanoVG::scrollSpectrogram(const SpectrogramRenderData& slice, int count)
             nvgImagePattern(
                 vg,
                 0, 0, count, imageHeight,
-                0.0f, mSpectrogramIm1, 1.0f));
+                0.0, mSpectrogramIm1, 1.0));
     nvgFill(vg);
    
     nvgRestore(vg);
     nvgSave(vg);
 
-    float xp = (count - 1);
+    double xp = (count - 1);
 
     if (!slice.empty()) {
-        float frequency = slice[0].frequency;
-        float intensity = slice[0].intensity;
+        double frequency = slice[0].frequency;
+        double intensity = slice[0].intensity;
 
-        float y = frequencyToCoordinate(slice[0].frequency);
+        double y = frequencyToCoordinate(slice[0].frequency);
 
-        float gain = intensity > 1e-10f ? 20.0f * log10f(intensity) : -1e6f;
-        float r, g, b;
+        double gain = intensity > 1e-10 ? 20.0 * log10f(intensity) : -1e6;
+        double r, g, b;
         gainToColor(gain, &r, &g, &b);
 
-        float yp = imageHeight - (y + 1.0f) / 2.0f * imageHeight;
+        double yp = imageHeight - (y + 1.0) / 2.0 * imageHeight;
 
         for (const auto& point : slice) {
-            float frequency = point.frequency;
-            float intensity = point.intensity;
+            double frequency = point.frequency;
+            double intensity = point.intensity;
 
-            float y2 = frequencyToCoordinate(frequency);
+            double y2 = frequencyToCoordinate(frequency);
 
-            float nextYp = imageHeight - (y2 + 1.0f) / 2.0f * imageHeight;
+            double nextYp = imageHeight - (y2 + 1.0) / 2.0 * imageHeight;
            
             if (std::abs(std::round(yp) - std::round(nextYp)) >= 1) {
-                float gain = intensity > 1e-10f ? 20.0f * log10f(intensity) : -1e6f;
-                float nr, ng, nb;
+                double gain = intensity > 1e-10 ? 20.0 * log10f(intensity) : -1e6;
+                double nr, ng, nb;
                 gainToColor(gain, &nr, &ng, &nb);
 
                 nvgBeginPath(vg);
@@ -185,7 +185,7 @@ void NanoVG::scrollSpectrogram(const SpectrogramRenderData& slice, int count)
                             xp, yp, xp, nextYp,
                             nvgRGBf(r, g, b),
                             nvgRGBf(nr, ng, nb)));
-                nvgStrokeWidth(vg, 1.0f);
+                nvgStrokeWidth(vg, 1.0);
                 nvgStroke(vg);
 
                 yp = nextYp;
@@ -217,26 +217,26 @@ void NanoVG::renderSpectrogram()
             nvgImagePattern(
                 vg,
                 0, 0, mWidth, mHeight,
-                0.0f, mSpectrogramIm1, 1.0f));
+                0.0, mSpectrogramIm1, 1.0));
     nvgFill(vg);
 }
 
-void NanoVG::renderFrequencyTrack(const FrequencyTrackRenderData& track, float thick, float r, float g, float b)
+void NanoVG::renderFrequencyTrack(const FrequencyTrackRenderData& track, double thick, double r, double g, double b)
 {
     nvgBeginPath(vg);
     nvgLineCap(vg, NVG_ROUND);
     nvgLineJoin(vg, NVG_ROUND);
     
-    float xstep = (float) mWidth / (float) track.size();
+    double xstep = (double) mWidth / (double) track.size();
 
     for (int i = 0; i < track.size(); ++i) {
         const auto& point = track[i];
 
         if (point.has_value()) {
-            float xp = i * xstep;
+            double xp = i * xstep;
 
-            float y = frequencyToCoordinate(point.value());
-            float yp = mHeight - (y + 1.0f) / 2.0f * mHeight;
+            double y = frequencyToCoordinate(point.value());
+            double yp = mHeight - (y + 1.0) / 2.0 * mHeight;
 
             if (i == 0 || !track[i - 1].has_value()) {
                 nvgMoveTo(vg, xp, yp);
@@ -247,18 +247,18 @@ void NanoVG::renderFrequencyTrack(const FrequencyTrackRenderData& track, float t
         }
     }
 
-    nvgStrokeWidth(vg, thick + 1.0f);
-    nvgStrokeColor(vg, nvgRGBAf(r, g, b, 1.0f));
+    nvgStrokeWidth(vg, thick + 1.0);
+    nvgStrokeColor(vg, nvgRGBAf(r, g, b, 1.0));
     nvgStroke(vg);
 
-    nvgStrokeWidth(vg, 2.0f);
-    nvgStrokeColor(vg, nvgRGBAf(0, 0, 0, 1.0f));
+    nvgStrokeWidth(vg, 2.0);
+    nvgStrokeColor(vg, nvgRGBAf(0, 0, 0, 1.0));
     nvgStroke(vg);
 }
 
-void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float thick, float r, float g, float b)
+void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, double thick, double r, double g, double b)
 {
-    float xstep = (float) mWidth / (float) track.size();
+    double xstep = (double) mWidth / (double) track.size();
 
     for (int i = 0; i < track.size(); ++i) {
         const auto& point = track[i];
@@ -266,29 +266,29 @@ void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float thick
         if (point.has_value()) {
             const auto& formant = point.value();
 
-            float xp = i * xstep;
+            double xp = i * xstep;
 
-            //float y1 = frequencyToCoordinate(formant.frequency - formant.bandwidth / 4.0f);
-            //float y1p = mHeight - (y1 + 1.0f) / 2.0f * mHeight;
+            //double y1 = frequencyToCoordinate(formant.frequency - formant.bandwidth / 4.0);
+            //double y1p = mHeight - (y1 + 1.0) / 2.0 * mHeight;
 
-            //float y2 = frequencyToCoordinate(formant.frequency + formant.bandwidth / 4.0f);
-            //float y2p = mHeight - (y2 + 1.0f) / 2.0f * mHeight;
+            //double y2 = frequencyToCoordinate(formant.frequency + formant.bandwidth / 4.0);
+            //double y2p = mHeight - (y2 + 1.0) / 2.0 * mHeight;
 
-            float y = frequencyToCoordinate(formant.frequency);
-            float yp = mHeight - (y + 1.0) / 2.0f * mHeight;
+            double y = frequencyToCoordinate(formant.frequency);
+            double yp = mHeight - (y + 1.0) / 2.0 * mHeight;
 
-            float cx = xp + xstep / 2.0f;
-            //float cy = (y1p + y2p) / 2.0f;
-            float cy = yp;
-            float rx = xstep + 0.5f;
-            //float ry = std::max(fabsf(y1p - y2p) / 2.0f, 4.0f);
-            float ry = 8.0f;
+            double cx = xp + xstep / 2.0;
+            //double cy = (y1p + y2p) / 2.0;
+            double cy = yp;
+            double rx = xstep + 0.5;
+            //double ry = std::max(fabsf(y1p - y2p) / 2.0, 4.0);
+            double ry = 8.0;
 
             nvgBeginPath(vg);
             nvgEllipse(vg, cx, cy, rx, ry);
             nvgFillPaint(vg,
                     nvgRadialGradient(vg, cx, cy, ry / 4, ry,
-                        nvgRGBf(r, g, b), nvgRGBAf(r, g, b, 1.0f / 1800.0f)));
+                        nvgRGBf(r, g, b), nvgRGBAf(r, g, b, 1.0 / 1800.0)));
             nvgFill(vg);
         }
     }
@@ -297,7 +297,7 @@ void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float thick
     nvgLineCap(vg, NVG_ROUND);
     nvgLineJoin(vg, NVG_ROUND);
 
-    float prevYp;
+    double prevYp;
 
     for (int i = 0; i < track.size(); ++i) {
         const auto& point = track[i];
@@ -305,20 +305,20 @@ void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float thick
         if (point.has_value()) {
             const auto& formant = point.value();
 
-            float xp = i * xstep;
+            double xp = i * xstep;
 
-            float y = frequencyToCoordinate(formant.frequency);
-            float yp = mHeight - (y + 1.0f) / 2.0f * mHeight;
+            double y = frequencyToCoordinate(formant.frequency);
+            double yp = mHeight - (y + 1.0) / 2.0 * mHeight;
 
             if (i == 0 || !track[i - 1].has_value()) {
                 nvgMoveTo(vg, xp, yp);
             }
             else {
-                float xmid = xp - xstep / 2.0f;
-                float ymid = (prevYp + yp) / 2.0f;
+                double xmid = xp - xstep / 2.0;
+                double ymid = (prevYp + yp) / 2.0;
 
-                float cx1 = (xmid + xp - xstep) / 2;
-                float cx2 = (xmid + xp + xstep) / 2;
+                double cx1 = (xmid + xp - xstep) / 2;
+                double cx2 = (xmid + xp + xstep) / 2;
 
                 nvgQuadTo(vg, cx1, prevYp, xmid, ymid);
                 nvgQuadTo(vg, cx2, yp, xp, yp);
@@ -328,12 +328,12 @@ void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float thick
         }
     }
 
-    nvgStrokeWidth(vg, thick + 1.0f);
-    nvgStrokeColor(vg, nvgRGBAf(1, 1, 1, 0.5f));
+    nvgStrokeWidth(vg, thick + 1.0);
+    nvgStrokeColor(vg, nvgRGBAf(1, 1, 1, 0.5));
     nvgStroke(vg);
 
-    nvgStrokeWidth(vg, thick - 1.0f);
-    nvgStrokeColor(vg, nvgRGBAf(0, 0, 0, 1.0f));
+    nvgStrokeWidth(vg, thick - 1.0);
+    nvgStrokeColor(vg, nvgRGBAf(0, 0, 0, 1.0));
     nvgStroke(vg);*/
 
 }
@@ -341,11 +341,11 @@ void NanoVG::renderFormantTrack(const FormantTrackRenderData& track, float thick
 void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::Freetype::Font& minorFont)
 {
     FrequencyScale scale = getParameters()->getFrequencyScale();
-    float min = getParameters()->getMinFrequency();
-    float max = getParameters()->getMaxFrequency();
+    double min = getParameters()->getMinFrequency();
+    double max = getParameters()->getMaxFrequency();
 
-    constexpr int   tickLens[2]   = {5, 3};
-    constexpr float tickThicks[2] = {3, 2};
+    constexpr int    tickLens[2]   = {5, 3};
+    constexpr double tickThicks[2] = {3, 2};
 
     if (scale == FrequencyScale::Linear) {
 
@@ -354,12 +354,12 @@ void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::
 
         for (int val = lo; val <= hi; val += 100) {
             if (val >= min && val < max) {
-                float y = frequencyToCoordinate(val);
-                float yp = mHeight - (y + 1.0f) / 2.0f * mHeight;
+                double y = frequencyToCoordinate(val);
+                double yp = mHeight - (y + 1.0) / 2.0 * mHeight;
 
                 bool majorTick = (val % 1000 == 0);
                 int tickLen                       = tickLens[!majorTick];
-                float tickThick                   = tickThicks[!majorTick];
+                double tickThick                   = tickThicks[!majorTick];
                 Module::Freetype::Font *labelFont = majorTick ? &majorFont : &minorFont;
 
                 nvgBeginPath(vg);
@@ -379,18 +379,18 @@ void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::
         }
     }
     else {
-        float loLog = log10f(min);
-        float hiLog = log10f(max);
+        double loLog = log10f(min);
+        double hiLog = log10f(max);
         int loDecade = (int) floorf(loLog);
 
-        float val;
-        float startDecade = powf(10.0f, loDecade);
+        double val;
+        double startDecade = powf(10.0, loDecade);
             
-        float decade = startDecade;
-        float delta = hiLog - loLog, steps = fabsf(delta);
-        float step = delta >= 0 ? 10 : 0.1;
-        float rMin = std::min(min, max), rMax = std::max(min, max);
-        float start, end, sstep, mstep;
+        double decade = startDecade;
+        double delta = hiLog - loLog, steps = fabs(delta);
+        double step = delta >= 0 ? 10 : 0.1;
+        double rMin = std::min(min, max), rMax = std::max(min, max);
+        double start, end, sstep, mstep;
         
         decade = startDecade;
         if (delta > 0) {
@@ -428,13 +428,13 @@ void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::
             for (int f = start; f <= (int) end; f += mstep) {
                 val = decade * f / 10;
                 if (val >= rMin && val < rMax) {
-                    float y = frequencyToCoordinate(val);
-                    float yp = mHeight - (y + 1.0f) / 2.0f * mHeight;
+                    double y = frequencyToCoordinate(val);
+                    double yp = mHeight - (y + 1.0) / 2.0 * mHeight;
 
-                    bool majorTick = ((int) (f / 10.0f) == f / 10.0f);
+                    bool majorTick = ((int) (f / 10.0) == f / 10.0);
 
                     int tickLen                       = tickLens[!majorTick];
-                    float tickThick                   = tickThicks[!majorTick];
+                    double tickThick                   = tickThicks[!majorTick];
                     Module::Freetype::Font *labelFont = majorTick ? &majorFont : &minorFont;
 
                     nvgBeginPath(vg);
@@ -475,38 +475,38 @@ void NanoVG::renderFrequencyScaleBar(Module::Freetype::Font& majorFont, Module::
     }
 }
 
-float NanoVG::renderFrequencyCursor(float mx, float my)
+double NanoVG::renderFrequencyCursor(double mx, double my)
 {
-    float yp = my * mHeight;
+    double yp = my * mHeight;
     
     nvgBeginPath(vg);
     nvgMoveTo(vg, 0, yp);
     nvgLineTo(vg, mWidth, yp);
     nvgStrokeColor(vg, nvgRGBf(1, 1, 1));
-    nvgStrokeWidth(vg, 3.0f);
+    nvgStrokeWidth(vg, 3.0);
     nvgStroke(vg);
     
-    float y = 2.0f * (0.5f - my);
+    double y = 2.0 * (0.5 - my);
 
     return coordinateToFrequency(y);
 }
 
-int NanoVG::renderFrameCursor(float mx, float my, int count)
+int NanoVG::renderFrameCursor(double mx, double my, int count)
 {
     int frame = std::min<int>(std::max<int>(std::round(mx * count), 0), count - 1);
-    float xp = (float) (mWidth * frame) / (float) count;
+    double xp = (double) (mWidth * frame) / (double) count;
 
     nvgBeginPath(vg);
     nvgMoveTo(vg, xp, 0);
     nvgLineTo(vg, xp, mHeight);
     nvgStrokeColor(vg, nvgRGBf(1, 1, 1));
-    nvgStrokeWidth(vg, 3.0f);
+    nvgStrokeWidth(vg, 3.0);
     nvgStroke(vg);
 
     return frame;
 }
 
-void NanoVG::renderRoundedRect(float x, float y, float w, float h, float r, float g, float b, float a)
+void NanoVG::renderRoundedRect(double x, double y, double w, double h, double r, double g, double b, double a)
 {
     nvgBeginPath(vg);
     nvgRoundedRect(vg, x, y, w, h, 10.0);
@@ -514,7 +514,7 @@ void NanoVG::renderRoundedRect(float x, float y, float w, float h, float r, floa
     nvgFill(vg);
 }
 
-void NanoVG::renderSVG(const std::string& path, float dpi, float x, float y, float w, float h)
+void NanoVG::renderSVG(const std::string& path, double dpi, double x, double y, double w, double h)
 {
     int image;
 
@@ -544,11 +544,11 @@ void NanoVG::renderSVG(const std::string& path, float dpi, float x, float y, flo
     nvgRect(vg, x, y, w, h);
     nvgFillPaint(vg,
             nvgImagePattern(
-                vg, x, y, w, h, 0.0f, image, 1.0f));
+                vg, x, y, w, h, 0.0, image, 1.0));
     nvgFill(vg);
 }
 
-void NanoVG::renderText(Module::Freetype::Font& font, const std::string& text, int x0, int y0, float r, float g, float b)
+void NanoVG::renderText(Module::Freetype::Font& font, const std::string& text, int x0, int y0, double r, double g, double b)
 {
     if (!font.hasAttachment()) {
         font.setAttachment(new NvgUtils::FontAttachment(vg, font), [](void *p) { delete (NvgUtils::FontAttachment *) p; });
@@ -573,9 +573,9 @@ void NanoVG::renderText(Module::Freetype::Font& font, const std::string& text, i
 
         int image = fa->getImageFor(glyphRenderData.character);
         NVGpaint paint = nvgImagePattern(
-                vg, x, y, glyphRenderData.width, glyphRenderData.height, 0.0f, image, 1.0f);
+                vg, x, y, glyphRenderData.width, glyphRenderData.height, 0.0, image, 1.0);
 
-        paint.innerColor = nvgRGBAf(r, g, b, 1.0f);
+        paint.innerColor = nvgRGBAf(r, g, b, 1.0);
 
         nvgFillPaint(vg, paint);
         nvgFill(vg);
@@ -584,7 +584,7 @@ void NanoVG::renderText(Module::Freetype::Font& font, const std::string& text, i
     }
 }
 
-std::tuple<float, float, float, float> NanoVG::renderInputBox(Module::Freetype::Font& font, const std::string& content, int x, int y, int w, bool isFocused)
+std::tuple<double, double, double, double> NanoVG::renderInputBox(Module::Freetype::Font& font, const std::string& content, int x, int y, int w, bool isFocused)
 {
     int h = std::get<3>(font.queryTextSize("M")) + 10;
     
@@ -592,32 +592,32 @@ std::tuple<float, float, float, float> NanoVG::renderInputBox(Module::Freetype::
     NVGcolor endClr   = isFocused ? nvgRGBA( 32,  32,  32,  32) : nvgRGBA( 32,  32,  32,  32);
 
     NVGpaint bg;
-    bg = nvgBoxGradient(vg, x+1,y+1+1.5f, w-2,h-2, 3,4, startClr, endClr);
+    bg = nvgBoxGradient(vg, x+1,y+1+1.5, w-2,h-2, 3,4, startClr, endClr);
     nvgBeginPath(vg);
     nvgRoundedRect(vg, x+1,y+1, w-2, h-2, 4-1);
     nvgFillPaint(vg, bg);
     nvgFill(vg);
 
     nvgBeginPath(vg);
-    nvgRoundedRect(vg, x+0.5f,y+0.5f, w-1,h-1, 4-0.5f);
+    nvgRoundedRect(vg, x+0.5,y+0.5, w-1,h-1, 4-0.5);
     nvgStrokeColor(vg, nvgRGBA(255,255,255,48));
     nvgStroke(vg);
 
-    renderText(font, content, x + 5, y + 5, 1.0f, 1.0f, 1.0f);
+    renderText(font, content, x + 5, y + 5, 1.0, 1.0, 1.0);
 
     return {
-        (float) x,
-        (float) y,
-        (float) w,
-        (float) h,
+        (double) x,
+        (double) y,
+        (double) w,
+        (double) h,
     };
 }
 
-std::pair<float, float> NanoVG::convertNormCoord(float x, float y)
+std::pair<double, double> NanoVG::convertNormCoord(double x, double y)
 {
     return {
-        (x + 1.0f) / 2.0f * mWidth,
-        mHeight - (y + 1.0f) / 2.0f * mHeight,
+        (x + 1.0) / 2.0 * mWidth,
+        mHeight - (y + 1.0) / 2.0 * mHeight,
     };
 }
 

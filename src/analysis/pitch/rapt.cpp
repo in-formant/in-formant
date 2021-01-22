@@ -33,7 +33,7 @@ PitchResult Pitch::RAPT::solve(const double *data, int length, int sampleRate)
 {
     double f0 = computeFrame(data, length, sampleRate);
 
-    if (f0 != 0.0f) {
+    if (f0 != 0.0) {
         return {
             .pitch = f0,
             .voiced = true,
@@ -41,7 +41,7 @@ PitchResult Pitch::RAPT::solve(const double *data, int length, int sampleRate)
     }
     else {
         return {
-            .pitch = 0.0f,
+            .pitch = 0.0,
             .voiced = false,
         };
     }
@@ -98,12 +98,12 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
 
     const double beta = lag_wt / (Fs / F0min);
     
-    const int J = std::round(0.03f * Fs);
+    const int J = std::round(0.03 * Fs);
 
     std::vector<double> s(data, data + length);
     
     if (s.size() < n + K) {
-        s.resize(n + K, 0.0f);
+        s.resize(n + K, 0.0);
     }
 
     subtractReferenceMean(s, n, K);
@@ -111,7 +111,7 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
     auto dss = downsampleSignal(s, Fs, Fds, &resampler);
     
     if (dss.size() < dsn + dsK2) {
-        dss.resize(dsn + dsK2, 0.0f);
+        dss.resize(dsn + dsK2, 0.0);
     }
     
     auto dsNCCF = calculateDownsampledNCCF(dss, dsn, dsK1, dsK2);
@@ -128,10 +128,10 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
     if (frames.size() != nbFrames) {
         Frame defaultFrame = {
             .cands = { { .localCost = vo_bias, .voiced = false } },
-            .rms = 1e-10f,
-            .rr = 1.0f,
-            .ar = { 1.0f },
-            .S = -0.25f,
+            .rms = 1e-10,
+            .rr = 1.0,
+            .ar = { 1.0 },
+            .S = -0.25,
         };
         frames.resize(nbFrames, defaultFrame);
     }
@@ -153,11 +153,11 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
         // Calculate AR.
         double gain;
         frm.ar = lpc.solve(s.data(), s.size(), lpcOrder, &gain);
-        frm.ar.insert(frm.ar.begin(), 1.0f);
-        frm.S = 0.2f / (expDistItakura(frm.ar, frames.back().ar) - 0.8f);
+        frm.ar.insert(frm.ar.begin(), 1.0);
+        frm.S = 0.2 / (expDistItakura(frm.ar, frames.back().ar) - 0.8);
     }
 
-    double pitch = 0.0f;
+    double pitch = 0.0;
     
     if (frm.cands[0].voiced) {
         double Linterp = std::get<0>(parabolicInterpolation(nccf, frm.cands[0].L));
@@ -207,7 +207,7 @@ std::vector<double> RAPT::computePath()
                     row[k] = vtran_c + vtr_s_c * Si + vtr_a_c / rri;
                 }
                 else { // Unvoiced to unvoiced
-                    row[k] = 0.0f;
+                    row[k] = 0.0;
                 }
             }
         }
@@ -217,7 +217,7 @@ std::vector<double> RAPT::computePath()
     static std::vector<std::vector<int>> ks;
     
     D.resize(nbFrames + 1);
-    D[0].resize(2, 0.0f);
+    D[0].resize(2, 0.0);
 
     ks.resize(nbFrames);
 
@@ -229,7 +229,7 @@ std::vector<double> RAPT::computePath()
             double min = HUGE_VALF;
             int kmin;
             for (int k = 0; k < D[i].size(); ++k) {
-                double val = D[i][k] + i > 0 ? transitionMatrices[i][j][k] : 0.0f;
+                double val = D[i][k] + i > 0 ? transitionMatrices[i][j][k] : 0.0;
                 if (val < min) {
                     min = val;
                     kmin = k;
@@ -253,12 +253,12 @@ std::vector<double> RAPT::computePath()
 
     int k = indices[0];
 
-    pitches[0] = frames[0].cands[k].voiced ? frames[0].Fs / frames[0].cands[k].L : 0.0f;
+    pitches[0] = frames[0].cands[k].voiced ? frames[0].Fs / frames[0].cands[k].L : 0.0;
 
     for (int i = 1; i < nbFrames; ++i) {
         k = ks[i][k];
         
-        pitches[i] = frames[i].cands[k].voiced ? frames[i].Fs / frames[i].cands[k].L : 0.0f;
+        pitches[i] = frames[i].cands[k].voiced ? frames[i].Fs / frames[i].cands[k].L : 0.0;
     }
 
     return pitches;
@@ -268,7 +268,7 @@ std::vector<double> RAPT::computePath()
 
 void subtractReferenceMean(std::vector<double>& s, int n, int K)
 {
-    double mu = 0.0f;
+    double mu = 0.0;
     for (int j = 0; j < n; ++j)
         mu += s[j];
     mu /= (double) n;
@@ -309,7 +309,7 @@ std::vector<double> downsampleSignal(const std::vector<double>& s, const double 
 
 std::vector<double> calculateDownsampledNCCF(const std::vector<double>& dss, const int dsn, const int dsK1, const int dsK2)
 {
-    std::vector<double> dsNCCF(dsK2 + 1, 0.0f);
+    std::vector<double> dsNCCF(dsK2 + 1, 0.0);
 
     double dse0;
     for (int l = 0; l < dsn; ++l) {
@@ -318,7 +318,7 @@ std::vector<double> calculateDownsampledNCCF(const std::vector<double>& dss, con
 
     for (int k = dsK1; k <= dsK2; ++k) {
         double p, q;
-        p = q = 0.0f;
+        p = q = 0.0;
 
         for (int j = 0; j < dsn; ++j) {
             p += dss[j] * dss[j + k];
@@ -390,12 +390,12 @@ std::vector<double> calculateOriginalNCCF(const std::vector<double>& s, const do
         }
     }
     
-    std::vector<double> nccf(K + 1, 0.0f);
+    std::vector<double> nccf(K + 1, 0.0);
 
     double e0;
     {
         int j = 0;
-        double v = 0.0f;
+        double v = 0.0;
         for (int l = j; l < j + n; ++l) {
             v += s[l] * s[l];
         }
@@ -404,7 +404,7 @@ std::vector<double> calculateOriginalNCCF(const std::vector<double>& s, const do
 
     for (const int& k : lagsToCalculate) {
         double p, q;
-        p = q = 0.0f;
+        p = q = 0.0;
 
         for (int j = 0; j < n; ++j) {
             p += s[j] * s[j + k];
@@ -429,7 +429,7 @@ std::vector<RAPT::Cand> createCosts(const std::vector<std::pair<double, double>>
     int i = 0;
     for (const auto& [k, y] : peaks) {
         costs[i] = {
-            .localCost = 1.0f - y * (1.0f - beta * k),
+            .localCost = 1.0 - y * (1.0 - beta * k),
             .voiced = true,
             .L = k,
             .C = y,
@@ -437,7 +437,7 @@ std::vector<RAPT::Cand> createCosts(const std::vector<std::pair<double, double>>
         i++;
     }
 
-    double maxCij = 0.0f;
+    double maxCij = 0.0;
     
     if (peaks.size() > 0) {
         maxCij = std::get<1>(
@@ -479,17 +479,17 @@ double expDistItakura(const std::vector<double>& ar1, const std::vector<double>&
     double denom = (ar1[0] * ar1[0]) / (ar2[0] * ar2[0]);
 
     auto m2 = lpcar2ra(ar2);
-    m2[0] /= 2.0f;
+    m2[0] /= 2.0;
     
     auto rr1 = lpcar2rr(ar1);
 
-    double numer = 0.0f;
+    double numer = 0.0;
 
     for (int i = 0; i < m2.size(); ++i) {
         numer += m2[i] * rr1[i];
     }
 
-    return 2.0f * numer / denom;
+    return 2.0 * numer / denom;
 }
 
 std::vector<double> lpcar2ra(const std::vector<double>& ar)
@@ -499,7 +499,7 @@ std::vector<double> lpcar2ra(const std::vector<double>& ar)
     std::vector<double> ra(p);
 
     for (int i = 0; i < p; ++i) {
-        ra[i] = 0.0f;
+        ra[i] = 0.0;
         for (int j = 0; j < p - i; ++j) {
             ra[i] += ar[j] * ar[i + j];
         }
@@ -510,7 +510,7 @@ std::vector<double> lpcar2ra(const std::vector<double>& ar)
 
 std::vector<double> lpcar2rr(const std::vector<double>& ar)
 {
-    double k = 1.0f / (ar[0] * ar[0]);
+    double k = 1.0 / (ar[0] * ar[0]);
 
     if (ar.size() == 1) {
         return { k };
@@ -532,7 +532,7 @@ std::vector<double> lpcar2rf(const std::vector<double>& ar)
     
     for (int j = p - 2; j >= 1; --j) {
         double k = rf[j + 1];
-        double d = 1.0f / (1.0f - k * k); 
+        double d = 1.0 / (1.0 - k * k); 
         
         std::vector<double> temp = rf;
         for (int i = 1; i <= j; ++i) {
@@ -553,11 +553,11 @@ std::vector<double> lpcrf2rr(const std::vector<double>& rf)
         std::vector<double> a;
         a.push_back(rf[1]);
 
-        std::vector<double> rr(p1, 0.0f);
-        rr[0] = 1.0f;
+        std::vector<double> rr(p1, 0.0);
+        rr[0] = 1.0;
         rr[1] = -a[0];
 
-        double e = a[0] * a[0] - 1.0f;
+        double e = a[0] * a[0] - 1.0;
         for (int n = 1; n < p0; ++n) {
             double k = rf[n + 1];
             rr[n + 1] = k * e;
@@ -568,14 +568,14 @@ std::vector<double> lpcrf2rr(const std::vector<double>& rf)
                 a[j] += k * a[n - 1 - j];
             }
             a.push_back(k);
-            e *= (1.0f - k * k);
+            e *= (1.0 - k * k);
         }
         
         double r0 = rr[0];
         for (int i = 1; i < a.size(); ++i) {
             r0 += rr[i] * a[i - 1];
         }
-        r0 = 1.0f / r0;
+        r0 = 1.0 / r0;
 
         for (int i = 0; i < rr.size(); ++i) {
             rr[i] *= r0;
@@ -584,6 +584,6 @@ std::vector<double> lpcrf2rr(const std::vector<double>& rf)
         return rr;
     }
     else {
-        return { 1.0f };
+        return { 1.0 };
     }
 }

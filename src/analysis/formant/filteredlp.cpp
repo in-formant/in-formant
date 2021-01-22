@@ -19,7 +19,7 @@ FormantResult FilteredLP::solve(const double *lpc, int lpcOrder, double sampleRa
     static Analysis::ReReFFT fft(nfft, FFTW_R2HC);
 
     std::vector<double> polynomial(lpcOrder + 1);
-    polynomial[0] = 1.0f;
+    polynomial[0] = 1.0;
     std::copy(lpc, lpc + lpcOrder, std::next(polynomial.begin()));
 
     std::vector<std::complex<double>> roots = findRoots(polynomial);
@@ -39,9 +39,9 @@ FormantResult FilteredLP::solve(const double *lpc, int lpcOrder, double sampleRa
         double r = std::abs(z);
         double phi = std::arg(z);
 
-        if (r >= 0.6f && r < 1.0f) {
+        if (r >= 0.6 && r < 1.0) {
             FormantData formant = calculateFormant(r, phi, sampleRate);
-            if (formant.frequency > 50.0f && formant.frequency < sampleRate / 2 - 50.0f) {
+            if (formant.frequency > 50.0 && formant.frequency < sampleRate / 2 - 50.0) {
                 pickedRoots.push_back({
                     .d = formant,
                     .r = z,
@@ -109,9 +109,9 @@ FormantResult FilteredLP::solve(const double *lpc, int lpcOrder, double sampleRa
         double r = std::abs(z);
         double phi = std::arg(z);
 
-        if (r >= 0.6f && r < 1.0f) {
+        if (r >= 0.6 && r < 1.0) {
             FormantData formant = calculateFormant(r, phi, sampleRate);
-            if (formant.frequency > 50.0f && formant.frequency < sampleRate / 2 - 50.0f) {
+            if (formant.frequency > 50.0 && formant.frequency < sampleRate / 2 - 50.0) {
                 result.formants.push_back(std::move(formant));
             }
         }

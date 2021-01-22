@@ -23,11 +23,11 @@ PitchResult AMDF_M::solve(const double *data, int length, int sampleRate)
     // Calculate the AMDF.
     mAMDF.resize(maxShift);
     
-    double Vmax = 0.0f;
+    double Vmax = 0.0;
     double Vmin = std::numeric_limits<double>::max();
 
     for (int i = 0; i < maxShift; ++i) {
-        double sum = 0.0f;
+        double sum = 0.0;
 
         for (int j = 0; j < maxShift - i; ++j) {
             sum += fabs(data[j] - data[i + j]);
@@ -87,12 +87,12 @@ PitchResult AMDF_M::solve(const double *data, int length, int sampleRate)
             maxPeriod - minPeriod + 1);
 
     if (maxPositions.empty()) {
-        return {.pitch = 0.0f, .voiced = false};
+        return {.pitch = 0.0, .voiced = false};
     }
 
     const double actualCutoff = mAlpha * m1bACF[0];
 
-    double pitch = 0.0f;
+    double pitch = 0.0;
 
     for (const int pos : maxPositions) {
         int i = minPeriod + pos;
@@ -105,6 +105,6 @@ PitchResult AMDF_M::solve(const double *data, int length, int sampleRate)
         }
     }
 
-    return pitch > 0.0f ? PitchResult {.pitch = pitch, .voiced = true}
-                        : PitchResult {.pitch = 0.0f, .voiced = false};
+    return pitch > 0.0 ? PitchResult {.pitch = pitch, .voiced = true}
+                       : PitchResult {.pitch = 0.0, .voiced = false};
 }

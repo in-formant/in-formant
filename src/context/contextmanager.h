@@ -1,179 +1,82 @@
 #ifndef MAIN_CONTEXT_MANAGER_H
 #define MAIN_CONTEXT_MANAGER_H
 
-#include "context.h"
-#include "../nodes/nodes.h"
+#include "../analysis/analysis.h"
 #include "../modules/app/app.h"
-
-#include <unordered_map>
-#include <memory>
-#include <vector>
-#include <QObject>
+#include "audiocontext.h"
+#include "rendercontext.h"
+#include "guicontext.h"
+#include "datastore.h"
+#include "views/views.h"
+#include "config.h"
+#include <atomic>
 
 namespace Main {
 
     using namespace Module;
 
-    struct RenderingContextInfo;
-    struct SettingsUIField;
+    using dur_ms = std::chrono::milliseconds;
 
-    class ContextManager : public QObject {
-        Q_OBJECT
+    extern int argc;
+    extern char **argv;
 
+    class ContextManager {
     public:
-        ContextManager(std::unique_ptr<Context>&& ctx);
+        ContextManager(
+                int captureSampleRate,
+                const dur_ms &captureDuration,
+                const dur_ms &playbackBlockMinDuration,
+                const dur_ms &playbackBlockMaxDuration,
+                const dur_ms &playbackDuration,
+                int playbackSampleRate);
 
-        void initialize();
-        void start();
-        void terminate();
-
-#if defined(ANDROID) || defined(__ANDROID__)
-        void selectView(const std::string& name);
-#endif
-
-        void mainBody(bool processEvents = true);
-    
-    public slots:
-        void requestClose();
-        void togglePaused();
-        void setDisplayLpSpec(bool flag);
-        void setUseFrameCursor(bool flag);
-        void setDisplayFormantTracks(bool flag);
-        void setDisplayPitchTrack(bool flag);
+        int exec();
 
     private:
-        void loadSettings();
+        void createViews();
+        void loadConfig();
+        void updatePipeline();
+        
+        void startAnalysisThread();
+        void analysisThreadLoop();
+        void stopAnalysisThread();
 
-        void updateRendererTargetSize(RenderingContext& rctx);
-        void updateRendererParameters(RenderingContext& rctx);
-        void updateAllRendererParameters();
-    
-        void createRenderingContexts(const std::initializer_list<RenderingContextInfo>& infos);
+        void setView(const std::string &name);
 
-        void initSettingsUI();
-        void initSynthUI();
+        std::unique_ptr<Audio::Buffer> mCaptureBuffer;
+        std::unique_ptr<Audio::Queue> mPlaybackQueue;
 
-        void updateNodeParameters();
-        void updateWithNextFrame();
+        std::unique_ptr<App::Pipeline> mPipeline;
+        std::unique_ptr<App::Synthesizer> mSynthesizer;
 
-        void scrollSpectrogram(RenderingContext& rctx);
+        std::unique_ptr<Config> mConfig;
 
-        void renderSpectrogram(RenderingContext& rctx);
-        void renderFFTSpectrum(RenderingContext& rctx);
-        void renderOscilloscope(RenderingContext& rctx);
-        void renderSettings(RenderingContext& rctx);
+        std::unique_ptr<Analysis::PitchSolver> mPitchSolver;
+        std::unique_ptr<Analysis::LinpredSolver> mLinpredSolver;
+        std::unique_ptr<Analysis::FormantSolver> mFormantSolver;
+        std::unique_ptr<Analysis::InvglotSolver> mInvglotSolver;
+        
+        std::unique_ptr<DataStore> mDataStore;
 
-        void eventSpectrogram(RenderingContext& rctx);
-        void eventFFTSpectrum(RenderingContext& rctx);
-        void eventOscilloscope(RenderingContext& rctx);
-        void eventSettings(RenderingContext& rctx);
+        std::unique_ptr<AudioContext> mAudioContext;
+        std::unique_ptr<RenderContext> mRenderContext;
+        std::unique_ptr<GuiContext> mGuiContext;
 
-#if ! ( defined(__EMSCRIPTEN__) || defined(ANDROID) || defined(__ANDROID__) )
-        void renderSynth(RenderingContext& rctx);
-        void eventSynth(RenderingContext& rctx);
-#endif
+        std::map<std::string, std::unique_ptr<AbstractView>> mViews;
 
-#if defined(ANDROID) || defined(__ANDROID__)
-        void initAndroidUI();
-        void renderAndroidCommonBefore(RenderingContext& rctx);
-        void renderAndroidCommonAfter(RenderingContext& rctx);
-        void eventAndroidCommon(RenderingContext& rctx);
-#endif
+        std::thread mAnalysisThread;
+        std::atomic_bool mAnalysisRunning;
 
-#ifdef __EMSCRIPTEN__
-        void changeModuleCanvas(const std::string& id);
-        void saveModuleCtx(const std::string& id);
-#endif
+        int mViewMinFrequency;
+        int mViewMaxFrequency;
+        int mViewFftSize;
 
-        std::unique_ptr<Context> ctx;
-
-        Freetype::FontFile *primaryFont;
-
-        App::Pipeline pipeline;
-        App::Synthesizer synth;
-
-        std::map<std::string, RenderingContextInfo> renderingContextInfos;
-        bool endLoop;
-        bool isPaused;
-        bool displayLpSpec;
-        bool useFrameCursor;
-        bool isNoiseOn;
-        bool displayFormantTracks;
-        bool displayPitchTrack;
-        bool displayLegends;
-
-#if defined(ANDROID) || defined(__ANDROID__)
-        std::string selectedViewName;
-#endif
-
-        float outputGain;
-            
-        int analysisDuration;
-        int analysisMaxFrequency;
-
-        int viewMinFrequency;
-        int viewMaxFrequency;
-        int viewMinGain;
-        int viewMaxGain;
-        Renderer::FrequencyScale viewFrequencyScale;
-
-        int fftLength;
-        int fftMaxFrequency;
-
-        int preEmphasisFrequency;
-        int pitchAndLpSampleRate;
-        int linPredOrder;
-        int linPredOrderOffset;
-
-        int spectrogramCount;
-
-        int numFormantsToRender;
-        std::vector<std::array<float, 3>> formantColors;
-
-        int uiFontSize;
-
-        float specMX, specMY;
-
-        std::vector<SettingsUIField> mSettingFields;
-        std::vector<SettingsUIField> mSynthFields;
-
-        std::deque<std::vector<std::array<float, 2>>>  spectrogramTrack;
-        std::deque<std::vector<std::array<float, 2>>>  lpSpecTrack;
-        std::deque<float>                              pitchTrack;
-        std::deque<std::vector<Analysis::FormantData>> formantTrack;
-        std::deque<std::vector<float>>                 soundTrack;
-        std::deque<std::vector<float>>                 glotTrack;
-        std::deque<std::vector<float>>                 glotInstTrack;
-
-        std::chrono::microseconds durProcessing;
-        std::chrono::microseconds durRendering;
-        std::chrono::microseconds durLoop;
+        int mAnalysisMaxFrequency;
+        int mAnalysisLpOffset;
+        int mAnalysisLpOrder;
+        int mAnalysisPitchSampleRate;
     };
 
-    struct RenderingContextInfo {
-        using CallbackType = void (ContextManager::*)(RenderingContext&);
-
-        std::string  name;
-        CallbackType renderCallback; 
-        CallbackType eventCallback;
-
-#ifdef __EMSCRIPTEN__
-        std::string  canvasId;
-#endif
-    };
-    
-    struct SettingsUIField {
-        std::string labelText;
-        float min, max;
-        std::function<float ()>       value;
-        std::function<void (float)>   update;
-        std::function<std::string ()> barText;
-        int x, y, w, h;
-        bool isFocused;
-    };
-    
 }
-
-#define FONT(font, size, rctx) ((font)->with((size), (rctx).renderer->getContextNumber(), (rctx).target.get()))
 
 #endif // MAIN_CONTEXT_MANAGER_H
