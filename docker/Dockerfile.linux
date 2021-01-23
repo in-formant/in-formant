@@ -54,7 +54,6 @@ RUN chmod +x qt-unified-linux-x64-4.0.1-online.run && \
             --email $QT_EMAIL \
             --pw $QT_PW \
             --confirm-command \
-            --set-temp-repository https://master.qt.io/online/qtsdkrepository/linux_x64/desktop/qt5_51210,https://master.qt.io/online/qtsdkrepository/linux_x64/desktop/qt5_51210_src_doc_examples,https://master.qt.io/online/qtsdkrepository/linux_x64/desktop/tools_generic,https://master.qt.io/online/qtsdkrepository/linux_x64/desktop/tools_qtcreator,https://master.qt.io/online/qtsdkrepository/linux_x64/desktop/licenses \
             qt.qt5.51210.gcc_64 \
         && \
         rm -f ~/.local/share/Qt/qtlicenses.ini ~/.local/share/Qt/qtaccount.ini
@@ -102,17 +101,19 @@ RUN cd fftw-$ver && \
         cd build && \
         ../configure --enable-shared --disable-static --prefix=/usr/local && \
         make -j$(nproc) && \
-        make install 
+        make install
 
-# Install recent GL headers
-ENV ver=2.1.0
-RUN wget "https://downloads.sourceforge.net/project/glew/glew/2.1.0/glew-2.1.0.tgz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fglew%2Ffiles%2Fglew%2F2.1.0%2Fglew-2.1.0.tgz%2Fdownload%3Fuse_mirror%3Dautoselect&ts=1610313377&use_mirror=autoselect" -O glew.tgz && \
-        tar -xvf glew.tgz
-RUN cd glew-$ver && \
-        mkdir -p /usr/local/include && cp -r include/* /usr/local/include && \
-        mkdir -p /usr/local/src && cp src/glew.c /usr/local/src
 RUN apt-get update -y && \
         apt-get install -y mesa-common-dev freeglut3-dev
+
+RUN wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -O /usr/bin/linuxdeploy && \
+        chmod 755 /usr/bin/linuxdeploy
+
+RUN wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage -O /usr/bin/linuxdeploy-plugin-qt && \
+        chmod 755 /usr/bin/linuxdeploy-plugin-qt
+
+RUN apt-get update -y && apt-get install -y fuse libegl1-mesa
+RUN rm -rf /dockerbuild
 
 CMD cd /build && \
         export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64 && \

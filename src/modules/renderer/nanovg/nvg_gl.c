@@ -8,7 +8,11 @@
 #    include <GLES3/gl3.h>
 #    define NANOVG_GLES3_IMPLEMENTATION
 #  else
-#    include <GL/gl.h>
+#    ifdef _WIN32
+#      include <GL/glew.h>
+#    else
+#      include <GL/gl.h>
+#    endif
 #    define NANOVG_GL3_IMPLEMENTATION
 #  endif
 #  include <nanovg_gl.h>

@@ -88,7 +88,7 @@ AudioContext::AudioContext(Audio::Backend type, Audio::Buffer *captureBuffer, Au
 #endif
 #ifdef AUDIO_USE_PORTAUDIO
     case Audio::Backend::PortAudio:
-        mAudio = std::make_unique<Audio::Pulse>();
+        mAudio = std::make_unique<Audio::PortAudio>();
         break;
 #endif
 #ifdef AUDIO_USE_OBOE

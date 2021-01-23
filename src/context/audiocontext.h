@@ -2,6 +2,7 @@
 #define MAIN_AUDIO_CONTEXT_H
 
 #include "../modules/audio/audio.h"
+#include <memory>
 
 namespace Main {
 

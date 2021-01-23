@@ -2,20 +2,20 @@
 
 set -e
 
-tmp=/speech-analysis
+tmp=/InFormant
 
 mkdir -p $tmp
 
-cp -v /build/speech-analysis.exe $tmp
+GCC_DLL_DIR=/usr/lib/gcc/$HOST/9.3-posix
 
-$MXE/tools/copydlldeps.sh \
-        --infile /build/speech-analysis.exe \
-        --destdir $tmp \
-        --recursivesrcdir $MXE/usr/${cross::-1} \
-        --recursivesrcdir /build/freetype \
-        --objdump $MXE/usr/bin/${cross}objdump \
-        --copy
-cp -v /src/Montserrat.otf $tmp
+touch $GCC_DLL_DIR/g++.exe
+chmod +x $GCC_DLL_DIR/g++.exe
+
+export PATH=/usr/$HOST/qt5/bin:$GCC_DLL_DIR:$PATH
+
+/usr/$HOST/qt5/bin/windeployqt /build/in-formant.exe --dir $tmp --qmldir /usr/$HOST/qt5/qml
+
+cp /src/Montserrat.otf $tmp/Montserrat.otf
 
 cd /dist
-zip -r speech-analysis-$target.zip $tmp
+zip -r InFormant-win32.zip $tmp

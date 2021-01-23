@@ -364,9 +364,10 @@ if(RENDERER_USE_NVG)
         find_package(OpenGL REQUIRED)
         target_include_directories(in-formant SYSTEM PRIVATE ${OPENGL_INCLUDE_DIRS})
         target_link_libraries(in-formant PRIVATE ${OPENGL_LIBRARIES})
-
-        #target_sources(in-formant PRIVATE $ENV{GLEW_SOURCE_FILE})
-        #target_compile_definitions(in-formant PRIVATE -DGLEW_STATIC -DGLEW_NO_GLU)
+        if(WIN32)
+            target_sources(in-formant PRIVATE /usr/$ENV{HOST}/glew.c)
+            target_compile_definitions(in-formant PRIVATE -DGLEW_STATIC=1)
+        endif()
     endif()
 endif()
 
@@ -426,4 +427,3 @@ if(WIN32)
     target_link_libraries(in-formant PRIVATE ntdll dbghelp)
 endif()
 
-target_compile_definitions(in-formant PRIVATE -DRESAMPLER_QUALITY=${RESAMPLER_QUALITY})

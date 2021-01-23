@@ -5,4 +5,4 @@ Exec=in-formant
 Name=InFormant
 Comment=Real-time formant tracking and voice analysis software
 Icon=in-formant
-Categories=Utility;Audio;Science;
+Categories=AudioVideo;Audio

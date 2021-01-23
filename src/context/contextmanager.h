@@ -10,6 +10,7 @@
 #include "views/views.h"
 #include "config.h"
 #include <atomic>
+#include <thread>
 
 namespace Main {
 

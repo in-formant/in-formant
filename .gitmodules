@@ -13,3 +13,6 @@
 [submodule "external/tomlplusplus"]
 	path = external/tomlplusplus
 	url = https://github.com/marzer/tomlplusplus
+[submodule "docker/windeployqt"]
+	path = docker/windeployqt
+	url = https://github.com/clo-yunhee/windeployqt
