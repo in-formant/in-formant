@@ -1,8 +1,7 @@
 #ifndef FIXED_SIZE_VECTOR_H
 #define FIXED_SIZE_VECTOR_H
 
-#include <iterator>
-#include <vector>
+#include "rpcxx.h"
 #include <mutex>
 
 template<typename T>
@@ -19,7 +18,7 @@ public:
     T back();
     T operator[] (int index);
     
-    std::vector<T> tail(int count);
+    rpm::vector<T> tail(int count);
 
     void resize(int size);
 
@@ -30,7 +29,7 @@ private:
     inline int logicalIndexToPhysical(int index);
 
     std::mutex mMutex;
-    std::vector<T> mData;
+    rpm::vector<T> mData;
     T mDefaultValue;
     int mSize;
     int mStart;

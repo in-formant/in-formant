@@ -4,18 +4,14 @@ using namespace Main;
 
 DataStore::DataStore()
     : mTrackLength(0),
-      mCatchupCount(0)
+      mCatchupCount(1),
+      mTime(0)
 {
 }
 
 void DataStore::setTrackLength(int trackLength)
 {
-    mSoundSpectrumTrack.resize(trackLength);
-    mLpSpectrumTrack.resize(trackLength);
-    mPitchTrack.resize(trackLength);
-    mFormantTrack.resize(trackLength);
     mSoundTrack.resize(trackLength);
-    mGifTrack.resize(trackLength);
     mTrackLength = trackLength;
 }
 
@@ -49,32 +45,49 @@ void DataStore::endRead()
     mMutex.unlock_shared();
 }
 
-FixedSizeVector<std::vector<std::array<double, 2>>>& DataStore::getSoundSpectrumTrack()
-{
-    return mSoundSpectrumTrack;
-}
-
-FixedSizeVector<std::vector<std::array<double, 2>>>& DataStore::getLpSpectrumTrack()
-{
-    return mLpSpectrumTrack;
-}
-
-FixedSizeVector<double>& DataStore::getPitchTrack()
-{
-    return mPitchTrack;
-}
-
-FixedSizeVector<std::vector<Analysis::FormantData>>& DataStore::getFormantTrack()
-{
-    return mFormantTrack;
-}
-
-FixedSizeVector<std::vector<double>>& DataStore::getSoundTrack()
+FixedSizeVector<rpm::vector<double>>& DataStore::getSoundTrack()
 {
     return mSoundTrack;
 }
 
-FixedSizeVector<std::vector<double>>& DataStore::getGifTrack()
+double DataStore::getTime() const
 {
-    return mGifTrack;
+    return mTime;
 }
+
+void DataStore::setTime(double t)
+{
+    mTime = t;
+}
+
+std::optional<gaborator::analyzer<double>>& DataStore::getSpectrogramAnalyzer()
+{
+    return mSpectrogramAnalyzer;
+}
+
+std::optional<gaborator::coefs<double>>& DataStore::getSpectrogramCoefs()
+{
+    return mSpectrogramCoefs;
+}
+
+TimeTrack<double>& DataStore::getPitchTrack()
+{
+    return mPitchTrack;
+}
+
+TimeTrack<double>& DataStore::getFormantTrack(int i)
+{
+    return mFormantTracks.at(i);
+}
+
+int DataStore::getFormantTrackCount() const
+{
+    return mFormantTracks.size();
+}
+
+void DataStore::setFormantTrackCount(int n)
+{
+    mFormantTracks.resize(n);
+}
+
+

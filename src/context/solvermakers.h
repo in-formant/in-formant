@@ -15,6 +15,7 @@ namespace Main {
     
     enum class LinpredAlgorithm : int64_t {
         Autocorr,
+        Covar,
         Burg,
     };
 
@@ -23,6 +24,7 @@ namespace Main {
     enum class FormantAlgorithm : int64_t {
         Simple,
         Filtered,
+        Deep,
     };
 
     Analysis::FormantSolver *makeFormantSolver(FormantAlgorithm alg);

@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(nanovg)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -D_CRT_SECURE_NO_WARNINGS")
-
 set(HEADERS
         src/fontstash.h
         src/nanovg.h
@@ -14,15 +12,21 @@ set(HEADERS
 set(SOURCES
         src/nanovg.c)
 
-#[[ Future support for Metal render
-if(APPLE)
-    list(APPEND SOURCES
-        src/nanovg_mtl.m
-        src/nanovg_mtl_shaders.metal)
-endif()
-]]
-
 add_library(nanovg STATIC ${HEADERS} ${SOURCES})
 
-install(FILES $<TARGET_FILE:nanovg> DESTINATION lib)
-install(FILES ${HEADERS}            DESTINATION include)
+target_include_directories(nanovg INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+if(SYSTEM_DARWIN)
+    string(REPLACE gcc clang CMAKE_C_COMPILER "${CMAKE_C_COMPILER}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -x objective-c -fobjc-arc")
+    target_sources(nanovg PRIVATE src/nanovg_mtl.h src/nanovg_mtl.m)
+    find_package(Qt5Gui REQUIRED)
+    target_link_libraries(nanovg
+        PUBLIC
+        Qt5::GuiPrivate
+        "-framework Foundation"
+        "-framework Metal"
+        "-framework QuartzCore"
+        /osxcross/build/compiler-rt/compiler-rt/build/lib/darwin/libclang_rt.osx.a
+    )
+endif()

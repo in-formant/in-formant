@@ -1,6 +1,5 @@
 #include "wavelet.h"
 #include "coeffs.h"
-#include "../../modules/math/constants.h"
 #include <algorithm>
 #include <stdexcept>
 

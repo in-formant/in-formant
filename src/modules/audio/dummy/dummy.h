@@ -16,8 +16,8 @@ namespace Module::Audio {
 
         void refreshDevices() override;
 
-        const std::vector<Device>& getCaptureDevices() const override;
-        const std::vector<Device>& getPlaybackDevices() const override;
+        const rpm::vector<Device>& getCaptureDevices() const override;
+        const rpm::vector<Device>& getPlaybackDevices() const override;
 
         const Device& getDefaultCaptureDevice() const override;
         const Device& getDefaultPlaybackDevice() const override;
@@ -37,8 +37,8 @@ namespace Module::Audio {
 
     private:
         static constexpr int dummyBufferLength = 256;
-        static std::vector<Device> captureDevices;
-        static std::vector<Device> playbackDevices;
+        static rpm::vector<Device> captureDevices;
+        static rpm::vector<Device> playbackDevices;
 
         std::array<float, dummyBufferLength> mDummyInputBuffer;
         std::array<float, dummyBufferLength> mDummyOutputBuffer;

@@ -9,9 +9,9 @@
 namespace Analysis {
 
 template <typename data_t>
-std::vector<data_t> swt(const std::vector<data_t>& _data, const Wt::DiscreteWavelet& wavelet, int level, int startLevel, bool trimApprox = false)
+rpm::vector<data_t> swt(const rpm::vector<data_t>& _data, const Wt::DiscreteWavelet& wavelet, int level, int startLevel, bool trimApprox = false)
 {
-    std::vector<data_t> data(_data);
+    rpm::vector<data_t> data(_data);
 
     if (data.size() % 2 == 1)
         throw std::runtime_error("Length of data must be even");
@@ -36,10 +36,10 @@ std::vector<data_t> swt(const std::vector<data_t>& _data, const Wt::DiscreteWave
     if (outputLen < 1)
         throw std::runtime_error("Invalid output length");
    
-    std::vector<data_t> cA, cD;
+    rpm::vector<data_t> cA, cD;
     int retval;
 
-    std::vector<data_t> ret;
+    rpm::vector<data_t> ret;
 
     for (int i = startLevel + 1; i < endLevel + 1; ++i) {
         int dataSize = data.size();

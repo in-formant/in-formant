@@ -1,7 +1,7 @@
 #include "util.h"
 #include <climits>
 
-void Analysis::polishComplexRoot(const std::vector<double>& p, std::complex<double> *root, int maxIt)
+void Analysis::polishComplexRoot(const rpm::vector<double>& p, std::complex<double> *root, int maxIt)
 {
     std::complex<double> zbest = *root;
     double ymin = HUGE_VALF;
@@ -24,7 +24,7 @@ void Analysis::polishComplexRoot(const std::vector<double>& p, std::complex<doub
     }
 }
 
-void Analysis::polishRealRoot(const std::vector<double>& p, double *root, int maxIt)
+void Analysis::polishRealRoot(const rpm::vector<double>& p, double *root, int maxIt)
 {
     double xbest = *root;
     double ymin = HUGE_VALF;
@@ -47,7 +47,7 @@ void Analysis::polishRealRoot(const std::vector<double>& p, double *root, int ma
     }
 }
 
-void Analysis::polishRoots(const std::vector<double> &p, std::vector<std::complex<double>>& roots)
+void Analysis::polishRoots(const rpm::vector<double> &p, rpm::vector<std::complex<double>>& roots)
 {
     constexpr int maxIt = 80;
 

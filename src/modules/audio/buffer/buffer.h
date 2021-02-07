@@ -1,34 +1,36 @@
 #ifndef AUDIO_BUFFER_H
 #define AUDIO_BUFFER_H
 
+#include "rpcxx.h"
 #include "../resampler/resampler.h"
-#include <deque>
+#include <atomic>
 #include <mutex>
 
 namespace Module::Audio {
 
     class Buffer {
     public:
-        Buffer(int sampleRate, int durationInMs);
+        Buffer(int sampleRate);
 
         void setSampleRate(int sampleRate);
-        void setDuration(int durationInMs);
-        void setLength(int length);
 
         int getSampleRate() const;
-        int getDuration() const;
         int getLength() const;
 
         void pull(double *pOut, int outLength);
         void push(const float *pIn, int inLength);
 
+        static void cancelPulls();
+
     private:
         int mSampleRate;
 
-        int mLength;
-        std::deque<double> mData;
+        std::atomic_int mLength;
+        rpm::deque<double> mData;
 
         std::mutex mLock;
+
+        static std::atomic_bool sCancel;
     };
 
 }

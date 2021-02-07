@@ -1,5 +1,4 @@
 #include "spectrum.h"
-#include "../../modules/math/constants.h"
 
 using namespace Nodes;
 

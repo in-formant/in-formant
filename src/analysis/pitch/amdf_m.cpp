@@ -82,7 +82,7 @@ PitchResult AMDF_M::solve(const double *data, int length, int sampleRate)
     }
 
     // Find the global peak.
-    std::vector<int> maxPositions = findPeaks(
+    rpm::vector<int> maxPositions = findPeaks(
             std::next(m1bACF.data(), minPeriod),
             maxPeriod - minPeriod + 1);
 

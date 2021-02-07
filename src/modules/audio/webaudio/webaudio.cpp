@@ -68,12 +68,12 @@ void WebAudio::refreshDevices()
     mPlaybackDevices.push_back(playback);
 }
 
-const std::vector<Device>& WebAudio::getCaptureDevices() const
+const rpm::vector<Device>& WebAudio::getCaptureDevices() const
 {
     return mCaptureDevices;
 }
 
-const std::vector<Device>& WebAudio::getPlaybackDevices() const
+const rpm::vector<Device>& WebAudio::getPlaybackDevices() const
 {
     return mPlaybackDevices;
 }

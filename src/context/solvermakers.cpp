@@ -22,6 +22,8 @@ Analysis::LinpredSolver *Main::makeLinpredSolver(LinpredAlgorithm alg)
     switch (alg) {
     case LinpredAlgorithm::Autocorr:
         return new Analysis::LP::Autocorr;
+    case LinpredAlgorithm::Covar:
+        return new Analysis::LP::Covar;
     case LinpredAlgorithm::Burg:
         return new Analysis::LP::Burg;
     default:
@@ -36,6 +38,8 @@ Analysis::FormantSolver *Main::makeFormantSolver(FormantAlgorithm alg)
         return new Analysis::Formant::SimpleLP;
     case FormantAlgorithm::Filtered:
         return new Analysis::Formant::FilteredLP;
+    case FormantAlgorithm::Deep:
+        return new Analysis::Formant::DeepFormants;
     default:
         throw std::runtime_error("ContextManager] Unknown formant estimation algorithm.");
     }

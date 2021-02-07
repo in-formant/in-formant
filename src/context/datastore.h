@@ -1,10 +1,13 @@
 #ifndef MAIN_CONTEXT_DATA_STORE_H
 #define MAIN_CONTEXT_DATA_STORE_H
 
+#include "rpcxx.h"
 #include "../fixedsizevector.h"
+#include "../timetrack.h"
 #include "../analysis/analysis.h"
 #include <array>
 #include <shared_mutex>
+#include <gaborator/gaborator.h>
 
 namespace Main {
 
@@ -21,12 +24,19 @@ namespace Main {
         int beginRead();
         void endRead();
 
-        FixedSizeVector<std::vector<std::array<double, 2>>>& getSoundSpectrumTrack();
-        FixedSizeVector<std::vector<std::array<double, 2>>>& getLpSpectrumTrack();
-        FixedSizeVector<double>&                             getPitchTrack();
-        FixedSizeVector<std::vector<Analysis::FormantData>>& getFormantTrack();
-        FixedSizeVector<std::vector<double>>&                getSoundTrack();
-        FixedSizeVector<std::vector<double>>&                getGifTrack();
+        FixedSizeVector<rpm::vector<double>>& getSoundTrack();
+    
+        double getTime() const;
+        void setTime(double t);
+
+        std::optional<gaborator::analyzer<double>>& getSpectrogramAnalyzer();
+        std::optional<gaborator::coefs<double>>& getSpectrogramCoefs();
+
+        TimeTrack<double>& getPitchTrack();
+
+        TimeTrack<double>& getFormantTrack(int i);
+        int getFormantTrackCount() const;
+        void setFormantTrackCount(int n);
 
     private:
         int mTrackLength;
@@ -34,12 +44,15 @@ namespace Main {
         std::shared_mutex mMutex;
         int mCatchupCount;
 
-        FixedSizeVector<std::vector<std::array<double, 2>>> mSoundSpectrumTrack;
-        FixedSizeVector<std::vector<std::array<double, 2>>> mLpSpectrumTrack;
-        FixedSizeVector<double>                             mPitchTrack;
-        FixedSizeVector<std::vector<Analysis::FormantData>> mFormantTrack;
-        FixedSizeVector<std::vector<double>>                mSoundTrack;
-        FixedSizeVector<std::vector<double>>                mGifTrack;
+        FixedSizeVector<rpm::vector<double>>                mSoundTrack;
+
+        double mTime;
+
+        std::optional<gaborator::analyzer<double>> mSpectrogramAnalyzer;
+        std::optional<gaborator::coefs<double>> mSpectrogramCoefs;
+        
+        TimeTrack<double> mPitchTrack;
+        rpm::vector<TimeTrack<double>> mFormantTracks;
     };
 
 }

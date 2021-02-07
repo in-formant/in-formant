@@ -1,6 +1,6 @@
 #include "util.h"
 
-std::pair<double, double> Analysis::parabolicInterpolation(const std::vector<double>& array, int x) {
+std::pair<double, double> Analysis::parabolicInterpolation(const rpm::vector<double>& array, int x) {
     int x_adjusted;
     double x_ = x;
 

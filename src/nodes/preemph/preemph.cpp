@@ -1,7 +1,7 @@
 #include "preemph.h"
-#include "../../modules/math/constants.h"
 #include <iostream>
 #include <utility>
+#include <cmath>
 
 using namespace Nodes;
 
@@ -26,13 +26,12 @@ void PreEmphasis::process(const NodeIO *inputs[], NodeIO *outputs[])
     out->setSampleRate(sampleRate);
     out->setLength(length);
 
-    std::vector<double> x(in->getConstData(), in->getConstData() + length);
+    rpm::vector<double> x(in->getConstData(), in->getConstData() + length);
     
-    /*
-    std::vector<double> a;
+    rpm::vector<double> a;
     double g;
-    
-    do {
+
+    /*do {
         a = lpc.solve(x.data(), length, 1, &g);
         if (g <= 0 || fabs(a[0]) < 0.001)
             break;
@@ -40,10 +39,9 @@ void PreEmphasis::process(const NodeIO *inputs[], NodeIO *outputs[])
         for (int i = length - 1; i >= 1; --i) {
             x[i] += a[0] * x[i - 1];
         }
-    } while (fabs(a[0]) >= 0.001);
-    */
-
-    double factor = exp(-(2.0 * M_PI * 100.0) / sampleRate);
+    } while (fabs(a[0]) >= 0.001);*/
+    
+    double factor = exp(-(2.0 * M_PI * 50.0) / sampleRate);
     for (int i = length - 1; i >= 1; --i) {
         x[i] -= factor * x[i - 1];
     }

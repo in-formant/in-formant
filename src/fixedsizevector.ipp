@@ -45,9 +45,9 @@ T FixedSizeVector<T>::operator[] (int index)
 }
 
 template<typename T>
-std::vector<T> FixedSizeVector<T>::tail(int count)
+rpm::vector<T> FixedSizeVector<T>::tail(int count)
 {
-    std::vector<T> tail(count);
+    rpm::vector<T> tail(count);
     for (int i = 0; i < count; ++i) {
         tail[i] = mData[logicalIndexToPhysical(-count - 1 + i)];
     }
@@ -63,7 +63,7 @@ void FixedSizeVector<T>::resize(int size)
         throw std::invalid_argument("FixedSizeVector<T>::resize() : new size is negative");
     }
 
-    std::vector<T> newData(size, mDefaultValue);
+    rpm::vector<T> newData(size, mDefaultValue);
 
     if (mSize > size) {
         std::move(

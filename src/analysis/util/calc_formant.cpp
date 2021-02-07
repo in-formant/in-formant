@@ -1,5 +1,4 @@
 #include "util.h"
-#include "../../modules/math/constants.h"
 
 Analysis::FormantData Analysis::calculateFormant(double r, double phi, double sampleRate)
 {

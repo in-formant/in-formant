@@ -12,6 +12,9 @@
 #include <atomic>
 #include <thread>
 
+#define STR(arg) #arg
+#define INFORMANT_VERSION_STR STR(INFORMANT_VERSION)
+
 namespace Main {
 
     using namespace Module;
@@ -25,7 +28,6 @@ namespace Main {
     public:
         ContextManager(
                 int captureSampleRate,
-                const dur_ms &captureDuration,
                 const dur_ms &playbackBlockMinDuration,
                 const dur_ms &playbackBlockMaxDuration,
                 const dur_ms &playbackDuration,
@@ -47,6 +49,8 @@ namespace Main {
         std::unique_ptr<Audio::Buffer> mCaptureBuffer;
         std::unique_ptr<Audio::Queue> mPlaybackQueue;
 
+        std::unique_ptr<DataStore> mDataStore;
+        
         std::unique_ptr<App::Pipeline> mPipeline;
         std::unique_ptr<App::Synthesizer> mSynthesizer;
 
@@ -57,13 +61,11 @@ namespace Main {
         std::unique_ptr<Analysis::FormantSolver> mFormantSolver;
         std::unique_ptr<Analysis::InvglotSolver> mInvglotSolver;
         
-        std::unique_ptr<DataStore> mDataStore;
-
         std::unique_ptr<AudioContext> mAudioContext;
         std::unique_ptr<RenderContext> mRenderContext;
         std::unique_ptr<GuiContext> mGuiContext;
 
-        std::map<std::string, std::unique_ptr<AbstractView>> mViews;
+        rpm::map<std::string, std::unique_ptr<AbstractView>> mViews;
 
         std::thread mAnalysisThread;
         std::atomic_bool mAnalysisRunning;

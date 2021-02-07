@@ -32,7 +32,7 @@ namespace Wt {
 /* memory efficient version */
 
 int CAT(TYPE, _downsampling_convolution)(const TYPE * const restrict input, const size_t N,
-                                         const std::vector<REAL_TYPE>& filter, const size_t F,
+                                         const rpm::vector<REAL_TYPE>& filter, const size_t F,
                                          TYPE * const restrict output, const size_t step,
                                          Mode mode);
 
@@ -50,7 +50,7 @@ int CAT(TYPE, _downsampling_convolution)(const TYPE * const restrict input, cons
  */
 int CAT(TYPE, _downsampling_convolution_periodization)(
     const TYPE * const restrict input, const size_t N,
-    const std::vector<REAL_TYPE>& filter, const size_t F,
+    const rpm::vector<REAL_TYPE>& filter, const size_t F,
     TYPE * const restrict output, const size_t step,
     const size_t fstep);
 
@@ -69,7 +69,7 @@ int CAT(TYPE, _downsampling_convolution_periodization)(
  */
 
 int CAT(TYPE, _upsampling_convolution_full)(const TYPE * const restrict input, const size_t N,
-                                            const std::vector<REAL_TYPE>& filter, const size_t F,
+                                            const rpm::vector<REAL_TYPE>& filter, const size_t F,
                                             TYPE * const restrict output, const size_t O);
 
 /* Performs valid convolution (signals must overlap)
@@ -77,7 +77,7 @@ int CAT(TYPE, _upsampling_convolution_full)(const TYPE * const restrict input, c
  */
 
 int CAT(TYPE, _upsampling_convolution_valid_sf)(const TYPE * const restrict input, const size_t N,
-                                                const std::vector<REAL_TYPE>& filter, const size_t F,
+                                                const rpm::vector<REAL_TYPE>& filter, const size_t F,
                                                 TYPE * const restrict output, const size_t O,
                                                 Mode mode);
 

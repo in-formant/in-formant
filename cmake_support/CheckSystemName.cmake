@@ -1,0 +1,15 @@
+
+function(CheckSystemName_Internal system_to_test)
+    string(TOUPPER ${system_to_test} uppercase_system_name)
+    set(var_name SYSTEM_${uppercase_system_name})
+    if(CMAKE_SYSTEM_NAME STREQUAL ${system_to_test})
+        set(${var_name} TRUE PARENT_SCOPE)
+    else()
+        set(${var_name} FALSE PARENT_SCOPE)
+    endif()
+endfunction()
+
+CheckSystemName_Internal(Windows)
+CheckSystemName_Internal(Darwin)
+CheckSystemName_Internal(Linux)
+CheckSystemName_Internal(Android)

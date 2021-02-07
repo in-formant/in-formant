@@ -14,12 +14,12 @@ Node::~Node()
 {
 }
 
-const std::vector<NodeIOType> Node::getInputTypes() const
+const rpm::vector<NodeIOType> Node::getInputTypes() const
 {
     return mInputTypes;
 }
 
-const std::vector<NodeIOType> Node::getOutputTypes() const
+const rpm::vector<NodeIOType> Node::getOutputTypes() const
 {
     return mOutputTypes;
 }

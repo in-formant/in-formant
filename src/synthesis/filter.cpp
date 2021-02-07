@@ -1,17 +1,17 @@
 #include "synthesis.h"
 
-std::vector<double> Synthesis::filter(
-        const std::vector<double>& b,
-        const std::vector<double>& a,
-        const std::vector<double>& x,
-        std::vector<double>& zf)
+rpm::vector<double> Synthesis::filter(
+        const rpm::vector<double>& b,
+        const rpm::vector<double>& a,
+        const rpm::vector<double>& x,
+        rpm::vector<double>& zf)
 {
     const int la = a.size();
     const int lb = b.size();
     const int lab = std::max(la, lb);
 
-    std::vector<double> bp = b;
-    std::vector<double> ap = a;
+    rpm::vector<double> bp = b;
+    rpm::vector<double> ap = a;
     bp.resize(lab, 0.0);
     ap.resize(lab, 0.0);
 
@@ -23,7 +23,7 @@ std::vector<double> Synthesis::filter(
     const int lz = lab - 1;
     const int lx = x.size();
 
-    std::vector<double> y(lx);
+    rpm::vector<double> y(lx);
     zf.resize(lz);
 
     if (la > 1) {
@@ -55,6 +55,6 @@ std::vector<double> Synthesis::filter(
         }
     }
 
-    return std::vector<double>(y.begin(), y.end());
+    return y;
 }
 

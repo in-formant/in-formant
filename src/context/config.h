@@ -7,14 +7,12 @@
 #include <toml++/toml.h>
 
 #include "solvermakers.h"
+#include "../gui/qpainterwrapper.h"
 #include "../modules/audio/base/base.h"
-#include "../modules/renderer/base/parameters.h"
 
 namespace fs = std::filesystem;
 
 namespace Main {
-
-    using Module::Renderer::FrequencyScale;
 
     fs::path getConfigPath();
     toml::table getConfigTable();
@@ -45,7 +43,7 @@ namespace Main {
         int getViewFFTSize();
         int getViewMinGain();
         int getViewMaxGain();
-        FrequencyScale getViewFrequencyScale();
+        QPainterWrapper::FrequencyScale getViewFrequencyScale();
         int getViewFormantCount();
         std::array<double, 3> getViewFormantColor(int i);
 

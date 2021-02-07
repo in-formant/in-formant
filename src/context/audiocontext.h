@@ -9,7 +9,7 @@ namespace Main {
     using namespace Module;
 
     Audio::Backend getDefaultAudioBackend();
-    std::vector<Audio::Backend> getSupportedAudioBackends();
+    rpm::vector<Audio::Backend> getSupportedAudioBackends();
     std::string getAudioBackendName(Audio::Backend type);
 
     class AudioContext {
@@ -19,8 +19,8 @@ namespace Main {
 
         void refreshDevices();
 
-        const std::vector<Audio::Device>& getCaptureDevices() const;
-        const std::vector<Audio::Device>& getPlaybackDevices() const;
+        const rpm::vector<Audio::Device>& getCaptureDevices() const;
+        const rpm::vector<Audio::Device>& getPlaybackDevices() const;
         
         const Audio::Device& getDefaultCaptureDevice() const;
         const Audio::Device& getDefaultPlaybackDevice() const;

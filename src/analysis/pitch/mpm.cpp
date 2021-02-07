@@ -2,9 +2,7 @@
 #include <algorithm>
 #include <complex>
 #include <float.h>
-#include <map>
 #include <numeric>
-#include <vector>
 #include "../util/util.h"
 
 #define MPM_CUTOFF 0.93
@@ -17,10 +15,10 @@
 #define PMPM_CUTOFF_STEP 0.01
 
 template <typename T>
-static std::vector<int>
-peak_picking(const std::vector<T> &nsdf)
+static rpm::vector<int>
+peak_picking(const rpm::vector<T> &nsdf)
 {
-	std::vector<int> max_positions{};
+	rpm::vector<int> max_positions{};
 	int pos = 0;
 	int cur_max_pos = 0;
 	ssize_t size = nsdf.size();
@@ -71,7 +69,7 @@ pow2roundup (int x)
 
 template <typename T>
 void
-acorr_r(std::vector<T> &audio_buffer)
+acorr_r(rpm::vector<T> &audio_buffer)
 {
 	if (audio_buffer.size() == 0)
 		throw std::invalid_argument("audio_buffer shouldn't be empty");
@@ -111,7 +109,7 @@ Analysis::Pitch::MPM::solve(const double *data, int length, int sample_rate)
 {
     using T = double;
 
-    std::vector<T> audio_buffer(data, data + length);
+    rpm::vector<T> audio_buffer(data, data + length);
 
 	acorr_r(audio_buffer);
 
@@ -126,8 +124,8 @@ Analysis::Pitch::MPM::solve(const double *data, int length, int sample_rate)
             audio_buffer[i] /= max;
         }
 
-	std::vector<int> max_positions = peak_picking(audio_buffer);
-	std::vector<std::pair<T, T>> estimates;
+	rpm::vector<int> max_positions = peak_picking(audio_buffer);
+	rpm::vector<std::pair<T, T>> estimates;
 
 	T highest_amplitude = -DBL_MAX;
 

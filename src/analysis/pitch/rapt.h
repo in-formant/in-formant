@@ -1,20 +1,17 @@
 #ifndef ANALYSIS_PITCH_RAPT_H
 #define ANALYSIS_PITCH_RAPT_H
 
-#include "../../modules/audio/resampler/resampler.h"
+#include "rpcxx.h"
 #include "../linpred/linpred.h"
-#include <deque>
-#include <vector>
 
 namespace Analysis {
 
     class RAPT {
     public:
         RAPT();
-        virtual ~RAPT();
 
         double computeFrame(const double *data, int length, double sampleRate);
-        std::vector<double> computePath();
+        rpm::vector<double> computePath();
 
         double F0min;    // minimum F0 to search for (Hz)                | 50
         double F0max;    // maximum F0 to search for (Hz)                | 500
@@ -38,14 +35,14 @@ namespace Analysis {
         };
     
         struct Frame {
-            std::vector<Cand> cands;
+            rpm::vector<Cand> cands;
            
             double Fs;
 
             double rms;
             double rr;
 
-            std::vector<double> ar;
+            rpm::vector<double> ar;
             double S;
         };
 
@@ -54,8 +51,7 @@ namespace Analysis {
         int nbFrames;
 
     private:
-        std::deque<Frame> frames;
-        SpeexResamplerState *resampler;
+        rpm::deque<Frame> frames;
     };
 }
 

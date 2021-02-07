@@ -1,13 +1,15 @@
 #include "buffer.h"
+#include <atomic>
 #include <memory>
 #include <iostream>
+#include <thread>
 
 using namespace Module::Audio;
+using namespace std::chrono_literals;
 
-Buffer::Buffer(int sampleRate, int durationInMs)
+Buffer::Buffer(int sampleRate)
     : mSampleRate(sampleRate),
-      mLength((sampleRate * durationInMs) / 1000),
-      mData(mLength, 0.0f)
+      mLength(0)
 {
 }
 
@@ -38,47 +40,9 @@ void Buffer::setSampleRate(int newSampleRate)
     mLock.unlock();
 }
 
-void Buffer::setDuration(int newDuration)
-{
-    setLength((mSampleRate * newDuration) / 1000);
-}
-
-void Buffer::setLength(int newLength)
-{
-    mLock.lock();
-
-    if (mLength == newLength) {
-        mLock.unlock();
-        return;
-    }
-
-    auto array = std::make_unique<double[]>(mLength);
-    std::copy(mData.begin(), mData.end(), array.get());
-    
-    // Copy old buffer to new buffer.
-
-    mData.resize(newLength, 0.0f);
-
-    if (mLength < newLength) {
-        std::copy(array.get(), std::next(array.get(), mLength), std::prev(mData.end(), mLength));
-    }
-    else {
-        std::copy(std::next(array.get(), mLength - newLength), std::next(array.get(), mLength), mData.begin());
-    }
-
-    mLength = newLength;
-
-    mLock.unlock();
-}
-
 int Buffer::getSampleRate() const
 {
     return mSampleRate;
-}
-
-int Buffer::getDuration() const
-{
-    return (mLength * 1000) / mSampleRate;
 }
 
 int Buffer::getLength() const
@@ -88,9 +52,16 @@ int Buffer::getLength() const
 
 void Buffer::pull(double *pOut, int outLength)
 {
+    while (mLength.load(std::memory_order_relaxed) < outLength) {
+        std::this_thread::sleep_for(10ms);
+        if (sCancel) return;
+    }
+    
     mLock.lock();
 
-    std::copy(std::prev(mData.end(), outLength), mData.end(), pOut);
+    std::copy(mData.begin(), std::next(mData.begin(), outLength), pOut);
+    mData.erase(mData.begin(), std::next(mData.begin(), outLength));
+    mLength -= outLength;
 
     mLock.unlock();
 }
@@ -100,8 +71,14 @@ void Buffer::push(const float *pIn, int inLength)
     mLock.lock();
 
     mData.insert(mData.end(), pIn, std::next(pIn, inLength));
-    mData.erase(mData.begin(), std::next(mData.begin(), inLength));
+    mLength.fetch_add(inLength, std::memory_order_relaxed);
 
     mLock.unlock();
 }
 
+std::atomic_bool Buffer::sCancel;
+
+void Buffer::cancelPulls()
+{
+    sCancel = true;
+}

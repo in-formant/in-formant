@@ -1,8 +1,6 @@
-#include "../modules/math/constants.h"
 #include "../analysis/fft/fft.h"
 #include "synthesis.h"
 #include <cmath>
-#include <map>
 
 template<typename Func, typename Func2>
 static double fzero(Func f, Func2 df, double x0);
@@ -57,7 +55,7 @@ void Synthesis::lfEpsAlpha(LF_State& state)
     state.alpha = a;
 }
 
-std::vector<double> Synthesis::lfGenFrame(double f0, double Fs, double Rd, double tc)
+rpm::vector<double> Synthesis::lfGenFrame(double f0, double Fs, double Rd, double tc)
 { 
     const double Ee = 1.0;
     
@@ -79,7 +77,7 @@ std::vector<double> Synthesis::lfGenFrame(double f0, double Fs, double Rd, doubl
     const double a = state.alpha;
     const double e = state.eps;
 
-    std::vector<double> glot(period);
+    rpm::vector<double> glot(period);
    
     double posMax = 1e-10;
 

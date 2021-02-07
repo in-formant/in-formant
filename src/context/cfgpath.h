@@ -54,6 +54,8 @@
 #elif defined(__APPLE__)
 #include <CoreServices/CoreServices.h>
 #include <sys/stat.h>
+#include <sysdir.h>
+#include <wordexp.h>
 #define MAX_PATH PATH_MAX
 #define PATH_SEPARATOR_CHAR '/'
 #define PATH_SEPARATOR_STRING "/"
@@ -146,22 +148,33 @@ static inline void get_user_config_file(char *out, unsigned int maxlen, const ch
 	strcat(out, appname);
 	strcat(out, ".ini");
 #elif defined(__APPLE__)
-	FSRef ref;
-	FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &ref);
-	char home[MAX_PATH];
-	FSRefMakePath(&ref, (UInt8 *)&home, MAX_PATH);
-	/* first +1 is "/", second is terminating null */
-	const char *ext = ".conf";
-	if (strlen(home) + 1 + strlen(appname) + strlen(ext) + 1 > maxlen) {
-		out[0] = 0;
-		return;
-	}
+        char home[MAX_PATH];
+        sysdir_search_path_enumeration_state state = sysdir_start_search_path_enumeration(SYSDIR_DIRECTORY_APPLICATION_SUPPORT, SYSDIR_DOMAIN_MASK_USER);
+       
+        state = sysdir_get_next_search_path_enumeration(state, home);
 
-	strcpy(out, home);
-	strcat(out, PATH_SEPARATOR_STRING);
-	strcat(out, appname);
-	strcat(out, ext);
-#endif
+        wordexp_t p;
+        if (wordexp(home, &p, 0) != 0) {
+            perror("wordexp");
+            out[0] = 0;
+            return;
+        }
+        strncpy(home, p.we_wordv[0], MAX_PATH);
+        home[MAX_PATH - 1] = '\0';
+        wordfree(&p);
+
+        const char *ext = ".conf";
+        if (strlen(home) + 1 + strlen(appname) + strlen(ext) + 1 > maxlen) {
+            out[0] = 0;
+            wordfree(&p);
+            return;
+        }
+
+        strcpy(out, home);
+        strcat(out, PATH_SEPARATOR_STRING);
+        strcat(out, appname);
+        strcat(out, ext);
+   #endif
 }
 
 /** Get an absolute path to a configuration folder, specific to this user.
@@ -257,13 +270,25 @@ static inline void get_user_config_folder(char *out, unsigned int maxlen, const 
 	mkdir(out);
 	strcat(out, "\\");
 #elif defined(__APPLE__)
-	FSRef ref;
-	FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &ref);
-	char home[MAX_PATH];
-	FSRefMakePath(&ref, (UInt8 *)&home, MAX_PATH);
+        char home[MAX_PATH];
+        sysdir_search_path_enumeration_state state = sysdir_start_search_path_enumeration(SYSDIR_DIRECTORY_APPLICATION_SUPPORT, SYSDIR_DOMAIN_MASK_USER);
+       
+        state = sysdir_get_next_search_path_enumeration(state, home);
+
+        wordexp_t p;
+        if (wordexp(home, &p, 0) != 0) {
+            perror("wordexp");
+            out[0] = 0;
+            return;
+        }
+        strncpy(home, p.we_wordv[0], MAX_PATH);
+        home[MAX_PATH - 1] = '\0';
+        wordfree(&p);
+
 	/* first +1 is "/", second is trailing "/", third is terminating null */
 	if (strlen(home) + 1 + strlen(appname) + 1 + 1 > maxlen) {
 		out[0] = 0;
+                wordfree(&p);
 		return;
 	}
 

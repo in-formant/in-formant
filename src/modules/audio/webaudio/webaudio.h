@@ -25,8 +25,8 @@ namespace Module::Audio {
 
         void refreshDevices() override;
 
-        const std::vector<Device>& getCaptureDevices() const override;
-        const std::vector<Device>& getPlaybackDevices() const override;
+        const rpm::vector<Device>& getCaptureDevices() const override;
+        const rpm::vector<Device>& getPlaybackDevices() const override;
 
         const Device& getDefaultCaptureDevice() const override;
         const Device& getDefaultPlaybackDevice() const override;
@@ -46,8 +46,8 @@ namespace Module::Audio {
     private:
         int mSampleRate;
 
-        std::vector<Device> mCaptureDevices;
-        std::vector<Device> mPlaybackDevices;
+        rpm::vector<Device> mCaptureDevices;
+        rpm::vector<Device> mPlaybackDevices;
     
         Buffer *getBuffer() { return mCaptureBuffer; }
         Queue *getQueue() { return mPlaybackQueue; }

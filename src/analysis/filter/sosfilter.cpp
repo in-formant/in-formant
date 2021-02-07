@@ -1,12 +1,12 @@
 #include "filter.h"
 
-std::vector<double> Analysis::sosfilter(const std::vector<std::array<double, 6>>& sos, const std::vector<double>& x)
+rpm::vector<double> Analysis::sosfilter(const rpm::vector<std::array<double, 6>>& sos, const rpm::vector<double>& x)
 {
-    std::vector<double> y = x;
+    rpm::vector<double> y = x;
 
     for (const auto& sec : sos) {
-        std::vector<double> b {sec[0], sec[1], sec[2]};
-        std::vector<double> a {sec[3], sec[4], sec[5]};
+        rpm::vector<double> b {sec[0], sec[1], sec[2]};
+        rpm::vector<double> a {sec[3], sec[4], sec[5]};
 
         y = filter(b, a, y);
     }

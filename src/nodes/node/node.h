@@ -2,7 +2,6 @@
 #define NODES_NODE_H
 
 #include "nodeio.h"
-#include <vector>
 
 namespace Nodes {
 
@@ -20,8 +19,8 @@ namespace Nodes {
 
         virtual void process(const NodeIO *inputs[], NodeIO *outputs[]) = 0;
 
-        const std::vector<NodeIOType> getInputTypes() const;
-        const std::vector<NodeIOType> getOutputTypes() const;
+        const rpm::vector<NodeIOType> getInputTypes() const;
+        const rpm::vector<NodeIOType> getOutputTypes() const;
 
         template<typename T>
         inline T *as() {
@@ -34,8 +33,8 @@ namespace Nodes {
         }
 
     private:
-        std::vector<NodeIOType> mInputTypes;
-        std::vector<NodeIOType> mOutputTypes;
+        rpm::vector<NodeIOType> mInputTypes;
+        rpm::vector<NodeIOType> mOutputTypes;
     };
 
     class NodePassthru : public Node {

@@ -1,13 +1,11 @@
 #include "../util/util.h"
 #include "../filter/filter.h"
-#include "../../modules/math/constants.h"
 #include "rapt.h"
 #include "pitch.h"
 #include <cmath>
 #include <algorithm>
 #include <numeric>
 #include <iostream>
-#include <set>
 
 using namespace Analysis;
 
@@ -47,37 +45,30 @@ PitchResult Pitch::RAPT::solve(const double *data, int length, int sampleRate)
     }
 }
 
-static void subtractReferenceMean(std::vector<double>& s, int n, int K);
+static void subtractReferenceMean(rpm::vector<double>& s, int n, int K);
 
-static std::vector<double> downsampleSignal(const std::vector<double>& s, const double Fs, const double Fds, SpeexResamplerState **resampler);
+static rpm::vector<double> downsampleSignal(const rpm::vector<double>& s, const double Fs, const double Fds);
 
-static std::vector<double> calculateDownsampledNCCF(const std::vector<double>& dss, const int dsn, const int dsK1, const int dsK2);
+static rpm::vector<double> calculateDownsampledNCCF(const rpm::vector<double>& dss, const int dsn, const int dsK1, const int dsK2);
 
-static std::vector<std::pair<double, double>> findPeaksWithThreshold(const std::vector<double>& nccf, const double cand_tr, const int n_cands, const bool paraInterp);
+static rpm::vector<std::pair<double, double>> findPeaksWithThreshold(const rpm::vector<double>& nccf, const double cand_tr, const int n_cands, const bool paraInterp);
 
-static std::vector<double> calculateOriginalNCCF(const std::vector<double>& s, const double Fs, const double Fds, const int n, const int K, const std::vector<std::pair<double, double>>& dsPeaks);
+static rpm::vector<double> calculateOriginalNCCF(const rpm::vector<double>& s, const double Fs, const double Fds, const int n, const int K, const rpm::vector<std::pair<double, double>>& dsPeaks);
 
-static std::vector<RAPT::Cand> createCosts(const std::vector<std::pair<double, double>>& peaks, const double vo_bias, const double beta);
+static rpm::vector<RAPT::Cand> createCosts(const rpm::vector<std::pair<double, double>>& peaks, const double vo_bias, const double beta);
 
-static double calculateRMS(const std::vector<double>& s, const int start, const int length);
+static double calculateRMS(const rpm::vector<double>& s, const int start, const int length);
 
-static double expDistItakura(const std::vector<double>& ar1, const std::vector<double>& ar2);
+static double expDistItakura(const rpm::vector<double>& ar1, const rpm::vector<double>& ar2);
 
-static std::vector<double> lpcar2ra(const std::vector<double>& ar);
-static std::vector<double> lpcar2rr(const std::vector<double>& ar);
-static std::vector<double> lpcar2rf(const std::vector<double>& ar);
-static std::vector<double> lpcrf2rr(const std::vector<double>& rf);
+static rpm::vector<double> lpcar2ra(const rpm::vector<double>& ar);
+static rpm::vector<double> lpcar2rr(const rpm::vector<double>& ar);
+static rpm::vector<double> lpcar2rf(const rpm::vector<double>& ar);
+static rpm::vector<double> lpcrf2rr(const rpm::vector<double>& rf);
 
 RAPT::RAPT()
-    : lpcOrder(-1), resampler(nullptr)
+    : lpcOrder(-1)
 {
-}
-
-RAPT::~RAPT()
-{
-    if (resampler != nullptr) {
-        speex_resampler_destroy(resampler);
-    }
 }
 
 double RAPT::computeFrame(const double *data, int length, double Fs)
@@ -100,7 +91,7 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
     
     const int J = std::round(0.03 * Fs);
 
-    std::vector<double> s(data, data + length);
+    rpm::vector<double> s(data, data + length);
     
     if (s.size() < n + K) {
         s.resize(n + K, 0.0);
@@ -108,7 +99,7 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
 
     subtractReferenceMean(s, n, K);
 
-    auto dss = downsampleSignal(s, Fs, Fds, &resampler);
+    auto dss = downsampleSignal(s, Fs, Fds);
     
     if (dss.size() < dsn + dsK2) {
         dss.resize(dsn + dsK2, 0.0);
@@ -117,9 +108,9 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
     auto dsNCCF = calculateDownsampledNCCF(dss, dsn, dsK1, dsK2);
     auto dsPeaks = findPeaksWithThreshold(dsNCCF, cand_tr, n_cands, true);
    
-    std::vector<std::pair<double, double>> peaks;
+    rpm::vector<std::pair<double, double>> peaks;
    
-    std::vector<double> nccf;
+    rpm::vector<double> nccf;
     if (dsPeaks.size() > 0) {
         nccf = calculateOriginalNCCF(s, Fs, Fds, n, K, dsPeaks);
         peaks = findPeaksWithThreshold(nccf, cand_tr, n_cands, false);
@@ -170,9 +161,9 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
     return pitch;
 }
 
-std::vector<double> RAPT::computePath()
+rpm::vector<double> RAPT::computePath()
 {
-    static std::vector<std::vector<std::vector<double>>> transitionMatrices;
+    static rpm::vector<rpm::vector<rpm::vector<double>>> transitionMatrices;
 
     transitionMatrices.resize(nbFrames);
 
@@ -213,8 +204,8 @@ std::vector<double> RAPT::computePath()
         }
     }
 
-    static std::vector<std::vector<double>> D;
-    static std::vector<std::vector<int>> ks;
+    static rpm::vector<rpm::vector<double>> D;
+    static rpm::vector<rpm::vector<int>> ks;
     
     D.resize(nbFrames + 1);
     D[0].resize(2, 0.0);
@@ -241,11 +232,11 @@ std::vector<double> RAPT::computePath()
         }
     }
 
-    std::vector<double> pitches(nbFrames);
+    rpm::vector<double> pitches(nbFrames);
  
     const int nj = D[1].size();
 
-    std::vector<int> indices(nj);
+    rpm::vector<int> indices(nj);
     std::iota(indices.begin(), indices.end(), 0);
 
     std::sort(indices.begin(), indices.end(),
@@ -266,7 +257,7 @@ std::vector<double> RAPT::computePath()
 
 // utility functions.
 
-void subtractReferenceMean(std::vector<double>& s, int n, int K)
+void subtractReferenceMean(rpm::vector<double>& s, int n, int K)
 {
     double mu = 0.0;
     for (int j = 0; j < n; ++j)
@@ -276,40 +267,29 @@ void subtractReferenceMean(std::vector<double>& s, int n, int K)
         s[j] -= mu;
 }
 
-std::vector<double> downsampleSignal(const std::vector<double>& s, const double Fs, const double Fds, SpeexResamplerState **resampler)
+rpm::vector<double> downsampleSignal(const rpm::vector<double>& s, const double Fs, const double Fds)
 {
-    static double lastFs(0), lastFds(0);
+    size_t odone, olen = s.size() * Fds / Fs + 0.5;
 
-    if (*resampler == nullptr || lastFs != Fs || lastFds != Fds) {
-        lastFs = Fs;
-        lastFds = Fds;
-        if (*resampler != nullptr) {
-            speex_resampler_destroy(*resampler);
-        }
-        *resampler = speex_resampler_init(1, Fs, Fds, 9, nullptr);
-    }
-  
-    speex_resampler_reset_mem(*resampler);
-    speex_resampler_skip_zeros(*resampler);
+    rpm::vector<double> out(olen);
 
-    int latency = speex_resampler_get_input_latency(*resampler);
-
-    spx_uint32_t inLen = s.size() + latency;
-    spx_uint32_t outLen = (inLen * Fds) / Fs;
+    auto ioSpec = soxr_io_spec(SOXR_FLOAT64_I, SOXR_FLOAT64_I);
     
-    std::vector<float> fin(inLen);
-    std::vector<float> fout(outLen);
-    std::copy(s.begin(), s.end(), fin.begin());
-
-    speex_resampler_process_float(*resampler, 0, fin.data(), &inLen, fout.data(), &outLen);
-    fout.resize(outLen);
-
-    return std::vector<double>(fout.begin(), fout.end());
+    soxr_oneshot(Fs, Fds, 1,
+        s.data(), s.size(), nullptr,
+        out.data(), olen, &odone,
+        &ioSpec,
+        nullptr,
+        nullptr);
+    
+    out.resize(odone);
+    
+    return out;
 }
 
-std::vector<double> calculateDownsampledNCCF(const std::vector<double>& dss, const int dsn, const int dsK1, const int dsK2)
+rpm::vector<double> calculateDownsampledNCCF(const rpm::vector<double>& dss, const int dsn, const int dsK1, const int dsK2)
 {
-    std::vector<double> dsNCCF(dsK2 + 1, 0.0);
+    rpm::vector<double> dsNCCF(dsK2 + 1, 0.0);
 
     double dse0;
     for (int l = 0; l < dsn; ++l) {
@@ -336,7 +316,7 @@ std::vector<double> calculateDownsampledNCCF(const std::vector<double>& dss, con
     return dsNCCF;
 }
 
-std::vector<std::pair<double, double>> findPeaksWithThreshold(const std::vector<double>& nccf, const double cand_tr, const int n_cands, const bool paraInterp)
+rpm::vector<std::pair<double, double>> findPeaksWithThreshold(const rpm::vector<double>& nccf, const double cand_tr, const int n_cands, const bool paraInterp)
 {
     double max = -HUGE_VALF;
     for (int i = 0; i < nccf.size(); ++i) {
@@ -349,7 +329,7 @@ std::vector<std::pair<double, double>> findPeaksWithThreshold(const std::vector<
 
     auto allPeaks = findPeaks(nccf.data(), nccf.size());
 
-    std::vector<std::pair<double, double>> peaks;
+    rpm::vector<std::pair<double, double>> peaks;
 
     for (const int& k : allPeaks) {
         if (k >= 0 && k < nccf.size() && nccf[k] > threshold) {
@@ -372,9 +352,9 @@ std::vector<std::pair<double, double>> findPeaksWithThreshold(const std::vector<
     return peaks;
 }
 
-std::vector<double> calculateOriginalNCCF(const std::vector<double>& s, const double Fs, const double Fds, const int n, const int K, const std::vector<std::pair<double, double>>& dsPeaks)
+rpm::vector<double> calculateOriginalNCCF(const rpm::vector<double>& s, const double Fs, const double Fds, const int n, const int K, const rpm::vector<std::pair<double, double>>& dsPeaks)
 {
-    std::set<int> lagsToCalculate;
+    rpm::set<int> lagsToCalculate;
     for (const auto& [dsk, y] : dsPeaks) {
         const int k = std::round((Fs * dsk) / Fds);
        
@@ -390,7 +370,7 @@ std::vector<double> calculateOriginalNCCF(const std::vector<double>& s, const do
         }
     }
     
-    std::vector<double> nccf(K + 1, 0.0);
+    rpm::vector<double> nccf(K + 1, 0.0);
 
     double e0;
     {
@@ -422,9 +402,9 @@ std::vector<double> calculateOriginalNCCF(const std::vector<double>& s, const do
     return nccf;
 }
 
-std::vector<RAPT::Cand> createCosts(const std::vector<std::pair<double, double>>& peaks, const double vo_bias, const double beta)
+rpm::vector<RAPT::Cand> createCosts(const rpm::vector<std::pair<double, double>>& peaks, const double vo_bias, const double beta)
 {
-    std::vector<RAPT::Cand> costs(peaks.size() + 1);
+    rpm::vector<RAPT::Cand> costs(peaks.size() + 1);
     
     int i = 0;
     for (const auto& [k, y] : peaks) {
@@ -456,7 +436,7 @@ std::vector<RAPT::Cand> createCosts(const std::vector<std::pair<double, double>>
     return costs;
 }
 
-double calculateRMS(const std::vector<double>& s, const int start, const int length)
+double calculateRMS(const rpm::vector<double>& s, const int start, const int length)
 {
     double sum = 0.0;
 
@@ -472,7 +452,7 @@ double calculateRMS(const std::vector<double>& s, const int start, const int len
     return (double) sqrt(sum / length);
 }
 
-double expDistItakura(const std::vector<double>& ar1, const std::vector<double>& ar2)
+double expDistItakura(const rpm::vector<double>& ar1, const rpm::vector<double>& ar2)
 {
     // d = 2 * sum ( lpcar2rr (ar1) * m2 ) * (ar1[0] / ar2[0]) ^ 2
     
@@ -492,11 +472,11 @@ double expDistItakura(const std::vector<double>& ar1, const std::vector<double>&
     return 2.0 * numer / denom;
 }
 
-std::vector<double> lpcar2ra(const std::vector<double>& ar)
+rpm::vector<double> lpcar2ra(const rpm::vector<double>& ar)
 {
     const int p = ar.size();
     
-    std::vector<double> ra(p);
+    rpm::vector<double> ra(p);
 
     for (int i = 0; i < p; ++i) {
         ra[i] = 0.0;
@@ -508,7 +488,7 @@ std::vector<double> lpcar2ra(const std::vector<double>& ar)
     return ra;
 }
 
-std::vector<double> lpcar2rr(const std::vector<double>& ar)
+rpm::vector<double> lpcar2rr(const rpm::vector<double>& ar)
 {
     double k = 1.0 / (ar[0] * ar[0]);
 
@@ -516,7 +496,7 @@ std::vector<double> lpcar2rr(const std::vector<double>& ar)
         return { k };
     }
     else {
-        std::vector<double> rr = lpcrf2rr(lpcar2rf(ar));
+        rpm::vector<double> rr = lpcrf2rr(lpcar2rf(ar));
         for (int i = 0; i < rr.size(); ++i) {
             rr[i] *= k;
         }
@@ -524,17 +504,17 @@ std::vector<double> lpcar2rr(const std::vector<double>& ar)
     }
 }
 
-std::vector<double> lpcar2rf(const std::vector<double>& ar)
+rpm::vector<double> lpcar2rf(const rpm::vector<double>& ar)
 {
     const int p = ar.size();
 
-    std::vector<double> rf = ar;
+    rpm::vector<double> rf = ar;
     
     for (int j = p - 2; j >= 1; --j) {
         double k = rf[j + 1];
         double d = 1.0 / (1.0 - k * k); 
         
-        std::vector<double> temp = rf;
+        rpm::vector<double> temp = rf;
         for (int i = 1; i <= j; ++i) {
             temp[i] = (rf[i] - k * rf[j + 1 - i]) * d;
         }
@@ -544,16 +524,16 @@ std::vector<double> lpcar2rf(const std::vector<double>& ar)
     return rf;
 }
 
-std::vector<double> lpcrf2rr(const std::vector<double>& rf)
+rpm::vector<double> lpcrf2rr(const rpm::vector<double>& rf)
 {
     const int p1 = rf.size();
     const int p0 = p1 - 1;
 
     if (p0 > 0) {
-        std::vector<double> a;
+        rpm::vector<double> a;
         a.push_back(rf[1]);
 
-        std::vector<double> rr(p1, 0.0);
+        rpm::vector<double> rr(p1, 0.0);
         rr[0] = 1.0;
         rr[1] = -a[0];
 

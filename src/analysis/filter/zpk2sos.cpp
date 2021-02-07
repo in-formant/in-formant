@@ -2,15 +2,15 @@
 #include <algorithm>
 #include <iostream>
 
-static std::pair<std::vector<std::complex<double>>, std::vector<double>> cplxreal(const std::vector<std::complex<double>>& z_)
+static std::pair<rpm::vector<std::complex<double>>, rpm::vector<double>> cplxreal(const rpm::vector<std::complex<double>>& z_)
 {
     double tol = 100.0 * std::numeric_limits<double>::epsilon();
     
-    std::vector<std::complex<double>> z(z_.begin(), z_.end());
+    rpm::vector<std::complex<double>> z(z_.begin(), z_.end());
     std::sort(z.begin(), z.end(), [](auto& x, auto& y) { return x.real() < y.real(); });
 
-    std::vector<std::complex<double>> cplx;
-    std::vector<double> real;
+    rpm::vector<std::complex<double>> cplx;
+    rpm::vector<double> real;
 
     for (const auto& x : z) {
         if (fabs(x.imag()) / (std::abs(x) + std::numeric_limits<double>::min()) <= tol) {
@@ -22,7 +22,7 @@ static std::pair<std::vector<std::complex<double>>, std::vector<double>> cplxrea
     }
 
     const int m = cplx.size();
-    std::vector<std::complex<double>> zc;
+    rpm::vector<std::complex<double>> zc;
 
     for (int i = 0; i < m; i += 2) {
         double v = std::numeric_limits<double>::max();
@@ -48,9 +48,9 @@ static std::pair<std::vector<std::complex<double>>, std::vector<double>> cplxrea
     return { std::move(zc), std::move(real) };
 }
 
-std::vector<std::array<double, 6>> Analysis::zpk2sos(
-        const std::vector<std::complex<double>>& z,
-        const std::vector<std::complex<double>>& p,
+rpm::vector<std::array<double, 6>> Analysis::zpk2sos(
+        const rpm::vector<std::complex<double>>& z,
+        const rpm::vector<std::complex<double>>& p,
         double k)
 {
     auto [zc, zr] = cplxreal(z);
@@ -64,7 +64,7 @@ std::vector<std::array<double, 6>> Analysis::zpk2sos(
 
     // Pair up real zeroes.
     int nzrsec;
-    std::vector<double> zrms, zrp;
+    rpm::vector<double> zrms, zrp;
     if (nzr > 0) {
         if (nzr % 2 == 1) {
             zr.push_back(0.0);
@@ -84,7 +84,7 @@ std::vector<std::array<double, 6>> Analysis::zpk2sos(
 
     // Pair up real poles.
     int nprsec;
-    std::vector<double> prms, prp;
+    rpm::vector<double> prms, prp;
     if (npr > 0) {
         if (npr % 2 == 1) {
             pr.push_back(0.0);
@@ -104,21 +104,21 @@ std::vector<std::array<double, 6>> Analysis::zpk2sos(
 
     const int nsecs = std::max(nzc + nzrsec, npc + nprsec);
 
-    std::vector<double> zcm2r(nzc), zca2(nzc);
+    rpm::vector<double> zcm2r(nzc), zca2(nzc);
     for (int i = 0; i < nzc; ++i) {
         zcm2r[i] = -2.0 * zc[i].real();
         double a = std::abs(zc[i]);
         zca2[i] = a * a;
     }
 
-    std::vector<double> pcm2r(npc), pca2(npc);
+    rpm::vector<double> pcm2r(npc), pca2(npc);
     for (int i = 0; i < npc; ++i) {
         pcm2r[i] = -2.0 * pc[i].real();
         double a = std::abs(pc[i]);
         pca2[i] = a * a;
     }
 
-    std::vector<std::array<double, 6>> sos(nsecs);
+    rpm::vector<std::array<double, 6>> sos(nsecs);
     
     for (int i = 0; i < nsecs; ++i) {
         sos[i][0] = 1.0;

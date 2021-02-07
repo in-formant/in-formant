@@ -24,12 +24,12 @@ std::unique_ptr<NodeIO> Nodes::makeNodeIO(NodeIOType type)
     }
 }
 
-std::vector<std::unique_ptr<NodeIO>> Nodes::makeNodeIO(int count, ...)
+rpm::vector<std::unique_ptr<NodeIO>> Nodes::makeNodeIO(int count, ...)
 {
     std::va_list args;
     va_start(args, count);
 
-    std::vector<std::unique_ptr<NodeIO>> nodes;
+    rpm::vector<std::unique_ptr<NodeIO>> nodes;
 
     for (int i = 0; i < count; ++i) {
         NodeIOType type = static_cast<NodeIOType>(va_arg(args, unsigned int));
@@ -41,7 +41,7 @@ std::vector<std::unique_ptr<NodeIO>> Nodes::makeNodeIO(int count, ...)
     return nodes;
 }
 
-NodeIO **Nodes::unpack(std::vector<std::unique_ptr<NodeIO>>& v, NodeIO *** ios)
+NodeIO **Nodes::unpack(rpm::vector<std::unique_ptr<NodeIO>>& v, NodeIO *** ios)
 {
     if (*ios != nullptr) {
         delete[] *ios;

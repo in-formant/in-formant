@@ -56,7 +56,7 @@ void Pulse::refreshDevices()
     mSinks.clear();
 
     struct DevArg {
-        std::vector<Device> *list;
+        rpm::vector<Device> *list;
         bool end;
     };
 
@@ -125,12 +125,12 @@ void Pulse::refreshDevices()
     mDefaultSink.name = defArg.sinkName;
 }
 
-const std::vector<Device>& Pulse::getCaptureDevices() const
+const rpm::vector<Device>& Pulse::getCaptureDevices() const
 {
     return mSources;
 }
 
-const std::vector<Device>& Pulse::getPlaybackDevices() const
+const rpm::vector<Device>& Pulse::getPlaybackDevices() const
 {
     return mSinks;
 }

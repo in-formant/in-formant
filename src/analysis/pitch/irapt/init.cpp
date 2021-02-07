@@ -4,7 +4,7 @@
 
 using namespace Analysis;
 
-static std::vector<double> fir1();
+static rpm::vector<double> fir1();
 
 IRAPT_Cfg Analysis::initCfg(double sampleRate)
 {

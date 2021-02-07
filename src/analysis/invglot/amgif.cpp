@@ -36,8 +36,8 @@ InvglotResult AMGIF::solve(const double *data, int length, double sampleRate)
 {
     auto pFloat = iaif.solve(data, length, sampleRate).glotSig;
     
-    std::vector<double> d_delta(data, data + length);
-    std::vector<double> y_epsilon(pFloat.begin(), pFloat.end());
+    rpm::vector<double> d_delta(data, data + length);
+    rpm::vector<double> y_epsilon(pFloat.begin(), pFloat.end());
 
     hwt(d_delta, +1);
     hwt(y_epsilon, +1);
@@ -60,10 +60,10 @@ void AMGIF::computeC()
 {
     int mu1 = (1 << (Jmax + 1));
 
-    std::vector<std::vector<double>> basis;
+    rpm::vector<rpm::vector<double>> basis;
     basis.reserve(mu1);
 
-    std::vector<double> func(mu1);
+    rpm::vector<double> func(mu1);
 
     for (int i = 0; i < mu1; ++i)
         func[i] = haarScaling((double) i / (double) mu1);
@@ -78,16 +78,16 @@ void AMGIF::computeC()
         }
     }
 
-    std::vector<std::vector<std::vector<double>>>
-        convolutions(mu1, std::vector<std::vector<double>>(mu1));
+    rpm::vector<rpm::vector<rpm::vector<double>>>
+        convolutions(mu1, rpm::vector<rpm::vector<double>>(mu1));
 
     for (int i = 0; i < mu1; ++i) {
         for (int j = 0; j <= i; ++j) {
-            std::vector<double> conv(mu1);
+            rpm::vector<double> conv(mu1);
 
             // Calculate circular convolution with FFT.
 
-            std::vector<std::dcomplex> out(mu1 / 2 + 1);
+            rpm::vector<std::dcomplex> out(mu1 / 2 + 1);
             for (int k = 0; k < mu1; ++k) {
                 fft.input(k) = basis[i][k];
             }

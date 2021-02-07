@@ -1,13 +1,12 @@
-#include "../modules/math/constants.h"
 #include "../analysis/analysis.h"
 #include "synthesis.h"
 #include <iostream>
 
-static std::vector<double> conv(const std::vector<double>& x, const std::vector<double>& y) {
+static rpm::vector<double> conv(const rpm::vector<double>& x, const rpm::vector<double>& y) {
     int lx = x.size();
     int ly = y.size();
     int lw = lx + ly - 1;
-    std::vector<double> w(lw, 0.0);
+    rpm::vector<double> w(lw, 0.0);
     for (int k = 0; k < lw; ++k) {
         int i = k;
         for (int j = 0; j < ly; ++j) {
@@ -20,7 +19,7 @@ static std::vector<double> conv(const std::vector<double>& x, const std::vector<
     return w;
 }
 
-std::vector<std::array<double, 6>> Synthesis::frequencyShiftFilter(const std::vector<Analysis::FormantData>& formants, double Fs, double factor)
+rpm::vector<std::array<double, 6>> Synthesis::frequencyShiftFilter(const rpm::vector<Analysis::FormantData>& formants, double Fs, double factor)
 {
     const double freqMin = 50.0;
     const double freqMax = Fs / 2.0 - 50.0;
@@ -28,7 +27,7 @@ std::vector<std::array<double, 6>> Synthesis::frequencyShiftFilter(const std::ve
     const double melMin = 2595.0 * log10f(1.0 + freqMin / 700.0);
     const double melMax = 2595.0 * log10f(1.0 + freqMax / 700.0);
 
-    std::vector<std::complex<double>> roots;
+    rpm::vector<std::complex<double>> roots;
    
     for (const auto& formant : formants) {
         if (formant.frequency < freqMin || formant.frequency > freqMax)

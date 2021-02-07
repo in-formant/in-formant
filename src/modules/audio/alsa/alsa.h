@@ -3,6 +3,7 @@
 
 #include "../base/base.h"
 #include <alsa/asoundlib.h>
+#include <atomic>
 #include <thread>
 #include <mutex>
 
@@ -18,8 +19,8 @@ namespace Module::Audio {
 
         void refreshDevices() override;
 
-        const std::vector<Device>& getCaptureDevices() const override;
-        const std::vector<Device>& getPlaybackDevices() const override;
+        const rpm::vector<Device>& getCaptureDevices() const override;
+        const rpm::vector<Device>& getPlaybackDevices() const override;
 
         const Device& getDefaultCaptureDevice() const override;
         const Device& getDefaultPlaybackDevice() const override;
@@ -46,12 +47,12 @@ namespace Module::Audio {
         std::mutex mPlaybackMutex;
         snd_pcm_t *mPlaybackHandle;
 
-        volatile bool mThreadsRunning;
+        std::atomic_bool mThreadsRunning;
         std::thread mCaptureThread;
         std::thread mPlaybackThread;
 
-        std::vector<Device> mCaptureDevices;
-        std::vector<Device> mPlaybackDevices;
+        rpm::vector<Device> mCaptureDevices;
+        rpm::vector<Device> mPlaybackDevices;
 
         Device mDefaultCaptureDevice;
         Device mDefaultPlaybackDevice;

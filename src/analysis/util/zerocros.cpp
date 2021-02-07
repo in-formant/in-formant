@@ -1,12 +1,12 @@
 #include "util.h"
 
-std::pair<std::vector<double>, std::vector<double>>
-Analysis::findZerocros(const std::vector<double>& y, char m)
+std::pair<rpm::vector<double>, rpm::vector<double>>
+Analysis::findZerocros(const rpm::vector<double>& y, char m)
 {
     const int n = y.size();
 
-    std::vector<double> s(n);
-    std::vector<double> k(n - 1);
+    rpm::vector<double> s(n);
+    rpm::vector<double> k(n - 1);
 
     for (int i = 0; i < n; ++i) {
         s[i] = (y[i] >= 0 ? 1.0 : 0.0);
@@ -16,7 +16,7 @@ Analysis::findZerocros(const std::vector<double>& y, char m)
         k[i] = s[i + 1] - s[i];
     }
 
-    std::vector<int> f;
+    rpm::vector<int> f;
     
     for (int i = 0; i < n - 1; ++i) {
         if ((m == 'p' && k[i] > 0)
@@ -32,7 +32,7 @@ Analysis::findZerocros(const std::vector<double>& y, char m)
         s[i] = y[i + 1] - y[i];
     }
 
-    std::vector<double> t(f.size());
+    rpm::vector<double> t(f.size());
 
     for (int i = 0; i < (int) f.size(); ++i) {
         t[i] = f[i] - y[f[i]] / s[i];

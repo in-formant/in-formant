@@ -1,11 +1,11 @@
 #include "filter.h"
 
-std::vector<double> Analysis::filter(const std::vector<double>& a, const std::vector<double>& x)
+rpm::vector<double> Analysis::filter(const rpm::vector<double>& a, const rpm::vector<double>& x)
 {
     const int nx = x.size();
     const int na = a.size();
 
-    std::vector<double> y(nx);
+    rpm::vector<double> y(nx);
 
     for (int i = 0; i < nx; ++i) {
         y[i] = 0.0;
@@ -19,13 +19,13 @@ std::vector<double> Analysis::filter(const std::vector<double>& a, const std::ve
     return y;
 }
 
-std::vector<double> Analysis::filter(const std::vector<double>& b, const std::vector<double>& a, const std::vector<double>& x)
+rpm::vector<double> Analysis::filter(const rpm::vector<double>& b, const rpm::vector<double>& a, const rpm::vector<double>& x)
 {
     const int nx = x.size();
     const int nb = b.size();
     const int na = a.size();
 
-    std::vector<double> y(nx);
+    rpm::vector<double> y(nx);
 
     for (int i = 0; i < nx; ++i) {
         y[i] = 0.0;

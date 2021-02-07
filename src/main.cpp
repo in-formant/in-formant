@@ -1,7 +1,6 @@
 #include "modules/modules.h"
 #include "nodes/nodes.h"
 #include "analysis/analysis.h"
-#include "backtrace/backtrace.h"
 #include "context/contextmanager.h"
 #include <iostream>
 #include <atomic>
@@ -58,18 +57,18 @@ int main(int argc, char **argv)
 #if ! defined(__EMSCRIPTEN__)
     std::signal(SIGTERM, signalHandler);
     std::signal(SIGINT, signalHandler);
-    registerCrashHandler();
+    //registerCrashHandler();
 #endif
 
 #if defined(__APPLE__)
-    uint32_t bufSize = 32;
-    std::vector<char> exePath(bufSize);
+    /*uint32_t bufSize = 32;
+    rpm::vector<char> exePath(bufSize);
     int ret = _NSGetExecutablePath(exePath.data(), &bufSize);
     if (ret < 0) {
         exePath.resize(bufSize);
         _NSGetExecutablePath(exePath.data(), &bufSize);
     }
-    chdir(dirname(exePath.data()));
+    chdir(dirname(exePath.data()));*/
 #endif
 
     Main::argc = argc;
@@ -77,7 +76,7 @@ int main(int argc, char **argv)
 
     auto contextManager = std::make_unique<Main::ContextManager>(
             48'000,     // captureSampleRate
-            100ms,      // captureDuration
+            //100ms,      // captureDuration
             10ms, 25ms, // playbackBlock(Min/Max)Duration
             50ms,       // playbackDuration
             48'000      // playbackSampleRate

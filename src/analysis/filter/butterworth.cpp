@@ -1,5 +1,4 @@
 #include "filter.h"
-#include "../../modules/math/constants.h"
 #include "../../synthesis/synthesis.h"
 #include <complex>
 #include <iostream>
@@ -23,8 +22,8 @@ VectorXcf poly(const VectorXcf& z) {
     return poly;
 }
 
-std::vector<std::complex<double>> poly(const std::vector<std::complex<double>>& z) {
-    std::vector<std::complex<double>> poly(z.size() + 1, 1.0);
+rpm::vector<std::complex<double>> poly(const rpm::vector<std::complex<double>>& z) {
+    rpm::vector<std::complex<double>> poly(z.size() + 1, 1.0);
 
     poly[0] = 1.0;
 
@@ -37,12 +36,12 @@ std::vector<std::complex<double>> poly(const std::vector<std::complex<double>>& 
     return poly;
 }
 
-std::vector<std::array<double, 6>> Analysis::butterworthHighpass(int N, double fc, double fs)
+rpm::vector<std::array<double, 6>> Analysis::butterworthHighpass(int N, double fc, double fs)
 {
     const double Wn = fc / (fs / 2.0);
     const double Wo = tanf(Wn * M_PI / 2.0);
 
-    std::vector<std::complex<double>> p;
+    rpm::vector<std::complex<double>> p;
 
     // Step 1. Get Butterworth analog lowpass prototype.
     for (int i = 2 + N - 1; i <= 3 * N - 1; i += 2) {
@@ -54,7 +53,7 @@ std::vector<std::array<double, 6>> Analysis::butterworthHighpass(int N, double f
                         prodSp = 1.0,
                         prodSz = 1.0;
 
-    std::vector<std::complex<double>> Sp(p.size()), Sz(p.size());
+    rpm::vector<std::complex<double>> Sp(p.size()), Sz(p.size());
 
     for (int i = 0; i < p.size(); ++i) {
         Sg *= -p[i];
@@ -66,7 +65,7 @@ std::vector<std::array<double, 6>> Analysis::butterworthHighpass(int N, double f
     Sg = 1.0 / Sg;
 
     // Step 3. Transform to digital filter.
-    std::vector<std::complex<double>> P(Sp.size()), Z(Sp.size());
+    rpm::vector<std::complex<double>> P(Sp.size()), Z(Sp.size());
     
     double G = std::real(Sg * prodSz / prodSp);
 
@@ -80,12 +79,12 @@ std::vector<std::array<double, 6>> Analysis::butterworthHighpass(int N, double f
     return zpk2sos(Z, P, G);
 }
 
-std::vector<std::array<double, 6>> Analysis::butterworthLowpass(int N, double fc, double fs)
+rpm::vector<std::array<double, 6>> Analysis::butterworthLowpass(int N, double fc, double fs)
 {
     const double Wn = fc / (fs / 2.0);
     const double Wo = tanf(Wn * M_PI / 2.0);
 
-    std::vector<std::complex<double>> p;
+    rpm::vector<std::complex<double>> p;
 
     // Step 1. Get Butterworth analog lowpass prototype.
     for (int i = 2 + N - 1; i <= 3 * N - 1; i += 2) {
@@ -96,7 +95,7 @@ std::vector<std::array<double, 6>> Analysis::butterworthLowpass(int N, double fc
     std::complex<double> Sg = 1.0,
                         prodSp = 1.0;
 
-    std::vector<std::complex<double>> Sp(p.size()), Sz(0);
+    rpm::vector<std::complex<double>> Sp(p.size()), Sz(0);
 
     for (int i = 0; i < p.size(); ++i) {
         Sg *= Wo;
@@ -105,7 +104,7 @@ std::vector<std::array<double, 6>> Analysis::butterworthLowpass(int N, double fc
     }
 
     // Step 3. Transform to digital filter.
-    std::vector<std::complex<double>> P(Sp.size()), Z(Sp.size(), -1);
+    rpm::vector<std::complex<double>> P(Sp.size()), Z(Sp.size(), -1);
    
     double G = std::real(Sg / prodSp);
 

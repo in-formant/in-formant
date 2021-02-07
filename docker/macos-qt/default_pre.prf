@@ -1,0 +1,23 @@
+CONFIG = asset_catalogs rez $$CONFIG
+load(default_pre)
+
+QMAKE_ASSET_CATALOGS_APP_ICON = AppIcon
+
+# Make the default debug info format for static debug builds
+# DWARF instead of DWARF with dSYM. This cuts down build times
+# for application debug builds significantly, as Xcode doesn't
+# have to pull out all the DWARF info from the Qt static libs
+# and put it into a dSYM file. We don't need that dSYM file in
+# the first place, since the information is available in the
+# object files inside the archives (static libraries).
+macx-xcode:qtConfig(static): \
+    QMAKE_XCODE_DEBUG_INFORMATION_FORMAT = dwarf
+
+# This variable is used by the xcode_dynamic_library_suffix
+# feature, which allows Xcode to choose the Qt libraries to link to
+# at build time, depending on the current Xcode SDK and configuration.
+QMAKE_XCODE_LIBRARY_SUFFIX_SETTING = QT_LIBRARY_SUFFIX
+
+xcode_copy_phase_strip_setting.name = COPY_PHASE_STRIP
+xcode_copy_phase_strip_setting.value = NO
+QMAKE_MAC_XCODE_SETTINGS += xcode_copy_phase_strip_setting

@@ -30,7 +30,7 @@ void InvGlot::process(const NodeIO *inputs[], NodeIO *outputs[])
     out1->setLength(result.glotSig.size());
     std::copy(result.glotSig.begin(), result.glotSig.end(), out1->getData());
   
-    std::vector<double> dg(result.glotSig.size()); 
+    rpm::vector<double> dg(result.glotSig.size()); 
     for (int i = 1; i < result.glotSig.size(); ++i)
         dg[i] = result.glotSig[i] - result.glotSig[i - 1];
     dg[0] = dg[1];

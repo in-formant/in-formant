@@ -1,0 +1,86 @@
+
+Add "API Introduction" documentation section that was missing
+from version 1.5, causing broken links.
+
+Improve analysis and resynthesis performance when using PFFFT or vDSP
+by automatically enabling the use of real rather than complex FFTs
+where applicable.
+
+1.5
+
+Add navigation links to the HTML documentation.
+
+Add a code example demonstrating synthesis of musical notes.
+
+Add a function process() for iterating over coefficients sets with
+greater flexibility than apply().  Also add a function fill() for
+algorithmically creating new coefficients.
+
+Make the C++ declarations in the API reference documents more closely
+resemble actual C++ code.
+
+Add a method gaborator::analyzer::band_ref() returning the band number
+corresponding to the reference frequency.
+
+1.4
+
+Support building the library as C++17, while retaining compatibility
+with C++11.
+
+Further improve the performance of analyzing short signal blocks, and
+of signal blocks not aligned to large powers of two.
+
+Add a code example mesasuring the resynthesis signal-to-noise
+ratio (SNR).
+
+1.3
+
+Eliminate some compiler warnings.
+
+Declare gaborator::analyzer::band_ff() const, making the code match
+the documentation.
+
+Fix incorrect return type of gaborator::analyzer::band_ff() in the
+documentation.
+
+Improve performance of analyzing short signal blocks.
+
+Remove special-case optimization of analyzing signal slices of all
+zeros, as it caused incorrect results.
+
+Support up to 384 bands per octave.
+
+1.2
+
+Add overview documentation.
+
+Add real-time FAQ.
+
+Actually include version.h in the release.
+
+Fix off-by-one error in defintion of analyzer constructor ff_min
+argument.
+
+Fix incorrect return value of band_ff() for DC band.
+
+Add streaming example code.
+
+Add analyzer::analysis_support() and analyzer::synthesis_support().
+
+Document analyzer::band_ff().
+
+Improve signal to noise ratio at low numbers of bands per octave.
+
+Note the need for -mfpu=neon on ARM in render.html.
+
+1.1
+
+Added CHANGES file.
+
+Added reference documentation.
+
+New include file gaborator/version.h.
+
+1.0
+
+Initial release

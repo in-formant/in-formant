@@ -17,9 +17,6 @@ Prereqs::Prereqs(Buffer *buffer, int outDurationInMs, int minOutLength)
       mOutDuration(outDurationInMs),
       mMinOutLength(minOutLength)
 {
-    if (buffer->getDuration() < outDurationInMs) {
-        throw std::runtime_error("Nodes::Prereqs] Input buffer duration is shorter than the requested output duration");
-    }
 }
 
 void Prereqs::setOutputDuration(int outDuration)
@@ -37,15 +34,11 @@ void Prereqs::process(const NodeIO *inputs[], NodeIO *outputs[])
     auto out = outputs[0]->as<IO::AudioTime>();
 
     int sampleRate = mBuffer->getSampleRate();
-    int bufferLength = mBuffer->getLength();
 
-    int actualLength = std::max({ bufferLength, mMinOutLength, (sampleRate * mOutDuration) / 1000 });
+    //int actualLength = std::max(mMinOutLength, (sampleRate * mOutDuration) / 1000);
+    int actualLength = (sampleRate * mOutDuration) / 1000;
 
-    if (mBuffer->getLength() < actualLength) {
-        mBuffer->setLength(actualLength);
-    }
-
-    static std::vector<std::array<double, 6>> hpsos;
+    static rpm::vector<std::array<double, 6>> hpsos;
     static int lastSampleRate = 0;
     static int lastLength = 0;
 
@@ -58,7 +51,7 @@ void Prereqs::process(const NodeIO *inputs[], NodeIO *outputs[])
     out->setSampleRate(sampleRate);
     out->setLength(actualLength);
 
-    std::vector<double> input(actualLength);
+    rpm::vector<double> input(actualLength);
     mBuffer->pull(input.data(), actualLength);
     input = Analysis::sosfilter(hpsos, input);
     for (int i = 0; i < actualLength; ++i) {

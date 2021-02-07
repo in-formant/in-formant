@@ -1,9 +1,9 @@
 #ifndef AUDIO_QUEUE_H
 #define AUDIO_QUEUE_H
 
+#include "rpcxx.h"
 #include "../resampler/resampler.h"
 #include <functional>
-#include <deque>
 #include <mutex>
 
 namespace Module::Audio {
@@ -34,7 +34,7 @@ namespace Module::Audio {
         Resampler mResampler;
         QueueCallback mCallback;
         
-        std::deque<double> mDeque;
+        rpm::deque<double> mDeque;
         
         std::mutex mLock;
     };

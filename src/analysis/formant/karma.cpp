@@ -73,7 +73,7 @@ FormantResult Karma::solve(const double *lpc, int lpcOrder, double sampleRate)
     state->m_up = m_pred + K * (y - y_pred);
     state->P_up = P_pred - K * H * P_pred;
 
-    std::vector<FormantData> formants(numF);
+    rpm::vector<FormantData> formants(numF);
     for (int i = 0; i < numF; ++i) {
         formants[i] = {
             .frequency = state->m_up(i),

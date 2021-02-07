@@ -1,7 +1,8 @@
 #ifndef ANALYSIS_FORMANT_H
 #define ANALYSIS_FORMANT_H
 
-#include <vector>
+#include "rpcxx.h"
+#include "../../modules/audio/resampler/resampler.h"
 
 namespace Analysis {
 
@@ -11,7 +12,7 @@ namespace Analysis {
     };
 
     struct FormantResult {
-        std::vector<FormantData> formants;
+        rpm::vector<FormantData> formants;
     };
 
     class FormantSolver {
@@ -40,6 +41,17 @@ namespace Analysis {
             FormantResult solve(const double *lpc, int lpcOrder, double sampleRate) override;
         private:
             KarmaState *state;
+        };
+
+        class DeepFormants : public FormantSolver {
+        public:
+            DeepFormants();
+            FormantResult solve(const double *lpc, int lpcOrder, double sampleRate) override;
+            void setFrameAudio(const double *x, int length, double fs);
+        private:
+            Module::Audio::Resampler rs;
+            rpm::vector<double> xv;
+            double fs;
         };
     };
 

@@ -1,6 +1,7 @@
 #include "contextmanager.h"
 #include "config.h"
 #include "cfgpath.h"
+#include <iostream>
 
 using namespace Main;
 
@@ -79,12 +80,15 @@ toml::table Main::getConfigTable()
 {
     auto path = getConfigPath();
 
+    std::cout << "Reading configuration from: " << path << std::endl;
+
     fs::create_directories(path.parent_path());
 
     if (fs::exists(path) && fs::is_regular_file(path)) {
         return toml::parse_file(path.string());
     }
 
+    std::cout << "Config not found, using defaults..." << std::endl;
     return toml::table();
 }
 
@@ -119,7 +123,7 @@ LinpredAlgorithm Config::getLinpredAlgorithm()
 
 FormantAlgorithm Config::getFormantAlgorithm()
 {
-    return enumField(mTbl["solvers"], "formant", FormantAlgorithm::Filtered);
+    return enumField(mTbl["solvers"], "formant", FormantAlgorithm::Deep);
 }
 
 InvglotAlgorithm Config::getInvglotAlgorithm()
@@ -163,9 +167,9 @@ int Config::getViewMaxGain()
     return integerField(mTbl["view"], "maxGain", 0);
 }
 
-FrequencyScale Config::getViewFrequencyScale()
+QPainterWrapper::FrequencyScale Config::getViewFrequencyScale()
 {
-    return enumField(mTbl["view"], "frequencyScale", FrequencyScale::Mel);
+    return enumField(mTbl["view"], "frequencyScale", QPainterWrapper::FrequencyScale::Mel);
 }
 
 int Config::getViewFormantCount()

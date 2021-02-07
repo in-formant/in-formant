@@ -1,6 +1,8 @@
 #ifndef APP_SYNTH_H
 #define APP_SYNTH_H
 
+#include "rpcxx.h"
+
 #include "../../../analysis/analysis.h"
 #include "../../../synthesis/synthesis.h"
 #include "../../audio/audio.h"
@@ -20,7 +22,7 @@ namespace Module::App
         void setGlotPitch(double);
         void setGlotRd(double);
         void setGlotTc(double);
-        void setFormants(const std::vector<Analysis::FormantData>&);
+        void setFormants(const rpm::vector<Analysis::FormantData>&);
         void setFilterShift(double);
         void setVoiced(bool);
 
@@ -46,7 +48,7 @@ namespace Module::App
         double glotPitch;
         double glotRd;
         double glotTc;
-        std::vector<Analysis::FormantData> formants;
+        rpm::vector<Analysis::FormantData> formants;
         double filterShift;
         bool voiced;
 
@@ -56,15 +58,15 @@ namespace Module::App
         double realGlotPitch;
         double realGlotRd;
         double realGlotTc;
-        std::vector<Analysis::FormantData> realFormants;
-        std::vector<std::array<double, 6>> realFilter;
+        rpm::vector<Analysis::FormantData> realFormants;
+        rpm::vector<std::array<double, 6>> realFilter;
         double realFilterShift;
 
-        std::vector<std::vector<double>> zfNoise;
-        std::vector<std::vector<double>> zfGlot;
+        rpm::vector<rpm::vector<double>> zfNoise;
+        rpm::vector<rpm::vector<double>> zfGlot;
 
-        std::vector<double> glotSurplus;
-        std::vector<double> surplus;
+        rpm::vector<double> glotSurplus;
+        rpm::vector<double> surplus;
 
         Module::Audio::Resampler *resampler;
     };

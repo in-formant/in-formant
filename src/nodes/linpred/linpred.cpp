@@ -1,18 +1,20 @@
 #include "linpred.h"
 #include <iostream>
+#include <algorithm>
 
 using namespace Nodes;
 
 constexpr NodeIOType outTypes[] = {
     kNodeIoTypeIIRFilter,
     kNodeIoTypeAudioSpec,
+    kNodeIoTypeAudioTime,
 };
 
 LinPred::LinPred(Analysis::LinpredSolver *solver, int order)
     : Node(NodeDescriptor {
             .inputCount = 1,
             .inputs = &kNodeIoTypeAudioTime,
-            .outputCount = 2,
+            .outputCount = 3,
             .outputs = outTypes,
         }),
       mSolver(solver),
@@ -34,7 +36,7 @@ inline double G(double x, int L, double alpha)
     return expf(-(k * k));
 }
 
-static void calcGaussian(std::vector<double>& win, double alpha)
+static void calcGaussian(rpm::vector<double>& win, double alpha)
 {
     const int L = win.size();
     
@@ -51,12 +53,13 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
     auto in = inputs[0]->as<IO::AudioTime>();
     auto out = outputs[0]->as<IO::IIRFilter>();
     auto outSpec = outputs[1]->as<IO::AudioSpec>();
+    auto outTime = outputs[2]->as<IO::AudioTime>();
 
     int sampleRate = in->getSampleRate();
 
     int inLength = in->getLength();
 
-    static std::vector<double> window;
+    static rpm::vector<double> window;
     if (window.size() != inLength) {
         constexpr double alpha = 0.2;
         window.resize(inLength);
@@ -70,7 +73,7 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
     }
 
     double gain;
-    std::vector<double> lpc = mSolver->solve(
+    rpm::vector<double> lpc = mSolver->solve(
             inData.get(),
             inLength,
             mOrder,
@@ -118,4 +121,8 @@ void LinPred::process(const NodeIO *inputs[], NodeIO *outputs[])
         outSpec->getData()[i] = mLastSpec[i] = 0.2 * mLastSpec[i]
                                                 + 0.8 * outSpec->getData()[i] / max;
     }
+
+    outTime->setLength(in->getLength());
+    outTime->setSampleRate(in->getSampleRate());
+    std::copy_n(in->getConstData(), in->getLength(), outTime->getData());
 }

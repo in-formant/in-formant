@@ -21,7 +21,7 @@ namespace Nodes::IO {
         int mSampleRate;
         int mLength;
 
-        std::vector<double> mData;
+        rpm::vector<double> mData;
     };
 
 }

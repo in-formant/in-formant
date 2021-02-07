@@ -103,12 +103,12 @@ void Alsa::refreshDevices()
     snd_device_name_free_hint(hints);
 }
 
-const std::vector<Device>& Alsa::getCaptureDevices() const
+const rpm::vector<Device>& Alsa::getCaptureDevices() const
 {
     return mCaptureDevices;
 }
 
-const std::vector<Device>& Alsa::getPlaybackDevices() const
+const rpm::vector<Device>& Alsa::getPlaybackDevices() const
 {
     return mPlaybackDevices;
 }
@@ -223,7 +223,7 @@ void Alsa::closePlaybackStream()
 
 void Alsa::captureThreadLoop()
 {
-    std::vector<float> array;
+    rpm::vector<float> array;
 
     while (mThreadsRunning) {
         while (mThreadsRunning && mPauseCapture)
@@ -261,7 +261,7 @@ void Alsa::captureThreadLoop()
 
 void Alsa::playbackThreadLoop()
 {
-    std::vector<float> array;
+    rpm::vector<float> array;
 
     while (mThreadsRunning) {
         while (mThreadsRunning && mPausePlayback)

@@ -31,6 +31,7 @@ extern "C" {
 #include "nanovg.h"
 
 // Create flags
+
 enum NVGcreateFlags {
   // Flag indicating if geometry based anti-aliasing is used (may not be
   // needed when using MSAA).
@@ -52,15 +53,6 @@ enum NVGimageFlagsMetal {
   NVG_IMAGE_NODELETE = 1 << 16, // Do not delete Metal texture handle.
 };
 
-// The possible OS targets.
-enum MNVGTarget {
-  MNVG_IOS,
-  MNVG_MACOS,
-  MNVG_SIMULATOR,
-  MNVG_TVOS,
-  MNVG_UNKNOWN,
-};
-
 struct MNVGframebuffer {
   NVGcontext* ctx;
   int image;
@@ -70,7 +62,7 @@ typedef struct MNVGframebuffer MNVGframebuffer;
 // Creates a new NanoVG context. The `metalLayer` parameter should be a
 // `CAMetalLayer` object, and the `flags` should be combination of
 // `NVGcreateFlags` above.
-NVGcontext* nvgCreateMTL(void* metalLayer, int flags);
+NVGcontext* nvgCreateMTL(void* metalLayer, void *commandQueue, int flags);
 
 // Deletes the specified NanoVG context.
 void nvgDeleteMTL(NVGcontext* ctx);
@@ -96,14 +88,14 @@ void mnvgDeleteFramebuffer(MNVGframebuffer* framebuffer);
 // Clear context on next frame, must be called before nvgEndFrame
 void mnvgClearWithColor(NVGcontext* ctx, NVGcolor color);
 
-// Returns a pointer to the corresponded `id<MTLCommandQueue>` object.
-void* mnvgCommandQueue(NVGcontext* ctx);
-
 // Creates an image id from a `id<MTLTexture>` object pointer.
 int mnvgCreateImageFromHandle(NVGcontext* ctx, void* textureId, int imageFlags);
 
 // Returns a pointer to the corresponded `id<MTLDevice>` object.
 void* mnvgDevice(NVGcontext* ctx);
+
+// Optional: set the target color texture
+void mnvgSetColorTexture(NVGcontext* ctx, void *texture);
 
 // Returns a pointer to the `id<MTLTexture>` object of the specified image.
 void* mnvgImageHandle(NVGcontext* ctx, int image);
@@ -111,9 +103,6 @@ void* mnvgImageHandle(NVGcontext* ctx, int image);
 // Copies the pixels from the specified image into the specified `data`.
 void mnvgReadPixels(NVGcontext* ctx, int image, int x, int y, int width,
                     int height, void* data);
-
-// Returns the current OS target.
-enum MNVGTarget mnvgTarget();
 
 #ifdef __cplusplus
 }

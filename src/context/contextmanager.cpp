@@ -1,29 +1,31 @@
 #include "contextmanager.h"
+#include "timings.h"
+
+#include <gaborator/gaborator.h>
+#include <gaborator/render.h>
 
 using namespace Main;
 using namespace std::chrono_literals;
 
 ContextManager::ContextManager(
                 int captureSampleRate,
-                const dur_ms &captureDuration,
                 const dur_ms &playbackBlockMinDuration,
                 const dur_ms &playbackBlockMaxDuration,
                 const dur_ms &playbackDuration,
                 int playbackSampleRate
             )
-    : mCaptureBuffer(std::make_unique<Audio::Buffer>(
-                captureSampleRate, captureDuration.count())),
+    : mCaptureBuffer(std::make_unique<Audio::Buffer>(captureSampleRate)),
       mPlaybackQueue(std::make_unique<Audio::Queue>(
                 playbackBlockMinDuration.count(), playbackBlockMaxDuration.count(),
                 playbackDuration.count(), playbackSampleRate, [](auto...){})),
-      mPipeline(std::make_unique<App::Pipeline>(mCaptureBuffer.get())),
+      mDataStore(std::make_unique<DataStore>()),
+      mPipeline(std::make_unique<App::Pipeline>(mCaptureBuffer.get(), mDataStore.get())),
       mSynthesizer(std::make_unique<App::Synthesizer>(mPlaybackQueue.get())),
       mConfig(std::make_unique<Config>()),
       mPitchSolver(makePitchSolver(mConfig->getPitchAlgorithm())),
       mLinpredSolver(makeLinpredSolver(mConfig->getLinpredAlgorithm())),
       mFormantSolver(makeFormantSolver(mConfig->getFormantAlgorithm())),
       mInvglotSolver(makeInvglotSolver(mConfig->getInvglotAlgorithm())),
-      mDataStore(std::make_unique<DataStore>()),
       mAudioContext(std::make_unique<AudioContext>(
                   mConfig->getAudioBackend(),
                   mCaptureBuffer.get(),
@@ -34,8 +36,8 @@ ContextManager::ContextManager(
     createViews();
     loadConfig();
     updatePipeline();
-    mPipeline->initialize();
     mDataStore->setTrackLength(1000);
+    mDataStore->setFormantTrackCount(4);
 }
 
 int ContextManager::exec()
@@ -78,40 +80,21 @@ void ContextManager::updatePipeline()
     mPipeline->setLinpredSolver(mLinpredSolver.get());
     mPipeline->setFormantSolver(mFormantSolver.get());
     mPipeline->setInvglotSolver(mInvglotSolver.get());
-
-    mPipeline->setFFTSampleRate(2 * mViewMaxFrequency);
-    mPipeline->setFFTSize(mViewFftSize);
-
-    mPipeline->setFormantSampleRate(2 * mAnalysisMaxFrequency);
-    mPipeline->setFormantLpOrder(mAnalysisLpOrder);
-
-    mPipeline->setPitchAndLpSpectrumSampleRate(mAnalysisPitchSampleRate);
 }
 
 void ContextManager::startAnalysisThread()
 {
     mAnalysisRunning = true;
-    mAnalysisThread = std::thread(&ContextManager::analysisThreadLoop, this);
+    mAnalysisThread = std::thread(std::mem_fn(&ContextManager::analysisThreadLoop), this);
 }
 
 void ContextManager::analysisThreadLoop()
 {
     while (mAnalysisRunning) {
-        mAudioContext->tickAudio();
-        mPipeline->processAll();
-
-        mDataStore->beginWrite();
-
-        mDataStore->getSoundSpectrumTrack().push_back(mPipeline->getFFTSlice());
-        mDataStore->getLpSpectrumTrack().push_back(mPipeline->getLpSpectrumSlice());
-        mDataStore->getPitchTrack().push_back(mPipeline->getPitch());
-        mDataStore->getFormantTrack().push_back(mPipeline->getFormants());
-        mDataStore->getSoundTrack().push_back(mPipeline->getSound());
-        mDataStore->getGifTrack().push_back(mPipeline->getGlottalFlow());
-
-        mDataStore->endWrite();
-
-        std::this_thread::sleep_for(5ms);
+        if (auto timer = timer_guard(timings::update)) {
+            mAudioContext->tickAudio();
+            mPipeline->processAll();
+        }
     }
 }
 

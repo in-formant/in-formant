@@ -3,8 +3,8 @@
 
 using namespace Module::Audio;
 
-std::vector<Device> Dummy::captureDevices;
-std::vector<Device> Dummy::playbackDevices;
+rpm::vector<Device> Dummy::captureDevices;
+rpm::vector<Device> Dummy::playbackDevices;
 
 Dummy::Dummy()
 {
@@ -39,12 +39,12 @@ void Dummy::refreshDevices()
     std::cout << "Audio::Dummy] refreshDevices ()" << std::endl;
 }
 
-const std::vector<Device>& Dummy::getCaptureDevices() const
+const rpm::vector<Device>& Dummy::getCaptureDevices() const
 {
     return captureDevices;
 }
 
-const std::vector<Device>& Dummy::getPlaybackDevices() const
+const rpm::vector<Device>& Dummy::getPlaybackDevices() const
 {
     return playbackDevices;
 }

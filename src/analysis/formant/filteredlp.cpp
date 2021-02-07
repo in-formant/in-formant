@@ -2,34 +2,32 @@
 #include "../util/util.h"
 #include "../util/laguerre.h"
 #include "../fft/fft.h"
-#include "../../modules/math/constants.h"
 #include <algorithm>
-#include <map>
 
 using namespace Analysis::Formant;
 using Analysis::FormantResult;
 
-static int cauchyIntegral(const std::vector<double>& p, double r1, double r2, double phi, int maxDepth);
+static int cauchyIntegral(const rpm::vector<double>& p, double r1, double r2, double phi, int maxDepth);
 
-static std::vector<int> peak_picking(const std::vector<double> &nsdf);
+static rpm::vector<int> peak_picking(const rpm::vector<double> &nsdf);
 
 FormantResult FilteredLP::solve(const double *lpc, int lpcOrder, double sampleRate)
 {
     constexpr int nfft = 512;
     static Analysis::ReReFFT fft(nfft, FFTW_R2HC);
 
-    std::vector<double> polynomial(lpcOrder + 1);
+    rpm::vector<double> polynomial(lpcOrder + 1);
     polynomial[0] = 1.0;
     std::copy(lpc, lpc + lpcOrder, std::next(polynomial.begin()));
 
-    std::vector<std::complex<double>> roots = findRoots(polynomial);
+    rpm::vector<std::complex<double>> roots = findRoots(polynomial);
     
     struct FormantRoot {
         FormantData d;
         std::complex<double> r;
     };
 
-    std::vector<FormantRoot> pickedRoots;
+    rpm::vector<FormantRoot> pickedRoots;
 
     const double phiDelta = 2.0 * 50.0 * M_PI / sampleRate;
 
@@ -54,7 +52,7 @@ FormantResult FilteredLP::solve(const double *lpc, int lpcOrder, double sampleRa
             [](const auto& a, const auto& b) { return a.d.frequency < b.d.frequency; });
 
     FormantResult result;
-    std::vector<FormantRoot> mergedPeaks;
+    rpm::vector<FormantRoot> mergedPeaks;
 
     for (int i = 0; i < int(pickedRoots.size()) - 1; ++i) {
         if (pickedRoots[i + 1].d.frequency - pickedRoots[i].d.frequency > 700
@@ -69,7 +67,7 @@ FormantResult FilteredLP::solve(const double *lpc, int lpcOrder, double sampleRa
         result.formants.push_back(pickedRoots.back().d);
     }
 
-    std::vector<std::complex<double>> resolvedRoots;
+    rpm::vector<std::complex<double>> resolvedRoots;
 
     for (const auto& v : mergedPeaks) {
         double phiPeak = std::arg(v.r);
@@ -89,7 +87,7 @@ FormantResult FilteredLP::solve(const double *lpc, int lpcOrder, double sampleRa
         int n = std::abs(n4 - n3);
 
         if (n == 2) {
-            std::vector<std::complex<double>> pr(polynomial.rbegin(), polynomial.rend());
+            rpm::vector<std::complex<double>> pr(polynomial.rbegin(), polynomial.rend());
             std::complex<double> r1, r2;
             r1 = Analysis::laguerreRoot(pr, std::polar(0.9, phiPeak), 1e-12);
             pr = Analysis::laguerreDeflate(pr, r1);
@@ -122,7 +120,7 @@ FormantResult FilteredLP::solve(const double *lpc, int lpcOrder, double sampleRa
     return result;
 }
 
-static void snellCalcRegion(double t, std::map<double, int>& C, const std::vector<double>& p, double phi)
+static void snellCalcRegion(double t, rpm::map<double, int>& C, const rpm::vector<double>& p, double phi)
 {
     // Do not calculate again.
     if (C.find(t) == C.end()) {
@@ -136,10 +134,10 @@ static void snellCalcRegion(double t, std::map<double, int>& C, const std::vecto
     }
 }
 
-static void snellCalcPartition(const std::vector<double>& t, std::map<double, int>& C, const std::vector<double>& p, double phi, int maxDepth, std::vector<double>& partition)
+static void snellCalcPartition(const rpm::vector<double>& t, rpm::map<double, int>& C, const rpm::vector<double>& p, double phi, int maxDepth, rpm::vector<double>& partition)
 {
-    std::vector<std::pair<double, double>> partNext;
-    std::vector<std::pair<double, double>> partCurrent;
+    rpm::vector<std::pair<double, double>> partNext;
+    rpm::vector<std::pair<double, double>> partCurrent;
     for (int i = 0; i < signed(t.size()) - 1; ++i) {
         partCurrent.emplace_back(t[i], t[i + 1]);
     }
@@ -176,16 +174,16 @@ static void snellCalcPartition(const std::vector<double>& t, std::map<double, in
     }
 }
 
-int cauchyIntegral(const std::vector<double>& p, double r1, double r2, double phi, int maxDepth)
+int cauchyIntegral(const rpm::vector<double>& p, double r1, double r2, double phi, int maxDepth)
 {
     // Let C(t) denote the region containing the point P(te^(j*phi)).
     // If ti, i = 0 to i = M is a partition of the ray (r1 -> r2),
     // then p(ti, ti+1) denotes the number of octants (mod 8) between C(ti) and C(ti-1)
 
-    std::map<double, int> C; // Memoised counts for every value of t encountered.
+    rpm::map<double, int> C; // Memoised counts for every value of t encountered.
 
-    std::vector<double> initialPartition({0, 0.2, 0.4, 0.6, 0.8, 1.0, 2.0});
-    std::vector<double> finalPartition;
+    rpm::vector<double> initialPartition({0, 0.2, 0.4, 0.6, 0.8, 1.0, 2.0});
+    rpm::vector<double> finalPartition;
     snellCalcPartition(initialPartition, C, p, phi, maxDepth, finalPartition);
 
     /*for (int i = 0; i < finalPartition.size(); ++i) {
@@ -223,9 +221,9 @@ int cauchyIntegral(const std::vector<double>& p, double r1, double r2, double ph
     return N;
 }
 
-std::vector<int> peak_picking(const std::vector<double> &nsdf)
+rpm::vector<int> peak_picking(const rpm::vector<double> &nsdf)
 {
-	std::vector<int> max_positions{};
+	rpm::vector<int> max_positions{};
 	int pos = 0;
 	int cur_max_pos = 0;
 	ssize_t size = nsdf.size();

@@ -49,12 +49,12 @@ void Oboe::refreshDevices()
     mPlaybackDevices.push_back(playback);
 }
 
-const std::vector<Device>& Oboe::getCaptureDevices() const
+const rpm::vector<Device>& Oboe::getCaptureDevices() const
 {
     return mCaptureDevices;
 }
 
-const std::vector<Device>& Oboe::getPlaybackDevices() const
+const rpm::vector<Device>& Oboe::getPlaybackDevices() const
 {
     return mPlaybackDevices;
 }

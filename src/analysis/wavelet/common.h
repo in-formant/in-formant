@@ -1,13 +1,13 @@
 #ifndef WAVELET_COMMON_H
 #define WAVELET_COMMON_H
 
-#include <vector>
+#include "rpcxx.h"
 
 namespace Wt {
 
     struct ArrayInfo {
-        std::vector<int> shape;
-        std::vector<int> strides;
+        rpm::vector<int> shape;
+        rpm::vector<int> strides;
         size_t ndim;
     };
 

@@ -1,6 +1,7 @@
 #ifndef ANALYSIS_IRAPT_H
 #define ANALYSIS_IRAPT_H
 
+#include "rpcxx.h"
 #include <utility>
 
 namespace Analysis {
@@ -23,24 +24,24 @@ namespace Analysis {
 
         double chunk_f0_sec;
         int chunk_f0_size;
-        std::vector<double> chunk_f0_freqs;
+        rpm::vector<double> chunk_f0_freqs;
 
         std::pair<double, double> f0_limits;
         double f0_max_step;
-        std::vector<double> f0_freq_lines;
+        rpm::vector<double> f0_freq_lines;
 
         struct {
             int FFT_order;
             int FFT_freq_line_size;
             int Interp_factor;
             int Interp_filter_h_size;
-            std::vector<double> Interp_filter;
+            rpm::vector<double> Interp_filter;
             int Left_index_actual;
             int Right_index_actual;
             int Left_index;
             int Right_index;
-            std::vector<int> Actual_indices;
-            std::vector<double> Actual_freqs;
+            rpm::vector<int> Actual_indices;
+            rpm::vector<double> Actual_freqs;
             int Actual_freqs_num;
         } corr_param;
     };

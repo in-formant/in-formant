@@ -1,176 +1,190 @@
 #include "pipeline.h"
 
+#include <iostream>
+
 using namespace Module::App;
 
-Pipeline::Pipeline(Module::Audio::Buffer *captureBuffer)
-    : ndi(nullptr), ndo(nullptr),
-      wasInitializedAtLeastOnce(false),
-      captureBuffer(captureBuffer)
+Pipeline::Pipeline(Module::Audio::Buffer *captureBuffer, Main::DataStore *dataStore)
+    : captureBuffer(captureBuffer),
+      dataStore(dataStore),
+
+      time(0),
+      runningThreads(false),
+      bufferSpectrogram(16000),
+      bufferPitch(16000),
+      bufferFormants(16000)
 {
 }
 
 Pipeline::~Pipeline()
 {
-    if (ndi) delete[] ndi;
-    if (ndo) delete[] ndo;
-}
+    runningThreads = false;
+    
+    Module::Audio::Buffer::cancelPulls();
 
-void Pipeline::initialize()
-{
-    captureSampleRate = captureBuffer->getSampleRate();
-    createNodes();
-    createIOs();
-    wasInitializedAtLeastOnce = true;
+    if (threadSpectrogram.joinable())
+        threadSpectrogram.join();
+
+    if (threadPitch.joinable())
+        threadPitch.join();
+
+    if (threadFormants.joinable())
+        threadFormants.join();
 }
 
 Pipeline& Pipeline::setPitchSolver(Analysis::PitchSolver *value)
 {
     pitchSolver = value;
-    if (wasInitializedAtLeastOnce) {
-        nodes["pitch"] = std::make_unique<Nodes::PitchTracker>(pitchSolver);
-    }
     return *this;
 }
 
 Pipeline& Pipeline::setInvglotSolver(Analysis::InvglotSolver *value)
 {
     invglotSolver = value;
-    if (wasInitializedAtLeastOnce) {
-        nodes["invglot"] = std::make_unique<Nodes::InvGlot>(invglotSolver);
-    }
     return *this;
 }
 
 Pipeline& Pipeline::setLinpredSolver(Analysis::LinpredSolver *value)
 {
     linpredSolver = value;
-    if (wasInitializedAtLeastOnce) {
-        nodes["linpred_spectrum"] = std::make_unique<Nodes::LinPred>(linpredSolver, lpSpecLpOrder);
-        nodes["linpred_formant"]  = std::make_unique<Nodes::LinPred>(linpredSolver, formantLpOrder);
-    }
     return *this;
 }
 
 Pipeline& Pipeline::setFormantSolver(Analysis::FormantSolver *value)
 {
     formantSolver = value;
-    if (wasInitializedAtLeastOnce) {
-        nodes["formants"] = std::make_unique<Nodes::FormantTracker>(formantSolver);
+    return *this;
+}
+
+void Pipeline::callbackSpectrogram()
+{
+    auto& analyzerOpt = dataStore->getSpectrogramAnalyzer();
+    auto& coefsOpt = dataStore->getSpectrogramCoefs();
+
+    rpm::vector<double> m(256);
+    
+    double fs = captureBuffer->getSampleRate();
+    double fsDest = fs; //16000;
+    gaborator::parameters params(32, 70.0 / fsDest, 440.0 / fsDest);
+    analyzerOpt = gaborator::analyzer<double>(params);
+    coefsOpt = gaborator::coefs<double>(analyzerOpt.value());
+    auto& analyzer = analyzerOpt.value();
+    auto& coefs = coefsOpt.value();
+
+    Module::Audio::Resampler resampler(fs, fsDest);
+
+    int64_t t = 0;
+
+    while (runningThreads) {
+        bufferSpectrogram.pull(m.data(), m.size());
+
+        auto out = resampler.process(m.data(), m.size());
+
+        dataStore->beginWrite();
+        analyzer.analyze(out.data(), t, t + out.size(), coefs);
+        dataStore->endWrite();
+        t += out.size();
     }
-    return *this;
 }
 
-Pipeline& Pipeline::setAnalysisDuration(millis value)
+void Pipeline::callbackPitch()
 {
-    /*analysisDuration = value;
-    if (wasInitializedAtLeastOnce) {
-        nodes["prereqs"]->as<Nodes::Prereqs>()->setOutputDuration(value.count());
-        nodes["tail_2"]->as<Nodes::Tail>()->setOutputDuration(value.count());
-        nodes["tail_formant"]->as<Nodes::Tail>()->setOutputDuration(value.count());
-    }*/
-    return *this;
-}
+    double fs = captureBuffer->getSampleRate();
 
-Pipeline& Pipeline::setFFTSampleRate(double value)
-{
-    fftSampleRate = value;
-    if (wasInitializedAtLeastOnce) {
-        nodes["rs_fft"]->as<Nodes::Resampler>()->setOutputSampleRate(value);
+    rpm::vector<double> m(30.0 * fs / 1000.0);
+
+    int64_t t = 0;
+
+    while (runningThreads) {
+        bufferPitch.pull(m.data(), m.size());
+
+        auto pitchResult = pitchSolver->solve(m.data(), m.size(), fs);
+
+        if (pitchResult.voiced) {
+            dataStore->beginWrite();
+            dataStore->getPitchTrack().insert(t / fs, pitchResult.pitch);
+            dataStore->endWrite();
+        }
+        t += m.size();
     }
-    return *this;
 }
 
-Pipeline& Pipeline::setFFTSize(int value)
+void Pipeline::callbackFormants()
 {
-    fftSize = value;
-    if (wasInitializedAtLeastOnce) {
-        nodes["fft"]->as<Nodes::Spectrum>()->setFFTLength(value);
+    double fs = captureBuffer->getSampleRate();
+
+    rpm::vector<double> m(25.0 * fs / 1000.0);
+
+    double fsDest = 10000;
+    Module::Audio::Resampler resampler(fs, fsDest);
+
+    int64_t t = 0;
+
+    while (runningThreads) {
+        bufferFormants.pull(m.data(), m.size());
+
+        // Resample even if we're not using LPC method.
+        auto mr = resampler.process(m.data(), m.size());
+
+        rpm::vector<double> lpc;
+
+        if (auto deepFormantSolver = dynamic_cast<Analysis::Formant::DeepFormants *>(formantSolver)) {
+            deepFormantSolver->setFrameAudio(m.data(), m.size(), fs);
+        }
+        else {
+            double gain;
+            lpc = linpredSolver->solve(mr.data(), mr.size(), 10, &gain);
+        }
+
+        auto formantResult = formantSolver->solve(lpc.data(), lpc.size(), fsDest);
+       
+        dataStore->beginWrite();
+        for (int i = 0;
+                i < std::min<int>(
+                    dataStore->getFormantTrackCount(),
+                    formantResult.formants.size());
+                ++i) {
+            dataStore->getFormantTrack(i).insert(t / fs, formantResult.formants[i].frequency);
+        }
+        dataStore->endWrite();
+        t += m.size();
     }
-    return *this;
-}
-
-Pipeline& Pipeline::setPitchAndLpSpectrumSampleRate(double value)
-{
-    secondSampleRate = value;
-    if (wasInitializedAtLeastOnce) {
-        nodes["rs_2"]->as<Nodes::Resampler>()->setOutputSampleRate(secondSampleRate);
-    }
-    setLpSpectrumLpOrder(2 * (secondSampleRate / 2000) + 2);
-    return *this;
-}
-
-Pipeline& Pipeline::setLpSpectrumLpOrder(int value)
-{
-    lpSpecLpOrder = value;
-    if (wasInitializedAtLeastOnce) {
-        nodes["linpred_spectrum"]->as<Nodes::LinPred>()->setOrder(value);
-    }
-    return *this;
-}
-
-Pipeline& Pipeline::setFormantSampleRate(double value)
-{
-    formantSampleRate = value;
-    if (wasInitializedAtLeastOnce) {
-        nodes["rs_formant"]->as<Nodes::Resampler>()->setOutputSampleRate(value);
-    }
-    return *this;
-}
-
-Pipeline& Pipeline::setFormantLpOrder(int value)
-{
-    formantLpOrder = value;
-    if (wasInitializedAtLeastOnce) {
-        nodes["linpred_formant"]->as<Nodes::LinPred>()->setOrder(value);
-    }
-    return *this;
-}
-
-const std::vector<std::array<double, 2>>& Pipeline::getFFTSlice() const
-{
-    return fftSlice;
-}
-
-const std::vector<std::array<double, 2>>& Pipeline::getLpSpectrumSlice() const
-{
-    return lpSpecSlice;
-}
-
-const std::vector<double>& Pipeline::getLpSpectrumLPC() const
-{
-    return lpSpecLPC;
-}
-
-const std::vector<Analysis::FormantData>& Pipeline::getFormants() const
-{
-    return formants;
-}
-
-double Pipeline::getPitch() const
-{
-    return pitch;
-}
-
-const std::vector<double>& Pipeline::getSound() const
-{
-    return sound;
-}
-
-const std::vector<double>& Pipeline::getGlottalFlow() const
-{
-    return glot;
-}
-
-const std::vector<double>& Pipeline::getGlottalInstants() const
-{
-    return glotInst;
 }
 
 void Pipeline::processAll()
 {
-    updatePrereqsForFFT();
+    static int blockSize = 384;
+    rpm::vector<double> data(blockSize);
+    captureBuffer->pull(data.data(), data.size());
+    time += blockSize;
+    
+    dataStore->setTime((double) time / (double) captureBuffer->getSampleRate());
 
-    processStart("prereqs");
+    bufferSpectrogram.setSampleRate(captureBuffer->getSampleRate());
+
+    rpm::vector<float> fdata(data.begin(), data.end());
+    bufferSpectrogram.push(fdata.data(), data.size());
+    bufferPitch.push(fdata.data(), data.size());
+    bufferFormants.push(fdata.data(), data.size());
+
+    if (!runningThreads) {
+        runningThreads = true;
+        threadSpectrogram = std::thread(std::mem_fn(&Pipeline::callbackSpectrogram), this);
+        threadPitch = std::thread(std::mem_fn(&Pipeline::callbackPitch), this);
+        threadFormants = std::thread(std::mem_fn(&Pipeline::callbackFormants), this);
+    }
+  
+    // dynamically adjust blockSize to consume all the buffer.
+    int bufferLength = captureBuffer->getLength();
+    if (bufferLength >= 8192) {
+        blockSize += 128;
+        std::cout << "Processing too slowly, "
+                  << bufferLength << " samples remaining. "
+                  << "Adjusted block size to "
+                  << blockSize << " samples" << std::endl;
+    }
+
+    /*processStart("prereqs");
 
     processArc("prereqs", "rs_fft");
     processArc("rs_fft", "fft");
@@ -193,29 +207,10 @@ void Pipeline::processAll()
     processArc("preemph_formant", "linpred_formant");
     processArc("linpred_formant", "formants");
     
-    updateOutputData();
+    updateOutputData();*/
 }
 
-void Pipeline::processStart(const std::string& nodeName)
-{
-    Nodes::NodeIO **outs = Nodes::unpack(nodeIOs[nodeName], &ndo);
-    nodes[nodeName]->process(nullptr, outs);
-}
-
-void Pipeline::processArc(const std::string& input, const std::string& output)
-{
-    const Nodes::NodeIO **ins = const_cast<decltype(ins)>(Nodes::unpack(nodeIOs[input], &ndi));
-    Nodes::NodeIO **outs = Nodes::unpack(nodeIOs[output], &ndo);
-    nodes[output]->process(ins, outs);
-}
-
-void Pipeline::updatePrereqsForFFT()
-{
-    int fftInLength = nodes["rs_fft"]->as<Nodes::Resampler>()->getRequiredInputLength(fftSize);
-    nodes["prereqs"]->as<Nodes::Prereqs>()->setMinimumOutputLength(fftInLength);
-}
-
-void Pipeline::updateOutputData()
+/*void Pipeline::updateOutputData()
 {
     auto ioFFT = nodeIOs["fft"][0]->as<Nodes::IO::AudioSpec>();
     int fftSliceLength = ioFFT->getLength();
@@ -285,15 +280,5 @@ void Pipeline::createNodes()
     nodes["tail_formant"]       = std::make_unique<Nodes::Tail>(15);
     nodes["linpred_formant"]    = std::make_unique<Nodes::LinPred>(linpredSolver, formantLpOrder);
     nodes["formants"]           = std::make_unique<Nodes::FormantTracker>(formantSolver);
-}
+}*/
 
-void Pipeline::createIOs()
-{
-    for (const auto& [name, node] : nodes) {
-        std::vector<std::unique_ptr<Nodes::NodeIO>> ioVector;
-        for (const auto type : node->getOutputTypes()) {
-            ioVector.push_back(Nodes::makeNodeIO(type));
-        }
-        nodeIOs[name] = std::move(ioVector);
-    }
-}

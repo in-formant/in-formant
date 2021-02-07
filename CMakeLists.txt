@@ -1,31 +1,20 @@
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{MACOSX_DEPLOYMENT_TARGET})
-project(in-formant)
+project(in-formant VERSION ${CUR_VERSION})
 
 set(CMAKE_SUPPORT_DIR "${PROJECT_SOURCE_DIR}/cmake_support")
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SUPPORT_DIR}")
+include(CheckSystemName)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -mtune=generic")
+set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -mtune=generic -fvisibility=hidden -fvisibility-inlines-hidden")
 set(CMAKE_CXX_FLAGS_DEBUG           "-Og -g")
 set(CMAKE_CXX_FLAGS_RELEASE         "-O2 -g0 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g")
 set(CMAKE_CXX_FLAGS_MINSIZEREL      "-Os -g0 -DNDEBUG")
-
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG    "-fuse-ld=gold")
-
-if(ANDROID)
-elseif(WIN32 OR APPLE OR UNIX)
-    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i686 -msse")
-    elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=x86-64 -msse")
-    endif()
-endif()
 
 set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -35,26 +24,28 @@ set(CMAKE_AUTOMOC ON)
 set(SOURCES
     src/main.cpp
     src/fixedsizevector.h
-    src/context/solvermakers.h
+    src/context/timings.cpp
+    src/context/timings.h
     src/context/solvermakers.cpp
-    src/context/config.h
+    src/context/solvermakers.h
     src/context/config.cpp
-    src/context/contextmanager.h
+    src/context/config.h
     src/context/contextmanager.cpp
-    src/context/audiocontext.h
+    src/context/contextmanager.h
     src/context/audiocontext.cpp
-    src/context/rendercontext.h
+    src/context/audiocontext.h
     src/context/rendercontext.cpp
-    src/context/rendercontextprovider.cpp
-    src/context/guicontext.h
+    src/context/rendercontext.h
     src/context/guicontext.cpp
-    src/context/datastore.h
+    src/context/guicontext.h
     src/context/datastore.cpp
+    src/context/datastore.h
     src/context/views/views.h
     src/context/views/spectrogram.cpp
-    src/gui/canvas.h
+    src/gui/qpainterwrapper.cpp
+    src/gui/qpainterwrapper.h
     src/gui/canvas.cpp
-    src/backtrace/backtrace.h
+    src/gui/canvas.h
     src/android_redirect_log.cpp
     src/modules/audio/base/base.cpp
     src/modules/audio/base/base.h
@@ -65,10 +56,6 @@ set(SOURCES
     src/modules/audio/resampler/resampler.cpp
     src/modules/audio/resampler/resampler.h
     src/modules/audio/audio.h
-    src/modules/renderer/base/base.cpp
-    src/modules/renderer/base/parameters.h
-    src/modules/renderer/base/base.h
-    src/modules/renderer/renderer.h
     src/modules/app/pipeline/pipeline.cpp
     src/modules/app/pipeline/pipeline.h
     src/modules/app/synthesizer/synthesizer.cpp
@@ -123,8 +110,15 @@ set(SOURCES
     src/analysis/pitch/rapt.h
     src/analysis/pitch/pitch.h
     src/analysis/linpred/autocorr.cpp
+    src/analysis/linpred/covar.cpp
     src/analysis/linpred/burg.cpp
     src/analysis/linpred/linpred.h
+    src/analysis/formant/deepformants/df.h
+    src/analysis/formant/deepformants/features.cpp
+    src/analysis/formant/deepformants/torch.cpp
+    src/analysis/formant/deepformants/cnpy.cpp
+    src/analysis/formant/deepformants/cnpy.h
+    src/analysis/formant/deepformants.cpp
     src/analysis/formant/simplelp.cpp
     src/analysis/formant/filteredlp.cpp
     src/analysis/formant/formant.h
@@ -170,15 +164,26 @@ set(SOURCES
     src/tomlplusplus.cpp
 )
 
-set(RESOURCES
-    resources/main.qrc
-)
-
 ### REQUIRED MODULES
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(Eigen3 REQUIRED eigen3)
+#pkg_check_modules(Eigen3 REQUIRED eigen3)
 pkg_check_modules(FFTW REQUIRED fftw3)
+
+find_package(Eigen3 REQUIRED NO_MODULE)
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+find_package(Torch REQUIRED)
+set_target_properties(torch PROPERTIES
+    MAP_IMPORTED_CONFIG_DEBUG Release
+    MAP_IMPORTED_CONFIG_MINSIZEREL Release
+    MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
+)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 
 find_package(Qt5 5.12 COMPONENTS Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core REQUIRED)
 foreach(c Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core)
@@ -187,13 +192,13 @@ foreach(c Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core)
         message(STATUS "Found Qt5${c}: ${Qt5${c}_LIBRARY_FILE}")
     endif()
 endforeach()
-find_package(Qt5QuickCompiler REQUIRED)
-qtquick_compiler_add_resources(RESOURCES_OBJ ${RESOURCES})
+find_package(Qt5QuickCompiler)
+qtquick_compiler_add_resources(RESOURCES_OBJ resources/qml.qrc)
+qt5_add_big_resources(RESOURCES_OBJ resources/other.qrc)
 
-set(SPEEX_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/speex)
-set(NANOSVG_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/nanosvg)
 set(ARMADILLO_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/armadillo/include)
 set(TOMLPP_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/tomlplusplus/include)
+set(GABORATOR_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/gaborator)
 
 ### SEARCH AUDIO MODULES 
 
@@ -236,7 +241,7 @@ if(portaudio_FOUND)
     )
 endif()
 
-if(ANDROID)
+if(SYSTEM_ANDROID)
     message(STATUS "Including audio module: oboe")
     set(OBOE_DIR ${PROJECT_SOURCE_DIR}/external/oboe)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
@@ -256,55 +261,23 @@ if(EMSCRIPTEN)
         src/modules/audio/webaudio/webaudio.h)
 endif()
 
-### SEARCH RENDERER MODULES 
-
-message(STATUS "Including renderer module: nanovg")
-set(NVG_DIR ${PROJECT_SOURCE_DIR}/external/nanovg)
-add_subdirectory(${NVG_DIR} ${PROJECT_BINARY_DIR}/nanovg)
-set(RENDERER_USE_NVG TRUE)
-list(APPEND SOURCES
-    src/modules/renderer/nanovg/nanovg.cpp
-    src/modules/renderer/nanovg/nanovg.h
-    src/modules/renderer/nanovg/fontattachment.cpp
-    src/modules/renderer/nanovg/nvg_gl.c
-    src/modules/renderer/nanovg/nvg_gl.h)
-if(TARGET_USE_SDL2)
-    list(APPEND SOURCES
-        src/modules/target/sdl2/sdl2_nanovg.cpp
-    )
-endif()
-if(TARGET_USE_QT5QUICK)
-    list(APPEND SOURCES
-        src/modules/target/qt5quick/q5q_nanovg.cpp
-    )
-endif()
-
-### FREETYPE MODULE
-
-message(STATUS "Including font module: freetype")
-set(FREETYPE_DIR ${PROJECT_SOURCE_DIR}/external/freetype)
-set(BUILD_SHARED_LIBS TRUE)
-add_subdirectory(${FREETYPE_DIR} ${PROJECT_BINARY_DIR}/freetype)
-set(FONT_USE_FREETYPE TRUE)
-list(APPEND SOURCES
-    src/modules/freetype/instance.cpp
-    src/modules/freetype/fontfile.cpp
-    src/modules/freetype/font.cpp
-    src/modules/freetype/freetype.h
-)
-
 ### CREATE CMAKE TARGET
 
-if(ANDROID)
+if(SYSTEM_ANDROID)
     add_library(in-formant SHARED ${SOURCES} ${RESOURCES_OBJ})
 else()
     add_executable(in-formant ${SOURCES} ${RESOURCES_OBJ})
 endif()
 
-target_include_directories(in-formant SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS} ${SPEEX_INCLUDE_DIR} ${NANOSVG_INCLUDE_DIR} ${ARMADILLO_INCLUDE_DIR} ${TOMLPP_INCLUDE_DIR})
-target_link_libraries(in-formant PRIVATE ${SDL2_LDFLAGS} ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
+target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${FFTW_INCLUDE_DIRS} ${TOMLPP_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS} ${GABORATOR_INCLUDE_DIR})
+target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} ${TORCH_LIBRARIES} Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
 
-target_compile_definitions(in-formant PRIVATE -DARMA_DONT_USE_WRAPPER -DTOML_HEADER_ONLY=0)
+add_subdirectory(external/rpmalloc)
+add_subdirectory(external/soxr)
+target_link_libraries(in-formant PRIVATE rpmalloc soxr)
+target_include_directories(in-formant SYSTEM PRIVATE external/soxr/src)
+
+target_compile_definitions(in-formant PRIVATE -DINFORMANT_VERSION=${CUR_VERSION} -DARMA_DONT_USE_WRAPPER -DTOML_HEADER_ONLY=0)
 
 if(AUDIO_USE_DUMMY)
     target_compile_definitions(in-formant PRIVATE -DAUDIO_USE_DUMMY=1)
@@ -343,31 +316,17 @@ if(RENDERER_USE_NVG)
     target_link_libraries(in-formant PRIVATE nanovg)
     target_compile_definitions(in-formant PRIVATE -DRENDERER_USE_NVG=1)
 
-#[[ Future code for Metal render support
-    if(APPLE)
-        find_package(Metal REQUIRED)
-        target_include_directories(in-formant SYSTEM PRIVATE ${METAL_INCLUDE_DIR})
-        target_link_libraries(in-formant PRIVATE PRIVATE ${METAL_LIBRARIES})
-    elseif(ANDROID)
-]]
-
-    if(ANDROID)
+    if(SYSTEM_WINDOWS OR SYSTEM_DARWIN OR SYSTEM_LINUX) 
+        #if(SYSTEM_WINDOWS)
+        #target_sources(in-formant PRIVATE /usr/$ENV{HOST}/glew.c)
+        #target_compile_definitions(in-formant PRIVATE -DGLEW_STATIC=1)
+        #elseif(SYSTEM_DARWIN)
+        #target_compile_definitions(in-formant PRIVATE -D__gl_h_ -DGL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED)
+        #endif()
+    elseif(SYSTEM_ANDROID)
         find_package(OpenGLES3 REQUIRED)
         target_include_directories(in-formant SYSTEM PRIVATE ${OpenGLES3_INCLUDE_DIRS})
         target_link_libraries(in-formant PRIVATE ${OpenGLES3_LIBRARIES})
-    elseif(EMSCRIPTEN)
-        #find_package(OpenGLES2 REQUIRED)
-        #target_include_directories(in-formant SYSTEM PRIVATE ${OpenGLES2_INCLUDE_DIRS})
-        #target_link_libraries(in-formant PRIVATE ${OpenGLES2_LIBRARIES})
-    elseif(UNIX OR WIN32 OR APPLE)
-        set(OpenGL_GL_PREFERENCE GLVND)
-        find_package(OpenGL REQUIRED)
-        target_include_directories(in-formant SYSTEM PRIVATE ${OPENGL_INCLUDE_DIRS})
-        target_link_libraries(in-formant PRIVATE ${OPENGL_LIBRARIES})
-        if(WIN32)
-            target_sources(in-formant PRIVATE /usr/$ENV{HOST}/glew.c)
-            target_compile_definitions(in-formant PRIVATE -DGLEW_STATIC=1)
-        endif()
     endif()
 endif()
 
@@ -379,51 +338,30 @@ endif()
 
 ## PLATFORM SPECIFIC CODE
 
-set(RESAMPLER_QUALITY SOXR_HQ)
+if(SYSTEM_WINDOWS OR SYSTEM_DARWIN OR SYSTEM_LINUX)
+    #target_compile_options(in-formant PRIVATE -msse)
+endif()
 
-if(EMSCRIPTEN)
-    set(EM_FLAGS "-sENVIRONMENT=web" "-sASSERTIONS=2" "-sINITIAL_MEMORY=32MB" "-sALLOW_MEMORY_GROWTH=1" "--no-heap-copy" "-sEMULATE_FUNCTION_POINTER_CASTS=1" "-sERROR_ON_UNDEFINED_SYMBOLS=1" "-sUSE_PTHREADS=0" #[["-sFULL_ES2=1"]] "-sEXIT_RUNTIME=1")
+if(SYSTEM_WINDOWS)
+    target_compile_definitions(in-formant PRIVATE -D_WIN32_WINNT=0x600 -D_USE_MATH_DEFINES)
+endif()
 
-    set(EMCC_FLAGS ${EM_FLAGS})
-    set(EMLD_FLAGS ${EM_FLAGS} "-sEXPORTED_FUNCTIONS=[_main,_webaudio_process_playback,_webaudio_process_capture]" "-sEXPORTED_RUNTIME_METHODS=[ccall]" "-sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[$autoResumeAudioContext]" "--preload-file ${PROJECT_SOURCE_DIR}/Montserrat.otf@Montserrat.otf")
+if(SYSTEM_DARWIN)
+    target_compile_options(in-formant PRIVATE -mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET})
+endif()
 
-    if (CMAKE_BUILD_TYPE MATCHES "^Debug$")
-        target_compile_options(in-formant PRIVATE ${EMCC_FLAGS} -g -g4 --source-map-base /)
-        target_link_libraries(in-formant PRIVATE ${EMLD_FLAGS} -g -g4 "--source-map-base /")
-    elseif (CMAKE_BUILD_TYPE MATCHES "^Release$")
-        target_compile_options(in-formant PRIVATE ${EMCC_FLAGS} -fno-rtti)
-        target_link_libraries(in-formant PRIVATE ${EMLD_FLAGS} -fno-rtti)
-    else()
-        target_compile_options(in-formant PRIVATE ${EMCC_FLAGS})
-        target_link_libraries(in-formant PRIVATE ${EMLD_FLAGS})
+if(SYSTEM_LINUX)
+    if(CMAKE_BUILD_TYPE STREQUAL Debug)
+        set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fsanitize=undefined -fsanitize=address")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fsanitize=address")
     endif()
 endif()
 
-if(ANDROID)
+if(SYSTEM_ANDROID)
     target_sources(in-formant PRIVATE src/context/ctxmgr_androidcommon.cpp)
     if(TARGET_USE_SDL2)
         target_sources(in-formant PRIVATE src/modules/target/sdl2/sdl2_android.cpp)
     endif()
     target_link_libraries(in-formant PRIVATE android)
-endif()
-
-if(UNIX AND NOT EMSCRIPTEN)
-    target_sources(in-formant PRIVATE src/backtrace/unix.cpp)
-    target_link_libraries(in-formant PRIVATE dl)
-    set_target_properties(in-formant PROPERTIES LINK_FLAGS "-pthread -static-libstdc++")
-endif()
-
-if(NOT ANDROID AND NOT WIN32 AND CMAKE_BUILD_TYPE MATCHES "^Debug$")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize=undefined")
-    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fsanitize=address -fsanitize=undefined")
-endif()
-
-if(WIN32)
-    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-        target_sources(in-formant PRIVATE src/backtrace/windows.cpp)
-    elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        target_sources(in-formant PRIVATE src/backtrace/windows64.cpp)
-    endif()
-    target_link_libraries(in-formant PRIVATE ntdll dbghelp)
 endif()
 

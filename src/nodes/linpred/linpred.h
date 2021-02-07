@@ -20,7 +20,7 @@ namespace Nodes
         Analysis::ReReFFT mFFT;
         int mOrder;
 
-        std::vector<double> mLastSpec;
+        rpm::vector<double> mLastSpec;
     };
 }
 

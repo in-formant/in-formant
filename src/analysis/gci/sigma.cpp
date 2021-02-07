@@ -1,10 +1,9 @@
 #include "sigma.h"
 #include "../wavelet/wavelet.h"
-#include <list>
 #include <armadillo>
 #include <iostream>
 
-std::vector<double> SIGMA::analyse(const std::vector<double>& lx, double fs)
+rpm::vector<double> SIGMA::analyse(const rpm::vector<double>& lx, double fs)
 {
     constexpr double fmin = 50;
     constexpr double fmax = 400;
@@ -23,11 +22,11 @@ std::vector<double> SIGMA::analyse(const std::vector<double>& lx, double fs)
     // Calculate SWT
     constexpr int nlev = 5;
     Wt::DiscreteWavelet wavelet(Wt::BIOR, 15);
-    std::vector<double> swc = Analysis::swt(lx, wavelet, nlev, 0, true);
+    rpm::vector<double> swc = Analysis::swt(lx, wavelet, nlev, 0, true);
 
     // Calculate multiscale product
     int dlen = Wt::swt_buffer_length(lx.size());
-    std::vector<double> mp(dlen, 1.0);
+    rpm::vector<double> mp(dlen, 1.0);
     for (int k = 1; k * dlen < (int) swc.size(); ++k) {
         for (int i = 0; i < dlen; ++i) {
             mp[i] *= swc[k * dlen + i];
@@ -35,10 +34,10 @@ std::vector<double> SIGMA::analyse(const std::vector<double>& lx, double fs)
     }
     
     // Find third roots
-    std::vector<double> nmp(mp);
-    std::vector<double> pmp(mp);
-    std::vector<double> crnmp(mp.size());
-    std::vector<double> crpmp(mp.size());
+    rpm::vector<double> nmp(mp);
+    rpm::vector<double> pmp(mp);
+    rpm::vector<double> crnmp(mp.size());
+    rpm::vector<double> crpmp(mp.size());
     for (int i = 0; i < (int) mp.size(); ++i) {
         // Half-wave rectify on negative half of mp for GCI
         if (nmp[i] > 0)
@@ -62,19 +61,19 @@ std::vector<double> SIGMA::analyse(const std::vector<double>& lx, double fs)
     pgrdel.erase(std::prev(pgrdel.end(), ptoff), pgrdel.end());
 
     // Set up other variables
-    std::vector<double> gci(lx.size(), 0.0);
-    std::vector<double> goi(lx.size(), 0.0);
+    rpm::vector<double> gci(lx.size(), 0.0);
+    rpm::vector<double> goi(lx.size(), 0.0);
     
     // --- GCI Detection ---
 
     // Model GD slope
     const int nr = (gwlen * fs) / 2 - 1;
     const int mngrdellen = 2 * nr + 1;
-    std::vector<double> mngrdel(mngrdellen);
+    rpm::vector<double> mngrdel(mngrdellen);
     for (int i = 0; i < mngrdellen; ++i) {
         mngrdel[i] = i - nr;
     }
-    std::vector<double> cmngrdel(ngrdel.size(), 0.0);
+    rpm::vector<double> cmngrdel(ngrdel.size(), 0.0);
 
     const int snfv = gcic.size();
     arma::mat nfv(3, snfv, arma::fill::zeros);
@@ -124,7 +123,7 @@ std::vector<double> SIGMA::analyse(const std::vector<double>& lx, double fs)
 
     if (gci.size() > 2) {
         // If a gci is separated from all others by more than Tmax, delete
-        std::list<int> fgci;
+        rpm::list<int> fgci;
         for (int i = 0; i < (int) gci.size(); ++i) {
             if (gci[i] > 0) {
                 fgci.push_back(i);

@@ -1,17 +1,17 @@
 #ifndef ANALYSIS_INVGLOT_H
 #define ANALYSIS_INVGLOT_H
 
+#include "rpcxx.h"
 #include "../linpred/linpred.h"
 #include "../fft/fft.h"
 #include <memory>
-#include <vector>
 #include <Eigen/Dense>
 
 namespace Analysis {
 
     struct InvglotResult {
         double sampleRate;
-        std::vector<double> glotSig;
+        rpm::vector<double> glotSig;
     };
 
     class InvglotSolver {
@@ -45,7 +45,7 @@ namespace Analysis {
             InvglotResult solve(const double *x, int length, double sampleRate) override;
         private:
             void computeC();
-            std::vector<Eigen::MatrixXd> C;
+            rpm::vector<Eigen::MatrixXd> C;
             IAIF iaif;
             RealFFT fft;
             int Jmax;

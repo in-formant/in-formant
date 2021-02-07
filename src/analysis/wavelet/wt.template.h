@@ -83,7 +83,7 @@ int CAT(TYPE, _swt_axis)(const TYPE * const restrict input, const ArrayInfo inpu
                          const Coefficient detail, unsigned int level);
 
 int CAT(TYPE, _swt_)(const TYPE * const restrict input, int input_len,
-                     const std::vector<REAL_TYPE>& filter, int filter_len,
+                     const rpm::vector<REAL_TYPE>& filter, int filter_len,
                      TYPE * const restrict output, size_t output_len,
                      unsigned int level);
 }

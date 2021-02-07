@@ -75,12 +75,12 @@ void PortAudio::refreshDevices()
     }
 }
 
-const std::vector<Device>& PortAudio::getCaptureDevices() const
+const rpm::vector<Device>& PortAudio::getCaptureDevices() const
 {
     return mCaptureDevices;
 }
 
-const std::vector<Device>& PortAudio::getPlaybackDevices() const
+const rpm::vector<Device>& PortAudio::getPlaybackDevices() const
 {
     return mPlaybackDevices;
 }

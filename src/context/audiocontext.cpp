@@ -1,9 +1,10 @@
 #include "audiocontext.h"
+#include <array>
 #include <stdexcept>
 
 using namespace Main;
 
-static std::vector<Audio::Backend> supportedAudioBackends = {
+static std::array supportedAudioBackends {
 #ifdef AUDIO_USE_DUMMY
     Audio::Backend::Dummy,
 #endif
@@ -39,9 +40,11 @@ Audio::Backend Main::getDefaultAudioBackend()
 #endif
 }
 
-std::vector<Audio::Backend> Main::getSupportedAudioBackends()
+rpm::vector<Audio::Backend> Main::getSupportedAudioBackends()
 {
-    return supportedAudioBackends;
+    return rpm::vector<Audio::Backend>(
+            supportedAudioBackends.begin(),
+            supportedAudioBackends.end());
 }
 
 std::string Main::getAudioBackendName(Audio::Backend type)
@@ -129,12 +132,12 @@ void AudioContext::refreshDevices()
     mAudio->refreshDevices();
 }
 
-const std::vector<Audio::Device>& AudioContext::getCaptureDevices() const
+const rpm::vector<Audio::Device>& AudioContext::getCaptureDevices() const
 {
     return mAudio->getCaptureDevices();
 }
 
-const std::vector<Audio::Device>& AudioContext::getPlaybackDevices() const
+const rpm::vector<Audio::Device>& AudioContext::getPlaybackDevices() const
 {
     return mAudio->getPlaybackDevices();
 }

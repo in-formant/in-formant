@@ -1,9 +1,9 @@
 #ifndef AUDIO_BASE_H
 #define AUDIO_BASE_H
 
+#include "rpcxx.h"
 #include "../buffer/buffer.h"
 #include "../queue/queue.h"
-#include <vector>
 #include <initializer_list>
 #include <string>
 #include <cstring>
@@ -124,8 +124,8 @@ namespace Module::Audio {
    
         virtual void refreshDevices() = 0;
 
-        virtual const std::vector<Device>& getCaptureDevices() const = 0;
-        virtual const std::vector<Device>& getPlaybackDevices() const = 0;
+        virtual const rpm::vector<Device>& getCaptureDevices() const = 0;
+        virtual const rpm::vector<Device>& getPlaybackDevices() const = 0;
         
         virtual const Device& getDefaultCaptureDevice() const = 0;
         virtual const Device& getDefaultPlaybackDevice() const = 0;

@@ -42,7 +42,7 @@
  */
 
 int Wt::CAT(TYPE, _downsampling_convolution_periodization)(const TYPE * const restrict input, const size_t N,
-                                                       const std::vector<REAL_TYPE>& filter, const size_t F,
+                                                       const rpm::vector<REAL_TYPE>& filter, const size_t F,
                                                        TYPE * const restrict output, const size_t step,
                                                        const size_t fstep)
 {
@@ -125,7 +125,7 @@ int Wt::CAT(TYPE, _downsampling_convolution_periodization)(const TYPE * const re
 
 
 int Wt::CAT(TYPE, _downsampling_convolution)(const TYPE * const restrict input, const size_t N,
-                                         const std::vector<REAL_TYPE>& filter, const size_t F,
+                                         const rpm::vector<REAL_TYPE>& filter, const size_t F,
                                          TYPE * const restrict output,
                                          const size_t step, Mode mode)
 {
@@ -470,7 +470,7 @@ int Wt::CAT(TYPE, _downsampling_convolution)(const TYPE * const restrict input, 
 }
 
 int Wt::CAT(TYPE, _upsampling_convolution_full)(const TYPE * const restrict input, const size_t N,
-                                            const std::vector<REAL_TYPE>& filter, const size_t F,
+                                            const rpm::vector<REAL_TYPE>& filter, const size_t F,
                                             TYPE * const restrict output, const size_t O)
 {
     /* Performs a zero-padded convolution, using each input element for two
@@ -525,7 +525,7 @@ int Wt::CAT(TYPE, _upsampling_convolution_full)(const TYPE * const restrict inpu
 
 
 static int CAT(TYPE, _upsampling_convolution_valid_sf_periodization)(const TYPE * const restrict input, const size_t N,
-                                                                     const std::vector<REAL_TYPE>& filter, const size_t F,
+                                                                     const rpm::vector<REAL_TYPE>& filter, const size_t F,
                                                                      TYPE * const restrict output, const size_t O)
 {
     // TODO? Allow for non-2 step
@@ -637,7 +637,7 @@ static int CAT(TYPE, _upsampling_convolution_valid_sf_periodization)(const TYPE 
  */
 
 int Wt::CAT(TYPE, _upsampling_convolution_valid_sf)(const TYPE * const restrict input, const size_t N,
-                                                const std::vector<REAL_TYPE>& filter, const size_t F,
+                                                const rpm::vector<REAL_TYPE>& filter, const size_t F,
                                                 TYPE * const restrict output, const size_t O,
                                                 Mode mode)
 {
@@ -669,7 +669,7 @@ int Wt::CAT(TYPE, _upsampling_convolution_valid_sf)(const TYPE * const restrict 
 
 /* -> swt - todo */
 /*int Wt::CAT(TYPE, _upsampled_filter_convolution)(const TYPE * const restrict input, const size_t N,
-                                             const std::vector<REAL_TYPE>& filter, const size_t F,
+                                             const rpm::vector<REAL_TYPE>& filter, const size_t F,
                                              TYPE * const restrict output,
                                              const size_t step, Mode mode)
 {

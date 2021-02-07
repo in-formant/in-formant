@@ -20,8 +20,8 @@ namespace Module::Audio {
 
         void refreshDevices() override;
 
-        const std::vector<Device>& getCaptureDevices() const override;
-        const std::vector<Device>& getPlaybackDevices() const override;
+        const rpm::vector<Device>& getCaptureDevices() const override;
+        const rpm::vector<Device>& getPlaybackDevices() const override;
 
         const Device& getDefaultCaptureDevice() const override;
         const Device& getDefaultPlaybackDevice() const override;
@@ -46,8 +46,8 @@ namespace Module::Audio {
         pa_stream *mCaptureStream;
         pa_stream *mPlaybackStream;
         
-        std::vector<Device> mSources;
-        std::vector<Device> mSinks;
+        rpm::vector<Device> mSources;
+        rpm::vector<Device> mSinks;
 
         Device mDefaultSource;
         Device mDefaultSink;

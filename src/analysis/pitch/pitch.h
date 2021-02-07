@@ -1,7 +1,7 @@
 #ifndef ANALYSIS_PITCH_H
 #define ANALYSIS_PITCH_H
 
-#include <vector>
+#include "rpcxx.h"
 #include <cstdint>
 #include <memory>
 
@@ -31,9 +31,9 @@ namespace Analysis {
             double mMinPitch;
             double mMaxPitch;
             double mAlpha;
-            std::vector<double> mAMDF;
-            std::vector<uint32_t> m1bAMDF;
-            std::vector<double> m1bACF;
+            rpm::vector<double> mAMDF;
+            rpm::vector<uint32_t> m1bAMDF;
+            rpm::vector<double> m1bACF;
         };
         */
 
@@ -44,9 +44,9 @@ namespace Analysis {
         private:
             double mThreshold;
             std::shared_ptr<ComplexFFT> mFFT;
-            std::vector<double> mAutocorrelation;
-            std::vector<double> mDifference;
-            std::vector<double> mCMND;
+            rpm::vector<double> mAutocorrelation;
+            rpm::vector<double> mDifference;
+            rpm::vector<double> mCMND;
         };
 
         class MPM : public PitchSolver {
@@ -59,7 +59,7 @@ namespace Analysis {
             RAPT();
             PitchResult solve(const double *data, int length, int sampleRate) override;
         private:
-            std::vector<double> pitches;
+            rpm::vector<double> pitches;
         };
 
         /*

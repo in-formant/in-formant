@@ -1,17 +1,16 @@
 #include "formant.h"
 #include "../util/util.h"
-#include "../../modules/math/constants.h"
 
 using namespace Analysis::Formant;
 using Analysis::FormantResult;
 
 FormantResult SimpleLP::solve(const double *lpc, int lpcOrder, double sampleRate)
 {
-    std::vector<double> polynomial(lpcOrder + 1);
+    rpm::vector<double> polynomial(lpcOrder + 1);
     polynomial[0] = 1.0;
     std::copy(lpc, lpc + lpcOrder, std::next(polynomial.begin()));
     
-    std::vector<std::complex<double>> roots = findRoots(polynomial);
+    rpm::vector<std::complex<double>> roots = findRoots(polynomial);
 
     FormantResult result;
 

@@ -1,85 +1,42 @@
 #include "rendercontext.h"
 #include "config.h"
+#include "../context/timings.h"
+#include <iostream>
 
 using namespace Main;
 
 RenderContext::RenderContext(Config *config, DataStore *dataStore)
-    : mRenderer(std::make_unique<Module::Renderer::NanoVG>()),
-      mFreetype(std::make_unique<FTInstance>()),
-      mFontFile(mFreetype->font("Montserrat.otf")),
-      mConfig(config),
+    : mConfig(config),
       mDataStore(dataStore),
-      mSelectedView(nullptr),
-      mWidth(320),
-      mHeight(240),
-      mDevicePixelRatio(1.0)
+      mSelectedView(nullptr)
 {
-    mRenderer->setProvider(&mRenderContextProvider);
 }
 
-void RenderContext::initialize()
+void RenderContext::render(QPainterWrapper *painter)
 {
-    mRenderer->initialize();
+    timer_guard timer(timings::render);
+    
+    painter->setRenderHints(
+            QPainter::Antialiasing
+            | QPainter::TextAntialiasing
+            | QPainter::SmoothPixmapTransform);
 
-    auto p = mRenderer->getParameters();
-    p->setMinFrequency(mConfig->getViewMinFrequency());
-    p->setMaxFrequency(mConfig->getViewMaxFrequency());
-    p->setMinGain(mConfig->getViewMinGain());
-    p->setMaxGain(mConfig->getViewMaxGain());
-    p->setFrequencyScale(mConfig->getViewFrequencyScale());
-}
+    painter->setMinFrequency(mConfig->getViewMinFrequency());
+    painter->setMaxFrequency(mConfig->getViewMaxFrequency());
+    painter->setMinGain(mConfig->getViewMinGain());
+    painter->setMaxGain(mConfig->getViewMaxGain());
 
-void RenderContext::terminate()
-{
-    mRenderer->terminate();
-}
-
-void RenderContext::render()
-{
-    mRenderer->begin();
     if (mSelectedView != nullptr) {
-        mSelectedView->render(mRenderer.get(), this, mConfig, mDataStore);
+        mSelectedView->render(painter, mConfig, mDataStore);
     }
-    mRenderer->end();
+
+    painter->setPen(Qt::white);
+    painter->setFont(QFont(":/Montserrat.otf", 20));
+    painter->drawText(10, 80, QString("Render: %1 ms").arg(timings::render));
+    painter->drawText(10, 110, QString("Update: %1 ms").arg(timings::update));
 }
 
 void RenderContext::setView(RenderView *view)
 {
     mSelectedView = view;
-}
-
-void RenderContext::setWidth(int width)
-{
-    mWidth = width;
-    updateSize();
-}
-
-void RenderContext::setHeight(int height)
-{
-    mHeight = height;
-    updateSize();
-}
-
-void RenderContext::setDevicePixelRatio(double ratio)
-{
-    mDevicePixelRatio = ratio;
-    updateSize();
-}
-
-void RenderContext::setDPI(double horizontalDpi, double verticalDpi)
-{
-    mHorizontalDpi = horizontalDpi;
-    mVerticalDpi = verticalDpi;
-    updateSize();
-}
-
-Font& RenderContext::font(int pointSize)
-{
-    return mFontFile.with(pointSize, mRenderer->getContextNumber(), mHorizontalDpi, mVerticalDpi);
-}
-
-void RenderContext::updateSize()
-{
-    mRenderer->setWindowSize(mWidth, mHeight);
-    mRenderer->setDrawableSize(mWidth, mHeight);
 }

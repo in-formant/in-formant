@@ -1,8 +1,8 @@
 #ifndef AUDIO_RESAMPLER_H
 #define AUDIO_RESAMPLER_H
 
-#include <vector>
-#include <speex_resampler.h>
+#include "rpcxx.h"
+#include <soxr.h>
 
 namespace Module::Audio {
 
@@ -31,12 +31,15 @@ namespace Module::Audio {
         int getDelay() const;
 
         void clear();
-        std::vector<double> process(double *pIn, int inLength);
+        rpm::vector<double> process(const double *pIn, int inLength);
         
     private:
         void createResampler();
 
-        SpeexResamplerState *mResampler;
+        soxr_io_spec_t      mSoxrIoSpec;
+        soxr_quality_spec_t mSoxrQualitySpec;
+        soxr_runtime_spec_t mSoxrRuntimeSpec;
+        soxr_t mSoxr;
 
         int mInRate, mOutRate;
     };

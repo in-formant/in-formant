@@ -1,19 +1,18 @@
 #ifndef SYNTHESIS_H
 #define SYNTHESIS_H
 
+#include "rpcxx.h"
 #include "../nodes/node/nodeio_frequencies.h"
 #include "../analysis/filter/filter.h"
 #include "../analysis/formant/formant.h"
-#include <vector>
-#include <deque>
 #include <complex>
 
 namespace Synthesis
 {
-    std::vector<double> whiteNoise(int length);
-    std::vector<double> brownNoise(int length);
-    std::vector<double> pinkNoise(int length);
-    std::vector<double> aspirateNoise(int length);
+    rpm::vector<double> whiteNoise(int length);
+    rpm::vector<double> brownNoise(int length);
+    rpm::vector<double> pinkNoise(int length);
+    rpm::vector<double> aspirateNoise(int length);
 
     struct LF_State {
         double T0;
@@ -26,22 +25,22 @@ namespace Synthesis
     void lfRd2tetpta(LF_State& state);
     void lfEpsAlpha(LF_State& state);
 
-    std::vector<double> lfGenFrame(double f0, double Fs, double Rd, double tc);
+    rpm::vector<double> lfGenFrame(double f0, double Fs, double Rd, double tc);
 
-    std::vector<double> createPolynomialFromRoots(const std::vector<std::complex<double>>& z);
+    rpm::vector<double> createPolynomialFromRoots(const rpm::vector<std::complex<double>>& z);
 
-    std::vector<std::array<double, 6>> frequencyShiftFilter(const std::vector<Analysis::FormantData>& formants, double Fs, double factor);
+    rpm::vector<std::array<double, 6>> frequencyShiftFilter(const rpm::vector<Analysis::FormantData>& formants, double Fs, double factor);
 
-    std::vector<double> filter(
-                    const std::vector<double>& b,
-                    const std::vector<double>& a,
-                    const std::vector<double>& x,
-                    std::vector<double>& zf);
+    rpm::vector<double> filter(
+                    const rpm::vector<double>& b,
+                    const rpm::vector<double>& a,
+                    const rpm::vector<double>& x,
+                    rpm::vector<double>& zf);
 
-    std::vector<double> sosfilter(
-                    const std::vector<std::array<double, 6>>& sos,
-                    const std::vector<double>& x,
-                    std::vector<std::vector<double>>& zf);
+    rpm::vector<double> sosfilter(
+                    const rpm::vector<std::array<double, 6>>& sos,
+                    const rpm::vector<double>& x,
+                    rpm::vector<rpm::vector<double>>& zf);
 }
 
 #endif // SYNTHESIS_H

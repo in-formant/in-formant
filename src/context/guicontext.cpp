@@ -1,6 +1,6 @@
+#include "../gui/canvas.h"
 #include "contextmanager.h"
 #include "rendercontext.h"
-#include "../gui/canvas.h"
 #include <QQmlContext>
 #include <iostream>
 #include <chrono>
@@ -14,23 +14,30 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext)
       mSelectedView(nullptr)
 {
     QCoreApplication::setApplicationName("InFormant");
-    QCoreApplication::setApplicationVersion("2.2");
+    QCoreApplication::setApplicationVersion(INFORMANT_VERSION_STR);
     QCoreApplication::setOrganizationDomain("in-formant.app");
     QCoreApplication::setOrganizationName("InFormant");
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QQuickStyle::setStyle("Material");
-    qmlRegisterType<Gui::Canvas>("IfCanvas", 1, 0, "IfCanvas");
+    qmlRegisterType<Gui::CanvasItem>("IfCanvas", 1, 0, "IfCanvas");
+
+#ifdef __APPLE__
+    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsApi::MetalRhi);
+#endif
 
     mApp = std::make_unique<QGuiApplication>(argc, argv);
     mQmlEngine = std::make_unique<QQmlApplicationEngine>();
     mQmlEngine->addImportPath(QCoreApplication::applicationDirPath() + "/qml");
+#ifdef __APPLE__
+    mQmlEngine->addImportPath(QCoreApplication::applicationDirPath() + "/../Resources/qml");
+#endif
     mQmlEngine->rootContext()->setContextProperty("config", mConfig);
     mQmlEngine->load(QUrl("qrc:/main.qml"));
    
     auto window = static_cast<QQuickWindow *>(mQmlEngine->rootObjects().first());
 
-    auto canvasItem = window->findChild<Gui::Canvas *>("ifCanvas");
+    auto canvasItem = window->findChild<Gui::CanvasItem *>("IfCanvas");
 
     auto contentItem = window->contentItem();
     
@@ -38,11 +45,6 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext)
 
     canvasItem->installEventFilter(this);
     window->installEventFilter(this);
-
-    QObject::connect(canvasItem, &QQuickItem::widthChanged, [=]() { this->setWidth(canvasItem->width()); });
-    QObject::connect(canvasItem, &QQuickItem::heightChanged, [=]() { this->setHeight(canvasItem->height()); });
-
-    QObject::connect(window, &QWindow::screenChanged, [=](QScreen *screen) { this->updateDpi(screen); });
 
     mUpdateTimer = new QTimer(this);
     mUpdateTimer->setInterval(33ms);
@@ -99,19 +101,3 @@ void GuiContext::setShowFormants(bool b)
     mConfig->setViewShowFormants(b);
 }
 
-void GuiContext::setWidth(int width)
-{
-    mRenderContext->setWidth(width);
-}
-
-void GuiContext::setHeight(int height)
-{
-    mRenderContext->setHeight(height);
-}
-
-void GuiContext::updateDpi(QScreen *screen)
-{
-    mRenderContext->setDevicePixelRatio(screen->devicePixelRatio());
-    mRenderContext->setDPI(screen->physicalDotsPerInchX(),
-                           screen->physicalDotsPerInchY());
-}

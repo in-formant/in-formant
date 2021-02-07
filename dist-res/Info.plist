@@ -3,21 +3,21 @@
 <plist version="1.0">
     <dict>
         <key>CFBundleName</key>
-        <string>SpeechAnalysis</string>
+        <string>InFormant</string>
         <key>CFBundleDisplayName</key>
-        <string>Speech analysis for macOS</string>
+        <string>InFormant for macOS</string>
         <key>CFBundleIdentifier</key>
-        <string>fr.cloyunhee.SpeechAnalysis</string>
+        <string>fr.cloyunhee.InFormant</string>
         <key>CFBundleVersion</key>
-        <string>1</string>
+        <string>@VERSION@</string>
         <key>CFBundleShortVersionString</key>
-        <string>1.0</string>
+        <string>@VERSION@</string>
         <key>CFBundlePackageType</key>
         <string>APPL</string>
         <key>CFBundleSignature</key>
-        <string>sply</string>
+        <string>ifrm</string>
         <key>CFBundleExecutable</key>
-        <string>speech-analysis</string>
+        <string>InFormant</string>
         <key>NSMicrophoneUsageDescription</key>
         <string>This app uses the microphone to record and analyse speech sounds.</string>
     </dict>

@@ -2,75 +2,63 @@
 
 using namespace Analysis::LP;
 
-std::vector<double> Autocorr::solve(const double *data, int length, int lpcOrder, double *pGain)
+rpm::vector<double> Autocorr::solve(const double *data, int length, int lpcOrder, double *pGain)
 {
     const int n = length;
     const int m = lpcOrder;
 
-    std::vector<double> aut(m + 1);
-    std::vector<double> lpc(m);    
-    double error;
-    double epsilon;
+    static rpm::vector<double> r, a, rc;
+    r.resize(1 + (m + 1));
+    a.resize(1 + (m + 1));
+    rc.resize(1 + (m));
+    double gain;
     int i, j;
+    std::fill(r.begin(), r.end(), 0.0);
+    std::fill(a.begin(), a.end(), 0.0);
+    std::fill(rc.begin(), rc.end(), 0.0);
 
-    j=m+1;
-    while(j--){
-        double d=0; /* double needed for accumulator depth */
-        for(i=j;i<n;i++)
-            d+=(double)data[i]*data[i-j];
-        aut[j]=d;
+    j = m + 1;
+    while (j--) {
+        double d = 0.0;
+        for (i = j; i < n; ++i)
+            d += data[i] * data[i - j];
+        r[j + 1] = d;
+    }
+    if (r[1] == 0.0) {
+        i = 1;
+        gain = 1e-10;
+        goto end;
     }
 
-    /* Generate lpc coefficients from autocorr values */
+    a[1] = 1.0;
+    a[2] = rc[1] = -r[2] / r[1];
+    gain = r[1] + r[2] * rc[1];
 
-    /* set our noise floor to about -100dB */
-    error=aut[0] * (1. + 1e-10);
-    epsilon=1e-9*aut[0]+1e-10;
-
-    for(i=0;i<m;i++){
-        double r= -aut[i+1];
-
-        if(error<epsilon){
-            std::fill(std::next(lpc.begin(), i), lpc.end(), 0.0);
-            goto done;
+    for (i = 2; i <= m; ++i) {
+        double s = 0.0;
+        for (j = 1; j <= i; ++j)
+            s += r[i - j + 2] * a[j];
+        rc[i] = -s / gain;
+        for (j = 2; j <= i / 2 + 1; ++j) {
+            const double at = a[j] + rc[i] * a[i - j + 2];
+            a[i - j + 2] += rc[i] * a[j];
+            a[j] = at;
         }
-
-        /* Sum up this iteration's reflection coefficient; note that in
-           Vorbis we don't save it.  If anyone wants to recycle this code
-           and needs reflection coefficients, save the results of 'r' from
-           each iteration. */
-
-        for(j=0;j<i;j++)
-            r-=lpc[j]*aut[i-j];
-        r/=error;
-
-        /* Update LPC coefficients and total error */
-
-        lpc[i]=r;
-        for(j=0;j<i/2;j++){
-            double tmp=lpc[j];
-
-            lpc[j]+=r*lpc[i-1-j];
-            lpc[i-1-j]+=r*tmp;
-        }
-        
-        if(i&1)lpc[j]+=lpc[j]*r;
-
-        error*=1.-r*r;
+        a[i + 1] = rc[i];
+        gain += rc[i] * s;
+        if (gain <= 0.0)
+            goto end;
     }
 
-done:
+end:
+    --i;
 
-    /* slightly damp the filter */
-    {
-        double g = .99;
-        double damp = g;
-        for(j=0;j<m;j++){
-            lpc[j]*=damp;
-            damp*=g;
-        }
-        *pGain = damp;
-    }
-
+    if (pGain != nullptr)
+        *pGain = gain;
+    
+    rpm::vector<double> lpc(i);
+    for (j = 1; j <= i; ++j)
+       lpc[j - 1] = a[j + 1];
     return lpc;
 }
+

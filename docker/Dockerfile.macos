@@ -1,61 +1,229 @@
-FROM ubuntu:focal
-ENV container docker
-RUN chmod 1777 /tmp
+FROM ubuntu:20.04 AS build
 
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND noninteractive
 
-# Install build tools.
-RUN apt-get update -yy && apt-get install -yy \
-            build-essential cmake clang \
-            gcc g++ zlib1g-dev libmpc-dev libmpfr-dev libgmp-dev \
-            git wget patch \
-            libssl-dev \
-            liblzma-dev \
+RUN apt-get update -y && \
+        apt-get install -y \
+            build-essential \
+            clang-11 \
+            clang++-11 \
+            llvm-11-dev \
+            llvm-11-tools \
             libxml2-dev \
-            libllvm7 \
-            llvm
+            uuid-dev \
+            libssl-dev \
+            make \
+            tar \
+            xz-utils \
+            bzip2 \
+            gzip \
+            cpio \
+            libbz2-dev \    
+            zlib1g-dev \
+            cmake \
+            git \
+            python
 
-# Install osxcross.
-COPY MacOSX10.12.sdk.tar.xz /
-RUN git clone https://github.com/tpoechtrager/osxcross /osxcross && \
-        cp /MacOSX10.12.sdk.tar.xz /osxcross/tarballs && \
-        cd /osxcross && \
+RUN ln -s /usr/bin/clang-11 /usr/bin/clang && \
+        ln -s /usr/bin/clang++-11 /usr/bin/clang++ && \
+        ln -s /usr/bin/llvm-config-11 /usr/bin/llvm-config
+
+COPY MacOSX10.14.sdk.tar.xz /dockerbuild/MacOSX10.14.sdk.tar.xz
+RUN git clone https://github.com/tpoechtrager/osxcross && \
+        mv /dockerbuild/MacOSX10.14.sdk.tar.xz osxcross/tarballs && \
+        cd osxcross && \
         UNATTENDED=1 ./build.sh
 
-ENV OSXCROSS=/osxcross/target
-ENV PATH=$OSXCROSS/bin:$PATH
-ENV MACOSX_DEPLOYMENT_TARGET=10.12
+RUN apt-get update -y && apt-get install -y wget libmpc-dev libmpfr-dev libgmp-dev
+RUN cd osxcross && GCC_VERSION=10.2.0 ENABLE_FORTRAN=1 ./build_gcc.sh
+RUN cd osxcross && ./build_compiler_rt.sh && \
+        mkdir -p /usr/lib/llvm-11/lib/clang/11.0.0/include && \
+        mkdir -p /usr/lib/llvm-11/lib/clang/11.0.0/lib/darwin && \
+        cp -rv /osxcross/build/compiler-rt/compiler-rt/include/sanitizer /usr/lib/llvm-11/lib/clang/11.0.0/include && \
+        cp -v /osxcross/build/compiler-rt/compiler-rt/build/lib/darwin/*.a /usr/lib/llvm-11/lib/clang/11.0.0/lib/darwin && \
+        cp -v /osxcross/build/compiler-rt/compiler-rt/build/lib/darwin/*.dylib /usr/lib/llvm-11/lib/clang/11.0.0/lib/darwin
 
-RUN apt-get update -yy && apt-get install -yy pkg-config
-RUN echo "1" | osxcross-macports install libsdl2 fftw-3 eigen3 portaudio
+WORKDIR /dockerbuild
 
-# Install recent GL headers
-ENV ver=2.1.0
-RUN wget "https://downloads.sourceforge.net/project/glew/glew/$ver/glew-$ver.tgz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fglew%2Ffiles%2Fglew%2F$ver%2Fglew-$ver.tgz%2Fdownload&ts=1597098028" -O glew.tgz && \
-        tar xf glew.tgz
+ENV HOST x86_64-apple-darwin18
+
+ENV ver=5.15.2
+RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtbase-everywhere-src-$ver.tar.xz && \
+        tar -xvf qtbase-everywhere-src-$ver.tar.xz
+COPY macos-qt/default_pre.prf               qtbase-everywhere-src-$ver/mkspecs/features/mac/default_pre.prf
+COPY macos-qt/g++-base.conf                 qtbase-everywhere-src-$ver/mkspecs/common/g++-base.conf
+COPY macos-qt/mac.conf                      qtbase-everywhere-src-$ver/mkspecs/common/mac.conf
+COPY macos-qt/clang-mac.conf                qtbase-everywhere-src-$ver/mkspecs/common/clang-mac.conf
+#COPY macos-qt/Qt5GuiConfigExtras.cmake.in   qtbase-everywhere-src-$ver/src/gui/Qt5GuiConfigExtras.cmake.in
+RUN cd qtbase-everywhere-src-$ver && \
+        sed -i '1s;^;QMAKE_MAC_SDK.macosx.Path = '"$(/osxcross/target/bin/xcrun --sdk macosx --show-sdk-path)"'\n\
+QMAKE_MAC_SDK.macosx.SDKVersion = '"$(/osxcross/target/bin/xcrun --sdk macosx --show-sdk-version)"'\n\
+QMAKE_MAC_SDK.macosx.PlatformPath = '"/osxcross/target"'\n;' 'mkspecs/features/mac/sdk.prf' && \
+        sed -i 's;/usr/bin/xcrun;/osxcross/target/bin/xcrun;g' 'mkspecs/features/mac/sdk.mk'
+
+ENV PATH /osxcross/target/bin:$PATH
+ENV OSXCROSS_XCRUN_NO_ENV_WARNING 1
+
+RUN mkdir qtbase-build && \
+        cd qtbase-build && \
+        ../qtbase-everywhere-src-$ver/configure \
+            -opensource \
+            -confirm-license \
+            -xplatform macx-clang \
+            -no-framework \
+            -device-option CROSS_COMPILE=$HOST- \
+            -device-option PKG_CONFIG='$HOST-pkg-config' \
+            -no-use-gold-linker \
+            -release \
+            -shared \
+            -prefix /osxcross/target/$HOST/qt5 \
+            QMAKE_APPLE_DEVICE_ARCHS=${HOST%%-*}
+
+RUN cd qtbase-build && \
+        ../qtbase-everywhere-src-$ver/configure \
+            -opensource \
+            -confirm-license \
+            -xplatform macx-clang \
+            -no-framework \
+            -device-option CROSS_COMPILE=$HOST- \
+            -device-option PKG_CONFIG='$HOST-pkg-config' \
+            -device-option CROSS_COMPILE_FLAGS=-fpch-preprocess \
+            -no-use-gold-linker \
+            -release \
+            -shared \
+            -prefix /osxcross/target/$HOST/qt5 \
+            -securetransport \
+            -no-icu \
+            -no-glib \
+            -accessibility \
+            -nomake examples \
+            -nomake tests \
+            -qt-zlib \
+            -qt-libpng \
+            -qt-libjpeg \
+            -qt-freetype \
+            -qt-harfbuzz \
+            -qt-pcre \
+            -no-dbus \
+            -no-pch \
+            -no-feature-concurrent \
+            -no-feature-sql \
+            -no-feature-xml \
+            QMAKE_APPLE_DEVICE_ARCHS=${HOST%%-*} && \
+        make -j$(nproc) && \
+        make install
+
+ENV ver=5.15.2
+RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtdeclarative-everywhere-src-$ver.tar.xz && \
+        tar -xvf qtdeclarative-everywhere-src-$ver.tar.xz
+RUN cd qtdeclarative-everywhere-src-$ver && \
+        /osxcross/target/$HOST/qt5/bin/qmake && \
+        make -j$(nproc) && \
+        make install
+
+#        make -j$(nproc) qmake_all && \
+#        find ./src/qmldevtools -type f -iname 'Makefile' -exec sed -i "s|-L/osxcross/target/$HOST/lib -lQt5Bootstrap|-L/usr/lib /osxcross/target/$HOST/lib/libQt5Bootstrap.a|g" {} \; && \
+#        find . -type f -iname 'Makefile' -exec sed -i "s|-L$PWD/lib -L/osxcross/target/$HOST/lib -lQt5Bootstrap|-L/usr/lib -L$PWD/lib /osxcross/target/$HOST/lib/libQt5Bootstrap.a|g" {} \; && \
+#        find . -type f -iname 'Makefile' -exec sed -i "s|-L/osxcross/target/$HOST/lib -lQt5Bootstrap|-L/usr/lib /osxcross/target/$HOST/lib/libQt5Bootstrap.a|g" {} \; && \
+#        find . -type f -iname 'Makefile' -exec sed -i "s|-L$PWD/lib -lQt5QmlDevTools|-L/usr/lib -L$PWD/lib ./lib/libQt5QmlDevTools.so|g" {} \; && \
+#        find . -type f -iname 'Makefile' -exec sed -i "s|-lQt5QmlDevTools|-L/usr/lib ./lib/libQt5QmlDevTools.so|g" {} \; && \
+#        make -j$(nproc) && \
+#        make install
+
+ENV ver=5.15.2
+RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtquickcontrols2-everywhere-src-$ver.tar.xz && \
+        tar -xvf qtquickcontrols2-everywhere-src-$ver.tar.xz
+RUN cd qtquickcontrols2-everywhere-src-$ver && \
+        /osxcross/target/$HOST/qt5/bin/qmake && \
+        make -j$(nproc) && \
+        make install
+
+RUN apt-get update -y && apt-get install -y autoconf
+
+ENV CC /osxcross/target/bin/$HOST-clang
+ENV CXX /osxcross/target/bin/$HOST-clang++
+
+# Build portaudio
+RUN wget http://www.portaudio.com/archives/pa_stable_v190600_20161030.tgz && \
+        tar -xvf pa_stable_v190600_20161030.tgz
+RUN cd portaudio && \
+        autoconf && \
+        mkdir objs && \
+        cd objs && \
+        CFLAGS="-arch x86_64 -Wno-implicit-int-float-conversion" \
+        ../configure --host=$HOST --prefix=/osxcross/target/$HOST --enable-shared --disable-static --disable-mac-universal --disable-dependency-tracking && \
+        make -j$(nproc) && \
+        make install
+
+# Build fftw3
+ENV ver=3.3.9
+RUN wget http://www.fftw.org/fftw-$ver.tar.gz && \
+        tar -xvf fftw-$ver.tar.gz
+RUN cd fftw-$ver && \
+        mkdir build && \
+        cd build && \
+        CFLAGS="-arch x86_64" \
+        ../configure --host=$HOST --prefix=/osxcross/target/$HOST --enable-shared --disable-static --disable-mac-universal --disable-dependency-tracking && \
+        make -j$(nproc) && \
+        make install
+
+ENV ver=2.2.0
+RUN wget https://downloads.sourceforge.net/project/glew/glew/$ver/glew-$ver.tgz && \
+        tar -xvf glew-$ver.tgz
 RUN cd glew-$ver && \
-        cp -r include/* $OSXCROSS/macports/pkgs/opt/local/include && \
-        cp src/glew.c $OSXCROSS/macports/pkgs/opt/local
+        make GLEW_DEST=/osxcross/target/$HOST install.include && \
+        cp src/glew.c /osxcross/target/$HOST
 
-ENV OSXCROSS_HOST=x86_64-apple-darwin16
-ENV OSXCROSS_TARGET_DIR=$OSXCROSS
-ENV OSXCROSS_TARGET=darwin16
+# Build eigen3
+ENV ver=3.3.9
+RUN wget https://gitlab.com/libeigen/eigen/-/archive/$ver/eigen-$ver.tar.gz && \
+        tar -xvf eigen-$ver.tar.gz
+RUN cd eigen-$ver && \
+        mkdir build && \
+        cd build && \
+        $HOST-cmake -DCMAKE_INSTALL_PREFIX=/osxcross/target/$HOST .. && \
+        make -j$(nproc) && \
+        make install 
 
-ENV CROSS=$OSXCROSS_HOST-
+RUN apt-get update -y && apt-get install -y pkg-config qt5-qmake qtbase5-dev unzip zlib1g-dev hfsprogs
 
-RUN apt-get update -yy && apt-get install -yy hfsprogs
+RUN wget https://github.com/clo-yunhee/pytorch_osx_cross/releases/download/1.7.1-osxcross/libtorch-x86_64-darwin18.tar.gz && \
+        tar -xvf libtorch-x86_64-darwin18.tar.gz -C /usr
 
-COPY macos-toolchain.cmake /toolchain.cmake
-COPY deploy-macos.sh /usr/bin/deploy-macos.sh
+RUN git clone https://github.com/planetbeing/libdmg-hfsplus -b openssl-1.1
+RUN cd libdmg-hfsplus && \
+        mkdir build && \
+        cd build && \
+        CC= CXX= cmake .. -DCMAKE_INSTALL_PREFIX=/usr && \
+        make -j$(nproc) && \
+        make install
+
+ENV ver=5.15.2
+RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qttools-everywhere-src-$ver.tar.xz && \
+        tar -xvf qttools-everywhere-src-$ver.tar.xz
+COPY macdeployqt/macdeployqt.pro qttools-everywhere-src-$ver/src/macdeployqt/macdeployqt/macdeployqt.pro
+COPY macdeployqt/main.cpp qttools-everywhere-src-$ver/src/macdeployqt/macdeployqt/main.cpp
+COPY macdeployqt/shared.cpp qttools-everywhere-src-$ver/src/macdeployqt/macdeployqt/shared.cpp
+COPY macdeployqt/shared.h qttools-everywhere-src-$ver/src/macdeployqt/macdeployqt/shared.h
+RUN cd qttools-everywhere-src-$ver/src/macdeployqt/macdeployqt && \
+        qmake && \
+        make -j$(nproc) && \
+        cp ../../../bin/macdeployqt /osxcross/target/$HOST/qt5/bin
+
+RUN rm -r /dockerbuild
+
+COPY macos-toolchain.cmake /usr/macos-toolchain.cmake
 
 CMD cd /build && \
-        export OSXCROSS_SDK="$($OSXCROSS/bin/xcrun --sdk macosx --show-sdk-path)" && \
-        export GLEW_SOURCE_FILE=$OSXCROSS/macports/pkgs/opt/local/glew.c && \
-        cmake /src \
-            -DCMAKE_TOOLCHAIN_FILE=/toolchain.cmake \
+        export version=`cat /src/version` && \
+        export MACOSX_DEPLOYMENT_TARGET=10.9 && \
+        cmake \
+            -DCUR_VERSION=$version \
+            -DCMAKE_TOOLCHAIN_FILE=/usr/macos-toolchain.cmake \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-            -DCMAKE_INSTALL_PREFIX=/ \
-                && \
+            -DCMAKE_PREFIX_PATH=/usr/libtorch \
+            /src && \
         make -j$(nproc) && \
-        host=${OSXCROSS_HOST} deploy-macos.sh
+        DIST_SUFFIX=macos-x86_64 \
+        /src/docker/deploy-macos.sh
 

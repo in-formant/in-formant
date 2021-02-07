@@ -14,24 +14,23 @@ dist=$(pwd)/dist
 extra_args=
 
 case $target in
-    win32|win64)
-        tag=windows
+    win32)
+        tag=win32
+        ;;
+    win64)
+        tag=win64
         ;;
     linux)
         tag=linux
         ;;
     macos)
         tag=macos
-        extra_args="--privileged=true"
         ;;
     android)
         tag=android
         if [ "$build_type" == "Debug" ]; then
             extra_args="-e debug=Debug"
         fi
-        ;;
-    emscripten)
-        tag=emscripten
         ;;
 esac
 

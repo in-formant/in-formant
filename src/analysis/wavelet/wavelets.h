@@ -1,7 +1,7 @@
 #ifndef ANALYSIS_WAVELETS_H
 #define ANALYSIS_WAVELETS_H
 
-#include <vector>
+#include "rpcxx.h"
 #include <string>
 
 namespace Wt {
@@ -42,11 +42,11 @@ namespace Wt {
     };
 
     struct DiscreteWavelet : public BaseWavelet {
-        std::vector<double> dec_hi;
-        std::vector<double> dec_lo;
+        rpm::vector<double> dec_hi;
+        rpm::vector<double> dec_lo;
         int dec_len;
-        std::vector<double> rec_hi;
-        std::vector<double> rec_lo;
+        rpm::vector<double> rec_hi;
+        rpm::vector<double> rec_lo;
         int rec_len;
         int vanishing_moments_psi;
         int vanishing_moments_phi;

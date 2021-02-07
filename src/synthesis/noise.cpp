@@ -15,19 +15,19 @@
 #endif
 static std::uniform_real_distribution<> dis(-1.0, 1.0);
 
-std::vector<double> Synthesis::whiteNoise(int length)
+rpm::vector<double> Synthesis::whiteNoise(int length)
 {
-    std::vector<double> out(length);
+    rpm::vector<double> out(length);
     for (int i = 0; i < length; ++i) {
         out[i] = dis(gen);
     }
     return out;
 }
 
-std::vector<double> Synthesis::brownNoise(int length)
+rpm::vector<double> Synthesis::brownNoise(int length)
 {
-    static std::vector<double> filter;
-    static std::vector<double> zf;
+    static rpm::vector<double> filter;
+    static rpm::vector<double> zf;
 
     if (filter.size() == 0) {
         filter.resize(64);
@@ -40,10 +40,10 @@ std::vector<double> Synthesis::brownNoise(int length)
     return Synthesis::filter(filter, {1.0}, whiteNoise(length), zf);
 }
 
-std::vector<double> Synthesis::pinkNoise(int length)
+rpm::vector<double> Synthesis::pinkNoise(int length)
 {
-    static std::vector<double> filter;
-    static std::vector<double> zf;
+    static rpm::vector<double> filter;
+    static rpm::vector<double> zf;
 
     if (filter.size() == 0) {
         filter.resize(64);
@@ -56,12 +56,12 @@ std::vector<double> Synthesis::pinkNoise(int length)
     return Synthesis::filter(filter, {1.0}, whiteNoise(length), zf);
 }
 
-std::vector<double> Synthesis::aspirateNoise(int length)
+rpm::vector<double> Synthesis::aspirateNoise(int length)
 {
     constexpr double alpha = 1.5;
 
-    static std::vector<double> filter;
-    static std::vector<double> zf;
+    static rpm::vector<double> filter;
+    static rpm::vector<double> zf;
 
     if (filter.size() == 0) {
         filter.resize(64);

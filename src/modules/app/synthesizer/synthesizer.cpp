@@ -1,5 +1,4 @@
 #include "../../../analysis/analysis.h"
-#include "../../../modules/math/constants.h"
 #include "synthesizer.h"
 #include <random>
 #include <iostream>
@@ -39,8 +38,8 @@ void Synthesizer::initialize()
     realFilterShift = 1.0;
     realFilter.clear();
 
-    zfNoise.resize(20, std::vector<double>(4, 0.0));
-    zfGlot.resize(20, std::vector<double>(4, 0.0));
+    zfNoise.resize(20, rpm::vector<double>(4, 0.0));
+    zfGlot.resize(20, rpm::vector<double>(4, 0.0));
 
     resampler->setOutputRate(playbackQueue->getInSampleRate());
 }
@@ -75,7 +74,7 @@ void Synthesizer::setGlotTc(double value)
     glotTc = value;
 }
 
-void Synthesizer::setFormants(const std::vector<Analysis::FormantData>& value)
+void Synthesizer::setFormants(const rpm::vector<Analysis::FormantData>& value)
 {
     formants = value;
 }
@@ -150,7 +149,7 @@ void Synthesizer::generateAudio(int requestedLength)
 
     auto noise = Synthesis::aspirateNoise(inputLength);
 
-    std::vector<double> glot;
+    rpm::vector<double> glot;
     glot.reserve(inputLength);
    
     if (glotSurplus.size() > 0) {
@@ -165,9 +164,9 @@ void Synthesizer::generateAudio(int requestedLength)
     }
 
     double glotFs = resampler->getInputRate();
-    std::vector<double> pitches(inputLength);
-    std::vector<double> Rds(inputLength);
-    std::vector<double> tcs(inputLength);
+    rpm::vector<double> pitches(inputLength);
+    rpm::vector<double> Rds(inputLength);
+    rpm::vector<double> tcs(inputLength);
     if (inputLength > 0) {
         constexpr double expFact = 0.997;
         pitches[0] = realGlotPitch;
@@ -197,7 +196,7 @@ void Synthesizer::generateAudio(int requestedLength)
     }
 
     // Anti-alias glot.
-    static std::vector<std::array<double, 6>> lpsos;
+    static rpm::vector<std::array<double, 6>> lpsos;
     static int lastSampleRate = 0;
 
     if (lpsos.empty() || lastSampleRate != glotFs) {
@@ -205,10 +204,10 @@ void Synthesizer::generateAudio(int requestedLength)
         lpsos = Analysis::butterworthLowpass(8, 16000, glotFs);
     }
 
-    static std::vector<std::vector<double>> lpglotmem(20, std::vector<double>(4, 0.0));
+    static rpm::vector<rpm::vector<double>> lpglotmem(20, rpm::vector<double>(4, 0.0));
     glot = Synthesis::sosfilter(lpsos, glot, lpglotmem);
 
-    std::vector<double> input(inputLength);
+    rpm::vector<double> input(inputLength);
 
     auto outputNoise = Synthesis::sosfilter(realFilter, noise, zfNoise);
     double outputNoiseMax = 0.0;
@@ -226,7 +225,7 @@ void Synthesizer::generateAudio(int requestedLength)
         }
     }
 
-    std::vector<double> output(inputLength);
+    rpm::vector<double> output(inputLength);
     for (int i = 0; i < inputLength; ++i) {
         if (voiced) {
             output[i] = 0.5 * realNoiseGain * outputNoise[i] / outputNoiseMax + realGlotGain * outputGlot[i] / outputGlotMax;

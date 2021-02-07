@@ -2,7 +2,6 @@
 #define NODES_NODEIO_FREQUENCIES_H
 
 #include "nodeio.h"
-#include <vector>
 
 namespace Nodes::IO {
 
@@ -18,7 +17,7 @@ namespace Nodes::IO {
 
     private:
         int mLength;
-        std::vector<double> mData;
+        rpm::vector<double> mData;
     };
 
 }

@@ -2,7 +2,7 @@
 #include "laguerre.h"
 #include <iostream>
 
-std::vector<std::complex<double>> Analysis::findRoots(const std::vector<double>& p)
+rpm::vector<std::complex<double>> Analysis::findRoots(const rpm::vector<double>& p)
 {
     auto roots = Analysis::laguerreSolve(p);
     return roots;

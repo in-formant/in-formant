@@ -1,8 +1,8 @@
 #ifndef NODES_NODEIO_H
 #define NODES_NODEIO_H
 
+#include "rpcxx.h"
 #include <memory>
-#include <vector>
 
 namespace Nodes {
 
@@ -41,9 +41,9 @@ namespace Nodes {
     };
 
     std::unique_ptr<NodeIO> makeNodeIO(NodeIOType type);
-    std::vector<std::unique_ptr<NodeIO>> makeNodeIO(int count, ...);
+    rpm::vector<std::unique_ptr<NodeIO>> makeNodeIO(int count, ...);
 
-    NodeIO **unpack(std::vector<std::unique_ptr<NodeIO>>& v, NodeIO ***ios);
+    NodeIO **unpack(rpm::vector<std::unique_ptr<NodeIO>>& v, NodeIO ***ios);
 
 };
 

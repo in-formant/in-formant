@@ -42,9 +42,9 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v$ver/cmake-$ver-Lin
         sh cmake-$ver-Linux-x86_64.sh --skip-license --prefix=/usr/local
 
 # Install qt
-RUN wget https://download.qt.io/archive/online_installers/4.0/qt-unified-linux-x64-4.0.1-online.run
-RUN chmod +x qt-unified-linux-x64-4.0.1-online.run && \
-        ./qt-unified-linux-x64-4.0.1-online.run in \
+RUN wget https://download.qt.io/archive/online_installers/4.0/qt-unified-linux-x64-4.0.1-1-online.run
+RUN chmod +x qt-unified-linux-x64-4.0.1-1-online.run && \
+        ./qt-unified-linux-x64-4.0.1-1-online.run in \
             --no-default-installations \
             --root /opt/Qt5 \
             --auto-answer telemetry-question=Yes,AssociateCommonFiletypes=Yes,installationError=Retry,installationErrorWithRetry=Retry,DownloadError=Retry,archiveDownloadError=Retry,stopProcessesForUpdates=Retry \
@@ -54,7 +54,8 @@ RUN chmod +x qt-unified-linux-x64-4.0.1-online.run && \
             --email $QT_EMAIL \
             --pw $QT_PW \
             --confirm-command \
-            qt.qt5.51210.gcc_64 \
+            --mirror http://www.nic.funet.fi/pub/mirrors/download.qt-project.org \
+            qt.qt5.5152.gcc_64 \
         && \
         rm -f ~/.local/share/Qt/qtlicenses.ini ~/.local/share/Qt/qtaccount.ini
 
@@ -104,7 +105,11 @@ RUN cd fftw-$ver && \
         make install
 
 RUN apt-get update -y && \
-        apt-get install -y mesa-common-dev freeglut3-dev
+        apt-get install -y mesa-common-dev freeglut3-dev unzip
+
+RUN wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.7.1%2Bcpu.zip -O libtorch.zip && \
+        unzip libtorch.zip && \
+        mv libtorch /usr/libtorch
 
 RUN wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -O /usr/bin/linuxdeploy && \
         chmod 755 /usr/bin/linuxdeploy
@@ -112,16 +117,25 @@ RUN wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous
 RUN wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage -O /usr/bin/linuxdeploy-plugin-qt && \
         chmod 755 /usr/bin/linuxdeploy-plugin-qt
 
-RUN apt-get update -y && apt-get install -y fuse libegl1-mesa
+ENV ver=2.2.0
+RUN wget https://downloads.sourceforge.net/project/glew/glew/$ver/glew-$ver.tgz && \
+        tar -xvf glew-$ver.tgz
+RUN cd glew-$ver && \
+        make GLEW_DEST=/usr install.include && \
+        cp src/glew.c /usr
+
+RUN apt-get update -y && apt-get install -y fuse libegl1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0
 RUN rm -rf /dockerbuild
 
 CMD cd /build && \
+        export version=`cat /src/version` && \
         export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64 && \
         export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig:/usr/local/pkgconfig:/usr/local/lib64/pkgconfig:/usr/local/share/pkgconfig && \
         export GLEW_SOURCE_FILE=/usr/local/src/glew.c && \
         cmake \
+            -DCUR_VERSION=$version \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-            -DCMAKE_PREFIX_PATH=/opt/Qt5/5.12.10/gcc_64 \
+            -DCMAKE_PREFIX_PATH="/opt/Qt5/5.15.2/gcc_64;/usr/libtorch" \
             /src && \
         make -j$(nproc) && \
         /src/docker/deploy-linux.sh

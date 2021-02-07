@@ -3,44 +3,44 @@
 #include <algorithm>
 #include <cmath>
 
-static void diff(std::vector<double> in, std::vector<double>& out)
+static void diff(rpm::vector<double> in, rpm::vector<double>& out)
 {
-    out = std::vector<double>(in.size()-1);
+    out = rpm::vector<double>(in.size()-1);
 
     for(int i=1; i<(int)in.size(); ++i)
         out[i-1] = in[i] - in[i-1];
 }
 
-static void vectorProduct(std::vector<double> a, std::vector<double> b, std::vector<double>& out)
+static void vectorProduct(rpm::vector<double> a, rpm::vector<double> b, rpm::vector<double>& out)
 {
-    out = std::vector<double>(a.size());
+    out = rpm::vector<double>(a.size());
 
     for(int i=0; i<(int)a.size(); ++i)
         out[i] = a[i] * b[i];
 }
 
-static void findIndicesLessThan(std::vector<double> in, double threshold, std::vector<int>& indices)
+static void findIndicesLessThan(rpm::vector<double> in, double threshold, rpm::vector<int>& indices)
 {
     for(int i=0; i<(int)in.size(); ++i)
         if(in[i]<threshold)
             indices.push_back(i+1);
 }
 
-static void selectElements(std::vector<double> in, std::vector<int> indices, std::vector<double>& out)
+static void selectElements(rpm::vector<double> in, rpm::vector<int> indices, rpm::vector<double>& out)
 {
     for(int i=0; i<(int)indices.size(); ++i)
         out.push_back(in[indices[i]]);
 }
 
-static void selectElements(std::vector<int> in, std::vector<int> indices, std::vector<int>& out)
+static void selectElements(rpm::vector<int> in, rpm::vector<int> indices, rpm::vector<int>& out)
 {
     for(int i=0; i<indices.size(); ++i)
         out.push_back(in[indices[i]]);
 }
 
-static void signVector(std::vector<double> in, std::vector<int>& out, int sign)
+static void signVector(rpm::vector<double> in, rpm::vector<int>& out, int sign)
 {
-    out = std::vector<int>(in.size());
+    out = rpm::vector<int>(in.size());
 
     for(int i=0; i<(int)in.size(); ++i)
     {
@@ -53,10 +53,10 @@ static void signVector(std::vector<double> in, std::vector<int>& out, int sign)
     }
 }
 
-std::vector<int> Analysis::findPeaks(const double *data, int length, int sign)
+rpm::vector<int> Analysis::findPeaks(const double *data, int length, int sign)
 {
-    std::vector<double> x0(data, std::next(data, length));
-    std::vector<int> peakInds;
+    rpm::vector<double> x0(data, std::next(data, length));
+    rpm::vector<int> peakInds;
 
     int minIdx = distance(x0.begin(), min_element(x0.begin(), x0.end()));
     int maxIdx = distance(x0.begin(), max_element(x0.begin(), x0.end()));
@@ -65,21 +65,21 @@ std::vector<int> Analysis::findPeaks(const double *data, int length, int sign)
 
     int len0 = x0.size();
 
-    std::vector<double> dx;
+    rpm::vector<double> dx;
     diff(x0, dx);
     replace(dx.begin(), dx.end(), 0.0, -2.2204e-16);
-    std::vector<double> dx0(dx.begin(), dx.end()-1);
-    std::vector<double> dx1(dx.begin()+1, dx.end());
-    std::vector<double> dx2;
+    rpm::vector<double> dx0(dx.begin(), dx.end()-1);
+    rpm::vector<double> dx1(dx.begin()+1, dx.end());
+    rpm::vector<double> dx2;
 
     vectorProduct(dx0, dx1, dx2);
 
-    std::vector<int> ind;
+    rpm::vector<int> ind;
     findIndicesLessThan(dx2, 0, ind); // Find where the derivative changes sign
     
-    std::vector<double> x;
+    rpm::vector<double> x;
 
-    std::vector<int> indAux(ind.begin(), ind.end());
+    rpm::vector<int> indAux(ind.begin(), ind.end());
     selectElements(x0, indAux, x);
     x.insert(x.begin(), x0[0]);
     x.insert(x.end(), x0[x0.size()-1]);
@@ -101,11 +101,11 @@ std::vector<int> Analysis::findPeaks(const double *data, int length, int sign)
         // Deal with first point a little differently since tacked it on
         // Calculate the sign of the derivative since we tacked the first
         //  point on it does not neccessarily alternate like the rest.
-        std::vector<double> xSub0(x.begin(), x.begin()+3);//tener cuidado substd::vector
-        std::vector<double> xDiff;//tener cuidado substd::vector
+        rpm::vector<double> xSub0(x.begin(), x.begin()+3);//tener cuidado subrpm::vector
+        rpm::vector<double> xDiff;//tener cuidado subrpm::vector
         diff(xSub0, xDiff);
 
-        std::vector<int> signDx;
+        rpm::vector<int> signDx;
         signVector(xDiff, signDx, sign);
 
         if (signDx[0] <= 0) // The first point is larger or equal to the second
@@ -133,8 +133,8 @@ std::vector<int> Analysis::findPeaks(const double *data, int length, int sign)
             ii = 1;
 
         double maxPeaks = ceil((double)len/2.0);
-        std::vector<int> peakLoc(maxPeaks,0);
-        std::vector<double> peakMag(maxPeaks,0.0);
+        rpm::vector<int> peakLoc(maxPeaks,0);
+        rpm::vector<double> peakMag(maxPeaks,0.0);
         int cInd = 1;
         int tempLoc;
     
@@ -158,7 +158,7 @@ std::vector<int> Analysis::findPeaks(const double *data, int length, int sign)
                 tempMag = x[ii-1];
             }
 
-            //Make sure we don't iterate past the length of our std::vector
+            //Make sure we don't iterate past the length of our rpm::vector
             if(ii == len)
                 break; //We assign the last point differently out of the loop
 
@@ -195,9 +195,9 @@ std::vector<int> Analysis::findPeaks(const double *data, int length, int sign)
         //Create output
         if( cInd > 0 )
         {            
-            std::vector<int> peakLocTmp(peakLoc.begin(), peakLoc.begin()+cInd-1);
+            rpm::vector<int> peakLocTmp(peakLoc.begin(), peakLoc.begin()+cInd-1);
             selectElements(ind, peakLocTmp, peakInds);
-            //peakMags = std::vector<double>(peakLoc.begin(), peakLoc.begin()+cInd-1);
+            //peakMags = rpm::vector<double>(peakLoc.begin(), peakLoc.begin()+cInd-1);
         }
     }
 

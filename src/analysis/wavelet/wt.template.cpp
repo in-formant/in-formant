@@ -448,11 +448,11 @@ int Wt::CAT(TYPE, _idwt)(const TYPE * const restrict coeffs_a, const size_t coef
 
 /* basic SWT step (TODO: optimize) */
 int Wt::CAT(TYPE, _swt_)(const TYPE * const restrict input, int input_len,
-                     const std::vector<REAL_TYPE>& filter, int filter_len,
+                     const rpm::vector<REAL_TYPE>& filter, int filter_len,
                      TYPE * const restrict output, size_t output_len,
                      unsigned int level){
 
-    std::vector<REAL_TYPE> e_filter;
+    rpm::vector<REAL_TYPE> e_filter;
     int i, e_filter_len, fstep;
     int ret;
 

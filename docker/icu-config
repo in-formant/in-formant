@@ -1,0 +1,11 @@
+#!/bin/bash
+
+case "$1" in
+    --version)
+    pkg-config icu-uc --modversion
+    ;;
+    --ldflags-only-libs)
+    pkg-config icu-uc --libs-only-l
+    ;;
+esac
+

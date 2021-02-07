@@ -1,11 +1,11 @@
 #include "util.h"
 #include "laguerre.h"
 
-std::complex<double> Analysis::laguerreRoot(const std::vector<std::complex<double>>& P, std::complex<double> xk, double accuracy)
+std::complex<double> Analysis::laguerreRoot(const rpm::vector<std::complex<double>>& P, std::complex<double> xk, double accuracy)
 {
     constexpr int maxIt = 5000;
 
-    std::vector<std::complex<double>> ys(3);
+    rpm::vector<std::complex<double>> ys(3);
     ys = evaluatePolynomialDerivatives(P, xk, 2);
   
     const int n = P.size() - 1;
@@ -37,11 +37,11 @@ std::complex<double> Analysis::laguerreRoot(const std::vector<std::complex<doubl
     return xk;
 }
 
-std::vector<std::complex<double>> Analysis::laguerreDeflate(const std::vector<std::complex<double>>& P, const std::complex<double>& root)
+rpm::vector<std::complex<double>> Analysis::laguerreDeflate(const rpm::vector<std::complex<double>>& P, const std::complex<double>& root)
 {
     const int n = P.size() - 1;
 
-    std::vector<std::complex<double>> Q(n);
+    rpm::vector<std::complex<double>> Q(n);
     Q[n - 1] = P[n];
 
     for (int i = n - 2; i >= 0; --i) {
@@ -53,14 +53,14 @@ std::vector<std::complex<double>> Analysis::laguerreDeflate(const std::vector<st
     return Q;
 }
 
-std::vector<std::complex<double>> Analysis::laguerreSolve(const std::vector<double>& realP)
+rpm::vector<std::complex<double>> Analysis::laguerreSolve(const rpm::vector<double>& realP)
 {
-    std::vector<std::complex<double>> P(realP.rbegin(), realP.rend());
+    rpm::vector<std::complex<double>> P(realP.rbegin(), realP.rend());
     auto Pi = P;
 
     const int N = P.size() - 1;
 
-    std::vector<std::complex<double>> R(N);
+    rpm::vector<std::complex<double>> R(N);
 
     for (int i = 0; i < N; ++i) {
         R[i] = laguerreRoot(Pi, 0.0, 1e-6);
@@ -71,5 +71,5 @@ std::vector<std::complex<double>> Analysis::laguerreSolve(const std::vector<doub
         R[i] = laguerreRoot(P, R[i], 1e-12);
     }
 
-    return std::vector<std::complex<double>>(R.begin(), R.end());
+    return rpm::vector<std::complex<double>>(R.begin(), R.end());
 }
