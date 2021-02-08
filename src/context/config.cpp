@@ -25,7 +25,7 @@ constexpr T valueCastField(toml::node_view<ViewedType> tblNode, const std::strin
     auto node = tblNode[name];
     auto opt = node.template value<V>();
     if (opt) {
-        return static_cast<T>(opt.value());
+        return static_cast<T>(*opt);
     }
     else {
         tblNode.as_table()->insert(name, static_cast<V>(defVal));
@@ -38,7 +38,7 @@ constexpr T valueField(toml::node_view<ViewedType> tblNode, const std::string &n
     auto node = tblNode[name];
     auto opt = node.template value<T>();
     if (opt) {
-        return static_cast<T>(opt.value());
+        return static_cast<T>(*opt);
     }
     else {
         tblNode.as_table()->insert(name, static_cast<T>(defVal));

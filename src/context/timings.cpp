@@ -1,5 +1,6 @@
 #include "timings.h"
 #include <iomanip>
+#include <sstream>
 
 namespace timings {
     duration render;

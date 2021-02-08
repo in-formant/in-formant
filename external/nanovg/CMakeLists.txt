@@ -17,7 +17,6 @@ add_library(nanovg STATIC ${HEADERS} ${SOURCES})
 target_include_directories(nanovg INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 if(SYSTEM_DARWIN)
-    string(REPLACE gcc clang CMAKE_C_COMPILER "${CMAKE_C_COMPILER}")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -x objective-c -fobjc-arc")
     target_sources(nanovg PRIVATE src/nanovg_mtl.h src/nanovg_mtl.m)
     find_package(Qt5Gui REQUIRED)

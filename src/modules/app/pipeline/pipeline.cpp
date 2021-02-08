@@ -67,9 +67,9 @@ void Pipeline::callbackSpectrogram()
     double fsDest = fs; //16000;
     gaborator::parameters params(32, 70.0 / fsDest, 440.0 / fsDest);
     analyzerOpt = gaborator::analyzer<double>(params);
-    coefsOpt = gaborator::coefs<double>(analyzerOpt.value());
-    auto& analyzer = analyzerOpt.value();
-    auto& coefs = coefsOpt.value();
+    auto& analyzer = *analyzerOpt;
+    coefsOpt = gaborator::coefs<double>(analyzer);
+    auto& coefs = *coefsOpt;
 
     Module::Audio::Resampler resampler(fs, fsDest);
 

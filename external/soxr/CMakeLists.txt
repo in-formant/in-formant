@@ -7,6 +7,8 @@ project (soxr C)
 set (DESCRIPTION_SUMMARY
     "High quality, one-dimensional sample-rate conversion library")
 
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
 
 # Release versioning:

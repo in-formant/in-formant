@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{MACOSX_DEPLOYMENT_TARGET})
 project(in-formant VERSION ${CUR_VERSION})
 
-set(CMAKE_SUPPORT_DIR "${PROJECT_SOURCE_DIR}/cmake_support")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SUPPORT_DIR}")
+#set(CMAKE_SUPPORT_DIR "${PROJECT_SOURCE_DIR}/cmake_support")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake_support")
 include(CheckSystemName)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -195,10 +195,11 @@ endforeach()
 find_package(Qt5QuickCompiler)
 qtquick_compiler_add_resources(RESOURCES_OBJ resources/qml.qrc)
 qt5_add_big_resources(RESOURCES_OBJ resources/other.qrc)
+set_property(SOURCE ${RESOURCES_OBJ} PROPERTY SKIP_AUTOMOC ON)
 
-set(ARMADILLO_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/armadillo/include)
-set(TOMLPP_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/tomlplusplus/include)
-set(GABORATOR_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/gaborator)
+set(ARMADILLO_INCLUDE_DIR external/armadillo/include)
+set(TOMLPP_INCLUDE_DIR external/tomlplusplus/include)
+set(GABORATOR_INCLUDE_DIR external/gaborator)
 
 ### SEARCH AUDIO MODULES 
 
@@ -243,9 +244,9 @@ endif()
 
 if(SYSTEM_ANDROID)
     message(STATUS "Including audio module: oboe")
-    set(OBOE_DIR ${PROJECT_SOURCE_DIR}/external/oboe)
+    set(OBOE_DIR external/oboe)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
-    add_subdirectory(${OBOE_DIR} ${PROJECT_BINARY_DIR}/oboe)
+    add_subdirectory(${OBOE_DIR})
     set(AUDIO_USE_OBOE TRUE)
     list(APPEND SOURCES
         src/modules/audio/oboe/oboe.cpp
@@ -347,6 +348,7 @@ if(SYSTEM_WINDOWS)
 endif()
 
 if(SYSTEM_DARWIN)
+    target_include_directories(in-formant PRIVATE external/filesystem-compat/include)
     target_compile_options(in-formant PRIVATE -mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET})
 endif()
 

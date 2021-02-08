@@ -91,8 +91,8 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     painter->setTimeRange(timeStart, timeEnd);
     
     if (coefsOpt.has_value()) {
-        auto& analyzer = analyzerOpt.value();
-        auto& coefs = coefsOpt.value();
+        auto& analyzer = *analyzerOpt;
+        auto& coefs = *coefsOpt;
         int64_t t_end = 48000 * timeEnd;
         int64_t t_dur = 48000 * (timeEnd - timeStart);
 

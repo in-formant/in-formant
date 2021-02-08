@@ -26,7 +26,6 @@ cp /usr/lib/gcc/$HOST/9.3-posix/libgomp-1.dll \
     /usr/libtorch/bin/libopenblas.dll \
     /usr/libtorch/lib/libc10.dll \
     /usr/libtorch/lib/libtorch_cpu.dll \
-    /build/freetype/libfreetype.dll \
     $tmp
 
 cd /dist

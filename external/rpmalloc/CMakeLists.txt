@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(rpmalloc)
 
+set(AUTOMOC OFF)
+
 add_library(rpmalloc INTERFACE)
 target_include_directories(rpmalloc SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/rpmalloc)
 

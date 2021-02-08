@@ -2,15 +2,13 @@
 #define MAIN_CONTEXT_CONFIG_H
 
 #include <QObject>
-#include <filesystem>
+#include "../filesystem.hpp"
 #include <fstream>
 #include <toml++/toml.h>
 
 #include "solvermakers.h"
 #include "../gui/qpainterwrapper.h"
 #include "../modules/audio/base/base.h"
-
-namespace fs = std::filesystem;
 
 namespace Main {
 

@@ -121,15 +121,6 @@ RUN cd qtdeclarative-everywhere-src-$ver && \
         make -j$(nproc) && \
         make install
 
-#        make -j$(nproc) qmake_all && \
-#        find ./src/qmldevtools -type f -iname 'Makefile' -exec sed -i "s|-L/osxcross/target/$HOST/lib -lQt5Bootstrap|-L/usr/lib /osxcross/target/$HOST/lib/libQt5Bootstrap.a|g" {} \; && \
-#        find . -type f -iname 'Makefile' -exec sed -i "s|-L$PWD/lib -L/osxcross/target/$HOST/lib -lQt5Bootstrap|-L/usr/lib -L$PWD/lib /osxcross/target/$HOST/lib/libQt5Bootstrap.a|g" {} \; && \
-#        find . -type f -iname 'Makefile' -exec sed -i "s|-L/osxcross/target/$HOST/lib -lQt5Bootstrap|-L/usr/lib /osxcross/target/$HOST/lib/libQt5Bootstrap.a|g" {} \; && \
-#        find . -type f -iname 'Makefile' -exec sed -i "s|-L$PWD/lib -lQt5QmlDevTools|-L/usr/lib -L$PWD/lib ./lib/libQt5QmlDevTools.so|g" {} \; && \
-#        find . -type f -iname 'Makefile' -exec sed -i "s|-lQt5QmlDevTools|-L/usr/lib ./lib/libQt5QmlDevTools.so|g" {} \; && \
-#        make -j$(nproc) && \
-#        make install
-
 ENV ver=5.15.2
 RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtquickcontrols2-everywhere-src-$ver.tar.xz && \
         tar -xvf qtquickcontrols2-everywhere-src-$ver.tar.xz
@@ -216,12 +207,13 @@ COPY macos-toolchain.cmake /usr/macos-toolchain.cmake
 
 CMD cd /build && \
         export version=`cat /src/version` && \
-        export MACOSX_DEPLOYMENT_TARGET=10.9 && \
+        export MACOSX_DEPLOYMENT_TARGET=10.13 && \
         cmake \
             -DCUR_VERSION=$version \
             -DCMAKE_TOOLCHAIN_FILE=/usr/macos-toolchain.cmake \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
             -DCMAKE_PREFIX_PATH=/usr/libtorch \
+            -DEigen3_DIR=/osxcross/target/$HOST/share/eigen3/cmake \ 
             /src && \
         make -j$(nproc) && \
         DIST_SUFFIX=macos-x86_64 \
