@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.5)
 set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{MACOSX_DEPLOYMENT_TARGET})
 project(in-formant VERSION ${CUR_VERSION})
 
-#set(CMAKE_SUPPORT_DIR "${PROJECT_SOURCE_DIR}/cmake_support")
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake_support")
 include(CheckSystemName)
 
@@ -310,31 +309,6 @@ endif()
 
 if(AUDIO_USE_WEBAUDIO)
     target_compile_definitions(in-formant PRIVATE -DAUDIO_USE_WEBAUDIO=1)
-endif()
-
-if(RENDERER_USE_NVG)
-    target_include_directories(in-formant SYSTEM PRIVATE ${NVG_DIR}/src)
-    target_link_libraries(in-formant PRIVATE nanovg)
-    target_compile_definitions(in-formant PRIVATE -DRENDERER_USE_NVG=1)
-
-    if(SYSTEM_WINDOWS OR SYSTEM_DARWIN OR SYSTEM_LINUX) 
-        #if(SYSTEM_WINDOWS)
-        #target_sources(in-formant PRIVATE /usr/$ENV{HOST}/glew.c)
-        #target_compile_definitions(in-formant PRIVATE -DGLEW_STATIC=1)
-        #elseif(SYSTEM_DARWIN)
-        #target_compile_definitions(in-formant PRIVATE -D__gl_h_ -DGL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED)
-        #endif()
-    elseif(SYSTEM_ANDROID)
-        find_package(OpenGLES3 REQUIRED)
-        target_include_directories(in-formant SYSTEM PRIVATE ${OpenGLES3_INCLUDE_DIRS})
-        target_link_libraries(in-formant PRIVATE ${OpenGLES3_LIBRARIES})
-    endif()
-endif()
-
-if(FONT_USE_FREETYPE)
-    target_include_directories(in-formant SYSTEM PRIVATE ${FREETYPE_DIR}/include)
-    target_link_libraries(in-formant PRIVATE freetype)
-    target_compile_definitions(in-formant PRIVATE -DFONT_USE_FREETYPE=1)
 endif()
 
 ## PLATFORM SPECIFIC CODE

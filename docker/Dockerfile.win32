@@ -224,7 +224,7 @@ RUN ln -sf /usr/bin/$HOST-gcc-posix /usr/bin/$HOST-gcc && \
         ln -sf /usr/bin/$HOST-g++-posix /usr/bin/$HOST-g++
 
 RUN apt-get update -y && apt-get install -y git unzip
-RUN wget https://github.com/clo-yunhee/pytorch_mingw_cross/releases/download/1.6.0a0/libtorch-x86.tar.gz && \
+RUN wget https://github.com/clo-yunhee/pytorch_mingw_cross/releases/download/1.6.0a0-1/libtorch-x86.tar.gz && \
         tar -xvf libtorch-x86.tar.gz -C /usr
 
 COPY win32-toolchain.cmake /usr/win32-toolchain.cmake
