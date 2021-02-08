@@ -1,8 +1,6 @@
 # SoX Resampler Library       Copyright (c) 2007-16 robs@users.sourceforge.net
 # Licence for this file: LGPL v2.1                  See LICENCE for details.
 
-
-
 # Can generate vr-coefs.h but it complicates cross-compiling & non-cmake builds
 
 if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/vr-coefs.h)

@@ -10,6 +10,7 @@ set (DESCRIPTION_SUMMARY
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+set(CMAKE_AUTOMOC OFF)
 
 # Release versioning:
 
@@ -153,8 +154,6 @@ test_big_endian (HAVE_BIGENDIAN)
 
 
 # Compiler configuration:
-
-set(AUTOMOC OFF)
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
   set (PROJECT_CXX_FLAGS "${PROJECT_CXX_FLAGS} -Wconversion -Wall -Wextra \
