@@ -179,7 +179,6 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(FFTW REQUIRED fftw3)
 
 find_package(Eigen3 REQUIRED NO_MODULE)
-find_package(BLAS REQUIRED)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
@@ -269,7 +268,7 @@ else()
 endif()
 
 target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${FFTW_INCLUDE_DIRS} ${TOMLPP_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS} ${GABORATOR_INCLUDE_DIR})
-target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${BLAS_LIBRARIES} ${FFTW_LDFLAGS} ${TORCH_LIBRARIES} Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
+target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LDFLAGS} ${TORCH_LIBRARIES} Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
 
 add_subdirectory(external/rpmalloc EXCLUDE_FROM_ALL)
 add_subdirectory(external/soxr EXCLUDE_FROM_ALL)

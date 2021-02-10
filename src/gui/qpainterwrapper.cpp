@@ -4,7 +4,6 @@
 #include <cmath>
 #include <iostream>
 #include <gaborator/gaussian.h>
-#include <cblas.h>
 
 constexpr double mapToUnit(double v, double min, double max) {
     return (v - min) / (max - min);
@@ -31,7 +30,7 @@ QPainterWrapper::QPainterWrapper(QPainter *p)
       mTimeStart(0.0),
       mTimeEnd(5.0),
       mFrequencyScale(FrequencyScale::Mel),
-      mMinFrequency(1),
+      mMinFrequency(60),
       mMaxFrequency(8000),
       mMinGain(-120),
       mMaxGain(0)
@@ -138,7 +137,11 @@ double QPainterWrapper::mapFrequencyToY(double frequency)
 
 void QPainterWrapper::drawFrequencyScale()
 {
+    rpm::vector<double> majorTicks;
+    rpm::vector<double> minorTicks;
+
     
+
 }
 
 void QPainterWrapper::drawTimeSeries(const rpm::vector<double>& y, double xstart, double xend, double ymin, double ymax)
