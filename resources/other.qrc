@@ -1,7 +1,7 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource>
-        <file>model.npz</file>
+        <file>model.pt</file>
         <file>Montserrat.otf</file>
     </qresource>
 </RCC>

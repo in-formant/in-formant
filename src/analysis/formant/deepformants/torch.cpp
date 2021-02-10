@@ -2,79 +2,35 @@
 #ifdef _WIN32
 #  define __assert_fail(...) // Suppress warning.
 #endif
-#include <torch/torch.h>
-#include "cnpy.h"
+#include <torch/script.h>
 
 #ifdef QT_CORE_LIB
 #  include <QFile>
 #endif
 
-namespace nn = torch::nn;
-
-constexpr int D = 350;
-
-struct DeepFormantsNet : nn::Module {
-    DeepFormantsNet()
-        : dense1(register_module("Dense1", nn::Linear(D, 1024))),
-          dense2(register_module("Dense2", nn::Linear(1024, 512))),
-          dense3(register_module("Dense3", nn::Linear(512, 256))),
-          out(register_module("out", nn::Linear(256, 4)))
-    {
-    }
-
-    torch::Tensor forward(torch::Tensor x) {
-        x = torch::sigmoid(dense1(x));
-        x = torch::sigmoid(dense2(x));
-        x = torch::sigmoid(dense3(x));
-        return out(x);
-    }
-
-    nn::Linear dense1{nullptr};
-    nn::Linear dense2{nullptr};
-    nn::Linear dense3{nullptr};
-    nn::Linear out{nullptr};
-};
-
-DeepFormantsNet dfNet;
-
+static torch::jit::script::Module dfModule;
 static bool dfModuleLoaded = false;
 
-static void loadModuleFromBuffer(QFile& file)
+static void loadModuleFromFile(QFile& file)
 {
-    cnpy::npz_t stateDict = cnpy::npz_load(file);
-
-    auto params = dfNet.named_parameters(true);
-    auto buffers = dfNet.named_buffers(true);
-
-    torch::autograd::GradMode::set_enabled(false);
-
-    for (auto& [name, value] : stateDict) {
-        rpm::vector<double> vec(value.as_vec<double>());
-        
-        rpm::vector<int64_t> sizes(value.shape.size());
-        std::copy(value.shape.begin(), value.shape.end(), sizes.begin());
-
-        auto* t = params.find(name);
-        if (t != nullptr) {
-            t->copy_(torch::tensor(torch::ArrayRef(vec)).resize_(sizes));
-            std::cout << vec[2] << std::endl;
-        } else {
-            t = buffers.find(name);
-            if (t != nullptr) {
-                t->copy_(torch::tensor(torch::ArrayRef(vec)).resize_(sizes));
-            }
-        }
+    try {
+        QByteArray buffer = file.readAll();
+        std::string data(buffer.data(), buffer.size());
+        std::istringstream stream(data);
+        dfModule = torch::jit::load(stream, c10::kCPU);
     }
-    
-    torch::autograd::GradMode::set_enabled(true);
+    catch (const c10::Error& e) {
+        std::cerr << "Error loading the model: " << e.msg() << std::endl;
+        return;
+    }
 }
 
 static void loadModule()
 {
 #ifdef QT_CORE_LIB
-    QFile file(":/model.npz");
+    QFile file(":/model.pt");
     if (file.open(QIODevice::ReadOnly)) {
-        loadModuleFromBuffer(file);
+        loadModuleFromFile(file);
         file.close();
         dfModuleLoaded = true;
     }
@@ -93,7 +49,7 @@ Eigen::ArrayXd predictFromFeatures(const Eigen::ArrayXd& features)
         input[0][i] = features(i);
     }
 
-    torch::Tensor output = dfNet.forward({input});
+    torch::Tensor output = dfModule.forward({input}).toTensor();
 
     return Eigen::Map<Eigen::ArrayXf>(output.data_ptr<float>(), output.size(1)).cast<double>();
 }

@@ -2,21 +2,24 @@
 #define MAIN_CONTEXT_DATA_STORE_H
 
 #include "rpcxx.h"
-#include "../fixedsizevector.h"
 #include "../timetrack.h"
 #include "../analysis/analysis.h"
 #include <array>
 #include <shared_mutex>
+#include <functional>
 #include <gaborator/gaborator.h>
 
 namespace Main {
 
+    struct SpectrogramCoefs {
+        gaborator::analyzer<double> analyzer;
+        gaborator::coefs<double> coefs;
+        double fs;
+    };
+
     class DataStore {
     public:
         DataStore();
-
-        void setTrackLength(int trackLength);
-        int getTrackLength() const;
 
         void beginWrite();
         void endWrite();
@@ -24,13 +27,12 @@ namespace Main {
         int beginRead();
         void endRead();
 
-        FixedSizeVector<rpm::vector<double>>& getSoundTrack();
+        TimeTrack<rpm::vector<double>>& getSoundTrack();
     
         double getTime() const;
         void setTime(double t);
 
-        std::optional<gaborator::analyzer<double>>& getSpectrogramAnalyzer();
-        std::optional<gaborator::coefs<double>>& getSpectrogramCoefs();
+        rpm::vector<SpectrogramCoefs>& getSpectrogramCoefs();
 
         TimeTrack<double>& getPitchTrack();
 
@@ -44,12 +46,11 @@ namespace Main {
         std::shared_mutex mMutex;
         int mCatchupCount;
 
-        FixedSizeVector<rpm::vector<double>>                mSoundTrack;
+        TimeTrack<rpm::vector<double>>                mSoundTrack;
 
         double mTime;
 
-        std::optional<gaborator::analyzer<double>> mSpectrogramAnalyzer;
-        std::optional<gaborator::coefs<double>> mSpectrogramCoefs;
+        rpm::vector<SpectrogramCoefs> mSpectrogramCoefs;
         
         TimeTrack<double> mPitchTrack;
         rpm::vector<TimeTrack<double>> mFormantTracks;

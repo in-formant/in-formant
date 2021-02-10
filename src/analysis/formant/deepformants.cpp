@@ -9,7 +9,7 @@ using Analysis::FormantResult;
 using namespace Eigen;
 
 DeepFormants::DeepFormants()
-    : rs(8000, 16000)
+    : rs(48000, 16000)
 {
 }
 

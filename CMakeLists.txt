@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
+cmake_policy(SET CMP0077 NEW)
+cmake_policy(SET CMP0075 NEW) 
 set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{MACOSX_DEPLOYMENT_TARGET})
 project(in-formant VERSION ${CUR_VERSION})
 
@@ -8,6 +10,12 @@ include(CheckSystemName)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(CMAKE_C_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -mtune=generic -fvisibility=hidden")
+set(CMAKE_C_FLAGS_DEBUG           "-Og -g")
+set(CMAKE_C_FLAGS_RELEASE         "-O2 -g0 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO  "-O2 -g")
+set(CMAKE_C_FLAGS_MINSIZEREL      "-Os -g0 -DNDEBUG")
 
 set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -mtune=generic -fvisibility=hidden -fvisibility-inlines-hidden")
 set(CMAKE_CXX_FLAGS_DEBUG           "-Og -g")
@@ -22,7 +30,8 @@ set(CMAKE_AUTOMOC ON)
 
 set(SOURCES
     src/main.cpp
-    src/fixedsizevector.h
+    src/timetrack.h
+    src/timetrack.ipp
     src/context/timings.cpp
     src/context/timings.h
     src/context/solvermakers.cpp
@@ -43,6 +52,8 @@ set(SOURCES
     src/context/views/spectrogram.cpp
     src/gui/qpainterwrapper.cpp
     src/gui/qpainterwrapper.h
+    src/gui/qpainterwrapperbase.h
+    src/gui/cmap.cpp
     src/gui/canvas.cpp
     src/gui/canvas.h
     src/android_redirect_log.cpp
@@ -115,8 +126,6 @@ set(SOURCES
     src/analysis/formant/deepformants/df.h
     src/analysis/formant/deepformants/features.cpp
     src/analysis/formant/deepformants/torch.cpp
-    src/analysis/formant/deepformants/cnpy.cpp
-    src/analysis/formant/deepformants/cnpy.h
     src/analysis/formant/deepformants.cpp
     src/analysis/formant/simplelp.cpp
     src/analysis/formant/filteredlp.cpp
@@ -170,6 +179,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(FFTW REQUIRED fftw3)
 
 find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(BLAS REQUIRED)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
@@ -180,11 +190,8 @@ set_target_properties(torch PROPERTIES
     MAP_IMPORTED_CONFIG_MINSIZEREL Release
     MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
 )
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 
-find_package(Qt5 5.12 COMPONENTS Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core REQUIRED)
+find_package(Qt5 5.15 COMPONENTS Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core REQUIRED)
 foreach(c Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core)
     if(${Qt5${c}_FOUND})
         get_target_property(Qt5${c}_LIBRARY_FILE ${Qt5${c}_LIBRARIES} LOCATION)
@@ -243,22 +250,14 @@ endif()
 
 if(SYSTEM_ANDROID)
     message(STATUS "Including audio module: oboe")
-    set(OBOE_DIR external/oboe)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
-    add_subdirectory(${OBOE_DIR})
+    set(BUILD_SHARED_LIBS OFF)
+    add_subdirectory(external/oboe EXCLUDE_FROM_ALL)
+    set(BUILD_SHARED_LIBS ON)
     set(AUDIO_USE_OBOE TRUE)
     list(APPEND SOURCES
         src/modules/audio/oboe/oboe.cpp
         src/modules/audio/oboe/oboe.h
     )
-endif()
-
-if(EMSCRIPTEN)
-    message(STATUS "Including audio module: webaudio")
-    set(AUDIO_USE_WEBAUDIO TRUE)
-    list(APPEND SOURCES
-        src/modules/audio/webaudio/webaudio.cpp
-        src/modules/audio/webaudio/webaudio.h)
 endif()
 
 ### CREATE CMAKE TARGET
@@ -270,10 +269,10 @@ else()
 endif()
 
 target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${FFTW_INCLUDE_DIRS} ${TOMLPP_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS} ${GABORATOR_INCLUDE_DIR})
-target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${Eigen3_LDFLAGS} ${FFTW_LDFLAGS} ${TORCH_LIBRARIES} Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
+target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${BLAS_LIBRARIES} ${FFTW_LDFLAGS} ${TORCH_LIBRARIES} Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
 
-add_subdirectory(external/rpmalloc)
-add_subdirectory(external/soxr)
+add_subdirectory(external/rpmalloc EXCLUDE_FROM_ALL)
+add_subdirectory(external/soxr EXCLUDE_FROM_ALL)
 target_link_libraries(in-formant PRIVATE rpmalloc soxr)
 target_include_directories(in-formant SYSTEM PRIVATE external/soxr/src)
 
@@ -302,13 +301,10 @@ if(AUDIO_USE_PORTAUDIO)
 endif()
 
 if(AUDIO_USE_OBOE)
+    add_dependencies(in-formant oboe)
     target_include_directories(in-formant SYSTEM PRIVATE ${OBOE_DIR}/include)
     target_link_libraries(in-formant PRIVATE oboe)
     target_compile_definitions(in-formant PRIVATE -DAUDIO_USE_OBOE=1)
-endif()
-
-if(AUDIO_USE_WEBAUDIO)
-    target_compile_definitions(in-formant PRIVATE -DAUDIO_USE_WEBAUDIO=1)
 endif()
 
 ## PLATFORM SPECIFIC CODE
@@ -317,12 +313,15 @@ if(SYSTEM_WINDOWS OR SYSTEM_DARWIN OR SYSTEM_LINUX)
     #target_compile_options(in-formant PRIVATE -msse)
 endif()
 
+if(SYSTEM_DARWIN OR SYSTEM_ANDROID)
+    target_include_directories(in-formant PRIVATE external/filesystem-compat/include)
+endif()
+
 if(SYSTEM_WINDOWS)
     target_compile_definitions(in-formant PRIVATE -D_WIN32_WINNT=0x600 -D_USE_MATH_DEFINES)
 endif()
 
 if(SYSTEM_DARWIN)
-    target_include_directories(in-formant PRIVATE external/filesystem-compat/include)
     target_compile_options(in-formant PRIVATE -mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET})
 endif()
 
@@ -334,10 +333,21 @@ if(SYSTEM_LINUX)
 endif()
 
 if(SYSTEM_ANDROID)
-    target_sources(in-formant PRIVATE src/context/ctxmgr_androidcommon.cpp)
-    if(TARGET_USE_SDL2)
-        target_sources(in-formant PRIVATE src/modules/target/sdl2/sdl2_android.cpp)
-    endif()
-    target_link_libraries(in-formant PRIVATE android)
+    find_package(Qt5AndroidExtras REQUIRED)
+    target_link_libraries(in-formant PRIVATE Qt5::AndroidExtras)
 endif()
 
+if(SYSTEM_DARWIN)
+    target_compile_definitions(in-formant PRIVATE -DGABORATOR_USE_VDSP)
+else()
+    set(USE_TYPE_FLOAT ON)
+    set(USE_TYPE_DOUBLE ON)
+    set(USE_BENCH_FFTW OFF)
+    set(USE_BENCH_GREEN OFF)
+    set(USE_BENCH_KISS OFF)
+    set(USE_BENCH_POCKET OFF)
+    add_subdirectory(external/pffft EXCLUDE_FROM_ALL)
+    target_include_directories(in-formant PRIVATE external/pffft)
+    target_link_libraries(in-formant PRIVATE PFFFT FFTPACK)
+    target_compile_definitions(in-formant PRIVATE -DGABORATOR_USE_PFFFT)
+endif()

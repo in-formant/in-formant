@@ -8,77 +8,11 @@ using namespace Main::View;
 
 void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *dataStore)
 {
-    int fsz = config->getViewFontSize();
-
-    /*int catchup = dataStore->beginRead();
-   
-    int trackLength = dataStore->getTrackLength(); 
-    int viewFormantCount = config->getViewFormantCount();
-
-    if (catchup > 0) {
-        int n;
-
-        auto spectrumTail = dataStore->getSoundSpectrumTrack().tail(catchup);
-
-        for (const auto& spectrum : spectrumTail) {
-            mSpectrumRender.clear();
-            for (const auto& [frequency, intensity] : spectrum) {
-                mSpectrumRender.push_back({frequency, intensity});
-            }
-            renderer->scrollSpectrogram(mSpectrumRender, trackLength);
-        }
-
-        mFormantTracksRender.resize(viewFormantCount);
-        for (int i = 0; i < viewFormantCount; ++i) {
-            mFormantTracksRender[i].resize(trackLength);
-        }
-
-        n = 0;
-        for (auto& formants : dataStore->getFormantTrack()) {
-            int i = 0;
-            for (auto& formant : formants) {
-                mFormantTracksRender[i][n] = formant;
-                if (++i >= viewFormantCount) break;
-            }
-            for (int j = i; j < viewFormantCount; ++j)
-                mFormantTracksRender[j][n] = std::nullopt;
-            ++n;
-        }
-
-        mPitchTrackRender.resize(trackLength);
-        n = 0;
-        for (auto& x : dataStore->getPitchTrack()) {
-            mPitchTrackRender[n++] = (x > 0) ? std::make_optional(x) : std::nullopt;
-        }
-    }
-
-    dataStore->endRead();
-
-    if (config->getViewShowSpectrogram()) {
-        renderer->renderSpectrogram();
-    }
-
-    if (config->getViewShowPitch()) {
-        renderer->renderFrequencyTrack(mPitchTrackRender, 6.0f, 0.0f, 1.0f, 1.0f);
-    }
-
-    if (config->getViewShowFormants()) {
-        for (int i = 0; i < viewFormantCount; ++i) {
-            const auto [r, g, b] = config->getViewFormantColor(i);
-            renderer->renderFormantTrack(mFormantTracksRender[i], 4.0f, r, g, b);
-        }
-    }
-
-    renderer->renderFrequencyScaleBar(fp->font(fsz - 3), fp->font(fsz - 4));*/
-
     dataStore->beginRead();
-
-    rpm::vector<double> sound = dataStore->getSoundTrack().back();
     
     static QImage image;
 
-    auto& analyzerOpt = dataStore->getSpectrogramAnalyzer();
-    auto& coefsOpt = dataStore->getSpectrogramCoefs();
+    auto& coefStore = dataStore->getSpectrogramCoefs();
 
     auto& pitchTrack = dataStore->getPitchTrack();
 
@@ -88,43 +22,50 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     const double timeStart = dataStore->getTime() - viewDuration;
     const double timeEnd = dataStore->getTime();
 
+    rpm::vector<double> sound = (--dataStore->getSoundTrack().upper_bound(timeEnd))->second;
+
     painter->setTimeRange(timeStart, timeEnd);
-    
-    if (coefsOpt.has_value()) {
-        auto& analyzer = *analyzerOpt;
-        auto& coefs = *coefsOpt;
-        int64_t t_end = 48000 * timeEnd;
-        int64_t t_dur = 48000 * (timeEnd - timeStart);
+  
+    if (config->getViewShowSpectrogram()) { 
+        for (auto& coefs : coefStore) {
+            double dfs = coefs.fs;
 
-        int x_scale_exp = 8;
-        int y_scale_exp = -1;
+            int64_t t_end = dfs * timeEnd;
+            int64_t t_dur = dfs * (timeEnd - timeStart);
 
-        int64_t x_origin = 0;
-        int64_t y_origin = analyzer.bandpass_bands_begin();
-        int64_t x0 = (t_end - t_dur) >> x_scale_exp;
-        int64_t x1 = t_end >> x_scale_exp;
-        int64_t y0 = 0;
-        int64_t y1 = (analyzer.bandpass_bands_end() - analyzer.bandpass_bands_begin()) << -y_scale_exp;
-        int64_t i0 = t_end - t_dur;
-        int64_t i1 = t_end;
-    
-        rpm::vector<double> amplitudes((x1 - x0) * (y1 - y0), 0.0);
+            int x_scale_exp = 9;
+            int y_scale_exp = -1;
 
-        gaborator::render_incremental(
-                analyzer,
-                coefs,
-                gaborator::linear_transform(ldexp(1, x_scale_exp), x_origin),
-                gaborator::linear_transform(ldexp(1, y_scale_exp), y_origin),
-                x0, x1,
-                y0, y1,
-                i0, i1,
-                amplitudes.data(),
-                x1 - x0);
+            int64_t begin_band = coefs.analyzer.ff_bandpass_band((double) config->getViewMaxFrequency() / dfs);
+            int64_t end_band = coefs.analyzer.ff_bandpass_band((double) config->getViewMinFrequency() / dfs);
 
-        image = painter->drawSpectrogramChunk(amplitudes, x1 - x0, y1 - y0);
+            int64_t x_origin = 0;
+            int64_t y_origin = 0;
+            int64_t x0 = (t_end - t_dur) >> x_scale_exp;
+            int64_t x1 = t_end >> x_scale_exp;
+            int64_t y0 = begin_band << -y_scale_exp;
+            int64_t y1 = end_band << -y_scale_exp;
+            int64_t i0 = t_end - t_dur;
+            int64_t i1 = t_end;
+        
+            rpm::vector<double> amplitudes((x1 - x0) * (y1 - y0), 0.0);
+
+            gaborator::render_incremental(
+                    coefs.analyzer,
+                    coefs.coefs,
+                    gaborator::linear_transform(ldexp(1, x_scale_exp), x_origin),
+                    gaborator::linear_transform(ldexp(1, y_scale_exp), y_origin),
+                    x0, x1,
+                    y0, y1,
+                    i0, i1,
+                    amplitudes.data(),
+                    x1 - x0);
+
+            image = painter->drawSpectrogramChunk(amplitudes, x1 - x0, y1 - y0);
+        }
+
+        painter->drawImage(viewport, image);
     }
-
-    painter->drawImage(viewport, image);
 
     if (config->getViewShowPitch()) {
         painter->setPen(QPen(Qt::cyan, 5, Qt::SolidLine, Qt::RoundCap));

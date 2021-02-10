@@ -9,17 +9,6 @@ DataStore::DataStore()
 {
 }
 
-void DataStore::setTrackLength(int trackLength)
-{
-    mSoundTrack.resize(trackLength);
-    mTrackLength = trackLength;
-}
-
-int DataStore::getTrackLength() const
-{
-    return mTrackLength;
-}
-
 void DataStore::beginWrite()
 {
     mMutex.lock();
@@ -45,7 +34,7 @@ void DataStore::endRead()
     mMutex.unlock_shared();
 }
 
-FixedSizeVector<rpm::vector<double>>& DataStore::getSoundTrack()
+TimeTrack<rpm::vector<double>>& DataStore::getSoundTrack()
 {
     return mSoundTrack;
 }
@@ -60,12 +49,7 @@ void DataStore::setTime(double t)
     mTime = t;
 }
 
-std::optional<gaborator::analyzer<double>>& DataStore::getSpectrogramAnalyzer()
-{
-    return mSpectrogramAnalyzer;
-}
-
-std::optional<gaborator::coefs<double>>& DataStore::getSpectrogramCoefs()
+rpm::vector<SpectrogramCoefs>& DataStore::getSpectrogramCoefs()
 {
     return mSpectrogramCoefs;
 }

@@ -36,7 +36,6 @@ ContextManager::ContextManager(
     createViews();
     loadConfig();
     updatePipeline();
-    mDataStore->setTrackLength(1000);
     mDataStore->setFormantTrackCount(4);
 }
 

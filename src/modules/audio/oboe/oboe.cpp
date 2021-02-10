@@ -1,8 +1,7 @@
 #include "oboe.h"
 #include <iostream>
 
-#include <SDL2/SDL.h>
-#include <jni.h>
+#include <QtAndroid>
 
 using namespace Module::Audio;
 
@@ -18,13 +17,7 @@ Oboe::~Oboe()
 
 void Oboe::initialize()
 {
-    JNIEnv *env = (JNIEnv *) SDL_AndroidGetJNIEnv();
-    jobject activity = (jobject) SDL_AndroidGetActivity();
-
-    jclass clazz = env->GetObjectClass(activity);
-    jmethodID methodId = env->GetMethodID(clazz, "requestAudioPermission", "()V");
-
-    env->CallVoidMethod(activity, methodId);
+    QtAndroid::requestPermissionsSync({"android.permission.RECORD_AUDIO"});
 
     mDefaultCaptureDeviceIndex = 0;
     mDefaultPlaybackDeviceIndex = 0;

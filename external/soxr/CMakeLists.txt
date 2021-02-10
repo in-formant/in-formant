@@ -95,7 +95,7 @@ include (CheckLibraryExists)
 include (SetSystemProcessor)
 include (TestBigEndian)
 
-#set_system_processor ()
+set_system_processor ()
 
 check_library_exists (m pow "" NEED_LIBM)
 if (NEED_LIBM)

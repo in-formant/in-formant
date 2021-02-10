@@ -1,274 +1,217 @@
-FROM ubuntu:focal AS build
-ENV container docker
-RUN chmod 1777 /tmp
+FROM ubuntu:20.04 AS build
 
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get -y update && \
-        apt-get -y install wget unzip openjdk-11-jre cmake libglib2.0-dev git
+ENV DEBIAN_FRONTEND noninteractive
 
-# Install Android SDK.
-ENV ver=6609375_latest
-RUN mkdir /android-sdk && cd /android-sdk && \
-        wget https://dl.google.com/android/repository/commandlinetools-linux-$ver.zip && \
+RUN apt-get update -y && \
+        apt-get install -y \
+            wget \
+            unzip \
+            openjdk-11-jre-headless \
+            make \
+            gcc-10 \
+            g++-10 \
+            xz-utils
+
+RUN ln -s /usr/bin/gcc-10 /usr/bin/gcc && \
+        ln -s /usr/bin/g++-10 /usr/bin/g++ 
+
+RUN mkdir /dockerbuild
+WORKDIR /dockerbuild
+
+# Install cmake
+ENV ver=3.19.3
+RUN wget https://github.com/Kitware/CMake/releases/download/v$ver/cmake-$ver-Linux-x86_64.sh && \
+        sh cmake-$ver-Linux-x86_64.sh --skip-license --prefix=/usr/local
+
+ENV ver=6858069_latest
+RUN wget https://dl.google.com/android/repository/commandlinetools-linux-$ver.zip && \
         unzip commandlinetools-linux-$ver.zip && \
-        rm commandlinetools-linux-$ver.zip && \
-        mkdir cmdline-tools && \
-        mv tools cmdline-tools/latest
-ENV ANDROID_HOME=/android-sdk ANDROID_SDK=/android-sdk PATH=/android-sdk/cmdline-tools/latest/bin:$PATH
-ENV android_api=30 ndk_ver=21.3.6528147 buildtools_ver=30.0.1
-ENV ANDROID_PLATFORM=android-$android_api ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ndk_ver
+        mkdir -p /android-sdk/cmdline-tools && \
+        mv cmdline-tools /android-sdk/cmdline-tools/latest
+
+ENV ANDROID_HOME /android-sdk
+ENV ANDROID_SDK  $ANDROID_HOME
+ENV PATH $ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+
+ENV ANDROID_API=30
+ENV ANDROID_PLATFORM=android-$ANDROID_API
 RUN yes | sdkmanager --install "platforms;$ANDROID_PLATFORM"
-RUN yes | sdkmanager --install "ndk;$ndk_ver"
-RUN yes | sdkmanager --install "build-tools;$buildtools_ver"
 
-COPY env-android.sh /usr/local/bin/env-android.sh
+ENV NDK_VER=21.4.7075529
+ENV ANDROID_NDK_HOME $ANDROID_HOME/ndk/$NDK_VER
+ENV ANDROID_NDK      $ANDROID_NDK_HOME
+RUN yes | sdkmanager --install "ndk;$NDK_VER"
 
-# Build pkgconfig
-ENV ver=0.29.2
-RUN wget https://pkg-config.freedesktop.org/releases/pkg-config-$ver.tar.gz && \
-        tar xf pkg-config-$ver.tar.gz
+ENV BUILD_TOOLS_VER=30.0.3
+RUN yes | sdkmanager --install "build-tools;$BUILD_TOOLS_VER"
 
-SHELL ["/bin/bash", "-c"]
+RUN apt-get update -y && apt-get install -y openjdk-11-jdk-headless perl pkg-config git python3 python-is-python3 python3-distutils python3-yaml
 
-ENV arch=arm
-RUN mkdir -p pkg-config-$ver/build-$arch && \
-        cd pkg-config-$ver/build-$arch && \
-        . env-android.sh android-$arch 1 && \
-        ../configure --disable-host-tool --prefix=$ins_prefix && \
-        make install -j$(nproc)
+ENV ver=5.15.2
+RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtbase-everywhere-src-$ver.tar.xz && \
+        tar -xvf qtbase-everywhere-src-$ver.tar.xz
+RUN mkdir qtbase-build && \
+        cd qtbase-build && \
+        ../qtbase-everywhere-src-$ver/configure \
+            -opensource \
+            -confirm-license \
+            -xplatform android-clang \
+            -release \
+            -shared \
+            -android-ndk $ANDROID_NDK_HOME \
+            -android-sdk $ANDROID_HOME \
+            -prefix /android
 
-ENV arch=arm64
-RUN mkdir -p pkg-config-$ver/build-$arch && \
-        cd pkg-config-$ver/build-$arch && \
-        . env-android.sh android-$arch 1 && \
-        ../configure --disable-host-tool --prefix=$ins_prefix && \
-        make install -j$(nproc)
+RUN apt-get update -y && apt-get install -y python3
 
-ENV arch=x86
-RUN mkdir -p pkg-config-$ver/build-$arch && \
-        cd pkg-config-$ver/build-$arch && \
-        . env-android.sh android-$arch 1 && \
-        ../configure --disable-host-tool --prefix=$ins_prefix && \
-        make install -j$(nproc)
+RUN cd qtbase-build && \
+        ../qtbase-everywhere-src-$ver/configure \
+            -opensource \
+            -confirm-license \
+            -xplatform android-clang \
+            -release \
+            -shared \
+            -android-ndk $ANDROID_NDK_HOME \
+            -android-sdk $ANDROID_HOME \
+            -prefix /android \
+            -nomake examples \
+            -nomake tests \
+            -no-feature-concurrent \
+            -no-feature-sql \
+            -no-feature-xml && \
+        make -j$(nproc) && \
+        make install
 
-ENV arch=x86_64
-RUN mkdir -p pkg-config-$ver/build-$arch && \
-        cd pkg-config-$ver/build-$arch && \
-        . env-android.sh android-$arch 1 && \
-        ../configure --disable-host-tool --prefix=$ins_prefix && \
-        make install -j$(nproc)
+ENV ver=5.15.2
+RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtdeclarative-everywhere-src-$ver.tar.xz && \
+        tar -xvf qtdeclarative-everywhere-src-$ver.tar.xz
+RUN cd qtdeclarative-everywhere-src-$ver && \
+        /android/bin/qmake && \
+        make -j$(nproc) && \
+        make install
 
-# Build eigen3
-ENV ver=3.3.7
-RUN wget https://gitlab.com/libeigen/eigen/-/archive/$ver/eigen-$ver.tar.gz && \
-        tar xf eigen-$ver.tar.gz
+ENV ver=5.15.2
+RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtquickcontrols2-everywhere-src-$ver.tar.xz && \
+        tar -xvf qtquickcontrols2-everywhere-src-$ver.tar.xz
+RUN cd qtquickcontrols2-everywhere-src-$ver && \
+        /android/bin/qmake && \
+        make -j$(nproc) && \
+        make install
 
-ENV arch=arm
-RUN mkdir -p eigen-$ver/build-$arch && \
-        cd eigen-$ver/build-$arch && \
-        . env-android.sh android-$arch && \
-        cmake .. $cmake_flags && \
-        make install -j$(nproc)
+COPY set-env-android.sh /set-env-android.sh
 
-ENV arch=arm64
-RUN mkdir -p eigen-$ver/build-$arch && \
-        cd eigen-$ver/build-$arch && \
-        . env-android.sh android-$arch && \
-        cmake .. $cmake_flags && \
-        make install -j$(nproc)
-
-ENV arch=x86
-RUN mkdir -p eigen-$ver/build-$arch && \
-        cd eigen-$ver/build-$arch && \
-        . env-android.sh android-$arch && \
-        cmake .. $cmake_flags && \
-        make install -j$(nproc)
-
-ENV arch=x86_64
-RUN mkdir -p eigen-$ver/build-$arch && \ 
-        cd eigen-$ver/build-$arch && \
-        . env-android.sh android-$arch && \
-        cmake .. $cmake_flags && \
-        make install -j$(nproc)
+ENV ver=1.7.1
+RUN git clone https://github.com/pytorch/pytorch -b v$ver --recursive
+ENV ARCH=arm
+RUN cd pytorch && \
+        . /set-env-android.sh && \
+        mkdir -p build/$HOST && \
+        cd build/$HOST && \
+        cmake ../.. \
+            -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE \
+            -DANDROID_PLATFORM=$ANDROID_PLATFORM \
+            -DANDROID_ABI="$ANDROID_ABI" \
+            -DCMAKE_PREFIX_PATH=$INS_PREFIX \
+            -DPYTHON_EXECUTABLE=`which python3` \
+            -DGLIBCXX_USE_CXX11_ABI=1 \
+            -DUSE_MKLDNN=OFF \
+            -DUSE_NNPACK=OFF \
+            -DUSE_QNNPACK=OFF \
+            -DUSE_PYTHON_QNNPACK=OFF \
+            -DUSE_FBGEMM=OFF \
+            && \
+        make -j$(nproc)
+RUN cd pytorch && \
+        . /set-env-android.sh && \
+        cd build/$HOST && \
+        make install
+ENV ARCH=arm64
+RUN cd pytorch && \
+        . /set-env-android.sh && \
+        mkdir -p build/$HOST && \
+        cd build/$HOST && \
+        cmake ../.. \
+            -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE \
+            -DANDROID_PLATFORM=$ANDROID_PLATFORM \
+            -DANDROID_ABI="$ANDROID_ABI" \
+            -DCMAKE_PREFIX_PATH=$INS_PREFIX \
+            -DPYTHON_EXECUTABLE=`which python3` \
+            -DGLIBCXX_USE_CXX11_ABI=1 \
+            -DUSE_MKLDNN=OFF \
+            -DUSE_NNPACK=OFF \
+            -DUSE_QNNPACK=OFF \
+            -DUSE_PYTHON_QNNPACK=OFF \
+            -DUSE_FBGEMM=OFF \
+            && \
+        make -j$(nproc)
+RUN cd pytorch && \
+        . /set-env-android.sh && \
+        cd build/$HOST && \
+        make install
 
 # Build fftw3
-ENV ver=3.3.8
+ENV ver=3.3.9
 RUN wget http://www.fftw.org/fftw-$ver.tar.gz && \
-        tar xf fftw-$ver.tar.gz
-
-ENV arch=arm
-RUN mkdir -p fftw-$ver/build-$arch && \
-        cd fftw-$ver/build-$arch && \
-        . env-android.sh android-$arch && \
-        ../configure --enable-shared --disable-static $configure_flags && \
-        make install -j$(nproc)
-
-ENV arch=arm64
-RUN mkdir -p fftw-$ver/build-$arch && \
-        cd fftw-$ver/build-$arch && \
-        . env-android.sh android-$arch && \
-        ../configure --enable-shared --disable-static $configure_flags && \
-        make install -j$(nproc)
-
-ENV arch=x86
-RUN mkdir -p fftw-$ver/build-$arch && \
-        cd fftw-$ver/build-$arch && \
-        . env-android.sh android-$arch && \
-        ../configure --enable-shared --disable-static $configure_flags && \
-        make install -j$(nproc)
-
-ENV arch=x86_64
-RUN mkdir -p fftw-$ver/build-$arch && \
-        cd fftw-$ver/build-$arch && \
-        . env-android.sh android-$arch && \
-        ../configure --enable-shared --disable-static $configure_flags && \
-        make install -j$(nproc)
-
-# Build SDL2
-ENV SDL2_ver=2.0.12
-RUN wget https://www.libsdl.org/release/SDL2-$SDL2_ver.tar.gz && \
-        tar xf SDL2-$SDL2_ver.tar.gz && \
-        ln -s SDL2-$SDL2_ver SDL2
-
-RUN cd /SDL2/build-scripts && ./androidbuild.sh org.libsdl /dev/null
-RUN cd /SDL2/build/org.libsdl/app && \
-        rm -r jni/src && \
-        ln -s /SDL2_ttf jni && \
-        $ANDROID_NDK_HOME/ndk-build -j$(nproc)
-
-COPY android-sdl2 /android-sdl2
-
-ENV arch=arm
-RUN cd /SDL2/build/org.libsdl/app && \
-        . env-android.sh android-$arch && \
-        mkdir -p $ins_prefix/lib && \
-        cp libs/$android_abi/* $ins_prefix/lib && \
-        mkdir -p $ins_prefix/include/SDL2 && \
-        cp jni/SDL/include/* $ins_prefix/include/SDL2 && \
-        mkdir -p $ins_prefix/lib/pkgconfig && \
-        cp /android-sdl2/sdl2.pc $ins_prefix/lib/pkgconfig && \
-        mkdir -p $ins_prefix/bin && \
-        cp /android-sdl2/sdl2-config $ins_prefix/bin && \
-        sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" $ins_prefix/lib/pkgconfig/sdl2.pc && \
-        sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" -e "s/@SDL_VERSION@/${SDL2_ver}/g" $ins_prefix/bin/sdl2-config
-
-ENV arch=arm64
-RUN cd /SDL2/build/org.libsdl/app && \
-        . env-android.sh android-$arch && \
-        mkdir -p $ins_prefix/lib && \
-        cp libs/$android_abi/* $ins_prefix/lib && \
-        mkdir -p $ins_prefix/include/SDL2 && \
-        cp jni/SDL/include/* $ins_prefix/include/SDL2 && \
-        mkdir -p $ins_prefix/lib/pkgconfig && \
-        cp /android-sdl2/sdl2.pc $ins_prefix/lib/pkgconfig && \
-        mkdir -p $ins_prefix/bin && \
-        cp /android-sdl2/sdl2-config $ins_prefix/bin && \
-        sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" $ins_prefix/lib/pkgconfig/sdl2.pc && \
-        sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" -e "s/@SDL_VERSION@/${SDL2_ver}/g" $ins_prefix/bin/sdl2-config
-
-ENV arch=x86
-RUN cd /SDL2/build/org.libsdl/app && \
-        . env-android.sh android-$arch && \
-        mkdir -p $ins_prefix/lib && \
-        cp libs/$android_abi/* $ins_prefix/lib && \
-        mkdir -p $ins_prefix/include/SDL2 && \
-        cp jni/SDL/include/* $ins_prefix/include/SDL2 && \
-        mkdir -p $ins_prefix/lib/pkgconfig && \
-        cp /android-sdl2/sdl2.pc $ins_prefix/lib/pkgconfig && \
-        mkdir -p $ins_prefix/bin && \
-        cp /android-sdl2/sdl2-config $ins_prefix/bin && \
-        sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" $ins_prefix/lib/pkgconfig/sdl2.pc && \
-        sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" -e "s/@SDL_VERSION@/${SDL2_ver}/g" $ins_prefix/bin/sdl2-config
-
-ENV arch=x86_64
-RUN cd /SDL2/build/org.libsdl/app && \
-        . env-android.sh android-$arch && \
-        mkdir -p $ins_prefix/lib && \
-        cp libs/$android_abi/* $ins_prefix/lib && \
-        mkdir -p $ins_prefix/include/SDL2 && \
-        cp jni/SDL/include/* $ins_prefix/include/SDL2 && \
-        mkdir -p $ins_prefix/lib/pkgconfig && \
-        cp /android-sdl2/sdl2.pc $ins_prefix/lib/pkgconfig && \
-        mkdir -p $ins_prefix/bin && \
-        cp /android-sdl2/sdl2-config $ins_prefix/bin && \
-        sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" $ins_prefix/lib/pkgconfig/sdl2.pc && \
-        sed -i -e "s/@PREFIX@/${ins_prefix//\//\\/}/g" -e "s/@SDL_VERSION@/${SDL2_ver}/g" $ins_prefix/bin/sdl2-config
-
-ENV gver=4.10.2
-RUN wget https://downloads.gradle-dn.com/distributions/gradle-$gver-bin.zip && \
-        unzip gradle-$gver-bin.zip && \
-        mv gradle-$gver gradle
-
-# Install recent GLES headers
-RUN mkdir gles-headers && \
-        cd gles-headers && \
-        wget https://www.khronos.org/registry/OpenGL/api/GLES3/gl3.h && \
-        wget https://www.khronos.org/registry/OpenGL/api/GLES2/gl2ext.h && \
-        for arch in arm arm64 x86 x86_64; do \
-            mkdir -p /usr/android-$arch/include/GLES3; \
-            cp gl3.h /usr/android-$arch/include/GLES3 ; \
-            mkdir -p /usr/android-$arch/include/GLES2; \
-            cp gl2ext.h /usr/android-$arch/include/GLES2 ; \
-        done
-
-ENV ver=0.9.9.8
-RUN wget https://github.com/g-truc/glm/archive/$ver.tar.gz -O glm.tgz && \
-        tar xf glm.tgz
-RUN cd glm-$ver && \
-        for arch in arm arm64 x86 x86_64; do \
-            cp -r glm /usr/android-$arch/include; \
-        done
-
-RUN for path in /usr/android-{arm,arm64,x86,x86_64}; do rm -r $path/share/{aclocal,doc,info,man}; done
-
-FROM ubuntu:focal
-COPY --from=build /android-sdk        /android-sdk
-COPY --from=build /usr/android-arm    /usr/android-arm
-COPY --from=build /usr/android-arm64  /usr/android-arm64
-COPY --from=build /usr/android-x86    /usr/android-x86
-COPY --from=build /usr/android-x86_64 /usr/android-x86_64
-COPY --from=build /gradle             /gradle
-
-RUN chmod 1777 /tmp
-
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get -y update && \
-        apt-get -y install cmake openjdk-11-jre libglib2.0-dev
-
-ENV PATH=/gradle/bin:$PATH
-RUN mkdir -p /tmp/gradle
-COPY android-project/build.gradle /tmp/gradle
-RUN cd /tmp/gradle && gradle --no-daemon
-
-ENV android_api=30 ndk_ver=21.3.6528147 
-ENV ANDROID_HOME=/android-sdk ANDROID_PLATFORM=android-$android_api ANDROID_NDK_HOME=/android-sdk/ndk/$ndk_ver
-
-COPY env-android.sh /usr/local/bin
-COPY deploy-android.sh /usr/local/bin
-
-SHELL ["/bin/bash", "-c"]
-CMD . env-android.sh android-arm && \
-        cd /build && \
-        mkdir -p $target && \
-        cd $target && \
-        cmake -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE $cmake_flags /src && \
+        tar -xvf fftw-$ver.tar.gz
+ENV ARCH=arm
+RUN cd fftw-$ver && \
+        . /set-env-android.sh && \
+        mkdir -p build/$HOST && \
+        cd build/$HOST && \
+        ../../configure $configure_flags --enable-shared --disable-static && \
         make -j$(nproc) && \
-    . env-android.sh android-arm64 && \
-        cd /build && \
-        mkdir -p $target && \
-        cd $target && \
-        cmake -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE $cmake_flags /src && \
+        make install
+ENV ARCH=arm64
+RUN cd fftw-$ver && \
+        . /set-env-android.sh && \
+        mkdir -p build/$HOST && \
+        cd build/$HOST && \
+        ../../configure $configure_flags --enable-shared --disable-static && \
         make -j$(nproc) && \
-    . env-android.sh android-x86 && \
-        cd /build && \
-        mkdir -p $target && \
-        cd $target && \
-        cmake -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE $cmake_flags /src && \
+        make install
+
+# Build eigen3
+ENV ver=3.3.9
+RUN wget https://gitlab.com/libeigen/eigen/-/archive/$ver/eigen-$ver.tar.gz && \
+        tar -xvf eigen-$ver.tar.gz
+ENV ARCH=arm
+RUN cd eigen-$ver && \
+        . /set-env-android.sh && \
+        mkdir -p build/$HOST && \
+        cd build/$HOST && \
+        cmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE -DCMAKE_INSTALL_PREFIX=$INS_PREFIX ../.. && \
         make -j$(nproc) && \
-    . env-android.sh android-x86_64 && \
-        cd /build && \
-        mkdir -p $target && \
-        cd $target && \
-        cmake -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE $cmake_flags /src && \
+        make install 
+ENV ARCH=arm64
+RUN cd eigen-$ver && \
+        . /set-env-android.sh && \
+        mkdir -p build/$HOST && \
+        cd build/$HOST && \
+        cmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE -DCMAKE_INSTALL_PREFIX=$INS_PREFIX ../.. && \
         make -j$(nproc) && \
-    deploy-android.sh $debug
+        make install
+ 
+ENV ver=5.15.2
+RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtandroidextras-everywhere-src-$ver.tar.xz && \
+        tar -xvf qtandroidextras-everywhere-src-$ver.tar.xz
+RUN cd qtandroidextras-everywhere-src-$ver && \
+        /android/bin/qmake && \
+        make -j$(nproc) && \
+        make install
+
+RUN rm -r /dockerbuild
+
+CMD cd /build && \
+        . /set-env-android.sh && \
+        export version=`cat /src/version` && \
+        cmake \
+            -DCUR_VERSION=$version \
+            -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE \
+            -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+            -DCMAKE_PREFIX_PATH="/android;$INS_PREFIX" \
+            -DEigen3_DIR=$INS_PREFIX/share/eigen3/cmake \
+            -DANDROID_PLATFORM=$ANDROID_PLATFORM \
+            -DANDROID_ABI="$ANDROID_ABI" \
+            /src && \
+        make -j$(nproc) 
+
