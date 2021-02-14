@@ -55,7 +55,7 @@ namespace Module::Audio {
 #endif
     };
 
-    enum class Backend {
+    enum class Backend : uint64_t {
         Dummy,
         ALSA,
         Pulse,

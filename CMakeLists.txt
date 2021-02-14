@@ -52,6 +52,7 @@ set(SOURCES
     src/context/views/spectrogram.cpp
     src/gui/qpainterwrapper.cpp
     src/gui/qpainterwrapper.h
+    src/gui/qpainterwrapper_static.cpp
     src/gui/qpainterwrapperbase.h
     src/gui/cmap.cpp
     src/gui/canvas.cpp
@@ -275,7 +276,9 @@ add_subdirectory(external/soxr EXCLUDE_FROM_ALL)
 target_link_libraries(in-formant PRIVATE rpmalloc soxr)
 target_include_directories(in-formant SYSTEM PRIVATE external/soxr/src)
 
-target_compile_definitions(in-formant PRIVATE -DINFORMANT_VERSION=${CUR_VERSION} -DARMA_DONT_USE_WRAPPER -DTOML_HEADER_ONLY=0)
+target_compile_definitions(in-formant PRIVATE
+    -DINFORMANT_VERSION=${CUR_VERSION} -DARMA_DONT_USE_WRAPPER
+    -DTOML_HEADER_ONLY=0 -DEIGEN_DONT_PARALLELIZE)
 
 if(AUDIO_USE_DUMMY)
     target_compile_definitions(in-formant PRIVATE -DAUDIO_USE_DUMMY=1)
@@ -325,6 +328,7 @@ if(SYSTEM_DARWIN)
 endif()
 
 if(SYSTEM_LINUX)
+    target_link_libraries(in-formant PRIVATE -static-libstdc++ -lstdc++fs)
     if(CMAKE_BUILD_TYPE STREQUAL Debug)
         set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fsanitize=undefined -fsanitize=address")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fsanitize=address")
@@ -349,4 +353,11 @@ else()
     target_include_directories(in-formant PRIVATE external/pffft)
     target_link_libraries(in-formant PRIVATE PFFFT FFTPACK)
     target_compile_definitions(in-formant PRIVATE -DGABORATOR_USE_PFFFT)
+endif()
+
+if(WITH_PROFILER)
+    pkg_check_modules(lprof REQUIRED libprofiler)
+    target_include_directories(in-formant PRIVATE ${lprof_INCLUDE_DIRS})
+    target_link_libraries(in-formant PRIVATE ${lprof_LIBRARIES})
+    target_compile_definitions(in-formant PRIVATE -DWITH_PROFILER)
 endif()

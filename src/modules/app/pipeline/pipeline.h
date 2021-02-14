@@ -18,13 +18,12 @@ namespace Module::App
 
     class Pipeline {
     public:
-        Pipeline(Module::Audio::Buffer *captureBuffer, Main::DataStore *dataStore);
+        Pipeline(Module::Audio::Buffer *captureBuffer, Main::DataStore *dataStore,
+                std::shared_ptr<Analysis::PitchSolver> pitchSolver,
+                std::shared_ptr<Analysis::LinpredSolver> linpredSolver,
+                std::shared_ptr<Analysis::FormantSolver> formantSolver,
+                std::shared_ptr<Analysis::InvglotSolver> invglotSolver);
         ~Pipeline();
-
-        Pipeline& setPitchSolver(Analysis::PitchSolver *);
-        Pipeline& setInvglotSolver(Analysis::InvglotSolver *);
-        Pipeline& setLinpredSolver(Analysis::LinpredSolver *);
-        Pipeline& setFormantSolver(Analysis::FormantSolver *);
 
         void processAll();
 
@@ -32,10 +31,10 @@ namespace Module::App
         Module::Audio::Buffer *captureBuffer;
         Main::DataStore *dataStore;
 
-        Analysis::PitchSolver *pitchSolver;
-        Analysis::InvglotSolver *invglotSolver;
-        Analysis::LinpredSolver *linpredSolver;
-        Analysis::FormantSolver *formantSolver;
+        std::shared_ptr<Analysis::PitchSolver> pitchSolver;
+        std::shared_ptr<Analysis::LinpredSolver> linpredSolver;
+        std::shared_ptr<Analysis::FormantSolver> formantSolver;
+        std::shared_ptr<Analysis::InvglotSolver> invglotSolver;
 
         std::atomic_int64_t time;
         bool runningThreads;

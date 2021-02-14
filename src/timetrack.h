@@ -18,6 +18,10 @@ public:
     const_iterator lower_bound(double t) const;
     const_iterator upper_bound(double t) const;
 
+    const T& back() const;
+
+    bool empty() const;
+
 private:
     map_type mTrack;
 };

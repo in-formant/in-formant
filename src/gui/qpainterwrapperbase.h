@@ -17,6 +17,14 @@ public:
         return p->compositionMode();
     }
 
+    inline void save() {
+        p->save();
+    }
+
+    inline void restore() {
+        p->restore();
+    }
+
     inline const QFont &font() const {
         return p->font();
     }

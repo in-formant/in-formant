@@ -1,8 +1,7 @@
 #include "contextmanager.h"
 #include "timings.h"
 
-#include <gaborator/gaborator.h>
-#include <gaborator/render.h>
+#include <iostream>
 
 using namespace Main;
 using namespace std::chrono_literals;
@@ -14,18 +13,21 @@ ContextManager::ContextManager(
                 const dur_ms &playbackDuration,
                 int playbackSampleRate
             )
-    : mCaptureBuffer(std::make_unique<Audio::Buffer>(captureSampleRate)),
-      mPlaybackQueue(std::make_unique<Audio::Queue>(
-                playbackBlockMinDuration.count(), playbackBlockMaxDuration.count(),
-                playbackDuration.count(), playbackSampleRate, [](auto...){})),
-      mDataStore(std::make_unique<DataStore>()),
-      mPipeline(std::make_unique<App::Pipeline>(mCaptureBuffer.get(), mDataStore.get())),
-      mSynthesizer(std::make_unique<App::Synthesizer>(mPlaybackQueue.get())),
-      mConfig(std::make_unique<Config>()),
+    : mConfig(std::make_unique<Config>()),
       mPitchSolver(makePitchSolver(mConfig->getPitchAlgorithm())),
       mLinpredSolver(makeLinpredSolver(mConfig->getLinpredAlgorithm())),
       mFormantSolver(makeFormantSolver(mConfig->getFormantAlgorithm())),
       mInvglotSolver(makeInvglotSolver(mConfig->getInvglotAlgorithm())),
+      mCaptureBuffer(std::make_unique<Audio::Buffer>(captureSampleRate)),
+      mPlaybackQueue(std::make_unique<Audio::Queue>(
+                  playbackBlockMinDuration.count(), playbackBlockMaxDuration.count(),
+                  playbackDuration.count(), playbackSampleRate, [](auto...){})),
+      mDataStore(std::make_unique<DataStore>()),
+      mPipeline(std::make_unique<App::Pipeline>(
+                  mCaptureBuffer.get(), mDataStore.get(),
+                  mPitchSolver, mLinpredSolver,
+                  mFormantSolver, mInvglotSolver)),
+      mSynthesizer(std::make_unique<App::Synthesizer>(mPlaybackQueue.get())),
       mAudioContext(std::make_unique<AudioContext>(
                   mConfig->getAudioBackend(),
                   mCaptureBuffer.get(),
@@ -35,16 +37,37 @@ ContextManager::ContextManager(
 {
     createViews();
     loadConfig();
-    updatePipeline();
     mDataStore->setFormantTrackCount(4);
+    QObject::connect(mConfig.get(), &Config::pitchAlgorithmChanged,
+            [this](int index) {
+            std::cout << index << std::endl;
+                mPitchSolver.reset(makePitchSolver(static_cast<PitchAlgorithm>(index)));
+            });
+    QObject::connect(mConfig.get(), &Config::linpredAlgorithmChanged,
+            [this](int index) {
+                mLinpredSolver.reset(makeLinpredSolver(static_cast<LinpredAlgorithm>(index)));
+            });
+    QObject::connect(mConfig.get(), &Config::formantAlgorithmChanged,
+            [this](int index) {
+                mFormantSolver.reset(makeFormantSolver(static_cast<FormantAlgorithm>(index)));
+            });
+    QObject::connect(mConfig.get(), &Config::invglotAlgorithmChanged,
+            [this](int index) {
+                mInvglotSolver.reset(makeInvglotSolver(static_cast<InvglotAlgorithm>(index)));
+            });
+    QObject::connect(mConfig.get(), &Config::audioBackendChanged,
+            [this](int index) {
+                mAudioContext = std::make_unique<AudioContext>(
+                        static_cast<Module::Audio::Backend>(index),
+                        mCaptureBuffer.get(),
+                        mPlaybackQueue.get());
+                openAndStartAudioStreams();
+            });
 }
 
 int ContextManager::exec()
 {
-    mAudioContext->openCaptureStream(nullptr);
-    mAudioContext->startCaptureStream();
-    mAudioContext->openPlaybackStream(nullptr);
-    mAudioContext->startPlaybackStream();
+    openAndStartAudioStreams();
     startAnalysisThread();
 
     int retCode = mGuiContext->exec();
@@ -73,12 +96,12 @@ void ContextManager::loadConfig()
     mAnalysisPitchSampleRate = mConfig->getAnalysisPitchSampleRate();
 }
 
-void ContextManager::updatePipeline()
+void ContextManager::openAndStartAudioStreams()
 {
-    mPipeline->setPitchSolver(mPitchSolver.get());
-    mPipeline->setLinpredSolver(mLinpredSolver.get());
-    mPipeline->setFormantSolver(mFormantSolver.get());
-    mPipeline->setInvglotSolver(mInvglotSolver.get());
+    mAudioContext->openCaptureStream(nullptr);
+    mAudioContext->startCaptureStream();
+    mAudioContext->openPlaybackStream(nullptr);
+    mAudioContext->startPlaybackStream();
 }
 
 void ContextManager::startAnalysisThread()

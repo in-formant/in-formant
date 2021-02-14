@@ -28,7 +28,7 @@ PitchResult Yin::solve(const double *data, int length, int sampleRate)
     int nfft = pow2roundup(length);
 
     if (!mFFT || mFFT->getLength() != nfft) {
-        mFFT.reset(new ComplexFFT(nfft));
+        mFFT = std::make_shared<ComplexFFT>(nfft);
     }
 
     for (int i = 0; i < length; ++i) {

@@ -97,6 +97,7 @@ Config::Config()
 {
     initSubTable(mTbl, "solvers");
     initSubTable(mTbl, "view");
+    initSubTable(mTbl, "ui");
     initSubTable(mTbl, "analysis");
 }
 
@@ -111,9 +112,31 @@ Module::Audio::Backend Config::getAudioBackend()
     return enumField(toml::node_view(mTbl), "audioBackend", Main::getDefaultAudioBackend());
 }
 
+void Config::setAudioBackend(Module::Audio::Backend b)
+{
+    mTbl["audioBackend"].ref<int64_t>() = enumInt(b);
+    emit audioBackendChanged(enumInt(b));
+}
+
 PitchAlgorithm Config::getPitchAlgorithm()
 {
     return enumField(mTbl["solvers"], "pitch", PitchAlgorithm::RAPT);
+}
+
+void Config::setPitchAlgorithm(PitchAlgorithm alg)
+{
+    mTbl["solvers"]["pitch"].ref<int64_t>() = enumInt(alg);
+    emit pitchAlgorithmChanged(enumInt(alg));
+}
+
+int Config::getPitchAlgorithmNumeric()
+{
+    return enumInt(getPitchAlgorithm());
+}
+
+void Config::setPitchAlgorithm(int alg)
+{
+    setPitchAlgorithm(static_cast<PitchAlgorithm>(alg));
 }
 
 LinpredAlgorithm Config::getLinpredAlgorithm()
@@ -121,9 +144,41 @@ LinpredAlgorithm Config::getLinpredAlgorithm()
     return enumField(mTbl["solvers"], "linpred", LinpredAlgorithm::Burg);
 }
 
+void Config::setLinpredAlgorithm(LinpredAlgorithm alg)
+{
+    mTbl["solvers"]["linpred"].ref<int64_t>() = enumInt(alg);
+    emit linpredAlgorithmChanged(enumInt(alg));
+}
+
+int Config::getLinpredAlgorithmNumeric()
+{
+    return enumInt(getLinpredAlgorithm());
+}
+
+void Config::setLinpredAlgorithm(int alg)
+{
+    setLinpredAlgorithm(static_cast<LinpredAlgorithm>(alg));
+}
+
 FormantAlgorithm Config::getFormantAlgorithm()
 {
     return enumField(mTbl["solvers"], "formant", FormantAlgorithm::Deep);
+}
+
+void Config::setFormantAlgorithm(FormantAlgorithm alg)
+{
+    mTbl["solvers"]["formant"].ref<int64_t>() = enumInt(alg);
+    emit formantAlgorithmChanged(enumInt(alg));
+}
+
+int Config::getFormantAlgorithmNumeric()
+{
+    return enumInt(getFormantAlgorithm());
+}
+
+void Config::setFormantAlgorithm(int alg)
+{
+    setFormantAlgorithm(static_cast<FormantAlgorithm>(alg));
 }
 
 InvglotAlgorithm Config::getInvglotAlgorithm()
@@ -131,15 +186,20 @@ InvglotAlgorithm Config::getInvglotAlgorithm()
     return enumField(mTbl["solvers"], "invglot", InvglotAlgorithm::GFM_IAIF);
 }
 
-int Config::getViewFontSize()
+void Config::setInvglotAlgorithm(InvglotAlgorithm alg)
 {
-#if defined(ANDROID) || defined(__ANDROID__)
-    constexpr int defaultFontSize = 10;
-#else
-    constexpr int defaultFontSize = 14;
-#endif
+    mTbl["solvers"]["invglot"].ref<int64_t>() = enumInt(alg);
+    emit invglotAlgorithmChanged(enumInt(alg));
+}
 
-    return integerField(mTbl["view"], "fontSize", defaultFontSize);
+int Config::getInvglotAlgorithmNumeric()
+{
+    return enumInt(getInvglotAlgorithm());
+}
+
+void Config::setInvglotAlgorithm(int alg)
+{
+    setInvglotAlgorithm(static_cast<InvglotAlgorithm>(alg));
 }
 
 int Config::getViewMinFrequency()
@@ -147,9 +207,21 @@ int Config::getViewMinFrequency()
     return integerField(mTbl["view"], "minFrequency", 1);
 }
 
+void Config::setViewMinFrequency(int f)
+{
+    mTbl["view"]["minFrequency"].ref<int64_t>() = f;
+    emit viewMinFrequencyChanged(f);
+}
+
 int Config::getViewMaxFrequency()
 {
     return integerField(mTbl["view"], "maxFrequency", 6000);
+}
+
+void Config::setViewMaxFrequency(int f)
+{
+    mTbl["view"]["maxFrequency"].ref<int64_t>() = f;
+    emit viewMaxFrequencyChanged(f);
 }
 
 int Config::getViewFFTSize()
@@ -232,6 +304,7 @@ bool Config::getViewShowSpectrogram()
 void Config::setViewShowSpectrogram(bool b)
 {
     mTbl["view"]["showSpectrogram"].ref<bool>() = b;
+    emit viewShowSpectrogramChanged(b);
 }
 
 bool Config::getViewShowPitch()
@@ -242,6 +315,7 @@ bool Config::getViewShowPitch()
 void Config::setViewShowPitch(bool b)
 {
     mTbl["view"]["showPitch"].ref<bool>() = b;
+    emit viewShowPitchChanged(b);
 }
 
 bool Config::getViewShowFormants()
@@ -252,6 +326,18 @@ bool Config::getViewShowFormants()
 void Config::setViewShowFormants(bool b)
 {
     mTbl["view"]["showFormants"].ref<bool>() = b;
+    emit viewShowFormantsChanged(b);
+}
+
+bool Config::getUiShowSidebar()
+{
+    return boolField(mTbl["ui"], "showSidebar", true);
+}
+
+void Config::setUiShowSidebar(bool b)
+{
+    mTbl["ui"]["showSidebar"].ref<bool>() = b;
+    emit uiShowSidebarChanged(b);
 }
 
 int Config::getAnalysisMaxFrequency()

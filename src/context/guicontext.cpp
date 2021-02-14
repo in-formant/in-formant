@@ -22,10 +22,6 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext)
     QQuickStyle::setStyle("Material");
     qmlRegisterType<Gui::CanvasItem>("IfCanvas", 1, 0, "IfCanvas");
 
-#ifdef __APPLE__
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsApi::MetalRhi);
-#endif
-
     mApp = std::make_unique<QGuiApplication>(argc, argv);
     mQmlEngine = std::make_unique<QQmlApplicationEngine>();
     mQmlEngine->addImportPath(QCoreApplication::applicationDirPath() + "/qml");
@@ -36,9 +32,7 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext)
     mQmlEngine->load(QUrl("qrc:/main.qml"));
    
     auto window = static_cast<QQuickWindow *>(mQmlEngine->rootObjects().first());
-
     auto canvasItem = window->findChild<Gui::CanvasItem *>("IfCanvas");
-
     auto contentItem = window->contentItem();
     
     canvasItem->setRenderContext(mRenderContext);

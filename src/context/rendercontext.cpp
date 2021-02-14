@@ -15,7 +15,7 @@ RenderContext::RenderContext(Config *config, DataStore *dataStore)
 void RenderContext::render(QPainterWrapper *painter)
 {
     timer_guard timer(timings::render);
-    
+
     painter->setRenderHints(
             QPainter::Antialiasing
             | QPainter::TextAntialiasing
@@ -30,10 +30,11 @@ void RenderContext::render(QPainterWrapper *painter)
         mSelectedView->render(painter, mConfig, mDataStore);
     }
 
+    QRect viewport = painter->viewport();
+
     painter->setPen(Qt::white);
-    painter->setFont(QFont(":/Montserrat.otf", 20));
-    painter->drawText(10, 80, QString("Render: %1 ms").arg(timings::render));
-    painter->drawText(10, 110, QString("Update: %1 ms").arg(timings::update));
+    painter->setFont(QFont(":/Montserrat.otf", 14, QFont::Medium));
+    painter->drawText(viewport.translated(10, 10), Qt::TextWordWrap, QString("Render: %1 ms\nUpdate: %2 ms").arg(timings::render).arg(timings::update));
 }
 
 void RenderContext::setView(RenderView *view)

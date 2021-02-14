@@ -5,9 +5,13 @@
 #include "../resampler/resampler.h"
 #include <atomic>
 #include <mutex>
+#include <condition_variable>
 
 namespace Module::Audio {
 
+    /*
+     *  NOTE: There can be only one reader and one writer at a given time.
+     */
     class Buffer {
     public:
         Buffer(int sampleRate);
@@ -28,7 +32,10 @@ namespace Module::Audio {
         std::atomic_int mLength;
         rpm::deque<double> mData;
 
-        std::mutex mLock;
+        int mRequestedLength;
+
+        std::condition_variable mCv;
+        std::mutex mMutex;
 
         static std::atomic_bool sCancel;
     };

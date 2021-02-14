@@ -36,7 +36,7 @@ namespace Module::Audio {
         bool needsTicking() override { return true; }
 
     private:
-        static constexpr int dummyBufferLength = 256;
+        static constexpr int dummyBufferLength = 1024;
         static rpm::vector<Device> captureDevices;
         static rpm::vector<Device> playbackDevices;
 

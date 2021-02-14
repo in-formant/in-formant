@@ -15,10 +15,9 @@ Buffer::Buffer(int sampleRate)
 
 void Buffer::setSampleRate(int newSampleRate)
 {
-    mLock.lock();
+    std::lock_guard<std::mutex> lock(mMutex);
  
     if (mSampleRate == newSampleRate) {
-        mLock.unlock();
         return;
     }
 
@@ -36,8 +35,6 @@ void Buffer::setSampleRate(int newSampleRate)
     mLength = outVec.size();
     mData.resize(outVec.size());
     std::copy(outVec.begin(), outVec.end(), mData.begin());
-
-    mLock.unlock();
 }
 
 int Buffer::getSampleRate() const
@@ -52,28 +49,30 @@ int Buffer::getLength() const
 
 void Buffer::pull(double *pOut, int outLength)
 {
-    while (mLength.load(std::memory_order_relaxed) < outLength) {
-        std::this_thread::sleep_for(10ms);
-        if (sCancel) return;
+    while (mLength.load(std::memory_order_seq_cst) <= outLength) {
+        std::this_thread::sleep_for(20ms);
+        if (sCancel.load(std::memory_order_relaxed)) {
+            return;
+        }
     }
     
-    mLock.lock();
+    mMutex.lock();
 
     std::copy(mData.begin(), std::next(mData.begin(), outLength), pOut);
     mData.erase(mData.begin(), std::next(mData.begin(), outLength));
     mLength -= outLength;
 
-    mLock.unlock();
+    mMutex.unlock();
 }
 
 void Buffer::push(const float *pIn, int inLength)
 {
-    mLock.lock();
+    mMutex.lock();
 
     mData.insert(mData.end(), pIn, std::next(pIn, inLength));
-    mLength.fetch_add(inLength, std::memory_order_relaxed);
+    mLength.fetch_add(inLength, std::memory_order_seq_cst);
 
-    mLock.unlock();
+    mMutex.unlock();
 }
 
 std::atomic_bool Buffer::sCancel;

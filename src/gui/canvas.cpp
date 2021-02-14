@@ -5,6 +5,7 @@
 #include <QTimer>
 #include <QScreen>
 #include <chrono>
+#include <iostream>
 
 using namespace Gui;
 

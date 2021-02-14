@@ -38,14 +38,21 @@ namespace Main {
     private:
         void createViews();
         void loadConfig();
-        void updatePipeline();
         
+        void openAndStartAudioStreams();
         void startAnalysisThread();
         void analysisThreadLoop();
         void stopAnalysisThread();
 
         void setView(const std::string &name);
 
+        std::unique_ptr<Config> mConfig;
+
+        std::shared_ptr<Analysis::PitchSolver> mPitchSolver;
+        std::shared_ptr<Analysis::LinpredSolver> mLinpredSolver;
+        std::shared_ptr<Analysis::FormantSolver> mFormantSolver;
+        std::shared_ptr<Analysis::InvglotSolver> mInvglotSolver;
+        
         std::unique_ptr<Audio::Buffer> mCaptureBuffer;
         std::unique_ptr<Audio::Queue> mPlaybackQueue;
 
@@ -53,13 +60,6 @@ namespace Main {
         
         std::unique_ptr<App::Pipeline> mPipeline;
         std::unique_ptr<App::Synthesizer> mSynthesizer;
-
-        std::unique_ptr<Config> mConfig;
-
-        std::unique_ptr<Analysis::PitchSolver> mPitchSolver;
-        std::unique_ptr<Analysis::LinpredSolver> mLinpredSolver;
-        std::unique_ptr<Analysis::FormantSolver> mFormantSolver;
-        std::unique_ptr<Analysis::InvglotSolver> mInvglotSolver;
         
         std::unique_ptr<AudioContext> mAudioContext;
         std::unique_ptr<RenderContext> mRenderContext;

@@ -5,15 +5,17 @@
 using namespace Main;
 
 static std::array supportedAudioBackends {
-#ifdef AUDIO_USE_DUMMY
+// Disable Dummy backend regardless because of locking.
+/*#ifdef AUDIO_USE_DUMMY
     Audio::Backend::Dummy,
-#endif
+#endif*/
 #ifdef AUDIO_USE_ALSA
     Audio::Backend::ALSA,
 #endif
-#ifdef AUDIO_USE_PULSE
+// Disable PulseAudio backend regardless because of latency issues.
+/*#ifdef AUDIO_USE_PULSE
     Audio::Backend::Pulse,
-#endif
+#endif*/
 #ifdef AUDIO_USE_PORTAUDIO
     Audio::Backend::PortAudio,
 #endif
@@ -30,13 +32,13 @@ Audio::Backend Main::getDefaultAudioBackend()
 #if defined(_WIN32) || defined(__APPLE__)
     return Audio::Backend::PortAudio;
 #elif defined(__linux)
-    return Audio::Backend::ALSA;
+    return Audio::Backend::PortAudio; // FIXME: alsa causes really high CPU usage
 #elif defined(ANDROID) || defined(__ANDROID__)
     return Audio::Backend::Oboe;
 #elif defined(__EMSCRIPTEN__)
     return Audio::Backend::WebAudio;
 #else
-#error "No default backend for this platform."
+#  error "No default backend for this platform."
 #endif
 }
 

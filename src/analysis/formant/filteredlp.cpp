@@ -13,9 +13,6 @@ static rpm::vector<int> peak_picking(const rpm::vector<double> &nsdf);
 
 FormantResult FilteredLP::solve(const double *lpc, int lpcOrder, double sampleRate)
 {
-    constexpr int nfft = 512;
-    static Analysis::ReReFFT fft(nfft, FFTW_R2HC);
-
     rpm::vector<double> polynomial(lpcOrder + 1);
     polynomial[0] = 1.0;
     std::copy(lpc, lpc + lpcOrder, std::next(polynomial.begin()));

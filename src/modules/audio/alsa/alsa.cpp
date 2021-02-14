@@ -131,8 +131,6 @@ void Alsa::openCaptureStream(const Device *pDevice)
    
     mPauseCapture = true;
 
-    mCaptureMutex.lock(); 
-
     err = snd_pcm_open(&mCaptureHandle, pDevice->alsa.hintName, SND_PCM_STREAM_CAPTURE, 0);
     checkError();
 
@@ -147,8 +145,6 @@ void Alsa::openCaptureStream(const Device *pDevice)
     checkError();
 
     setCaptureBufferSampleRate(48000);
-
-    mCaptureMutex.unlock();
 }
 
 void Alsa::startCaptureStream()
@@ -167,9 +163,7 @@ void Alsa::closeCaptureStream()
 {
     mPauseCapture = true;
     
-    mCaptureMutex.lock();
     snd_pcm_close(mCaptureHandle);
-    mCaptureMutex.unlock();
 }
 
 void Alsa::openPlaybackStream(const Device *pDevice) 
@@ -179,8 +173,6 @@ void Alsa::openPlaybackStream(const Device *pDevice)
     }
 
     mPausePlayback = true;
-
-    mPlaybackMutex.lock(); 
 
     err = snd_pcm_open(&mPlaybackHandle, pDevice->alsa.hintName, SND_PCM_STREAM_PLAYBACK, 0);
     checkError();
@@ -196,8 +188,6 @@ void Alsa::openPlaybackStream(const Device *pDevice)
     checkError();
         
     mPlaybackQueue->setOutSampleRate(48000);
-
-    mPlaybackMutex.unlock();
 }
 
 void Alsa::startPlaybackStream()
@@ -216,9 +206,7 @@ void Alsa::closePlaybackStream()
 {
     mPausePlayback = true;
 
-    mPlaybackMutex.lock(); 
     snd_pcm_close(mPlaybackHandle);
-    mPlaybackMutex.unlock();
 }
 
 void Alsa::captureThreadLoop()
@@ -231,12 +219,10 @@ void Alsa::captureThreadLoop()
     
         if (!mThreadsRunning)
             break;
-
-        mCaptureMutex.lock();
         
         int frameCount = snd_pcm_avail(mCaptureHandle);
         if (frameCount < 0) {
-            //std::cout << "Audio::ALSA] Capture stream query failed: " << snd_strerror(frameCount) << std::endl;
+            std::cout << "Audio::ALSA] Capture stream query failed: " << snd_strerror(frameCount) << std::endl;
         }
         else if (frameCount > 0) {
             array.resize(frameCount);
@@ -254,8 +240,6 @@ void Alsa::captureThreadLoop()
 
             pushToCaptureBuffer(array.data(), ret);
         }
-        
-        mCaptureMutex.unlock();
     }
 }
 
@@ -269,12 +253,10 @@ void Alsa::playbackThreadLoop()
     
         if (!mThreadsRunning)
             break;
-
-        mPlaybackMutex.lock();
         
         int frameCount = snd_pcm_avail(mPlaybackHandle);
         if (frameCount < 0) {
-            //std::cout << "Audio::ALSA] Playback stream query failed: " << snd_strerror(frameCount) << std::endl;
+            std::cout << "Audio::ALSA] Playback stream query failed: " << snd_strerror(frameCount) << std::endl;
         }
         else {
             array.resize(frameCount);
@@ -292,8 +274,6 @@ void Alsa::playbackThreadLoop()
                 std::cout << "Audio::ALSA] Playback stream wrote fewer frames than expected" << std::endl;
             }
         }
-        
-        mPlaybackMutex.unlock();
     }
 }
 

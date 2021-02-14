@@ -5,10 +5,17 @@
 
 using namespace Module::App;
 
-Pipeline::Pipeline(Module::Audio::Buffer *captureBuffer, Main::DataStore *dataStore)
+Pipeline::Pipeline(Module::Audio::Buffer *captureBuffer, Main::DataStore *dataStore,
+                std::shared_ptr<Analysis::PitchSolver> pitchSolver,
+                std::shared_ptr<Analysis::LinpredSolver> linpredSolver,
+                std::shared_ptr<Analysis::FormantSolver> formantSolver,
+                std::shared_ptr<Analysis::InvglotSolver> invglotSolver)
     : captureBuffer(captureBuffer),
       dataStore(dataStore),
-
+      pitchSolver(pitchSolver),
+      linpredSolver(linpredSolver),
+      formantSolver(formantSolver),
+      invglotSolver(invglotSolver),
       time(0),
       runningThreads(false),
       bufferSpectrogram(16000),
@@ -33,30 +40,6 @@ Pipeline::~Pipeline()
         threadFormants.join();
 }
 
-Pipeline& Pipeline::setPitchSolver(Analysis::PitchSolver *value)
-{
-    pitchSolver = value;
-    return *this;
-}
-
-Pipeline& Pipeline::setInvglotSolver(Analysis::InvglotSolver *value)
-{
-    invglotSolver = value;
-    return *this;
-}
-
-Pipeline& Pipeline::setLinpredSolver(Analysis::LinpredSolver *value)
-{
-    linpredSolver = value;
-    return *this;
-}
-
-Pipeline& Pipeline::setFormantSolver(Analysis::FormantSolver *value)
-{
-    formantSolver = value;
-    return *this;
-}
-
 void Pipeline::callbackSpectrogram()
 {
     auto& coefStore = dataStore->getSpectrogramCoefs();
@@ -67,7 +50,7 @@ void Pipeline::callbackSpectrogram()
 
     double dfs = 16000;
     Module::Audio::Resampler rs(fs, dfs);
-    gaborator::parameters params(48, 80.0 / dfs, 440.0 / dfs);
+    gaborator::parameters params(48, 20.0 / dfs, 440.0 / dfs);
     gaborator::analyzer<double> analyzer(params);
     coefStore.push_back({
         .analyzer = std::move(analyzer),
@@ -161,12 +144,12 @@ void Pipeline::callbackFormants()
 
         rpm::vector<double> lpc;
 
-        if (auto deepFormantSolver = dynamic_cast<Analysis::Formant::DeepFormants *>(formantSolver)) {
+        if (auto deepFormantSolver = dynamic_cast<Analysis::Formant::DeepFormants *>(formantSolver.get())) {
             deepFormantSolver->setFrameAudio(mDF.data(), mDF.size(), fsDF);
         }
         else {
             double gain;
-            lpc = linpredSolver->solve(mLPC.data(), mLPC.size(), 10, &gain);
+            lpc = linpredSolver->solve(mLPC.data(), mLPC.size(), 12, &gain);
         }
 
         auto formantResult = formantSolver->solve(lpc.data(), lpc.size(), fsLPC);
@@ -196,6 +179,8 @@ void Pipeline::processAll()
     dataStore->setTime((double) time / fs);
 
     bufferSpectrogram.setSampleRate(fs);
+    bufferPitch.setSampleRate(fs);
+    bufferFormants.setSampleRate(fs);
 
     rpm::vector<float> fdata(data.begin(), data.end());
     bufferSpectrogram.push(fdata.data(), data.size());
@@ -220,102 +205,4 @@ void Pipeline::processAll()
                   << "Adjusted block size to "
                   << blockSize << " samples" << std::endl;
     }
-
-    /*processStart("prereqs");
-
-    processArc("prereqs", "rs_fft");
-    processArc("rs_fft", "fft");
-
-    processArc("prereqs", "rs_2");
-   
-    processArc("rs_2", "tail_pitch");
-    processArc("tail_pitch", "pitch");
-
-    processArc("rs_2", "tail_invglot");
-    processArc("tail_invglot", "invglot");
-
-    processArc("rs_2", "tail_linpred");
-    processArc("tail_linpred", "preemph_linpred");
-    processArc("preemph_linpred", "linpred_spectrum");
-
-    processArc("prereqs", "rs_formant");
-    processArc("rs_formant", "tail_formant");
-    processArc("tail_formant", "preemph_formant");
-    processArc("preemph_formant", "linpred_formant");
-    processArc("linpred_formant", "formants");
-    
-    updateOutputData();*/
-}
-
-/*void Pipeline::updateOutputData()
-{
-    auto ioFFT = nodeIOs["fft"][0]->as<Nodes::IO::AudioSpec>();
-    int fftSliceLength = ioFFT->getLength();
-    fftSlice.resize(fftSliceLength);
-    for (int i = 0; i < fftSliceLength; ++i) {
-        fftSlice[i][0] = (fftSampleRate * i) / (2.0 * fftSliceLength);
-        fftSlice[i][1] = ioFFT->getConstData()[i];
-    }
-    
-    auto ioLpSpec = nodeIOs["linpred_spectrum"][1]->as<Nodes::IO::AudioSpec>();
-    int lpSpecSliceLength = ioLpSpec->getLength();
-    lpSpecSlice.resize(lpSpecSliceLength);
-    for (int i = 0; i < lpSpecSliceLength; ++i) {
-        lpSpecSlice[i][0] = (secondSampleRate * i) / (2.0 * lpSpecSliceLength);
-        lpSpecSlice[i][1] = ioLpSpec->getConstData()[i];
-    }
-
-    auto ioLpFilter = nodeIOs["linpred_spectrum"][0]->as<Nodes::IO::IIRFilter>();
-    int lpSpecLpcLength = ioLpFilter->getFBOrder();
-    lpSpecLPC.resize(lpSpecLpcLength);
-    for (int i = 0; i < ioLpFilter->getFBOrder(); ++i) {
-        lpSpecLPC[i] = ioLpFilter->getFBConstData()[i];
-    }
-
-    auto ioPitch = nodeIOs["pitch"][0]->as<Nodes::IO::Frequencies>();
-    pitch = (ioPitch->getLength() > 0) ? ioPitch->get(0) : -1.0;
-
-    auto ioFormantF = nodeIOs["formants"][0]->as<Nodes::IO::Frequencies>();
-    auto ioFormantB = nodeIOs["formants"][1]->as<Nodes::IO::Frequencies>();
-    int formantCount = ioFormantF->getLength();
-    formants.resize(formantCount);
-    for (int i = 0; i < formantCount; ++i) {
-        formants[i] = {
-            .frequency = ioFormantF->get(i),
-            .bandwidth = ioFormantB->get(i),
-        };
-    }
-
-    auto ioSound = nodeIOs["tail_invglot"][0]->as<Nodes::IO::AudioTime>();
-    sound.assign(ioSound->getConstData(), ioSound->getConstData() + ioSound->getLength());
-
-    auto ioGlot = nodeIOs["invglot"][0]->as<Nodes::IO::AudioTime>();
-    glot.assign(ioGlot->getConstData(), ioGlot->getConstData() + ioGlot->getLength());
-
-    auto ioGlotInst = nodeIOs["invglot"][1]->as<Nodes::IO::AudioTime>();
-    glotInst.assign(ioGlotInst->getConstData(), ioGlotInst->getConstData() + ioGlotInst->getLength());
-}
-
-void Pipeline::createNodes()
-{
-    nodes["prereqs"]            = std::make_unique<Nodes::Prereqs>(captureBuffer, 50, 0);
-
-    nodes["rs_fft"]             = std::make_unique<Nodes::Resampler>(captureSampleRate, fftSampleRate);
-    nodes["fft"]                = std::make_unique<Nodes::Spectrum>(fftSize);
-    
-    nodes["rs_2"]               = std::make_unique<Nodes::Resampler>(captureSampleRate, secondSampleRate);
-    nodes["preemph_linpred"]    = std::make_unique<Nodes::PreEmphasis>();
-    nodes["tail_pitch"]         = std::make_unique<Nodes::Tail>(30);
-    nodes["pitch"]              = std::make_unique<Nodes::PitchTracker>(pitchSolver);
-    nodes["tail_invglot"]       = std::make_unique<Nodes::Tail>(50);
-    nodes["invglot"]            = std::make_unique<Nodes::InvGlot>(invglotSolver);
-    nodes["tail_linpred"]       = std::make_unique<Nodes::Tail>(15);
-    nodes["linpred_spectrum"]   = std::make_unique<Nodes::LinPred>(linpredSolver, lpSpecLpOrder);
-    
-    nodes["rs_formant"]         = std::make_unique<Nodes::Resampler>(captureSampleRate, formantSampleRate);
-    nodes["preemph_formant"]    = std::make_unique<Nodes::PreEmphasis>();
-    nodes["tail_formant"]       = std::make_unique<Nodes::Tail>(15);
-    nodes["linpred_formant"]    = std::make_unique<Nodes::LinPred>(linpredSolver, formantLpOrder);
-    nodes["formants"]           = std::make_unique<Nodes::FormantTracker>(formantSolver);
-}*/
-
+} 

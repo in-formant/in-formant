@@ -36,24 +36,27 @@ public:
 
     void drawTimeSeries(const rpm::vector<double> &y, double xstart, double xend, double ymin, double ymax); 
 
-    QImage drawSpectrogramChunk(const rpm::vector<double> &amplitudes, int width, int height);
-
     void drawFrequencyTrack(const TimeTrack<double>::const_iterator& begin,
                             const TimeTrack<double>::const_iterator& end);
 
     void drawCurve(const rpm::vector<QPointF> &points, double tension = 0.5);
 
+    double mapTimeToX(double time);
+    double mapFrequencyToY(double frequency);
+
+    static double mapTimeToX(double time, int width, double startTime, double endTime);
+    static double mapFrequencyToY(double frequency, int height, FrequencyScale scale, double minFrequency, double maxFrequency);
+
+    static QImage drawSpectrogram(const rpm::vector<double> &amplitudes,
+            int width, int height, int viewportWidth, int viewportHeight,
+            FrequencyScale scale, double minFrequency, double maxFrequency,
+            double minGain, double maxGain);
+
 private:
     double transformFrequency(double frequency);
     double inverseFrequency(double value);
 
-    double mapTimeToX(double time);
-    double mapFrequencyToY(double frequency);
-
     QRgb mapAmplitudeToColor(double amplitude);
-
-    void constructTransformX(int w);
-    void constructTransformY(int h);
 
     double mTimeStart;
     double mTimeEnd;
@@ -72,8 +75,13 @@ private:
 
     QPen   mTimeSeriesPen;
 
-    Eigen::MatrixXd mTransformX;
-    Eigen::MatrixXd mTransformY;
+    static double transformFrequency(double frequency, FrequencyScale scale);
+    static double inverseFrequency(double value, FrequencyScale scale);
+
+    static QRgb mapAmplitudeToColor(double amplitude, double minGain, double maxGain);
+
+    static Eigen::MatrixXd constructTransformX(int w, int vw);
+    static Eigen::MatrixXd constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax);
 
     static QVector<QRgb> cmap;
 };

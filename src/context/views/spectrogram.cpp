@@ -6,11 +6,57 @@
 
 using namespace Main::View;
 
+std::atomic_bool SpectrogramWorker::mQueued;
+
+SpectrogramWorker::SpectrogramWorker()
+{
+    mQueued = false;
+}
+
+bool SpectrogramWorker::queued()
+{
+    return mQueued;
+}
+
+void SpectrogramWorker::render(
+        double timeStart,
+        double timeEnd,
+        const rpm::vector<double>& amplitudes,
+        int w, int h, int vw, int vh,
+        QPainterWrapper::FrequencyScale scale,
+        double minFrequency, double maxFrequency,
+        double minGain, double maxGain) {
+    mQueued = true;
+    QImage image = QPainterWrapper::drawSpectrogram(
+            amplitudes, w, h, vw, vh, scale,
+            minFrequency, maxFrequency,
+            minGain, maxGain);
+    emit rendered(image, timeStart, timeEnd);
+    mQueued = false;
+}
+
+Spectrogram::Spectrogram()
+{
+    qRegisterMetaType<rpm::vector<double>>("rpm::vector<double>");
+    qRegisterMetaType<QPainterWrapper::FrequencyScale>("QPainterWrapper::FrequencyScale");
+    
+    auto *worker = new SpectrogramWorker;
+    worker->moveToThread(&mRenderThread);
+    QObject::connect(&mRenderThread, &QThread::finished, worker, &QObject::deleteLater);
+    QObject::connect(this, &Spectrogram::renderSpectrogram, worker, &SpectrogramWorker::render);
+    QObject::connect(worker, &SpectrogramWorker::rendered, this, &Spectrogram::spectrogramRendered);
+    mRenderThread.start();
+}
+
+Spectrogram::~Spectrogram()
+{
+    mRenderThread.quit();
+    mRenderThread.wait();
+}
+
 void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *dataStore)
 {
     dataStore->beginRead();
-    
-    static QImage image;
 
     auto& coefStore = dataStore->getSpectrogramCoefs();
 
@@ -22,7 +68,10 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     const double timeStart = dataStore->getTime() - viewDuration;
     const double timeEnd = dataStore->getTime();
 
-    rpm::vector<double> sound = (--dataStore->getSoundTrack().upper_bound(timeEnd))->second;
+    rpm::vector<double> sound =
+        !dataStore->getSoundTrack().empty() 
+            ? dataStore->getSoundTrack().back()
+            : rpm::vector<double>();
 
     painter->setTimeRange(timeStart, timeEnd);
   
@@ -33,11 +82,13 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
             int64_t t_end = dfs * timeEnd;
             int64_t t_dur = dfs * (timeEnd - timeStart);
 
-            int x_scale_exp = 9;
-            int y_scale_exp = -1;
+            int x_scale_exp = 8;
+            int y_scale_exp = -3;
 
             int64_t begin_band = coefs.analyzer.ff_bandpass_band((double) config->getViewMaxFrequency() / dfs);
             int64_t end_band = coefs.analyzer.ff_bandpass_band((double) config->getViewMinFrequency() / dfs);
+            
+            /*int64_t mid_band = coefs.analyzer.ff_bandpass_band(400.0 / dfs);*/
 
             int64_t x_origin = 0;
             int64_t y_origin = 0;
@@ -47,7 +98,7 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
             int64_t y1 = end_band << -y_scale_exp;
             int64_t i0 = t_end - t_dur;
             int64_t i1 = t_end;
-        
+
             rpm::vector<double> amplitudes((x1 - x0) * (y1 - y0), 0.0);
 
             gaborator::render_incremental(
@@ -60,11 +111,23 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
                     i0, i1,
                     amplitudes.data(),
                     x1 - x0);
-
-            image = painter->drawSpectrogramChunk(amplitudes, x1 - x0, y1 - y0);
+        
+            if (!SpectrogramWorker::queued()) {
+                emit renderSpectrogram(
+                        timeStart,
+                        timeEnd,
+                        amplitudes,
+                        x1 - x0, y1 - y0,
+                        viewport.width(), viewport.height(),
+                        config->getViewFrequencyScale(),
+                        config->getViewMinFrequency(),
+                        config->getViewMaxFrequency(),
+                        config->getViewMinGain(),
+                        config->getViewMaxGain());
+            }
         }
 
-        painter->drawImage(viewport, image);
+        painter->drawImage(viewport.translated(painter->mapTimeToX(mTime), 0), mImage);
     }
 
     if (config->getViewShowPitch()) {
@@ -89,3 +152,8 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     dataStore->endRead();
 }
 
+void Spectrogram::spectrogramRendered(QImage image, double timeStart, double timeEnd)
+{
+    mImage = image;
+    mTime = timeStart;
+}

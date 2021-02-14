@@ -1,7 +1,4 @@
 #include "df.h"
-#ifdef _WIN32
-#  define __assert_fail(...) // Suppress warning.
-#endif
 #include <torch/script.h>
 
 #ifdef QT_CORE_LIB
