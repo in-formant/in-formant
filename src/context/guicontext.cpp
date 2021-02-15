@@ -41,10 +41,10 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext)
     window->installEventFilter(this);
 
     mUpdateTimer = new QTimer(this);
-    mUpdateTimer->setInterval(33ms);
+    mUpdateTimer->setInterval(40ms);
     mUpdateTimer->setTimerType(Qt::PreciseTimer);
     QObject::connect(mUpdateTimer, &QTimer::timeout, canvasItem, &QQuickItem::update);
-    mUpdateTimer->moveToThread(qApp->thread());
+    mUpdateTimer->moveToThread(qGuiApp->thread());
 }
 
 int GuiContext::exec()

@@ -13,8 +13,8 @@ function run_or_debug()
 }
 
 export CMAKE_PREFIX_PATH="/opt/Qt/5.15.2/gcc_64;/usr/local/libtorch"
-export CC=clang-8
-export CXX=clang++-8
+#export CC=clang-8
+#export CXX=clang++-8
 
 if [ "x$build_type" = "xp" ]; then
     cmake .. \

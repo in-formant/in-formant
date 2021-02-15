@@ -62,8 +62,6 @@ RUN mkdir qtbase-build && \
             -android-sdk $ANDROID_HOME \
             -prefix /android
 
-RUN apt-get update -y && apt-get install -y python3
-
 RUN cd qtbase-build && \
         ../qtbase-everywhere-src-$ver/configure \
             -opensource \
