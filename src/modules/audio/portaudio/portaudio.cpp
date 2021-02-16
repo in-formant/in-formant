@@ -182,7 +182,7 @@ void PortAudio::openPlaybackStream(const Device *pDevice)
             nullptr,
             &params,
             pDevice->portaudio.sampleRate,
-            paFramesPerBufferUnspecified,
+            512,
             paNoFlag,
             &PortAudio::playbackCallback,
             this);
@@ -246,6 +246,8 @@ int PortAudio::captureCallback(
 
     return that->mPauseCapture ? paComplete : paContinue;
 }
+
+#include <cmath>
 
 int PortAudio::playbackCallback(
         const void *input,

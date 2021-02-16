@@ -28,10 +28,9 @@ case $target in
         ;;
     android)
         tag=android
-        if [ "$build_type" == "Debug" ]; then
-            extra_args="-e debug=Debug"
-        fi
+        arch=${3:-x86}
+        target=android-$arch
         ;;
 esac
 
-docker run $extra_args --rm -it -e TERM=xterm-256color -e CMAKE_BUILD_TYPE=$build_type -e target=$target -v $src:/src -v $build/$target:/build -v $dist:/dist clorika/sabuilder:$tag
+docker run $extra_args --rm -it -e TERM=xterm-256color -e CMAKE_BUILD_TYPE=$build_type -e target=$target -e ARCH=$arch -v $src:/src -v $build/$target:/build -v $dist:/dist clorika/sabuilder:$tag

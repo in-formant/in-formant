@@ -149,7 +149,7 @@ void Pipeline::callbackFormants()
         }
         else {
             double gain;
-            lpc = linpredSolver->solve(mLPC.data(), mLPC.size(), 12, &gain);
+            lpc = linpredSolver->solve(mLPC.data(), mLPC.size(), 10, &gain);
         }
 
         auto formantResult = formantSolver->solve(lpc.data(), lpc.size(), fsLPC);

@@ -1,21 +1,25 @@
 #ifndef APP_SYNTH_H
 #define APP_SYNTH_H
 
+#ifndef WITHOUT_SYNTH
+
 #include "rpcxx.h"
 
 #include "../../../analysis/analysis.h"
 #include "../../../synthesis/synthesis.h"
 #include "../../audio/audio.h"
 
+#include <QObject>
+
 namespace Module::App
 {
-    class Synthesizer {
+    class Synthesizer : public QObject {
+        Q_OBJECT
+
     public:
         Synthesizer(Module::Audio::Queue *);
-        virtual ~Synthesizer();
 
-        void initialize();
-
+    public slots:
         void setMasterGain(double);
         void setNoiseGain(double);
         void setGlotGain(double);
@@ -26,6 +30,7 @@ namespace Module::App
         void setFilterShift(double);
         void setVoiced(bool);
 
+    public:
         double getMasterGain() const;
         double getNoiseGain() const;
         double getGlotGain() const;
@@ -68,8 +73,10 @@ namespace Module::App
         rpm::vector<double> glotSurplus;
         rpm::vector<double> surplus;
 
-        Module::Audio::Resampler *resampler;
+        Module::Audio::Resampler resampler;
     };
 }
+
+#endif // !WITHOUT_SYNTH
 
 #endif // APP_SYNTH_H

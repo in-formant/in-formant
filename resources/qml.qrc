@@ -1,6 +1,7 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource>
-        <file>main.qml</file>
+        <file alias="MainWindow.qml">../src/qml/MainWindow.qml</file>
+        <file alias="SynthWindow.qml">../src/qml/SynthWindow.qml</file>
     </qresource>
 </RCC>

@@ -31,10 +31,10 @@ Audio::Backend Main::getDefaultAudioBackend()
 {
 #if defined(_WIN32) || defined(__APPLE__)
     return Audio::Backend::PortAudio;
-#elif defined(__linux)
-    return Audio::Backend::PortAudio; // FIXME: alsa causes really high CPU usage
 #elif defined(ANDROID) || defined(__ANDROID__)
     return Audio::Backend::Oboe;
+#elif defined(__linux)
+    return Audio::Backend::PortAudio; // FIXME: alsa causes really high CPU usage
 #elif defined(__EMSCRIPTEN__)
     return Audio::Backend::WebAudio;
 #else
@@ -107,7 +107,7 @@ AudioContext::AudioContext(Audio::Backend type, Audio::Buffer *captureBuffer, Au
         break;
 #endif
     default:
-        break;
+        throw std::runtime_error(std::string("AudioContext] Unknown backend: ") + std::to_string(static_cast<int>(type)));
     }
 
     if (!mAudio) {

@@ -10,7 +10,7 @@ cd /dist
 
 export APPIMAGE_EXTRACT_AND_RUN=1
 export QMAKE=/opt/Qt5/5.15.2/gcc_64/bin/qmake
-export QML_SOURCES_PATHS=/src/resources
+export QML_SOURCES_PATHS=/src/src
 
 export OUTPUT=InFormant-$version-Linux-x86_64.AppImage
 

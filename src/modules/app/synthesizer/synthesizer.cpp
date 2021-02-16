@@ -1,3 +1,5 @@
+#ifndef WITHOUT_SYNTH
+
 #include "../../../analysis/analysis.h"
 #include "synthesizer.h"
 #include <random>
@@ -7,18 +9,10 @@ using namespace Module::App;
 
 Synthesizer::Synthesizer(Module::Audio::Queue *playbackQueue)
     : playbackQueue(playbackQueue),
-      resampler(new Module::Audio::Resampler(32'000, 48'000))
+      resampler(32'000, 48'000)
 {
     playbackQueue->setCallback(App::Synthesizer::audioCallback);
-}
-
-Synthesizer::~Synthesizer()
-{
-    delete resampler;
-}
-
-void Synthesizer::initialize()
-{
+    
     masterGain = 0.0;
     noiseGain = 0.3;
     glotGain = 1.0;
@@ -41,7 +35,7 @@ void Synthesizer::initialize()
     zfNoise.resize(20, rpm::vector<double>(4, 0.0));
     zfGlot.resize(20, rpm::vector<double>(4, 0.0));
 
-    resampler->setOutputRate(playbackQueue->getInSampleRate());
+    resampler.setOutputRate(playbackQueue->getInSampleRate());
 }
 
 void Synthesizer::setMasterGain(double value)
@@ -145,7 +139,7 @@ void Synthesizer::generateAudio(int requestedLength)
 
     static std::normal_distribution<> dis(0.0, 0.05);
 
-    int inputLength = resampler->getRequiredInLength(requestedLength);
+    int inputLength = resampler.getRequiredInLength(requestedLength);
 
     auto noise = Synthesis::aspirateNoise(inputLength);
 
@@ -163,7 +157,7 @@ void Synthesizer::generateAudio(int requestedLength)
         }
     }
 
-    double glotFs = resampler->getInputRate();
+    double glotFs = resampler.getInputRate();
     rpm::vector<double> pitches(inputLength);
     rpm::vector<double> Rds(inputLength);
     rpm::vector<double> tcs(inputLength);
@@ -240,7 +234,7 @@ void Synthesizer::generateAudio(int requestedLength)
         output[i] = output[i] * realMasterGain * 0.7;
     }
 
-    output = resampler->process(output.data(), output.size());
+    output = resampler.process(output.data(), output.size());
 
     surplus.insert(surplus.end(), output.begin(), output.end());
 }
@@ -273,7 +267,7 @@ void Synthesizer::audioCallback(double *output, int length, void *userdata)
         }
     }
 
-    self->realFilter = Synthesis::frequencyShiftFilter(self->realFormants, self->resampler->getInputRate(), self->realFilterShift);
+    self->realFilter = Synthesis::frequencyShiftFilter(self->realFormants, self->resampler.getInputRate(), self->realFilterShift);
 
     // Generate the audio.
     self->generateAudio(length);
@@ -289,3 +283,5 @@ void Synthesizer::audioCallback(double *output, int length, void *userdata)
         self->surplus.erase(self->surplus.begin(), std::next(self->surplus.begin(), length));
     }
 }
+
+#endif // !WITHOUT_SYNTH

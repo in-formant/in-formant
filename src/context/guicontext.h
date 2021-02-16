@@ -10,6 +10,8 @@
 #include <QScreen>
 #include <QTimer>
 
+#include "synthwrapper.h"
+
 namespace Main {
 
     class RenderContext;
@@ -21,7 +23,7 @@ namespace Main {
         Q_OBJECT
 
     public:
-        GuiContext(Config *config, RenderContext *renderContext);
+        GuiContext(Config *config, RenderContext *renderContext, SynthWrapper *synthWrapper);
 
         int exec();
     

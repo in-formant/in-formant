@@ -1,11 +1,42 @@
 cmake_minimum_required(VERSION 3.5)
+cmake_policy(SET CMP0048 NEW)
+cmake_policy(SET CMP0075 NEW)
 cmake_policy(SET CMP0077 NEW)
-cmake_policy(SET CMP0075 NEW) 
+
 set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{MACOSX_DEPLOYMENT_TARGET})
+
 project(in-formant VERSION ${CUR_VERSION})
 
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake_support")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_support")
 include(CheckSystemName)
+
+if(SYSTEM_ANDROID)
+    include(MakeVersionCode)
+
+    set(ANDROID_VERSION_NAME "${CUR_VERSION}")
+    set(ANDROID_VERSION_CODE "${VERSION_CODE}")
+
+    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dist-res/android")
+
+    set(ANDROID_EXTRA_LIBS_NAMES "fftw3" "c10" "torch" "torch_cpu")
+
+    set(ANDROID_EXTRA_LIBS "")
+    foreach(libname ${ANDROID_EXTRA_LIBS_NAMES})
+        list(APPEND ANDROID_EXTRA_LIBS "$ENV{INS_PREFIX}/lib/lib${libname}.so")
+    endforeach()
+
+    if($ENV{ARCH} STREQUAL "arm")
+        set(OMP_DIR "arm")
+    elseif($ENV{ARCH} STREQUAL "arm64")
+        set(OMP_DIR "aarch64")
+    elseif($ENV{ARCH} STREQUAL "x86")
+        set(OMP_DIR "i386")
+    elseif($ENV{ARCH} STREQUAL "x86_64")
+        set(OMP_DIR "x86_64")
+    endif()
+
+    list(APPEND ANDROID_EXTRA_LIBS "$ENV{ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/9.0.9/lib/linux/${OMP_DIR}/libomp.so")
+endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -36,6 +67,8 @@ set(SOURCES
     src/context/timings.h
     src/context/solvermakers.cpp
     src/context/solvermakers.h
+    src/context/synthwrapper.cpp
+    src/context/synthwrapper.h
     src/context/config.cpp
     src/context/config.h
     src/context/contextmanager.cpp
@@ -251,7 +284,10 @@ endif()
 if(SYSTEM_ANDROID)
     message(STATUS "Including audio module: oboe")
     set(BUILD_SHARED_LIBS OFF)
+    set(CONFIG_BAK ${CMAKE_BUILD_TYPE})
+    set(CMAKE_BUILD_TYPE RelWithDebInfo)
     add_subdirectory(external/oboe EXCLUDE_FROM_ALL)
+    set(CMAKE_BUILD_TYPE ${CONFIG_BAK})
     set(BUILD_SHARED_LIBS ON)
     set(AUDIO_USE_OBOE TRUE)
     list(APPEND SOURCES
@@ -337,7 +373,9 @@ endif()
 
 if(SYSTEM_ANDROID)
     find_package(Qt5AndroidExtras REQUIRED)
-    target_link_libraries(in-formant PRIVATE Qt5::AndroidExtras)
+    target_link_libraries(in-formant PRIVATE Qt5::AndroidExtras GLESv2 z omp)
+    target_compile_definitions(in-formant PRIVATE -DWITHOUT_SYNTH)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fuse-ld=lld")
 endif()
 
 if(SYSTEM_DARWIN)

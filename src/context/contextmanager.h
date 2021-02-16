@@ -12,6 +12,8 @@
 #include <atomic>
 #include <thread>
 
+#include "synthwrapper.h"
+
 #define STR(arg) #arg
 #define INFORMANT_VERSION_STR STR(INFORMANT_VERSION)
 
@@ -40,9 +42,16 @@ namespace Main {
         void loadConfig();
         
         void openAndStartAudioStreams();
+        
         void startAnalysisThread();
         void analysisThreadLoop();
         void stopAnalysisThread();
+
+#ifndef WITHOUT_SYNTH
+        void startSynthesisThread();
+        void synthesisThreadLoop();
+        void stopSynthesisThread();
+#endif
 
         void setView(const std::string &name);
 
@@ -59,8 +68,12 @@ namespace Main {
         std::unique_ptr<DataStore> mDataStore;
         
         std::unique_ptr<App::Pipeline> mPipeline;
+       
+#ifndef WITHOUT_SYNTH
         std::unique_ptr<App::Synthesizer> mSynthesizer;
-        
+        SynthWrapper mSynthWrapper;
+#endif
+
         std::unique_ptr<AudioContext> mAudioContext;
         std::unique_ptr<RenderContext> mRenderContext;
         std::unique_ptr<GuiContext> mGuiContext;
@@ -69,6 +82,11 @@ namespace Main {
 
         std::thread mAnalysisThread;
         std::atomic_bool mAnalysisRunning;
+
+#ifndef WITHOUT_SYNTH
+        std::thread mSynthesisThread;
+        std::atomic_bool mSynthesisRunning;
+#endif
 
         int mViewMinFrequency;
         int mViewMaxFrequency;

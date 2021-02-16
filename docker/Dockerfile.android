@@ -62,6 +62,8 @@ RUN mkdir qtbase-build && \
             -android-sdk $ANDROID_HOME \
             -prefix /android
 
+RUN apt-get update -y && apt-get install -y python3
+
 RUN cd qtbase-build && \
         ../qtbase-everywhere-src-$ver/configure \
             -opensource \
@@ -109,7 +111,7 @@ RUN cd pytorch && \
             -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE \
             -DANDROID_PLATFORM=$ANDROID_PLATFORM \
             -DANDROID_ABI="$ANDROID_ABI" \
-            -DCMAKE_PREFIX_PATH=$INS_PREFIX \
+            -DCMAKE_INSTALL_PREFIX=$INS_PREFIX \
             -DPYTHON_EXECUTABLE=`which python3` \
             -DGLIBCXX_USE_CXX11_ABI=1 \
             -DUSE_MKLDNN=OFF \
@@ -118,10 +120,7 @@ RUN cd pytorch && \
             -DUSE_PYTHON_QNNPACK=OFF \
             -DUSE_FBGEMM=OFF \
             && \
-        make -j$(nproc)
-RUN cd pytorch && \
-        . /set-env-android.sh && \
-        cd build/$HOST && \
+        make -j$(nproc) && \
         make install
 ENV ARCH=arm64
 RUN cd pytorch && \
@@ -132,7 +131,7 @@ RUN cd pytorch && \
             -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE \
             -DANDROID_PLATFORM=$ANDROID_PLATFORM \
             -DANDROID_ABI="$ANDROID_ABI" \
-            -DCMAKE_PREFIX_PATH=$INS_PREFIX \
+            -DCMAKE_INSTALL_PREFIX=$INS_PREFIX \
             -DPYTHON_EXECUTABLE=`which python3` \
             -DGLIBCXX_USE_CXX11_ABI=1 \
             -DUSE_MKLDNN=OFF \
@@ -141,10 +140,47 @@ RUN cd pytorch && \
             -DUSE_PYTHON_QNNPACK=OFF \
             -DUSE_FBGEMM=OFF \
             && \
-        make -j$(nproc)
+        make -j$(nproc) && \
+        make install
+ENV ARCH=x86
 RUN cd pytorch && \
         . /set-env-android.sh && \
+        mkdir -p build/$HOST && \
         cd build/$HOST && \
+        cmake ../.. \
+            -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE \
+            -DANDROID_PLATFORM=$ANDROID_PLATFORM \
+            -DANDROID_ABI="$ANDROID_ABI" \
+            -DCMAKE_INSTALL_PREFIX=$INS_PREFIX \
+            -DPYTHON_EXECUTABLE=`which python3` \
+            -DGLIBCXX_USE_CXX11_ABI=1 \
+            -DUSE_MKLDNN=OFF \
+            -DUSE_NNPACK=OFF \
+            -DUSE_QNNPACK=OFF \
+            -DUSE_PYTHON_QNNPACK=OFF \
+            -DUSE_FBGEMM=OFF \
+            && \
+        make -j$(nproc) && \
+        make install
+ENV ARCH=x86_64
+RUN cd pytorch && \
+        . /set-env-android.sh && \
+        mkdir -p build/$HOST && \
+        cd build/$HOST && \
+        cmake ../.. \
+            -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE \
+            -DANDROID_PLATFORM=$ANDROID_PLATFORM \
+            -DANDROID_ABI="$ANDROID_ABI" \
+            -DCMAKE_INSTALL_PREFIX=$INS_PREFIX \
+            -DPYTHON_EXECUTABLE=`which python3` \
+            -DGLIBCXX_USE_CXX11_ABI=1 \
+            -DUSE_MKLDNN=OFF \
+            -DUSE_NNPACK=OFF \
+            -DUSE_QNNPACK=OFF \
+            -DUSE_PYTHON_QNNPACK=OFF \
+            -DUSE_FBGEMM=OFF \
+            && \
+        make -j$(nproc) && \
         make install
 
 # Build fftw3
@@ -160,6 +196,22 @@ RUN cd fftw-$ver && \
         make -j$(nproc) && \
         make install
 ENV ARCH=arm64
+RUN cd fftw-$ver && \
+        . /set-env-android.sh && \
+        mkdir -p build/$HOST && \
+        cd build/$HOST && \
+        ../../configure $configure_flags --enable-shared --disable-static && \
+        make -j$(nproc) && \
+        make install
+ENV ARCH=x86
+RUN cd fftw-$ver && \
+        . /set-env-android.sh && \
+        mkdir -p build/$HOST && \
+        cd build/$HOST && \
+        ../../configure $configure_flags --enable-shared --disable-static && \
+        make -j$(nproc) && \
+        make install
+ENV ARCH=x86_64
 RUN cd fftw-$ver && \
         . /set-env-android.sh && \
         mkdir -p build/$HOST && \
@@ -188,6 +240,22 @@ RUN cd eigen-$ver && \
         cmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE -DCMAKE_INSTALL_PREFIX=$INS_PREFIX ../.. && \
         make -j$(nproc) && \
         make install
+ENV ARCH=x86
+RUN cd eigen-$ver && \
+        . /set-env-android.sh && \
+        mkdir -p build/$HOST && \
+        cd build/$HOST && \
+        cmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE -DCMAKE_INSTALL_PREFIX=$INS_PREFIX ../.. && \
+        make -j$(nproc) && \
+        make install
+ENV ARCH=x86_64
+RUN cd eigen-$ver && \
+        . /set-env-android.sh && \
+        mkdir -p build/$HOST && \
+        cd build/$HOST && \
+        cmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE -DCMAKE_INSTALL_PREFIX=$INS_PREFIX ../.. && \
+        make -j$(nproc) && \
+        make install
  
 ENV ver=5.15.2
 RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtandroidextras-everywhere-src-$ver.tar.xz && \
@@ -196,6 +264,8 @@ RUN cd qtandroidextras-everywhere-src-$ver && \
         /android/bin/qmake && \
         make -j$(nproc) && \
         make install
+
+RUN /android/src/3rdparty/gradle/gradlew
 
 RUN rm -r /dockerbuild
 
@@ -210,6 +280,7 @@ CMD cd /build && \
             -DEigen3_DIR=$INS_PREFIX/share/eigen3/cmake \
             -DANDROID_PLATFORM=$ANDROID_PLATFORM \
             -DANDROID_ABI="$ANDROID_ABI" \
+            -DANDROID_SDK="$ANDROID_SDK" \
             /src && \
-        make -j$(nproc) 
-
+        make -j$(nproc) && \
+        /src/docker/deploy-android.sh

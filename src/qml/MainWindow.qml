@@ -1,17 +1,23 @@
 import QtQuick 2.15
-import QtQuick.Layouts 1.11
+import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15
 import IfCanvas 1.0
 
 ApplicationWindow {
+    id: mainWindow
     visible: true
-
-    minimumWidth: 600
-    minimumHeight: 400
 
     Material.theme: Material.Dark
     Material.accent: Material.DeepPurple
+
+    function mel(f) {
+        return 2595 * Math.log10(1 + f / 700);
+    }
+
+    function hz(m) {
+        return 700 * (Math.pow(10, m / 2595) - 1);
+    }
 
     header: ToolBar {
         RowLayout {
@@ -22,46 +28,64 @@ ApplicationWindow {
             }
 
             ToolSeparator {}
+
+            Button {
+                icon.name: "settings-configure"
+                text: "Synthesizer"
+                Material.background: Material.color(Material.DeepPurple, Material.ShadeA200)
+                onPressed: synthWindow.show()
+            }
         }
     }
 
+    SynthWindow { id: synthWindow }
+
     RowLayout {
+        id: container
         anchors.fill: parent
 
-        ScrollView {
+        Flickable {
             id: sidebar
+            width: sidebarContent.width
+            height: parent.height
+            contentWidth: sidebarContent.width
+            contentHeight: sidebarContent.height
+            
+            Layout.margins: 10
+            Layout.fillHeight: true
 
-            Layout.margins: 10 
-
-            states: [
-                State {
-                    name: "visible"; when: config.uiShowSidebar
-                    PropertyChanges { target: sidebar; x: 10; opacity: 1 }
-                    PropertyChanges { target: canvas; x: sidebar.width + 20; width: parent.width - sidebar.width }
-                },
-                State {
-                    name: "hidden"; when: !config.uiShowSidebar
-                    PropertyChanges { target: sidebar; x: -sidebar.width; opacity: 0 }
-                    PropertyChanges { target: canvas; x: 0; width: parent.width  }
-                }
-            ]
-
-            Behavior on x {
-                NumberAnimation {
-                    easing.type: Easing.InOutQuad
-                    duration: 200
-                }
-            }
-
-            Behavior on opacity {
-                NumberAnimation {
-                    easing.type: Easing.InOutQuad
-                    duration: 200
-                }
-            }
+            ScrollBar.vertical: ScrollBar {}
 
             ColumnLayout {
-                
+                id: sidebarContent
+
+                states: [
+                    State {
+                        name: "visible"; when: config.uiShowSidebar
+                        PropertyChanges { target: sidebar; x: 10; opacity: 1 }
+                        PropertyChanges { target: canvas; x: sidebar.width + 20; width: parent.width - sidebar.width }
+                    },
+                    State {
+                        name: "hidden"; when: !config.uiShowSidebar
+                        PropertyChanges { target: sidebar; x: -sidebar.width; opacity: 0 }
+                        PropertyChanges { target: canvas; x: 0; width: parent.width  }
+                    }
+                ]
+
+                Behavior on x {
+                    NumberAnimation {
+                        easing.type: Easing.InOutQuad
+                        duration: 200
+                    }
+                }
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        easing.type: Easing.InOutQuad
+                        duration: 200
+                    }
+                }
+
                 Switch {
                     text: "Spectrogram"
                     checked: config.viewShowSpectrogram
@@ -82,17 +106,8 @@ ApplicationWindow {
 
                 MenuSeparator {}
 
-                Label {
-                    text: "View frequency range:"
-                }
+                Label { text: "View frequency range:" }
                 RangeSlider {
-                    function mel(f) {
-                        return 2595 * Math.log10(1 + f / 700);
-                    }
-                    function hz(m) {
-                        return 700 * (Math.pow(10, m / 2595) - 1);
-                    }
-
                     id: viewFrequency
                     from: mel(1)
                     to: mel(16000)
@@ -118,9 +133,7 @@ ApplicationWindow {
 
                 MenuSeparator {}
 
-                Label {
-                    text: "Pitch algorithm:"
-                }
+                Label { text: "Pitch algorithm:" }
                 ComboBox {
                     implicitWidth: parent.width - 10
                     model: [ "YIN", "McLeod", "RAPT" ]
@@ -131,9 +144,7 @@ ApplicationWindow {
      
                 MenuSeparator {}
 
-                Label {
-                    text: "Formant algorithm:"
-                }
+                Label { text: "Formant algorithm:" }
                 ComboBox {
                     implicitWidth: parent.width - 10
                     model: [ "Simple LPC", "Filtered LPC", "DeepFormants" ]
@@ -144,9 +155,7 @@ ApplicationWindow {
 
                 MenuSeparator {}
 
-                Label {
-                    text: "LPC algorithm:"
-                }
+                Label { text: "LPC algorithm:" }
                 ComboBox {
                     implicitWidth: parent.width - 10
                     model: [ "Autocorrelation", "Covariance", "Burg" ]
@@ -157,9 +166,7 @@ ApplicationWindow {
 
                 MenuSeparator {}
 
-                Label {
-                    text: "Glottal inverse algorithm:"
-                }
+                Label { text: "Glottal inverse algorithm:" }
                 ComboBox {
                     implicitWidth: parent.width - 10
                     model: [ "IAIF", "GFM-IAIF", "AM-GIF" ]
@@ -172,6 +179,7 @@ ApplicationWindow {
 
         IfCanvas {
             id: canvas
+
             Layout.fillWidth: true
             Layout.fillHeight: true
 
@@ -200,3 +208,4 @@ ApplicationWindow {
         }
     }
 }
+

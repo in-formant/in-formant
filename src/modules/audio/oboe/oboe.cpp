@@ -17,7 +17,10 @@ Oboe::~Oboe()
 
 void Oboe::initialize()
 {
-    QtAndroid::requestPermissionsSync({"android.permission.RECORD_AUDIO"});
+    auto result = QtAndroid::checkPermission(QStringLiteral("android.permission.RECORD_AUDIO"));
+    if (result == QtAndroid::PermissionResult::Denied) {
+        QtAndroid::requestPermissionsSync(QStringList{QStringLiteral("android.permission.RECORD_AUDIO")});
+    }
 
     mDefaultCaptureDeviceIndex = 0;
     mDefaultPlaybackDeviceIndex = 0;
@@ -70,7 +73,7 @@ void Oboe::openCaptureStream(const Device *pDevice)
 
     oboe::AudioStreamBuilder builder;
     builder.setDirection(oboe::Direction::Input)
-        ->setSharingMode(oboe::SharingMode::Exclusive)
+        ->setSharingMode(oboe::SharingMode::Shared)
         ->setChannelCount(oboe::ChannelCount::Mono)
         ->setFormat(oboe::AudioFormat::Float)
         ->setPerformanceMode(oboe::PerformanceMode::LowLatency)

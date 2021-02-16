@@ -3,6 +3,7 @@
 
 #include "rpcxx.h"
 #include <soxr.h>
+#include <mutex>
 
 namespace Module::Audio {
 
@@ -25,8 +26,8 @@ namespace Module::Audio {
         void getRate(int *pInRate, int *pOutRate) const;
         int getQuality() const;
 
-        int getRequiredInLength(int outLength);
-        int getExpectedOutLength(int inLength);
+        int getRequiredInLength(int outLength) const;
+        int getExpectedOutLength(int inLength) const;
     
         int getDelay() const;
 
@@ -40,6 +41,8 @@ namespace Module::Audio {
         soxr_quality_spec_t mSoxrQualitySpec;
         soxr_runtime_spec_t mSoxrRuntimeSpec;
         soxr_t mSoxr;
+
+        std::mutex mMutex;
 
         int mInRate, mOutRate;
     };

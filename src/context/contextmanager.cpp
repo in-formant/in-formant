@@ -27,13 +27,15 @@ ContextManager::ContextManager(
                   mCaptureBuffer.get(), mDataStore.get(),
                   mPitchSolver, mLinpredSolver,
                   mFormantSolver, mInvglotSolver)),
+#ifndef WITHOUT_SYNTH
       mSynthesizer(std::make_unique<App::Synthesizer>(mPlaybackQueue.get())),
+#endif
       mAudioContext(std::make_unique<AudioContext>(
                   mConfig->getAudioBackend(),
                   mCaptureBuffer.get(),
                   mPlaybackQueue.get())),
       mRenderContext(std::make_unique<RenderContext>(mConfig.get(), mDataStore.get())),
-      mGuiContext(std::make_unique<GuiContext>(mConfig.get(), mRenderContext.get()))
+      mGuiContext(std::make_unique<GuiContext>(mConfig.get(), mRenderContext.get(), &mSynthWrapper))
 {
     createViews();
     loadConfig();
@@ -69,10 +71,16 @@ int ContextManager::exec()
 {
     openAndStartAudioStreams();
     startAnalysisThread();
+#ifndef WITHOUT_SYNTH
+    startSynthesisThread();
+#endif
 
     int retCode = mGuiContext->exec();
 
     stopAnalysisThread();
+#ifndef WITHOUT_SYNTH
+    stopSynthesisThread();
+#endif
 
     return retCode;
 }
@@ -100,8 +108,10 @@ void ContextManager::openAndStartAudioStreams()
 {
     mAudioContext->openCaptureStream(nullptr);
     mAudioContext->startCaptureStream();
+#ifndef WITHOUT_SYNTH
     mAudioContext->openPlaybackStream(nullptr);
     mAudioContext->startPlaybackStream();
+#endif
 }
 
 void ContextManager::startAnalysisThread()
@@ -116,6 +126,35 @@ void ContextManager::analysisThreadLoop()
         if (auto timer = timer_guard(timings::update)) {
             mAudioContext->tickAudio();
             mPipeline->processAll();
+
+            double f1 =
+                !mDataStore->getFormantTrack(0).empty() 
+                    ? mDataStore->getFormantTrack(0).back()
+                    : 1000.0;
+            double f2 =
+                !mDataStore->getFormantTrack(1).empty() 
+                    ? mDataStore->getFormantTrack(1).back()
+                    : 2000.0;
+            double f3 =
+                !mDataStore->getFormantTrack(2).empty() 
+                    ? mDataStore->getFormantTrack(2).back()
+                    : 3000.0;
+            rpm::vector<Analysis::FormantData> formants {
+                {f1, 80.0},
+                {f2, 90.0},
+                {f3, 100.0},
+            };
+            mSynthesizer->setFormants(formants);
+
+            /*double pitch =
+                !mDataStore->getPitchTrack().empty() 
+                    ? mDataStore->getPitchTrack().back()
+                    : 0.0;
+
+            mSynthesizer->setVoiced(pitch != 0.0);
+            if (pitch != 0.0) {
+                mSynthesizer->setGlotPitch(pitch);
+            }*/
         }
     }
 }
@@ -127,6 +166,60 @@ void ContextManager::stopAnalysisThread()
         mAnalysisThread.join();
     }
 }
+
+#ifndef WITHOUT_SYNTH
+
+void ContextManager::startSynthesisThread()
+{
+    mSynthesisRunning = true;
+    mSynthesisThread = std::thread(std::mem_fn(&ContextManager::synthesisThreadLoop), this);
+}
+
+void ContextManager::synthesisThreadLoop()
+{
+    using Synth = Module::App::Synthesizer;
+
+    QObject::connect(&mSynthWrapper, &SynthWrapper::noiseGainChanged, mSynthesizer.get(), &Synth::setNoiseGain);
+    QObject::connect(&mSynthWrapper, &SynthWrapper::glotGainChanged, mSynthesizer.get(), &Synth::setGlotGain);
+    QObject::connect(&mSynthWrapper, &SynthWrapper::glotPitchChanged, mSynthesizer.get(), &Synth::setGlotPitch);
+    QObject::connect(&mSynthWrapper, &SynthWrapper::glotRdChanged, mSynthesizer.get(), &Synth::setGlotRd);
+    QObject::connect(&mSynthWrapper, &SynthWrapper::glotTcChanged, mSynthesizer.get(), &Synth::setGlotTc);
+    QObject::connect(&mSynthWrapper, &SynthWrapper::filterShiftChanged, mSynthesizer.get(), &Synth::setFilterShift);
+    QObject::connect(&mSynthWrapper, &SynthWrapper::voicedChanged, mSynthesizer.get(), &Synth::setVoiced);
+
+    while (mSynthesisRunning) {
+        mPlaybackQueue->pushIfNeeded(mSynthesizer.get());
+
+        QSignalBlocker sb(mSynthesizer.get());
+
+        if (mSynthWrapper.enabled()) {
+            mSynthesizer->setMasterGain(1.0);
+        }
+        else {
+            mSynthesizer->setMasterGain(0.0);
+        }
+
+        mSynthWrapper.setNoiseGain(mSynthesizer->getNoiseGain());
+        mSynthWrapper.setGlotGain(mSynthesizer->getGlotGain());
+        mSynthWrapper.setGlotPitch(mSynthesizer->getGlotPitch());
+        mSynthWrapper.setGlotRd(mSynthesizer->getGlotRd());
+        mSynthWrapper.setGlotTc(mSynthesizer->getGlotTc());
+        mSynthWrapper.setFilterShift(mSynthesizer->getFilterShift());
+        mSynthWrapper.setVoiced(mSynthesizer->isVoiced());
+        
+        std::this_thread::sleep_for(20ms);
+    }
+}
+
+void ContextManager::stopSynthesisThread()
+{
+    if (mSynthesisThread.joinable()) {
+        mSynthesisRunning = false;
+        mSynthesisThread.join();
+    }
+}
+
+#endif // !WITHOUT_SYNTH
 
 void ContextManager::setView(const std::string &name)
 {

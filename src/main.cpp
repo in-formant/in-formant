@@ -38,6 +38,7 @@ int start_logger(const char *app_name);
 int Main::argc;
 char **Main::argv;
 
+__attribute__((visibility ("default")))
 int main(int argc, char **argv)
 {
 #ifdef _WIN32

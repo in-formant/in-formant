@@ -24,7 +24,9 @@ void CanvasItem::setRenderContext(Main::RenderContext *renderContext)
 
 void CanvasItem::paint(QPainter *painterBase)
 {
-    QPainterWrapper painter(painterBase);
-    mRenderContext->render(&painter);
+    if (mRenderContext != nullptr) {
+        QPainterWrapper painter(painterBase);
+        mRenderContext->render(&painter);
+    }
 }
 

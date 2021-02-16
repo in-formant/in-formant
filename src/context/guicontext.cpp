@@ -8,7 +8,7 @@
 using namespace Main;
 using namespace std::chrono_literals;
 
-GuiContext::GuiContext(Config *config, RenderContext *renderContext)
+GuiContext::GuiContext(Config *config, RenderContext *renderContext, SynthWrapper *synthWrapper)
     : mConfig(config),
       mRenderContext(renderContext),
       mSelectedView(nullptr)
@@ -18,7 +18,7 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext)
     QCoreApplication::setOrganizationDomain("in-formant.app");
     QCoreApplication::setOrganizationName("InFormant");
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-
+    
     QQuickStyle::setStyle("Material");
     qmlRegisterType<Gui::CanvasItem>("IfCanvas", 1, 0, "IfCanvas");
 
@@ -29,7 +29,8 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext)
     mQmlEngine->addImportPath(QCoreApplication::applicationDirPath() + "/../Resources/qml");
 #endif
     mQmlEngine->rootContext()->setContextProperty("config", mConfig);
-    mQmlEngine->load(QUrl("qrc:/main.qml"));
+    mQmlEngine->rootContext()->setContextProperty("synth", synthWrapper);
+    mQmlEngine->load(QUrl("qrc:/MainWindow.qml"));
    
     auto window = static_cast<QQuickWindow *>(mQmlEngine->rootObjects().first());
     auto canvasItem = window->findChild<Gui::CanvasItem *>("IfCanvas");
