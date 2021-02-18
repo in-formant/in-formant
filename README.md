@@ -1,6 +1,6 @@
 # InFormant™ - a real-time pitch and formant tracking software
 
-# THIS BRANCH IS CURRENTLY NOT MAINTAINED - CURRENT WORK IS HAPPENING ON THE [WITH-QT](/with-qt) BRANCH.
+# THIS BRANCH IS CURRENTLY NOT MAINTAINED - CURRENT WORK IS HAPPENING ON THE [WITH-QT](/../../tree/with-qt) BRANCH.
 
 ## How to compile from source
 
