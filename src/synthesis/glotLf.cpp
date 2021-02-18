@@ -93,14 +93,6 @@ rpm::vector<double> Synthesis::lfGenFrame(double f0, double Fs, double Rd, doubl
         else {
             glot[i] = 0.0;
         }
-
-        if (glot[i] > posMax) {
-            posMax = glot[i];
-        }
-    }
-
-    for (int i = 0; i < period; ++i) {
-        glot[i] /= posMax;
     }
 
     return glot;

@@ -24,41 +24,9 @@ rpm::vector<double> Synthesis::whiteNoise(int length)
     return out;
 }
 
-rpm::vector<double> Synthesis::brownNoise(int length)
-{
-    static rpm::vector<double> filter;
-    static rpm::vector<double> zf;
-
-    if (filter.size() == 0) {
-        filter.resize(64);
-        filter[0] = 1.0;
-        for (int k = 1; k <= 63; ++k) {
-            filter[k] = (k - 2.0) * filter[k - 1] / (double) k;
-        }
-    }
-
-    return Synthesis::filter(filter, {1.0}, whiteNoise(length), zf);
-}
-
-rpm::vector<double> Synthesis::pinkNoise(int length)
-{
-    static rpm::vector<double> filter;
-    static rpm::vector<double> zf;
-
-    if (filter.size() == 0) {
-        filter.resize(64);
-        filter[0] = 1.0;
-        for (int k = 1; k <= 63; ++k) {
-            filter[k] = (k - 1.5) * filter[k - 1] / (double) k;
-        }
-    }
-
-    return Synthesis::filter(filter, {1.0}, whiteNoise(length), zf);
-}
-
 rpm::vector<double> Synthesis::aspirateNoise(int length)
 {
-    constexpr double alpha = 1.5;
+    constexpr double alpha = -1.5;
 
     static rpm::vector<double> filter;
     static rpm::vector<double> zf;

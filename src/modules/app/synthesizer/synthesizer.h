@@ -40,6 +40,9 @@ namespace Module::App
         double getFilterShift() const;
         bool isVoiced() const;
         
+        rpm::vector<std::array<double, 6>> getFilterCopy(double *fs) const;
+        rpm::vector<double> getSourceCopy(double fs, double durationInMs) const;
+        
         void generateAudio(int requestedLength);
 
         static void audioCallback(double *, int, void *);

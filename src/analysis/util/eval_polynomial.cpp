@@ -1,11 +1,24 @@
 #include "util.h"
 
+rpm::vector<std::complex<double>> Analysis::evaluatePolynomialComplexVector(const rpm::vector<double>& poly, const rpm::vector<std::complex<double>>& x)
+{
+    rpm::vector<std::complex<double>> y(x.size(), poly[poly.size() - 1]);
+
+    for (int i = poly.size() - 2; i >= 0; --i) {
+        for (int k = 0; k < x.size(); ++k) {
+            y[k] = y[k] * x[k] + poly[i];
+        }
+    }
+    
+    return y;
+}
+
 void Analysis::evaluatePolynomialWithDerivative(const rpm::vector<double>& poly, const double x, double *y, double *dy)
 {
     double p = poly[poly.size() - 1];
     double dp = 0.0;
 
-    for (int i = poly.size() - 1; i >= 0; --i) {
+    for (int i = poly.size() - 2; i >= 0; --i) {
         dp = dp * x + p;
         p = p * x + poly[i];
     }
@@ -19,7 +32,7 @@ void Analysis::evaluatePolynomialWithDerivative(const rpm::vector<double>& poly,
     std::complex<double> p = poly[poly.size() - 1];
     std::complex<double> dp = 0.0;
 
-    for (int i = poly.size() - 1; i >= 0; --i) {
+    for (int i = poly.size() - 2; i >= 0; --i) {
         dp = dp * z + p;
         p = p * z + poly[i];
     }

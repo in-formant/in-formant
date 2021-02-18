@@ -141,7 +141,10 @@ set(SOURCES
     src/analysis/fft/complexfft.cpp
     src/analysis/fft/realrealfft.cpp
     src/analysis/fft/wisdom.cpp
+    src/analysis/fft/fft_n.cpp
     src/analysis/fft/fft.h
+    src/analysis/freqz/sosfreqz.cpp
+    src/analysis/freqz/freqz.h
     src/analysis/filter/butterworth.cpp
     src/analysis/filter/zpk2sos.cpp
     src/analysis/filter/sosfilter.cpp
@@ -224,8 +227,8 @@ set_target_properties(torch PROPERTIES
     MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
 )
 
-find_package(Qt5 5.15 COMPONENTS Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core REQUIRED)
-foreach(c Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core)
+find_package(Qt5 5.15 COMPONENTS Charts Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core REQUIRED)
+foreach(c Charts Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core)
     if(${Qt5${c}_FOUND})
         get_target_property(Qt5${c}_LIBRARY_FILE ${Qt5${c}_LIBRARIES} LOCATION)
         message(STATUS "Found Qt5${c}: ${Qt5${c}_LIBRARY_FILE}")
@@ -305,7 +308,7 @@ else()
 endif()
 
 target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${FFTW_INCLUDE_DIRS} ${TOMLPP_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS} ${GABORATOR_INCLUDE_DIR})
-target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LDFLAGS} ${TORCH_LIBRARIES} Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
+target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LDFLAGS} ${TORCH_LIBRARIES} Qt5::Charts Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
 
 add_subdirectory(external/rpmalloc EXCLUDE_FROM_ALL)
 add_subdirectory(external/soxr EXCLUDE_FROM_ALL)

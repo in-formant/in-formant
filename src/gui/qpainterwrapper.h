@@ -37,7 +37,12 @@ public:
     void drawTimeSeries(const rpm::vector<double> &y, double xstart, double xend, double ymin, double ymax); 
 
     void drawFrequencyTrack(const TimeTrack<double>::const_iterator& begin,
-                            const TimeTrack<double>::const_iterator& end);
+                            const TimeTrack<double>::const_iterator& end,
+                            bool curve = false);
+
+    void drawFrequencyTrack(const OptionalTimeTrack<double>::const_iterator& begin,
+                            const OptionalTimeTrack<double>::const_iterator& end,
+                            bool curve = true);
 
     void drawCurve(const rpm::vector<QPointF> &points, double tension = 0.5);
 

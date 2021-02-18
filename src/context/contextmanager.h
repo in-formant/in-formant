@@ -50,6 +50,7 @@ namespace Main {
 #ifndef WITHOUT_SYNTH
         void startSynthesisThread();
         void synthesisThreadLoop();
+        void synthPushThreadLoop();
         void stopSynthesisThread();
 #endif
 
@@ -85,6 +86,7 @@ namespace Main {
 
 #ifndef WITHOUT_SYNTH
         std::thread mSynthesisThread;
+        std::thread mSynthPushThread;
         std::atomic_bool mSynthesisRunning;
 #endif
 

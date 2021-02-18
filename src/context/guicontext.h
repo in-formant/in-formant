@@ -2,7 +2,7 @@
 #define MAIN_GUI_CONTEXT_H
 
 #include <memory>
-#include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
 #include <QQuickStyle>
@@ -23,7 +23,11 @@ namespace Main {
         Q_OBJECT
 
     public:
+#ifndef WITHOUT_SYNTH
         GuiContext(Config *config, RenderContext *renderContext, SynthWrapper *synthWrapper);
+#else
+        GuiContext(Config *config, RenderContext *renderContext);
+#endif
 
         int exec();
     
@@ -47,7 +51,7 @@ namespace Main {
 
         GuiView *mSelectedView;
 
-        std::unique_ptr<QGuiApplication> mApp;
+        std::unique_ptr<QApplication> mApp;
         std::unique_ptr<QQmlApplicationEngine> mQmlEngine;
 
         QTimer *mUpdateTimer;

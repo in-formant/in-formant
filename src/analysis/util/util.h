@@ -25,6 +25,7 @@ namespace Analysis {
     void polishRealRoot(const rpm::vector<double>& p, double *root, int maxIt);
     void polishRoots(const rpm::vector<double>& p, rpm::vector<std::complex<double>>& roots);
 
+    rpm::vector<std::complex<double>> evaluatePolynomialComplexVector(const rpm::vector<double>& poly, const rpm::vector<std::complex<double>>& x);
     void evaluatePolynomialWithDerivative(const rpm::vector<double>& p, double x, double *y, double *dy);
     void evaluatePolynomialWithDerivative(const rpm::vector<double>& p, const std::complex<double>& x, std::complex<double> *y, std::complex<double> *dy);
     

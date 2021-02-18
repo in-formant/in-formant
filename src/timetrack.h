@@ -2,6 +2,7 @@
 #define TIME_TRACK_H
 
 #include "rpcxx.h"
+#include <optional>
 
 template<typename T>
 class TimeTrack {
@@ -25,6 +26,9 @@ public:
 private:
     map_type mTrack;
 };
+
+template<typename T>
+using OptionalTimeTrack = TimeTrack<std::optional<T>>;
 
 #include "timetrack.ipp"
 

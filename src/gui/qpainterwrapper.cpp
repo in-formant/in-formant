@@ -126,8 +126,11 @@ QRgb QPainterWrapper::mapAmplitudeToColor(double amplitude)
 
 void QPainterWrapper::drawFrequencyTrack(
             const TimeTrack<double>::const_iterator& begin,
-            const TimeTrack<double>::const_iterator& end)
+            const TimeTrack<double>::const_iterator& end,
+            bool curve)
 {
+    rpm::vector<QPointF> points;
+
     for (auto it = begin; it != end; ++it) {
         double time = it->first;
         double pitch = it->second;
@@ -135,9 +138,56 @@ void QPainterWrapper::drawFrequencyTrack(
         double x = mapTimeToX(time);
         double y = mapFrequencyToY(pitch);
 
-        p->drawPoint(x, y);
+        points.emplace_back(x, y);
+    }
+
+    if (curve) {
+        drawCurve(points);
+    }
+    else {
+        p->drawPoints(points.data(), points.size());
     }
 }
+
+void QPainterWrapper::drawFrequencyTrack(
+            const OptionalTimeTrack<double>::const_iterator& begin,
+            const OptionalTimeTrack<double>::const_iterator& end,
+            bool curve)
+{
+    rpm::vector<rpm::vector<QPointF>> segments;
+    rpm::vector<QPointF> points;
+
+    for (auto it = begin; it != end; ++it) {
+        if (it->second.has_value()) {
+            double time = it->first;
+            double pitch = *(it->second);
+
+            double x = mapTimeToX(time);
+            double y = mapFrequencyToY(pitch);
+
+            points.emplace_back(x, y);
+        }
+        else if (!points.empty()) {
+            segments.push_back(std::move(points));
+        }
+    }
+
+    if (!points.empty()) {
+        segments.push_back(std::move(points));
+    }
+
+    if (curve) {
+        for (const auto& segmentPoints : segments) {
+            drawCurve(segmentPoints);
+        }
+    }
+    else {
+        for (const auto& segmentPoints : segments) {
+            p->drawPoints(segmentPoints.data(), segmentPoints.size());
+        }
+    }
+}
+
 
 static inline void cubicControlPoints(const QPointF &p1, const QPointF &p2, const QPointF &p3, double t, QPointF &ctrl1, QPointF &ctrl2)
 {

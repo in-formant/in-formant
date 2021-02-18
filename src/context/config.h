@@ -26,7 +26,6 @@ namespace Main {
         Q_PROPERTY(bool viewShowSpectrogram READ getViewShowSpectrogram     WRITE setViewShowSpectrogram    NOTIFY viewShowSpectrogramChanged)
         Q_PROPERTY(bool viewShowPitch       READ getViewShowPitch           WRITE setViewShowPitch          NOTIFY viewShowPitchChanged)
         Q_PROPERTY(bool viewShowFormants    READ getViewShowFormants        WRITE setViewShowFormants       NOTIFY viewShowFormantsChanged)
-        Q_PROPERTY(bool uiShowSidebar       READ getUiShowSidebar           WRITE setUiShowSidebar          NOTIFY uiShowSidebarChanged)
     
     signals:
         void pitchAlgorithmChanged(int);
@@ -39,7 +38,6 @@ namespace Main {
         void viewShowSpectrogramChanged(bool);
         void viewShowPitchChanged(bool);
         void viewShowFormantsChanged(bool);
-        void uiShowSidebarChanged(bool);
 
     public:
         Config();
@@ -93,9 +91,6 @@ namespace Main {
 
         bool getViewShowFormants();
         void setViewShowFormants(bool b);
-
-        bool getUiShowSidebar();
-        void setUiShowSidebar(bool b);
 
         int getAnalysisMaxFrequency();
         int getAnalysisLpOffset();

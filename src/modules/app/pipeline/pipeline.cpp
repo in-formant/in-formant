@@ -103,11 +103,14 @@ void Pipeline::callbackPitch()
 
         auto pitchResult = pitchSolver->solve(m.data(), m.size(), fs);
 
+        dataStore->beginWrite();
         if (pitchResult.voiced) {
-            dataStore->beginWrite();
             dataStore->getPitchTrack().insert(t / fs, pitchResult.pitch);
-            dataStore->endWrite();
         }
+        else {
+            dataStore->getPitchTrack().insert(t / fs, std::nullopt);
+        }
+        dataStore->endWrite();
         t += m.size();
     }
 }
@@ -161,6 +164,9 @@ void Pipeline::callbackFormants()
                     formantResult.formants.size());
                 ++i) {
             dataStore->getFormantTrack(i).insert(t / fs, formantResult.formants[i].frequency);
+        }
+        for (int i = formantResult.formants.size(); i < dataStore->getFormantTrackCount(); ++i) {
+            dataStore->getFormantTrack(i).insert(t / fs, std::nullopt);
         }
         dataStore->endWrite();
         t += m.size();

@@ -329,17 +329,6 @@ void Config::setViewShowFormants(bool b)
     emit viewShowFormantsChanged(b);
 }
 
-bool Config::getUiShowSidebar()
-{
-    return boolField(mTbl["ui"], "showSidebar", true);
-}
-
-void Config::setUiShowSidebar(bool b)
-{
-    mTbl["ui"]["showSidebar"].ref<bool>() = b;
-    emit uiShowSidebarChanged(b);
-}
-
 int Config::getAnalysisMaxFrequency()
 {
     return integerField(mTbl["analysis"], "maxFrequency", 5200);

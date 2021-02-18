@@ -34,9 +34,9 @@ namespace Main {
 
         rpm::vector<SpectrogramCoefs>& getSpectrogramCoefs();
 
-        TimeTrack<double>& getPitchTrack();
+        OptionalTimeTrack<double>& getPitchTrack();
 
-        TimeTrack<double>& getFormantTrack(int i);
+        OptionalTimeTrack<double>& getFormantTrack(int i);
         int getFormantTrackCount() const;
         void setFormantTrackCount(int n);
 
@@ -52,8 +52,8 @@ namespace Main {
 
         rpm::vector<SpectrogramCoefs> mSpectrogramCoefs;
         
-        TimeTrack<double> mPitchTrack;
-        rpm::vector<TimeTrack<double>> mFormantTracks;
+        OptionalTimeTrack<double> mPitchTrack;
+        rpm::vector<OptionalTimeTrack<double>> mFormantTracks;
     };
 
 }

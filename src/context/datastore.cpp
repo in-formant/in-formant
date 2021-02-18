@@ -54,12 +54,12 @@ rpm::vector<SpectrogramCoefs>& DataStore::getSpectrogramCoefs()
     return mSpectrogramCoefs;
 }
 
-TimeTrack<double>& DataStore::getPitchTrack()
+OptionalTimeTrack<double>& DataStore::getPitchTrack()
 {
     return mPitchTrack;
 }
 
-TimeTrack<double>& DataStore::getFormantTrack(int i)
+OptionalTimeTrack<double>& DataStore::getFormantTrack(int i)
 {
     return mFormantTracks.at(i);
 }

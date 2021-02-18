@@ -10,8 +10,6 @@
 namespace Synthesis
 {
     rpm::vector<double> whiteNoise(int length);
-    rpm::vector<double> brownNoise(int length);
-    rpm::vector<double> pinkNoise(int length);
     rpm::vector<double> aspirateNoise(int length);
 
     struct LF_State {

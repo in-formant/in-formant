@@ -8,7 +8,11 @@
 using namespace Main;
 using namespace std::chrono_literals;
 
+#ifndef WITHOUT_SYNTH
 GuiContext::GuiContext(Config *config, RenderContext *renderContext, SynthWrapper *synthWrapper)
+#else
+GuiContext::GuiContext(Config *config, RenderContext *renderContext)
+#endif
     : mConfig(config),
       mRenderContext(renderContext),
       mSelectedView(nullptr)
@@ -22,14 +26,22 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, SynthWrappe
     QQuickStyle::setStyle("Material");
     qmlRegisterType<Gui::CanvasItem>("IfCanvas", 1, 0, "IfCanvas");
 
-    mApp = std::make_unique<QGuiApplication>(argc, argv);
+    mApp = std::make_unique<QApplication>(argc, argv);
     mQmlEngine = std::make_unique<QQmlApplicationEngine>();
     mQmlEngine->addImportPath(QCoreApplication::applicationDirPath() + "/qml");
 #ifdef __APPLE__
     mQmlEngine->addImportPath(QCoreApplication::applicationDirPath() + "/../Resources/qml");
 #endif
+
     mQmlEngine->rootContext()->setContextProperty("config", mConfig);
+
+#ifndef WITHOUT_SYNTH
     mQmlEngine->rootContext()->setContextProperty("synth", synthWrapper);
+    mQmlEngine->rootContext()->setContextProperty("HAS_SYNTH", true);
+#else
+    mQmlEngine->rootContext()->setContextProperty("HAS_SYNTH", false);
+#endif
+
     mQmlEngine->load(QUrl("qrc:/MainWindow.qml"));
    
     auto window = static_cast<QQuickWindow *>(mQmlEngine->rootObjects().first());

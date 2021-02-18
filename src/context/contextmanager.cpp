@@ -35,7 +35,11 @@ ContextManager::ContextManager(
                   mCaptureBuffer.get(),
                   mPlaybackQueue.get())),
       mRenderContext(std::make_unique<RenderContext>(mConfig.get(), mDataStore.get())),
+#ifndef WITHOUT_SYNTH
       mGuiContext(std::make_unique<GuiContext>(mConfig.get(), mRenderContext.get(), &mSynthWrapper))
+#else
+      mGuiContext(std::make_unique<GuiContext>(mConfig.get(), mRenderContext.get()))
+#endif
 {
     createViews();
     loadConfig();
@@ -126,35 +130,6 @@ void ContextManager::analysisThreadLoop()
         if (auto timer = timer_guard(timings::update)) {
             mAudioContext->tickAudio();
             mPipeline->processAll();
-
-            double f1 =
-                !mDataStore->getFormantTrack(0).empty() 
-                    ? mDataStore->getFormantTrack(0).back()
-                    : 1000.0;
-            double f2 =
-                !mDataStore->getFormantTrack(1).empty() 
-                    ? mDataStore->getFormantTrack(1).back()
-                    : 2000.0;
-            double f3 =
-                !mDataStore->getFormantTrack(2).empty() 
-                    ? mDataStore->getFormantTrack(2).back()
-                    : 3000.0;
-            rpm::vector<Analysis::FormantData> formants {
-                {f1, 80.0},
-                {f2, 90.0},
-                {f3, 100.0},
-            };
-            mSynthesizer->setFormants(formants);
-
-            /*double pitch =
-                !mDataStore->getPitchTrack().empty() 
-                    ? mDataStore->getPitchTrack().back()
-                    : 0.0;
-
-            mSynthesizer->setVoiced(pitch != 0.0);
-            if (pitch != 0.0) {
-                mSynthesizer->setGlotPitch(pitch);
-            }*/
         }
     }
 }
@@ -173,6 +148,15 @@ void ContextManager::startSynthesisThread()
 {
     mSynthesisRunning = true;
     mSynthesisThread = std::thread(std::mem_fn(&ContextManager::synthesisThreadLoop), this);
+    mSynthPushThread = std::thread(std::mem_fn(&ContextManager::synthPushThreadLoop), this);
+}
+
+void ContextManager::synthPushThreadLoop()
+{ 
+    while (mSynthesisRunning) {
+        mPlaybackQueue->pushIfNeeded(mSynthesizer.get());
+        std::this_thread::sleep_for(20ms);
+    }
 }
 
 void ContextManager::synthesisThreadLoop()
@@ -187,10 +171,50 @@ void ContextManager::synthesisThreadLoop()
     QObject::connect(&mSynthWrapper, &SynthWrapper::filterShiftChanged, mSynthesizer.get(), &Synth::setFilterShift);
     QObject::connect(&mSynthWrapper, &SynthWrapper::voicedChanged, mSynthesizer.get(), &Synth::setVoiced);
 
-    while (mSynthesisRunning) {
-        mPlaybackQueue->pushIfNeeded(mSynthesizer.get());
+    double maxFrequency = 0;
+    rpm::vector<double> frequencies(1024);
+    rpm::vector<std::complex<double>> wn(frequencies.size());
 
-        QSignalBlocker sb(mSynthesizer.get());
+    double maxFrequencySource = 16000;
+    Analysis::RealFFT fft(512);
+    rpm::vector<double> fftFrequencies(fft.getOutputLength());
+    for (int k = 0; k < fftFrequencies.size(); ++k) {
+        fftFrequencies[k] = maxFrequencySource * (double) (k + 1) / (double) fftFrequencies.size();
+    }
+    
+    while (mSynthesisRunning) {
+        mDataStore->beginRead();
+
+        if (mSynthWrapper.followPitch()) {
+            if (!mDataStore->getPitchTrack().empty()) {
+                std::optional<double> p = mDataStore->getPitchTrack().back();
+                if (p.has_value()) {
+                    mSynthWrapper.setVoiced(true);
+                    mSynthWrapper.setGlotPitch(*p);
+                }
+                else {
+                    mSynthWrapper.setVoiced(false);
+                }
+            }
+            else {
+                mSynthWrapper.setVoiced(false);
+            }
+        }
+
+        if (mSynthWrapper.followFormants()) {
+            rpm::vector<Analysis::FormantData> formants;
+            for (int i = 0; i < 4; ++i) {
+                if (!mDataStore->getFormantTrack(i).empty()) {
+                    std::optional<double> fi = mDataStore->getFormantTrack(i).back();
+                    if (fi.has_value()) {
+                        formants.push_back({*fi, 100.0});
+                    }
+                }
+            }
+            mSynthesizer->setFormants(formants);
+        }
+
+        mDataStore->endRead();
 
         if (mSynthWrapper.enabled()) {
             mSynthesizer->setMasterGain(1.0);
@@ -199,23 +223,39 @@ void ContextManager::synthesisThreadLoop()
             mSynthesizer->setMasterGain(0.0);
         }
 
-        mSynthWrapper.setNoiseGain(mSynthesizer->getNoiseGain());
-        mSynthWrapper.setGlotGain(mSynthesizer->getGlotGain());
-        mSynthWrapper.setGlotPitch(mSynthesizer->getGlotPitch());
-        mSynthWrapper.setGlotRd(mSynthesizer->getGlotRd());
-        mSynthWrapper.setGlotTc(mSynthesizer->getGlotTc());
-        mSynthWrapper.setFilterShift(mSynthesizer->getFilterShift());
-        mSynthWrapper.setVoiced(mSynthesizer->isVoiced());
+        double synthSampleRate;
+        auto filter = mSynthesizer->getFilterCopy(&synthSampleRate);
+
+        if (maxFrequency != synthSampleRate / 2) {
+            maxFrequency = synthSampleRate / 2;
+            for (int k = 0; k < frequencies.size(); ++k) {
+                frequencies[k] = maxFrequency * (double) (k + 1) / (double) frequencies.size();
+                wn[k] = std::polar(1.0, 2.0 * M_PI * frequencies[k] / synthSampleRate);
+            }
+        }
+
+        mSynthWrapper.setFilterResponse(frequencies, Analysis::sosfreqz(filter, wn));
         
-        std::this_thread::sleep_for(20ms);
+        auto source = mSynthesizer->getSourceCopy(maxFrequencySource * 2, 25.0);
+        mSynthWrapper.setSource(source, maxFrequencySource * 2);
+
+        auto sourceSpectrum = Analysis::fft_n(fft, source);
+        mSynthWrapper.setSourceSpectrum(fftFrequencies, sourceSpectrum);
+
+        std::this_thread::sleep_for(50ms);
     }
 }
 
 void ContextManager::stopSynthesisThread()
 {
-    if (mSynthesisThread.joinable()) {
+    if (mSynthesisThread.joinable() || mSynthPushThread.joinable()) {
         mSynthesisRunning = false;
-        mSynthesisThread.join();
+        if (mSynthesisThread.joinable()) {
+            mSynthesisThread.join();
+        }
+        if (mSynthPushThread.joinable()) {
+            mSynthPushThread.join();
+        }
     }
 }
 

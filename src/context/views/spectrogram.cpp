@@ -131,7 +131,7 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     }
 
     if (config->getViewShowPitch()) {
-        painter->setPen(QPen(Qt::cyan, 8, Qt::SolidLine, Qt::RoundCap));
+        painter->setPen(QPen(Qt::cyan, 6, Qt::SolidLine, Qt::RoundCap));
         painter->drawFrequencyTrack(pitchTrack.lower_bound(timeStart), pitchTrack.upper_bound(timeEnd));
     }
 
@@ -140,14 +140,14 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
         auto f2 = dataStore->getFormantTrack(1);
         auto f3 = dataStore->getFormantTrack(2);
 
-        painter->setPen(QPen(Qt::green, 8, Qt::SolidLine, Qt::RoundCap));
-        painter->drawFrequencyTrack(f1.lower_bound(timeStart), f1.upper_bound(timeEnd));
+        painter->setPen(QPen(Qt::green, 7, Qt::SolidLine, Qt::RoundCap));
+        painter->drawFrequencyTrack(f1.lower_bound(timeStart), f1.upper_bound(timeEnd), false);
 
-        painter->setPen(QPen(Qt::darkYellow, 8, Qt::SolidLine, Qt::RoundCap));
-        painter->drawFrequencyTrack(f2.lower_bound(timeStart), f2.upper_bound(timeEnd));
+        painter->setPen(QPen(Qt::darkYellow, 7, Qt::SolidLine, Qt::RoundCap));
+        painter->drawFrequencyTrack(f2.lower_bound(timeStart), f2.upper_bound(timeEnd), false);
  
-        painter->setPen(QPen(Qt::magenta, 8, Qt::SolidLine, Qt::RoundCap));
-        painter->drawFrequencyTrack(f3.lower_bound(timeStart), f3.upper_bound(timeEnd));
+        painter->setPen(QPen(Qt::magenta, 7, Qt::SolidLine, Qt::RoundCap));
+        painter->drawFrequencyTrack(f3.lower_bound(timeStart), f3.upper_bound(timeEnd), false);
     }
 
     //painter->setTimeSeriesPen(QPen(QColor(0xFFA500), 2));

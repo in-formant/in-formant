@@ -2,6 +2,7 @@
 #define ANALYSIS_H
 
 #include "fft/fft.h"
+#include "freqz/freqz.h"
 #include "pitch/pitch.h"
 #include "linpred/linpred.h"
 #include "formant/formant.h"

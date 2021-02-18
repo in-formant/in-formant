@@ -1,6 +1,7 @@
 #ifndef ANALYSIS_FFT_H
 #define ANALYSIS_FFT_H
 
+#include "rpcxx.h"
 #include <fftw3.h>
 #include <complex>
 
@@ -104,6 +105,8 @@ namespace Analysis
 
         fftw_complex *mData;
     };
+
+    rpm::vector<double> fft_n(Analysis::RealFFT& fft, const rpm::vector<double>& signal);
 }
 
 #endif // ANALYSIS_FFT_H
