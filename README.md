@@ -2,9 +2,19 @@
 
 ## Table of Contents
 
+* [Prebuilt binaries](#prebuilt-binaries)
 * [Compiling from source](#how-to-compile-from-source-using-docker)
   * [Using Docker](#how-to-compile-from-source-using-docker)
   * [Locally](#how-to-compile-from-source-locally)
+
+## Prebuilt binaries
+
+There are several prebuilt binaries included with each new release:
+
+* an AppImage file, for Linux (simply set the executable flag and run it)
+* two ZIP archives, for 32-bit and 64-bit Windows (the 32-bit will run on both editions of Windows)
+* a DMG image, for macOS 10.14 Mojave or newer (only 64-bit PC architecture supported, no ARM binaries yet)
+* an APK file, for Android 9 Pie or newer (**prefer [the Play Store version](https://play.google.com/store/apps/details?id=fr.cloyunhee.speechanalysis) for smaller downloads**)
 
 ## How to compile from source (using Docker)
 
@@ -82,14 +92,4 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 ```
 
 **Note:** the `Debug` build configuration enables ASan and UBSan by default.
-
-## Prebuilt binaries
-
-There are several prebuilt binaries included with each new release:
-
-* an AppImage file, for Linux (simply set the executable flag and run it)
-* two ZIP archives, for 32-bit and 64-bit Windows (the 32-bit will run on both editions of Windows)
-* a DMG image, for macOS 10.14 Mojave or newer (only 64-bit PC architecture supported, no ARM binaries yet)
-* an APK file, for Android 9 Pie or newer (**prefer [the Play Store version](https://play.google.com/store/apps/details?id=fr.cloyunhee.speechanalysis) for smaller downloads**)
-
 
