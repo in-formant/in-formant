@@ -16,6 +16,16 @@ inline double mel2hz(double m) {
     return 700.0 * (pow(10.0, m / 2595.0) - 1.0);
 }
 
+inline double hz2erb(double f) {
+    constexpr double A = 21.33228113095401739888262;
+    return A * log10(1 + 0.00437 * f);
+}
+
+inline double erb2hz(double erb) {
+    constexpr double A = 21.33228113095401739888262;
+    return (pow(10.0, erb / A) - 1) / 0.00437;
+}
+
 inline double hz2log(double f) {
     return log2(f);
 }
@@ -33,6 +43,8 @@ double QPainterWrapper::transformFrequency(double frequency, FrequencyScale scal
         return hz2log(frequency);
     case FrequencyScale::Mel:
         return hz2mel(frequency);
+    case FrequencyScale::ERB:
+        return hz2erb(frequency);
     default:
         return 0;
     }
@@ -47,6 +59,8 @@ double QPainterWrapper::inverseFrequency(double value, FrequencyScale scale)
         return log2hz(value);
     case FrequencyScale::Mel:
         return mel2hz(value);
+    case FrequencyScale::ERB:
+        return erb2hz(value);
     default:
         return 0;
     }

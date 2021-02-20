@@ -1,5 +1,6 @@
 #include "qpainterwrapper.h"
 #include <QPainterPath>
+#include <iostream>
 
 QPainterWrapper::QPainterWrapper(QPainter *p)
     : QPainterWrapperBase(p),
@@ -93,9 +94,167 @@ void QPainterWrapper::drawFrequencyScale()
 {
     rpm::vector<double> majorTicks;
     rpm::vector<double> minorTicks;
+    rpm::vector<double> minorMinorTicks;
 
+    if (mFrequencyScale == FrequencyScale::Linear) {
+    }
+    else {
+        double loLog = log10(mMinFrequency);
+        double hiLog = log10(mMaxFrequency);
+        int loDecade = (int) floor(loLog);
+
+        double val;
+        double startDecade = pow(10.0, (double) loDecade);
+
+        // Major ticks are the decades.
+        double decade = startDecade;
+        double delta = hiLog - loLog, steps = fabs(delta);
+        double step = delta >= 0 ? 10 : 0.1;
+        double rMin = std::min(mMinFrequency, mMaxFrequency);
+        double rMax = std::max(mMinFrequency, mMaxFrequency);
+        for (int i = 0; i <= steps; ++i) {
+            val = decade;
+            if (val >= rMin && val < rMax) {
+                majorTicks.push_back(val);
+            }
+            decade *= step;
+        }
+
+        // Minor ticks are multiple of decades.
+        decade = startDecade;
+        float start, end, mstep;
+        if (delta > 0) {
+            start = 2; end = 9; mstep = 1;
+        }
+        else {
+            start = 9; end = 2; mstep = -1;
+        }
+        ++steps;
+        for (int i = 0; i <= steps; ++i) {
+            for (int j = start; j <= (int) end; j += mstep) {
+                val = decade * j;
+                if (val >= rMin && val < rMax) {
+                    minorTicks.push_back(val);
+                }
+            }
+            decade *= step;
+        }
+
+        // MinorMinor ticks are multiple of decades.
+        decade = startDecade;
+        if (delta > 0) {
+            start = 10; end = 100; mstep = 1;
+        }
+        else {
+            start = 100; end = 10; mstep = -1;
+        }
+        ++steps;
+        for (int i = 0; i <= steps; ++i) {
+            if (decade >= 10.0) {
+                for (int f = start; f <= (int) end; f += mstep) {
+                    if ((int) (f / 10) != f / 10.0) {
+                        val = decade * f / 10;
+                        if (val >= rMin && val < rMax) {
+                            minorMinorTicks.push_back(val);
+                        }
+                    }
+                }
+            }
+            decade *= step;
+        }
+    }
+
+    int x1 = viewport().width();
+    std::vector<bool> bits(viewport().height(), false);
+
+    QFont tickFont(p->font());
     
+    p->setPen(QPen(Qt::white, 4, Qt::SolidLine, Qt::RoundCap));
+    tickFont.setPointSize(13);
+    p->setFont(tickFont);
+    for (const double val : majorTicks) {
+        const double y = mapFrequencyToY(val);
+        const auto valstr = QString("%1").arg(val, 'g');
+        const int horizAdvance = p->fontMetrics().horizontalAdvance(valstr);
+        const int descent = p->fontMetrics().descent();
+        const int fontHeight = p->fontMetrics().height();
+        QRect rect(x1 - 12 - horizAdvance, y + descent, horizAdvance, fontHeight);
+        bool covered = false;
+        for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
+            if (ty >= 0 && ty < bits.size()
+                    && bits[ty]) {
+                covered = true;
+                break;
+            }
+        }
+        if (covered) {
+            continue;
+        }
+        p->drawLine(x1 - 8, y, x1, y);
+        p->drawText(rect.x(), rect.y(), valstr);
 
+        for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
+            if (ty >= 0 && ty < bits.size())
+                bits[ty] = true;
+        }
+    }
+
+    p->setPen(QPen(Qt::white, 3, Qt::SolidLine, Qt::RoundCap));
+    tickFont.setPointSize(11);
+    p->setFont(tickFont);
+    for (const double val : minorTicks) {
+        const double y = mapFrequencyToY(val);
+        const auto valstr = QString("%1").arg(val, 'g');
+        const int horizAdvance = p->fontMetrics().horizontalAdvance(valstr);
+        const int descent = p->fontMetrics().descent();
+        const int fontHeight = p->fontMetrics().height();
+        QRect rect(x1 - 10 - horizAdvance, y + descent, horizAdvance, fontHeight);
+        bool covered = false;
+        for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
+            if (ty >= 0 && ty < bits.size()
+                    && bits[ty]) {
+                covered = true;
+                break;
+            }
+        }
+        if (covered) {
+            continue;
+        }
+        p->drawLine(x1 - 6, y, x1, y);
+        p->drawText(rect.x(), rect.y(), valstr);
+        for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
+            if (ty >= 0 && ty < bits.size())
+                bits[ty] = true;
+        }
+    }
+
+    tickFont.setPointSize(10);
+    p->setPen(QPen(Qt::white, 2, Qt::SolidLine, Qt::RoundCap));
+    for (const double val : minorMinorTicks) {
+        const double y = mapFrequencyToY(val);
+        const auto valstr = QString("%1").arg(val, 'g');
+        const int horizAdvance = p->fontMetrics().horizontalAdvance(valstr);
+        const int descent = p->fontMetrics().descent();
+        const int fontHeight = p->fontMetrics().height();
+        QRect rect(x1 - 8 - horizAdvance, y + descent, horizAdvance, fontHeight);
+        bool covered = false;
+        for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
+            if (ty >= 0 && ty < bits.size()
+                    && bits[ty]) {
+                covered = true;
+                break;
+            }
+        }
+        if (covered) {
+            continue;
+        }
+        p->drawLine(x1 - 4, y, x1, y);
+        p->drawText(rect.x(), rect.y(), valstr);
+        for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
+            if (ty >= 0 && ty < bits.size())
+                bits[ty] = true;
+        }
+    }
 }
 
 void QPainterWrapper::drawTimeSeries(const rpm::vector<double>& y, double xstart, double xend, double ymin, double ymax)

@@ -46,7 +46,6 @@ ContextManager::ContextManager(
     mDataStore->setFormantTrackCount(4);
     QObject::connect(mConfig.get(), &Config::pitchAlgorithmChanged,
             [this](int index) {
-            std::cout << index << std::endl;
                 mPitchSolver.reset(makePitchSolver(static_cast<PitchAlgorithm>(index)));
             });
     QObject::connect(mConfig.get(), &Config::linpredAlgorithmChanged,

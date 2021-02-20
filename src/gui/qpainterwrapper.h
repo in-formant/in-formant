@@ -12,6 +12,7 @@ public:
         Linear      = 0,
         Logarithmic = 1,
         Mel         = 2,
+        ERB         = 3,
     };
 
     QPainterWrapper(QPainter *p);

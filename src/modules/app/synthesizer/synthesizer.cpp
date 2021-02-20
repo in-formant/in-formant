@@ -131,13 +131,41 @@ rpm::vector<std::array<double, 6>> Synthesizer::getFilterCopy(double *fs) const
 
 rpm::vector<double> Synthesizer::getSourceCopy(double fs, double durationInMs) const
 {
+#ifdef __WIN32
+#   define rd rand
+#else
+    static std::random_device rd;
+#endif
+
+#if SIZEOF_VOID_P == 4
+    static std::mt19937 gen(rd());
+#else
+    static std::mt19937_64 gen(rd());
+#endif
+
+    static std::normal_distribution<> dis(0.0, 0.05);
+
     int length = std::round((durationInMs * fs) / 1000);
 
     auto source = Synthesis::aspirateNoise(length);
 
+    rpm::vector<double> pitches(length);
+    rpm::vector<double> Rds(length);
+    rpm::vector<double> tcs(length);
+    
+    constexpr double expFact = 0.997;
+    pitches[0] = realGlotPitch;
+    Rds[0] = realGlotRd;
+    tcs[0] = realGlotTc;
+    for (int i = 1; i < length; ++i) {
+        pitches[i] = expFact * pitches[i - 1] + (1 - expFact) * (glotPitch * (1 + dis(gen)));
+        Rds[i]     = expFact * Rds[i - 1]     + (1 - expFact) * (glotRd + dis(gen));
+        tcs[i]     = expFact * tcs[i - 1]     + (1 - expFact) * (glotTc + dis(gen));
+    }
+
     rpm::vector<double> glot;
     while (glot.size() < length) {
-        auto frame = Synthesis::lfGenFrame(glotPitch, fs, realGlotRd, realGlotTc);
+        auto frame = Synthesis::lfGenFrame(pitches[glot.size()], fs, Rds[glot.size()], tcs[glot.size()]);
         glot.insert(glot.end(), frame.begin(), frame.end());
     }
 
@@ -201,8 +229,8 @@ void Synthesizer::generateAudio(int requestedLength)
         tcs[0] = realGlotTc;
         for (int i = 1; i < inputLength; ++i) {
             pitches[i] = expFact * pitches[i - 1] + (1 - expFact) * (glotPitch * (1 + dis(gen)));
-            Rds[i]     = expFact * Rds[i - 1]     + (1 - expFact) * glotRd;
-            tcs[i]     = expFact * tcs[i - 1]     + (1 - expFact) * glotTc;
+            Rds[i]     = expFact * Rds[i - 1]     + (1 - expFact) * (glotRd + dis(gen));
+            tcs[i]     = expFact * tcs[i - 1]     + (1 - expFact) * (glotTc + dis(gen));
         }
         realGlotPitch = pitches.back();
         realGlotRd = Rds.back();

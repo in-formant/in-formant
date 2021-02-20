@@ -22,7 +22,7 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext)
     QCoreApplication::setOrganizationDomain("in-formant.app");
     QCoreApplication::setOrganizationName("InFormant");
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    
+
     QQuickStyle::setStyle("Material");
     qmlRegisterType<Gui::CanvasItem>("IfCanvas", 1, 0, "IfCanvas");
 

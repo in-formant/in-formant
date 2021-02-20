@@ -33,7 +33,9 @@ void RenderContext::render(QPainterWrapper *painter)
     QRect viewport = painter->viewport();
 
     painter->setPen(Qt::white);
-    painter->setFont(QFont(":/Montserrat.otf", 14, QFont::Medium));
+    QFont timingFont(painter->font());
+    timingFont.setPointSize(14);
+    painter->setFont(timingFont);
     painter->drawText(viewport.translated(10, 10), Qt::TextWordWrap, QString("Render: %1 ms\nUpdate: %2 ms").arg(timings::render).arg(timings::update));
 }
 
