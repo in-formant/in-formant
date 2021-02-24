@@ -3,8 +3,10 @@
 
 #include "rpcxx.h"
 #include "../timetrack.h"
+#include "../context/datastore.h"
 #include "qpainterwrapperbase.h"
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 
 class QPainterWrapper : public QPainterWrapperBase {
 public:
@@ -37,6 +39,9 @@ public:
 
     void drawTimeSeries(const rpm::vector<double> &y, double xstart, double xend, double ymin, double ymax); 
 
+    void drawSpectrogram(const TimeTrack<Main::SpectrogramCoefs>::const_iterator& begin,
+                         const TimeTrack<Main::SpectrogramCoefs>::const_iterator& end);
+
     void drawFrequencyTrack(const TimeTrack<double>::const_iterator& begin,
                             const TimeTrack<double>::const_iterator& end,
                             bool curve = false);
@@ -54,6 +59,7 @@ public:
     static double mapFrequencyToY(double frequency, int height, FrequencyScale scale, double minFrequency, double maxFrequency);
 
     static QImage drawSpectrogram(const rpm::vector<double> &amplitudes,
+            double sourceMin, double sourceMax,
             int width, int height, int viewportWidth, int viewportHeight,
             FrequencyScale scale, double minFrequency, double maxFrequency,
             double minGain, double maxGain);
@@ -86,8 +92,7 @@ private:
 
     static QRgb mapAmplitudeToColor(double amplitude, double minGain, double maxGain);
 
-    static Eigen::MatrixXd constructTransformX(int w, int vw);
-    static Eigen::MatrixXd constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax);
+    static Eigen::SparseMatrix<double> constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax, double sourceMin, double sourceMax);
 
     static QVector<QRgb> cmap;
 };

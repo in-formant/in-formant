@@ -6,6 +6,7 @@
 #include "../../../nodes/nodes.h"
 #include "../../audio/audio.h"
 #include "../../../context/datastore.h"
+#include "../../../context/config.h"
 
 #include <atomic>
 #include <thread>
@@ -18,7 +19,8 @@ namespace Module::App
 
     class Pipeline {
     public:
-        Pipeline(Module::Audio::Buffer *captureBuffer, Main::DataStore *dataStore,
+        Pipeline(Module::Audio::Buffer *captureBuffer,
+                Main::DataStore *dataStore, Main::Config *config,
                 std::shared_ptr<Analysis::PitchSolver> pitchSolver,
                 std::shared_ptr<Analysis::LinpredSolver> linpredSolver,
                 std::shared_ptr<Analysis::FormantSolver> formantSolver,
@@ -30,6 +32,7 @@ namespace Module::App
     private:
         Module::Audio::Buffer *captureBuffer;
         Main::DataStore *dataStore;
+        Main::Config *config;
 
         std::shared_ptr<Analysis::PitchSolver> pitchSolver;
         std::shared_ptr<Analysis::LinpredSolver> linpredSolver;

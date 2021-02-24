@@ -49,9 +49,9 @@ void DataStore::setTime(double t)
     mTime = t;
 }
 
-rpm::vector<SpectrogramCoefs>& DataStore::getSpectrogramCoefs()
+TimeTrack<SpectrogramCoefs>& DataStore::getSpectrogram()
 {
-    return mSpectrogramCoefs;
+    return mSpectrogram;
 }
 
 OptionalTimeTrack<double>& DataStore::getPitchTrack()

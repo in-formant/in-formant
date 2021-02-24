@@ -62,3 +62,18 @@ rpm::vector<double> Analysis::gaussianWindow(int L, double alpha)
     }
     return win;
 }
+
+rpm::vector<double> Analysis::blackmanHarrisWindow(int L)
+{
+    constexpr double a0 = 0.35875;
+    constexpr double a1 = 0.48829;
+    constexpr double a2 = 0.14128;
+    constexpr double a3 = 0.01168;
+    rpm::vector<double> w(L);
+    for (int j = 0; j < L; ++j) { 
+        w[j] = a0 - a1 * cos((2.0 * M_PI * j) / (L - 1))
+                  + a2 * cos((4.0 * M_PI * j) / (L - 1));
+                  - a3 * cos((6.0 * M_PI * j) / (L - 1));
+    }
+    return w;
+}

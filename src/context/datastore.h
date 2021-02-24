@@ -12,9 +12,10 @@
 namespace Main {
 
     struct SpectrogramCoefs {
-        gaborator::analyzer<double> analyzer;
-        gaborator::coefs<double> coefs;
-        double fs;
+        Eigen::VectorXd amplitudes;
+        double duration;
+        double minFrequency;
+        double maxFrequency;
     };
 
     class DataStore {
@@ -32,7 +33,7 @@ namespace Main {
         double getTime() const;
         void setTime(double t);
 
-        rpm::vector<SpectrogramCoefs>& getSpectrogramCoefs();
+        TimeTrack<SpectrogramCoefs>& getSpectrogram();
 
         OptionalTimeTrack<double>& getPitchTrack();
 
@@ -46,11 +47,11 @@ namespace Main {
         std::shared_mutex mMutex;
         int mCatchupCount;
 
-        TimeTrack<rpm::vector<double>>                mSoundTrack;
+        TimeTrack<rpm::vector<double>> mSoundTrack;
 
         double mTime;
 
-        rpm::vector<SpectrogramCoefs> mSpectrogramCoefs;
+        TimeTrack<SpectrogramCoefs> mSpectrogram;
         
         OptionalTimeTrack<double> mPitchTrack;
         rpm::vector<OptionalTimeTrack<double>> mFormantTracks;

@@ -24,7 +24,7 @@ ContextManager::ContextManager(
                   playbackDuration.count(), playbackSampleRate, [](auto...){})),
       mDataStore(std::make_unique<DataStore>()),
       mPipeline(std::make_unique<App::Pipeline>(
-                  mCaptureBuffer.get(), mDataStore.get(),
+                  mCaptureBuffer.get(), mDataStore.get(), mConfig.get(),
                   mPitchSolver, mLinpredSolver,
                   mFormantSolver, mInvglotSolver)),
 #ifndef WITHOUT_SYNTH

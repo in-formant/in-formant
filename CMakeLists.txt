@@ -150,6 +150,11 @@ set(SOURCES
     src/analysis/filter/sosfilter.cpp
     src/analysis/filter/filter.cpp
     src/analysis/filter/filter.h
+    src/analysis/gammatonegram/gammatonegram.h
+    src/analysis/gammatonegram/erbspace.cpp
+    src/analysis/gammatonegram/erbfilters.cpp
+    src/analysis/gammatonegram/erbfilterbank.cpp
+    src/analysis/gammatonegram/gammatonegram.cpp
     #src/analysis/pitch/amdf_m.cpp
     src/analysis/pitch/yin.cpp
     src/analysis/pitch/mpm.cpp

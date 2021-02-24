@@ -112,7 +112,7 @@ void QPainterWrapper::drawFrequencyScale()
         double step = delta >= 0 ? 10 : 0.1;
         double rMin = std::min(mMinFrequency, mMaxFrequency);
         double rMax = std::max(mMinFrequency, mMaxFrequency);
-        for (int i = 0; i <= steps; ++i) {
+        for (int i = 0; i <= steps; ++i) { 
             val = decade;
             if (val >= rMin && val < rMax) {
                 majorTicks.push_back(val);
@@ -131,7 +131,7 @@ void QPainterWrapper::drawFrequencyScale()
         }
         ++steps;
         for (int i = 0; i <= steps; ++i) {
-            for (int j = start; j <= (int) end; j += mstep) {
+            for (int j = start; mstep > 0 ? j <= end : j >= end; j += mstep) {
                 val = decade * j;
                 if (val >= rMin && val < rMax) {
                     minorTicks.push_back(val);
@@ -151,7 +151,7 @@ void QPainterWrapper::drawFrequencyScale()
         ++steps;
         for (int i = 0; i <= steps; ++i) {
             if (decade >= 10.0) {
-                for (int f = start; f <= (int) end; f += mstep) {
+                for (int f = start; mstep > 0 ? f <= end : f >= end; f += mstep) {
                     if ((int) (f / 10) != f / 10.0) {
                         val = decade * f / 10;
                         if (val >= rMin && val < rMax) {
@@ -281,6 +281,34 @@ void QPainterWrapper::drawTimeSeries(const rpm::vector<double>& y, double xstart
 QRgb QPainterWrapper::mapAmplitudeToColor(double amplitude)
 {
     return mapAmplitudeToColor(amplitude, mMinGain, mMaxGain);
+}
+
+void QPainterWrapper::drawSpectrogram(
+            const TimeTrack<Main::SpectrogramCoefs>::const_iterator& begin,
+            const TimeTrack<Main::SpectrogramCoefs>::const_iterator& end)
+{
+    int vh = viewport().height();
+
+    for (auto it = begin; it != end; ++it) {
+        double time = it->first;
+        const auto& coefs = it->second;
+
+        double x = mapTimeToX(time);
+        double x2 = mapTimeToX(time + coefs.duration);
+
+        auto& slice = coefs.amplitudes;
+
+        auto ytrans = constructTransformY(slice.rows(), vh, mFrequencyScale, mMinFrequency, mMaxFrequency, coefs.minFrequency, coefs.maxFrequency);
+
+        Eigen::VectorXd mapped = (slice.transpose() * ytrans).reverse();
+
+        QImage image(1, mapped.size(), QImage::Format_RGB32);
+        for (int vy = 0; vy < mapped.size(); ++vy) {
+            QRgb *scanLineBits = reinterpret_cast<QRgb *>(image.scanLine(vy));
+            scanLineBits[0] = mapAmplitudeToColor(mapped(vy));
+        }
+        p->drawImage(x, 0, image.scaled(x2 - x, vh, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+    }
 }
 
 void QPainterWrapper::drawFrequencyTrack(

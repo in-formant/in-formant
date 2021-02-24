@@ -7,6 +7,7 @@ ComplexFFT::ComplexFFT(size_t n)
     : mSize(n),
       mData(fftw_alloc_complex(n))
 {
+    std::lock_guard<std::mutex> lock(sFFTWPlanMutex);
     importFFTWisdom();
     mPlanForward = fftw_plan_dft_1d(n, mData, mData, FFTW_FORWARD, FFTW_EM_FLAG);
     mPlanBackward = fftw_plan_dft_1d(n, mData, mData, FFTW_BACKWARD, FFTW_EM_FLAG);
@@ -14,6 +15,7 @@ ComplexFFT::ComplexFFT(size_t n)
 
 ComplexFFT::~ComplexFFT()
 {
+    std::lock_guard<std::mutex> lock(sFFTWPlanMutex);
     fftw_destroy_plan(mPlanForward);
     fftw_destroy_plan(mPlanBackward);
     fftw_free(mData);

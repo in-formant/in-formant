@@ -4,6 +4,7 @@
 #include "rpcxx.h"
 #include <fftw3.h>
 #include <complex>
+#include <mutex>
 
 #if defined(EMSCRIPTEN)
 #   define FFTW_EM_FLAG FFTW_ESTIMATE
@@ -28,6 +29,8 @@ namespace std
 
 namespace Analysis
 {
+    extern std::mutex sFFTWPlanMutex;
+
     void importFFTWisdom();
 
     class ReReFFT

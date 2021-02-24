@@ -82,22 +82,25 @@ double QPainterWrapper::mapFrequencyToY(double frequency, int height, FrequencyS
 
 QRgb QPainterWrapper::mapAmplitudeToColor(double amplitude, double minGain, double maxGain)
 {
-    /*
-    double gain = amplitude > 1e-10 ? 20 * log10(amplitude) : -1e6;
+    double gain = amplitude > 1e-10 ? 20.0 * log10(amplitude) : -1e6;
     double clampedGain = std::clamp(gain, minGain, maxGain);
-
-    double clampedAmplitude = pow(10.0, clampedGain / 20);
-    */
-
-    double a = sqrt(amplitude) * 7.5;
+    double a = pow(10.0, clampedGain / 20.0);
+    
+    a = sqrt(amplitude) * 30;
 
     int leftIndex = std::floor(a * 255);
 
+    QColor c;
+
+    if (a < 1e-6) {
+        return QColor(Qt::transparent).rgba();
+    }
+
     if (leftIndex <= 0) {
-        return cmap[0];
+        c = QColor::fromRgb(cmap[0]);
     }
     else if (leftIndex >= 255) {
-        return cmap[255];
+        c = QColor::fromRgb(cmap[255]);
     }
     else {
         double frac = a * 255 - leftIndex;
@@ -106,41 +109,54 @@ QRgb QPainterWrapper::mapAmplitudeToColor(double amplitude, double minGain, doub
         int r = frac * c1.red() + (1 - frac) * c2.red();
         int g = frac * c1.green() + (1 - frac) * c2.green();
         int b = frac * c1.blue() + (1 - frac) * c2.blue();
-        return qRgb(r, g, b);
+        c = QColor::fromRgb(qRgb(r, g, b));
     }
-}
-// ( vh, h, scale, minf, maxf )
-using ytrans_key = std::tuple<int, int, QPainterWrapper::FrequencyScale, double, double>;
 
-static rpm::map<ytrans_key, Eigen::MatrixXd> ytrans_map;
+    return c.rgba();
+}
+
+// ( vh, h, scale, minf, maxf, minsrc, maxsrc )
+using ytrans_key = std::tuple<int, int, QPainterWrapper::FrequencyScale, double, double, double, double>;
+
+static rpm::map<ytrans_key, Eigen::SparseMatrix<double>> ytrans_map;
 
 static std::mutex ytrans_mutex;
 
-Eigen::MatrixXd QPainterWrapper::constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax)
+Eigen::SparseMatrix<double> QPainterWrapper::constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax, double sourceMin, double sourceMax)
 {
     std::lock_guard<std::mutex> ytrans_lock(ytrans_mutex);
 
-    auto key = std::make_tuple(vh, h, freqScale, freqMin, freqMax);
+    auto key = std::make_tuple(vh, h, freqScale, freqMin, freqMax, sourceMin, sourceMax);
     auto it = ytrans_map.find(key);
     if (it != ytrans_map.end()) {
         return it->second;
     }
 
-    const double lmin = hz2log(freqMin);
-    const double lmax = hz2log(freqMax); 
+    const double lmin = hz2log(sourceMin);
+    const double lmax = hz2log(sourceMax); 
 
-    Eigen::MatrixXd ytrans(h, vh);
+    Eigen::SparseMatrix<double> ytrans(h, vh);
     ytrans.setZero();
 
-    const double sd = (exp2(1.0 / 24) - 1) * 1000.0;
+    const double sd = (exp2(1.0 / 48) - 1) * 1000.0;
 
     for (int y = 0; y < h; ++y) {
         const double fc = log2hz(lmin + (1 - (double) y / (double) h) * (lmax - lmin));
+        const double f1 = log2hz(lmin + (1 - (double) (y+1) / (double) h) * (lmax - lmin));
+        const double f2 = log2hz(lmin + (1 - (double) (y-1) / (double) h) * (lmax - lmin));
 
         const double vyc = mapFrequencyToY(fc, vh, freqScale, freqMin, freqMax);
-        
-        for (int vy = 0; vy < vh; ++vy) {
-            ytrans(y, vy) = gaborator::norm_gaussian(sd, (vy - vyc) * 8);
+        const double vy1 = mapFrequencyToY(f1, vh, freqScale, freqMin, freqMax);
+        const double vy2 = mapFrequencyToY(f2, vh, freqScale, freqMin, freqMax);
+
+        int vy1real = std::floor(std::min(vy1, vy2)) - 1;
+        int vy2real = std::ceil(std::max(vy1, vy2)) + 1;
+
+        for (int vy = vy1real; vy <= vy2real; ++vy) {
+            if (vy >= 0 && vy < vh) {
+                // Triangular shape weight
+                ytrans.insert(y, vy) = 1.0 - fabs(vy - vyc) / (double) (vy2real - vy1real);
+            }
         }
     }
 
@@ -149,44 +165,22 @@ Eigen::MatrixXd QPainterWrapper::constructTransformY(int h, int vh, FrequencySca
     return ytrans;
 }
 
-QImage QPainterWrapper::drawSpectrogram(const rpm::vector<double>& amplitudes, int width, int height, int viewportWidth, int viewportHeight, FrequencyScale scale, double minFrequency, double maxFrequency, double minGain, double maxGain)
+QImage QPainterWrapper::drawSpectrogram(const rpm::vector<double>& amplitudes, double sourceMin, double sourceMax, int width, int height, int viewportWidth, int viewportHeight, FrequencyScale scale, double minFrequency, double maxFrequency, double minGain, double maxGain)
 {
     Eigen::Map<const Eigen::MatrixXd> logSpec(amplitudes.data(), width, height);
     
-    Eigen::MatrixXd ytrans = constructTransformY(height, viewportHeight, scale, minFrequency, maxFrequency);
+    Eigen::SparseMatrix<double> ytrans = constructTransformY(height, viewportHeight, scale, minFrequency, maxFrequency, sourceMin, sourceMax);
     
-    QImage image(width, viewportHeight, QImage::Format_RGB32);
+    QImage image(width, viewportHeight, QImage::Format_ARGB32_Premultiplied);
     
-    const int chunkWidth = 50;
-    int x = 0;
-    
-    while (x + chunkWidth < width) {
-        auto chunk = logSpec.block(x, 0, chunkWidth, height);
-
-        Eigen::MatrixXd mappedChunk = (chunk * ytrans).transpose();
-
-        for (int vy = 0; vy < mappedChunk.rows(); ++vy) {
-            QRgb *scanLineBits = reinterpret_cast<QRgb *>(image.scanLine(vy));
-            for (int vx = 0; vx < mappedChunk.cols(); ++vx) {
-                scanLineBits[x + vx] = mapAmplitudeToColor(mappedChunk(vy, vx), minGain, maxGain);
-            }
-        }
-
-        x += chunkWidth;
-    }
-
-    if (x < width) {
-        auto chunk = logSpec.block(x, 0, width - x, height);
-
-        Eigen::MatrixXd mappedChunk = (chunk * ytrans).transpose();
-
-        for (int vy = 0; vy < mappedChunk.rows(); ++vy) {
-            QRgb *scanLineBits = reinterpret_cast<QRgb *>(image.scanLine(vy));
-            for (int vx = 0; vx < mappedChunk.cols(); ++vx) {
-                scanLineBits[x + vx] = mapAmplitudeToColor(mappedChunk(vy, vx), minGain, maxGain);
-            }
+    Eigen::MatrixXd mapped = (logSpec * ytrans).transpose();
+    for (int vy = 0; vy < mapped.rows(); ++vy) {
+        QRgb *scanLineBits = reinterpret_cast<QRgb *>(image.scanLine(vy));
+        for (int vx = 0; vx < mapped.cols(); ++vx) {
+            scanLineBits[vx] = mapAmplitudeToColor(mapped(vy, vx), minGain, maxGain);
         }
     }
-
+   
     return image.scaled(viewportWidth, viewportHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 }
+

@@ -3,6 +3,7 @@
 
 #include "fft/fft.h"
 #include "freqz/freqz.h"
+#include "gammatonegram/gammatonegram.h"
 #include "pitch/pitch.h"
 #include "linpred/linpred.h"
 #include "formant/formant.h"

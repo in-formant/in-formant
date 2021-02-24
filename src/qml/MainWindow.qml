@@ -136,9 +136,9 @@ ApplicationWindow {
                         from: mel(1)
                         to: mel(16000)
                         first.value: mel(config.viewMinFrequency)
-                        first.onMoved: config.viewMinFrequency = hz(first.value)
+                        first.onMoved: config.viewMinFrequency = Math.max(1, hz(first.value))
                         second.value: mel(config.viewMaxFrequency)
-                        second.onMoved: config.viewMaxFrequency = hz(second.value)
+                        second.onMoved: config.viewMaxFrequency = Math.max(1, hz(second.value))
                         Label {
                             anchors.top: parent.first.handle.bottom
                             anchors.topMargin: 5

@@ -5,13 +5,15 @@
 
 using namespace Module::App;
 
-Pipeline::Pipeline(Module::Audio::Buffer *captureBuffer, Main::DataStore *dataStore,
+Pipeline::Pipeline(Module::Audio::Buffer *captureBuffer,
+                Main::DataStore *dataStore, Main::Config *config,
                 std::shared_ptr<Analysis::PitchSolver> pitchSolver,
                 std::shared_ptr<Analysis::LinpredSolver> linpredSolver,
                 std::shared_ptr<Analysis::FormantSolver> formantSolver,
                 std::shared_ptr<Analysis::InvglotSolver> invglotSolver)
     : captureBuffer(captureBuffer),
       dataStore(dataStore),
+      config(config),
       pitchSolver(pitchSolver),
       linpredSolver(linpredSolver),
       formantSolver(formantSolver),
@@ -42,51 +44,47 @@ Pipeline::~Pipeline()
 
 void Pipeline::callbackSpectrogram()
 {
-    auto& coefStore = dataStore->getSpectrogramCoefs();
-
-    rpm::vector<double> m(2048);
-    
     double fs = captureBuffer->getSampleRate();
 
-    double dfs = 16000;
-    Module::Audio::Resampler rs(fs, dfs);
-    gaborator::parameters params(48, 20.0 / dfs, 440.0 / dfs);
-    gaborator::analyzer<double> analyzer(params);
-    coefStore.push_back({
-        .analyzer = std::move(analyzer),
-        .coefs = gaborator::coefs(analyzer),
-        .fs = dfs,
-    });
+    Analysis::RealFFT fft(4096);
+    
+    rpm::vector<double> m(25.0 * fs / 1000.0);
+    
+    auto hpsos = Analysis::butterworthHighpass(8, 50.0, fs);
 
-    /*double dfs2 = 24000;
-    Module::Audio::Resampler rs2(fs, dfs2);
-    gaborator::parameters params2(32, 400.0 / dfs2, 440.0 / dfs2);
-    gaborator::analyzer<double> analyzer2(params2);
-    coefStore.push_back({
-        .analyzer = std::move(analyzer2),
-          .coefs = gaborator::coefs(analyzer2),
-        .fs = dfs2,
-    });*/
+    double dfs = 2 * config->getViewMaxFrequency();
+    Module::Audio::Resampler rs(fs, dfs);
 
     int64_t t = 0;
-
     int64_t t1 = 0;
-    int64_t t2 = 0;
 
     while (runningThreads) {
+        dfs = 2 * config->getViewMaxFrequency();
+        rs.setOutputRate(dfs);
+        
+        //m.resize(rs.getRequiredInLength(fft.getInputLength()));
+        
         bufferSpectrogram.pull(m.data(), m.size());
+        m = Analysis::sosfilter(hpsos, m);
 
         auto out = rs.process(m.data(), m.size());
-        //auto out2 = rs2.process(m.data(), m.size());
+
+        //Eigen::VectorXd gram = Analysis::gammatoneGram(out, dfs, 128, config->getViewMinFrequency());
+    
+        auto spec = Analysis::fft_n(fft, m);
+        Eigen::VectorXd gram = Eigen::Map<Eigen::VectorXd>(spec.data(), spec.size());
 
         dataStore->beginWrite();
-        coefStore[0].analyzer.analyze(out.data(), t1, t1 + out.size(), coefStore[0].coefs);
-        //coefStore[1].analyzer.analyze(out2.data(), t2, t2 + out2.size(), coefStore[1].coefs);
+        dataStore->getSpectrogram().insert(t / fs, {
+            .amplitudes = gram,
+            .duration = (double) out.size() / dfs,
+            .minFrequency = (double) 1, //config->getViewMinFrequency(),
+            .maxFrequency = (double) config->getViewMaxFrequency(),
+        });
         dataStore->endWrite();
 
         t += m.size();
         t1 += out.size();
-        //t2 += out2.size();
     }
 }
 
@@ -123,7 +121,7 @@ void Pipeline::callbackFormants()
 
     double preemphFrequency = 100;
     double preemphFactor = exp(-(2.0 * M_PI * preemphFrequency) / fs);
-    rpm::vector<double> w = Analysis::gaussianWindow(m.size(), 0.75);
+    rpm::vector<double> w = Analysis::gaussianWindow(m.size(), 2.5);
 
     double fsDF = 16000;
     Module::Audio::Resampler rsDF(fs, fsDF);
