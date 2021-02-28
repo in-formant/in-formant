@@ -13,7 +13,7 @@ chmod +x $GCC_DLL_DIR/g++.exe
 
 export PATH=/usr/$HOST/qt5/bin:$GCC_DLL_DIR:$PATH
 
-/usr/$HOST/qt5/bin/windeployqt /build/in-formant.exe --dir $tmp --qmldir /src/resources
+/usr/$HOST/qt5/bin/windeployqt /build/in-formant.exe --dir $tmp --qmldir /src/src/qml
 
 cp /build/in-formant.exe $tmp/InFormant-$version.exe
 cp /build/external/soxr/bin/libsoxr.dll $tmp
