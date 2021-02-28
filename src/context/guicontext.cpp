@@ -56,16 +56,26 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext)
     window->installEventFilter(this);
 
     mUpdateTimer = new QTimer(this);
-    mUpdateTimer->setInterval(50ms);
     mUpdateTimer->setTimerType(Qt::PreciseTimer);
     QObject::connect(mUpdateTimer, &QTimer::timeout, canvasItem, &QQuickItem::update);
     mUpdateTimer->moveToThread(qGuiApp->thread());
+    setTimerSlow(false);
 }
 
 int GuiContext::exec()
 {
     QMetaObject::invokeMethod(mUpdateTimer, "start", Q_ARG(int, 0));
     return mApp->exec();
+}
+
+void GuiContext::setTimerSlow(bool slow)
+{
+    if (slow) {
+        mUpdateTimer->setInterval(10ms);
+    }
+    else {
+        mUpdateTimer->setInterval(33ms);
+    }
 }
 
 void GuiContext::setView(GuiView *view)

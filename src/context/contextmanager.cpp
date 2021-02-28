@@ -66,6 +66,17 @@ ContextManager::ContextManager(
                         mPlaybackQueue.get());
                 openAndStartAudioStreams();
             });
+    QObject::connect(mConfig.get(), &Config::pausedChanged,
+            [this](bool paused) {
+                if (paused) {
+                    mAudioContext->stopCaptureStream();
+                    mGuiContext->setTimerSlow(true);
+                }
+                else {
+                    mAudioContext->startCaptureStream();
+                    mGuiContext->setTimerSlow(false);
+                }
+            });
 }
 
 int ContextManager::exec()
@@ -128,11 +139,16 @@ void ContextManager::analysisThreadLoop()
             mAudioContext->tickAudio();
             mPipeline->processAll();
         }
+        while (mConfig->isPaused() && mAnalysisRunning) {
+            std::this_thread::sleep_for(0.5s);
+        }
     }
 }
 
 void ContextManager::stopAnalysisThread()
 {
+    Module::Audio::Buffer::cancelPulls();
+
     if (mAnalysisThread.joinable()) {
         mAnalysisRunning = false;
         mAnalysisThread.join();

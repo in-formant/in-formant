@@ -23,6 +23,11 @@ ApplicationWindow {
         return 700 * (Math.pow(10, m / 2595) - 1);
     }
 
+    Shortcut {
+        sequence: "P"
+        onActivated: config.paused = !config.paused
+    }
+
     header: ToolBar {
         Material.background: Material.color(Material.BlueGrey, Material.Shade800)
 
@@ -31,7 +36,7 @@ ApplicationWindow {
 
             ToolButton {
                 id: drawerButton
-                icon.name: "application-menu"
+                icon.source: drawer.visible ? "icons/menu_open.svg" : "icons/menu.svg"
                 checked: drawer.visible 
                 onPressed: drawer.visible = !drawer.visible
 
@@ -54,6 +59,17 @@ ApplicationWindow {
                     icon.height = 2 * icon.height
                 }
             }
+
+            ToolButton {
+                icon.source: config.paused ? "icons/play_arrow.svg" : "icons/stop.svg"
+                checked: config.paused 
+                onPressed: config.paused = !config.paused 
+                
+                Component.onCompleted: {
+                    icon.width = 2 * icon.width
+                    icon.height = 2 * icon.height
+                }
+            } 
 
             Button {
                 visible: HAS_SYNTH

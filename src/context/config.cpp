@@ -366,3 +366,14 @@ int Config::getAnalysisPitchSampleRate()
 {
     return integerField(mTbl["analysis"], "pitchSampleRate", 32000);
 }
+
+bool Config::isPaused()
+{
+    return mPaused;
+}
+
+void Config::setPaused(bool p)
+{
+    mPaused = p;
+    emit pausedChanged(p);
+}

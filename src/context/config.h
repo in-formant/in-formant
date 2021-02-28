@@ -29,6 +29,7 @@ namespace Main {
         Q_PROPERTY(bool viewShowSpectrogram READ getViewShowSpectrogram         WRITE setViewShowSpectrogram    NOTIFY viewShowSpectrogramChanged)
         Q_PROPERTY(bool viewShowPitch       READ getViewShowPitch               WRITE setViewShowPitch          NOTIFY viewShowPitchChanged)
         Q_PROPERTY(bool viewShowFormants    READ getViewShowFormants            WRITE setViewShowFormants       NOTIFY viewShowFormantsChanged)
+        Q_PROPERTY(bool paused              READ isPaused                       WRITE setPaused                 NOTIFY pausedChanged)
     
     signals:
         void pitchAlgorithmChanged(int);
@@ -45,6 +46,7 @@ namespace Main {
         void viewShowSpectrogramChanged(bool);
         void viewShowPitchChanged(bool);
         void viewShowFormantsChanged(bool);
+        void pausedChanged(bool);
 
     public:
         Config();
@@ -111,8 +113,15 @@ namespace Main {
         int getAnalysisLpOffset();
         int getAnalysisPitchSampleRate();
 
+        // WILL NOT BE SERIALIZED
+        bool isPaused();
+        void setPaused(bool p);
+
     private:
         toml::table mTbl;
+    
+        // WILL NOT BE SERIALIZED
+        bool mPaused;
     };
 
 }

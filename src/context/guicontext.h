@@ -31,6 +31,7 @@ namespace Main {
 
         int exec();
     
+        void setTimerSlow(bool slow);
         void setView(GuiView *view);
 
     protected:

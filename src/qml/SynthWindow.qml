@@ -75,7 +75,7 @@ ApplicationWindow {
                 Label { text: "Glottal source pitch" }
                 Slider {
                     from: mel(60)
-                    to: mel(8000)
+                    to: mel(1500)
                     value: mel(synth.glotPitch)
                     onMoved: synth.glotPitch = hz(value)
                     Layout.topMargin: -10

@@ -3,5 +3,9 @@
 <RCC version="1.0">
     <qresource>
         <file>model.pt</file>
+        <file>icons/play_arrow.svg</file>
+        <file>icons/stop.svg</file>
+        <file>icons/menu.svg</file>
+        <file>icons/menu_open.svg</file>
     </qresource>
 </RCC>
