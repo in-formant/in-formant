@@ -23,5 +23,4 @@ hfsplus $srcdmg chmod 0755 /InFormant.app/Contents/MacOS/InFormant
 rm -rf /dist/InFormant.app
 cp -r /InFormant.app /dist
 
-rm -f $distdmg
-#dmg dmg $srcdmg $distdmg
+dmg dmg $srcdmg $distdmg
