@@ -8,10 +8,10 @@ using namespace Module::App;
 
 Pipeline::Pipeline(Module::Audio::Buffer *captureBuffer,
                 Main::DataStore *dataStore, Main::Config *config,
-                std::shared_ptr<Analysis::PitchSolver> pitchSolver,
-                std::shared_ptr<Analysis::LinpredSolver> linpredSolver,
-                std::shared_ptr<Analysis::FormantSolver> formantSolver,
-                std::shared_ptr<Analysis::InvglotSolver> invglotSolver)
+                std::shared_ptr<Analysis::PitchSolver>& pitchSolver,
+                std::shared_ptr<Analysis::LinpredSolver>& linpredSolver,
+                std::shared_ptr<Analysis::FormantSolver>& formantSolver,
+                std::shared_ptr<Analysis::InvglotSolver>& invglotSolver)
     : mCaptureBuffer(captureBuffer),
       mDataStore(dataStore),
       mConfig(config),
@@ -158,7 +158,7 @@ void Pipeline::callbackFormants()
         rpm::vector<double> lpc;
 
         if (auto deepFormantSolver = dynamic_cast<Analysis::Formant::DeepFormants *>(mFormantSolver.get())) {
-            deepFormantSolver->setFrameAudio(mDF.data(), mDF.size(), fsDF);
+            deepFormantSolver->setFrameAudio(mDF);
         }
         else {
             double gain;

@@ -106,37 +106,6 @@ set(SOURCES
     src/modules/app/synthesizer/synthesizer.h
     src/modules/app/app.h
     src/modules/modules.h
-    src/nodes/node/nodeio_audiotime.cpp
-    src/nodes/node/nodeio_audiotime.h
-    src/nodes/node/nodeio_audiospec.cpp
-    src/nodes/node/nodeio_audiospec.h
-    src/nodes/node/nodeio_frequencies.cpp
-    src/nodes/node/nodeio_frequencies.h
-    src/nodes/node/nodeio_iirfilter.cpp
-    src/nodes/node/nodeio_iirfilter.h
-    src/nodes/node/nodeio.cpp
-    src/nodes/node/nodeio.h
-    src/nodes/node/node.cpp
-    src/nodes/node/node.h
-    src/nodes/prereqs/prereqs.cpp
-    src/nodes/prereqs/prereqs.h
-    src/nodes/resampler/resampler.cpp
-    src/nodes/resampler/resampler.h
-    src/nodes/spectrum/spectrum.cpp
-    src/nodes/spectrum/spectrum.h
-    src/nodes/tail/tail.cpp
-    src/nodes/tail/tail.h
-    src/nodes/pitchtracker/pitchtracker.cpp
-    src/nodes/pitchtracker/pitchtracker.h
-    src/nodes/preemph/preemph.cpp
-    src/nodes/preemph/preemph.h
-    src/nodes/linpred/linpred.cpp
-    src/nodes/linpred/linpred.h
-    src/nodes/formants/formants.cpp
-    src/nodes/formants/formants.h
-    src/nodes/invglot/invglot.cpp
-    src/nodes/invglot/invglot.h
-    src/nodes/nodes.h
     src/analysis/fft/realfft.cpp
     src/analysis/fft/complexfft.cpp
     src/analysis/fft/realrealfft.cpp
@@ -208,8 +177,6 @@ set(SOURCES
     src/synthesis/shiftFilter.cpp
     src/synthesis/polyFromRoots.cpp
     src/synthesis/synthesis.h
-    external/speex/speex_resampler.h
-    external/speex/speex_resampler.c
     src/tomlplusplus.cpp
 )
 
@@ -245,7 +212,6 @@ set_property(SOURCE "${RESOURCES_OBJ}" PROPERTY SKIP_AUTOMOC ON)
 
 set(ARMADILLO_INCLUDE_DIR external/armadillo/include)
 set(TOMLPP_INCLUDE_DIR external/tomlplusplus/include)
-set(GABORATOR_INCLUDE_DIR external/gaborator)
 
 ### SEARCH AUDIO MODULES 
 
@@ -311,7 +277,7 @@ else()
     add_executable(in-formant ${SOURCES} ${RESOURCES_OBJ})
 endif()
 
-target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${FFTW_INCLUDE_DIRS} ${TOMLPP_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS} ${GABORATOR_INCLUDE_DIR})
+target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${FFTW_INCLUDE_DIRS} ${TOMLPP_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS})
 target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LDFLAGS} ${TORCH_LIBRARIES} Qt5::Charts Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
 
 add_subdirectory(external/rpmalloc EXCLUDE_FROM_ALL)
@@ -356,6 +322,13 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL Release)
     set_property(SOURCE ${SOURCES} PROPERTY COMPILE_FLAGS "-flto")
+    if(SYSTEM_WINDOWS)
+        execute_process(
+            COMMAND ${CMAKE_C_COMPILER} --print-file-name=liblto_plugin.so
+            OUTPUT_VARIABLE lto_plugin_file)
+        string(STRIP ${lto_plugin_file} lto_plugin_file)
+        set_property(SOURCE ${SOURCES} PROPERTY COMPILE_FLAGS "-Wl,--plugin=${lto_plugin_file}")
+    endif()
 endif()
 
 if(SYSTEM_WINDOWS OR SYSTEM_DARWIN OR SYSTEM_LINUX)

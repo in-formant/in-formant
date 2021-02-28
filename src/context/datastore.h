@@ -7,7 +7,6 @@
 #include <array>
 #include <shared_mutex>
 #include <functional>
-#include <gaborator/gaborator.h>
 
 enum class FrequencyScale : unsigned int {
     Linear      = 0,

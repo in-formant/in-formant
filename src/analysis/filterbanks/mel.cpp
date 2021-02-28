@@ -9,7 +9,7 @@ Eigen::SparseMatrix<double> Analysis::melFilterbank(double minFreqHz, double max
     Eigen::ArrayXd melLinSpaced = Eigen::ArrayXd::LinSpaced(melBinCount, minMels, maxMels);
 
     // Map each of these mel values back into linear frequencies (Hz).
-    Eigen::ArrayXd centerFrequenciesHz = melLinSpaced.unaryExpr(std::ptr_fun(mel2hz));
+    Eigen::ArrayXd centerFrequenciesHz = melLinSpaced.unaryExpr(std::ref(mel2hz));
 
     double melsPerBin = (maxMels - minMels) / (double) (melBinCount - 1);
 

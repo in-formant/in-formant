@@ -3,6 +3,7 @@
 
 #include <Eigen/Sparse>
 #include <cmath>
+#include <functional>
 
 namespace Analysis {
 

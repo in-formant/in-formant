@@ -235,17 +235,6 @@ void Config::setViewFFTSize(int nfft)
     emit viewFFTSizeChanged(nfft);
 }
 
-int Config::getViewMinGain()
-{
-    return integerField(mTbl["view"], "minGain", -120);
-}
-
-void Config::setViewMinGain(int g)
-{
-    mTbl["view"]["minGain"].ref<int64_t>() = g;
-    emit viewMinGainChanged(g);
-}
-
 int Config::getViewMaxGain()
 {
     return integerField(mTbl["view"], "maxGain", 0);

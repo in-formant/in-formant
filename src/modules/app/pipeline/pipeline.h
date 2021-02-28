@@ -3,7 +3,6 @@
 
 #include "rpcxx.h"
 #include "../../../analysis/analysis.h"
-#include "../../../nodes/nodes.h"
 #include "../../audio/audio.h"
 #include "../../../context/datastore.h"
 #include "../../../context/config.h"
@@ -21,10 +20,10 @@ namespace Module::App
     public:
         Pipeline(Module::Audio::Buffer *captureBuffer,
                 Main::DataStore *dataStore, Main::Config *config,
-                std::shared_ptr<Analysis::PitchSolver> pitchSolver,
-                std::shared_ptr<Analysis::LinpredSolver> linpredSolver,
-                std::shared_ptr<Analysis::FormantSolver> formantSolver,
-                std::shared_ptr<Analysis::InvglotSolver> invglotSolver);
+                std::shared_ptr<Analysis::PitchSolver>& pitchSolver,
+                std::shared_ptr<Analysis::LinpredSolver>& linpredSolver,
+                std::shared_ptr<Analysis::FormantSolver>& formantSolver,
+                std::shared_ptr<Analysis::InvglotSolver>& invglotSolver);
         ~Pipeline();
 
         void processAll();
@@ -34,10 +33,10 @@ namespace Module::App
         Main::DataStore *mDataStore;
         Main::Config *mConfig;
 
-        std::shared_ptr<Analysis::PitchSolver> mPitchSolver;
-        std::shared_ptr<Analysis::LinpredSolver> mLinpredSolver;
-        std::shared_ptr<Analysis::FormantSolver> mFormantSolver;
-        std::shared_ptr<Analysis::InvglotSolver> mInvglotSolver;
+        std::shared_ptr<Analysis::PitchSolver>& mPitchSolver;
+        std::shared_ptr<Analysis::LinpredSolver>& mLinpredSolver;
+        std::shared_ptr<Analysis::FormantSolver>& mFormantSolver;
+        std::shared_ptr<Analysis::InvglotSolver>& mInvglotSolver;
 
         std::atomic_int64_t mTime;
         std::atomic_bool mRunningThreads;

@@ -2,7 +2,6 @@
 #define SYNTHESIS_H
 
 #include "rpcxx.h"
-#include "../nodes/node/nodeio_frequencies.h"
 #include "../analysis/filter/filter.h"
 #include "../analysis/formant/formant.h"
 #include <complex>

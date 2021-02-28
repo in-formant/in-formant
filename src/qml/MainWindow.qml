@@ -6,6 +6,7 @@ import IfCanvas 1.0
 
 ApplicationWindow {
     id: mainWindow
+    title: appName
     visible: true
 
     width: 640

@@ -32,6 +32,8 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext)
 #ifdef __APPLE__
     mQmlEngine->addImportPath(QCoreApplication::applicationDirPath() + "/../Resources/qml");
 #endif
+    
+    mQmlEngine->rootContext()->setContextProperty("appName", "InFormant " INFORMANT_VERSION_STR);
 
     mQmlEngine->rootContext()->setContextProperty("config", mConfig);
 

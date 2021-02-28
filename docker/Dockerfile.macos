@@ -189,6 +189,14 @@ RUN cd libdmg-hfsplus && \
         make install
 
 ENV ver=5.15.2
+RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtcharts-everywhere-src-$ver.tar.xz && \
+        tar -xvf qtcharts-everywhere-src-$ver.tar.xz
+RUN cd qtcharts-everywhere-src-$ver && \
+        /osxcross/target/$HOST/qt5/bin/qmake && \
+        make -j$(nproc) && \
+        make install
+
+ENV ver=5.15.2
 RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qttools-everywhere-src-$ver.tar.xz && \
         tar -xvf qttools-everywhere-src-$ver.tar.xz
 COPY macdeployqt/macdeployqt.pro qttools-everywhere-src-$ver/src/macdeployqt/macdeployqt/macdeployqt.pro

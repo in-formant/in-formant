@@ -6,7 +6,7 @@ import QtCharts 2.15
 
 ApplicationWindow {
     id: synthWindow
-    title: "InFormant - Synthesizer"
+    title: appName + " - Synthesizer"
     visible: true
 
     width: 400

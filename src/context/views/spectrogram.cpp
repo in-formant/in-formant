@@ -1,21 +1,18 @@
 #include "views.h"
 #include "../timings.h"
 #include <iostream>
-#include <gaborator/gaborator.h>
-#include <gaborator/render.h>
 #include <qnamespace.h>
 
 using namespace Main::View;
 
 Spectrogram::Spectrogram()
-    : mThreadPool(this)
 {
-    mThreadPool.setMaxThreadCount(numBlocksMax);
-
     qRegisterMetaType<rpm::vector<double>>("rpm::vector<double>");
     qRegisterMetaType<FrequencyScale>("FrequencyScale");
+}
 
-    std::fill(mRendering.begin(), mRendering.end(), false);
+Spectrogram::~Spectrogram()
+{
 }
 
 void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *dataStore)

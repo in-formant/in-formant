@@ -8,15 +8,9 @@ using Analysis::FormantResult;
 
 using namespace Eigen;
 
-DeepFormants::DeepFormants()
-    : rs(48000, 16000)
+void DeepFormants::setFrameAudio(const rpm::vector<double>& x)
 {
-}
-
-void DeepFormants::setFrameAudio(const double *x, int length, double fs)
-{
-    rs.setInputRate(fs);
-    xv = rs.process(x, length);
+    xv = x;
 }
 
 FormantResult DeepFormants::solve(const double *, int, double)

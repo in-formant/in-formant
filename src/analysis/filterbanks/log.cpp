@@ -9,7 +9,7 @@ Eigen::SparseMatrix<double> Analysis::logFilterbank(double minFreqHz, double max
     Eigen::ArrayXd logLinSpaced = Eigen::ArrayXd::LinSpaced(logBinCount, minLogs, maxLogs);
 
     // Map each of these erb values back into linear frequencies (Hz).
-    Eigen::ArrayXd centerFrequenciesHz = logLinSpaced.unaryExpr(std::ptr_fun(log2hz));
+    Eigen::ArrayXd centerFrequenciesHz = logLinSpaced.unaryExpr(std::ref(log2hz));
 
     double logsPerBin = (maxLogs - minLogs) / (double) (logBinCount - 1);
 

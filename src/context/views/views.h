@@ -23,22 +23,10 @@ namespace Main {
        
         public:
             Spectrogram();
-            virtual ~Spectrogram() {}
+            virtual ~Spectrogram();
 
         protected:
             void render(QPainterWrapper *painter, Config *config, DataStore *dataStore) override;
-
-        private:
-            QThreadPool mThreadPool;
-            
-            static constexpr int numBlocksMax = 6;
-
-            std::array<bool, numBlocksMax> mRendering;
-            std::array<std::future<std::pair<double, QImage>>, numBlocksMax> mFutures;
-           
-            std::mutex mMutex; 
-            std::array<QImage, numBlocksMax> mImages;
-            std::array<double, numBlocksMax> mTimes;
         };
 
     }

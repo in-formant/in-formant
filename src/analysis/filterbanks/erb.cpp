@@ -9,7 +9,7 @@ Eigen::SparseMatrix<double> Analysis::erbFilterbank(double minFreqHz, double max
     Eigen::ArrayXd erbLinSpaced = Eigen::ArrayXd::LinSpaced(erbBinCount, minErbs, maxErbs);
 
     // Map each of these erb values back into linear frequencies (Hz).
-    Eigen::ArrayXd centerFrequenciesHz = erbLinSpaced.unaryExpr(std::ptr_fun(erb2hz));
+    Eigen::ArrayXd centerFrequenciesHz = erbLinSpaced.unaryExpr(std::ref(erb2hz));
 
     double erbsPerBin = (maxErbs - minErbs) / (double) (erbBinCount - 1);
 

@@ -45,11 +45,9 @@ namespace Analysis {
 
         class DeepFormants : public FormantSolver {
         public:
-            DeepFormants();
             FormantResult solve(const double *lpc, int lpcOrder, double sampleRate) override;
-            void setFrameAudio(const double *x, int length, double fs);
+            void setFrameAudio(const rpm::vector<double>& x);
         private:
-            Module::Audio::Resampler rs;
             rpm::vector<double> xv;
             double fs;
         };

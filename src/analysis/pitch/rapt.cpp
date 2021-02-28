@@ -12,7 +12,7 @@ using namespace Analysis;
 Pitch::RAPT::RAPT()
 {
     F0min   = 70;
-    F0max   = 700;
+    F0max   = 500;
     cand_tr = 0.3;
     lag_wt  = 0.3;
     freq_wt = 0.02;
