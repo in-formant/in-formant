@@ -2,9 +2,12 @@
 #define AUDIO_QUEUE_H
 
 #include "rpcxx.h"
+#include "../../../atomicops.h"
+#include "../../../readerwriterqueue.h"
 #include "../resampler/resampler.h"
 #include <functional>
 #include <mutex>
+#include <atomic>
 
 namespace Module::Audio {
 
@@ -12,8 +15,7 @@ namespace Module::Audio {
 
     class Queue {
     public:
-        Queue(int minInDurationInMs, int maxInDurationInMs, int avgDurationInMs,
-                int inSampleRate, QueueCallback callback);
+        Queue(int blockDurationInMs, int inSampleRate, QueueCallback callback);
         ~Queue();
 
         void setOutSampleRate(int outSampleRate);
@@ -27,14 +29,12 @@ namespace Module::Audio {
         void pull(float *pOut, int outLength);
 
     private: 
-        const int mMinInLength;
-        const int mMaxInLength;
-        const int mAvgLength;
+        std::atomic<float> mBlockDuration;
 
         Resampler mResampler;
         QueueCallback mCallback;
         
-        rpm::deque<double> mDeque;
+        moodycamel::BlockingReaderWriterQueue<double> mQueue;
         
         std::mutex mLock;
     };

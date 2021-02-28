@@ -132,7 +132,6 @@ ApplicationWindow {
 
                     Label { text: "View frequency range:" }
                     RangeSlider {
-                        id: viewFrequency
                         from: mel(1)
                         to: mel(16000)
                         first.value: mel(config.viewMinFrequency)
@@ -146,13 +145,61 @@ ApplicationWindow {
                             text: config.viewMinFrequency + " Hz"
                         }
                         Label {
-                            id: handleLabel
+                            id: frequencyRangeHandleLabel
                             anchors.top: parent.second.handle.bottom
                             anchors.topMargin: 5
                             anchors.horizontalCenter: parent.second.handle.horizontalCenter
                             text: config.viewMaxFrequency + " Hz"
                         }
-                        Layout.bottomMargin: handleLabel.height - 10
+                        Layout.bottomMargin: frequencyRangeHandleLabel.height - 10
+                    }
+
+                    MenuSeparator {}
+
+                    Label { text: "View frequency scale:" }
+                    ComboBox {
+                        implicitWidth: parent.width - 10
+                        model: [ "Linear", "Logarithmic", "Mel", "ERB" ]
+                        currentIndex: config.viewFrequencyScale
+                        onActivated: config.viewFrequencyScale = currentIndex
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    MenuSeparator {}
+                    
+                    Label { text: "FFT size" }
+                    Slider {
+                        from: Math.log2(16)
+                        to: Math.log2(16384)
+                        stepSize: 1
+                        value: Math.log2(config.viewFFTSize)
+                        onMoved: config.viewFFTSize = Math.pow(2, Math.round(value))
+                        Label {
+                            id: fftSizeHandleLabel
+                            anchors.top: parent.handle.bottom
+                            anchors.topMargin: 5
+                            anchors.horizontalCenter: parent.handle.horizontalCenter
+                            text: config.viewFFTSize
+                        }
+                        Layout.bottomMargin: fftSizeHandleLabel.height - 10
+                    }
+
+                    MenuSeparator {}
+
+                    Label { text: "Gain normalization:" }
+                    Slider {
+                        from: -100
+                        to: 40
+                        value: config.viewMaxGain
+                        onMoved: config.viewMaxGain = value
+                        Label {
+                            id: gainHandleLabel
+                            anchors.top: parent.handle.bottom
+                            anchors.topMargin: 5
+                            anchors.horizontalCenter: parent.handle.horizontalCenter
+                            text: config.viewMaxGain + " dB"
+                        }
+                        Layout.bottomMargin: gainHandleLabel.height - 10
                     }
 
                     MenuSeparator {}

@@ -17,15 +17,19 @@ namespace Main {
 
     class Config : public QObject {
         Q_OBJECT
-        Q_PROPERTY(int pitchAlgorithm       READ getPitchAlgorithmNumeric   WRITE setPitchAlgorithm         NOTIFY pitchAlgorithmChanged)
-        Q_PROPERTY(int linpredAlgorithm     READ getLinpredAlgorithmNumeric WRITE setLinpredAlgorithm       NOTIFY linpredAlgorithmChanged)
-        Q_PROPERTY(int formantAlgorithm     READ getFormantAlgorithmNumeric WRITE setFormantAlgorithm       NOTIFY formantAlgorithmChanged)
-        Q_PROPERTY(int invglotAlgorithm     READ getInvglotAlgorithmNumeric WRITE setInvglotAlgorithm       NOTIFY invglotAlgorithmChanged)
-        Q_PROPERTY(int viewMinFrequency     READ getViewMinFrequency        WRITE setViewMinFrequency       NOTIFY viewMinFrequencyChanged)
-        Q_PROPERTY(int viewMaxFrequency     READ getViewMaxFrequency        WRITE setViewMaxFrequency       NOTIFY viewMaxFrequencyChanged)
-        Q_PROPERTY(bool viewShowSpectrogram READ getViewShowSpectrogram     WRITE setViewShowSpectrogram    NOTIFY viewShowSpectrogramChanged)
-        Q_PROPERTY(bool viewShowPitch       READ getViewShowPitch           WRITE setViewShowPitch          NOTIFY viewShowPitchChanged)
-        Q_PROPERTY(bool viewShowFormants    READ getViewShowFormants        WRITE setViewShowFormants       NOTIFY viewShowFormantsChanged)
+        Q_PROPERTY(int pitchAlgorithm       READ getPitchAlgorithmNumeric       WRITE setPitchAlgorithm         NOTIFY pitchAlgorithmChanged)
+        Q_PROPERTY(int linpredAlgorithm     READ getLinpredAlgorithmNumeric     WRITE setLinpredAlgorithm       NOTIFY linpredAlgorithmChanged)
+        Q_PROPERTY(int formantAlgorithm     READ getFormantAlgorithmNumeric     WRITE setFormantAlgorithm       NOTIFY formantAlgorithmChanged)
+        Q_PROPERTY(int invglotAlgorithm     READ getInvglotAlgorithmNumeric     WRITE setInvglotAlgorithm       NOTIFY invglotAlgorithmChanged)
+        Q_PROPERTY(int viewMinFrequency     READ getViewMinFrequency            WRITE setViewMinFrequency       NOTIFY viewMinFrequencyChanged)
+        Q_PROPERTY(int viewMaxFrequency     READ getViewMaxFrequency            WRITE setViewMaxFrequency       NOTIFY viewMaxFrequencyChanged)
+        Q_PROPERTY(int viewFFTSize          READ getViewFFTSize                 WRITE setViewFFTSize            NOTIFY viewFFTSizeChanged)
+        Q_PROPERTY(int viewMinGain          READ getViewMinGain                 WRITE setViewMinGain            NOTIFY viewMinGainChanged)
+        Q_PROPERTY(int viewMaxGain          READ getViewMaxGain                 WRITE setViewMaxGain            NOTIFY viewMaxGainChanged)
+        Q_PROPERTY(int viewFrequencyScale   READ getViewFrequencyScaleNumeric   WRITE setViewFrequencyScale     NOTIFY viewFrequencyScaleChanged)
+        Q_PROPERTY(bool viewShowSpectrogram READ getViewShowSpectrogram         WRITE setViewShowSpectrogram    NOTIFY viewShowSpectrogramChanged)
+        Q_PROPERTY(bool viewShowPitch       READ getViewShowPitch               WRITE setViewShowPitch          NOTIFY viewShowPitchChanged)
+        Q_PROPERTY(bool viewShowFormants    READ getViewShowFormants            WRITE setViewShowFormants       NOTIFY viewShowFormantsChanged)
     
     signals:
         void pitchAlgorithmChanged(int);
@@ -35,6 +39,10 @@ namespace Main {
         void audioBackendChanged(int);
         void viewMinFrequencyChanged(int);
         void viewMaxFrequencyChanged(int);
+        void viewFFTSizeChanged(int);
+        void viewMinGainChanged(int);
+        void viewMaxGainChanged(int);
+        void viewFrequencyScaleChanged(int);
         void viewShowSpectrogramChanged(bool);
         void viewShowPitchChanged(bool);
         void viewShowFormantsChanged(bool);
@@ -77,9 +85,20 @@ namespace Main {
         void setViewMaxFrequency(int f);
 
         int getViewFFTSize();
+        void setViewFFTSize(int nfft);
+
         int getViewMinGain();
+        void setViewMinGain(int g);
+
         int getViewMaxGain();
-        QPainterWrapper::FrequencyScale getViewFrequencyScale();
+        void setViewMaxGain(int g);
+
+        FrequencyScale getViewFrequencyScale();
+        void setViewFrequencyScale(FrequencyScale scale);
+
+        int getViewFrequencyScaleNumeric();
+        void setViewFrequencyScale(int scale);
+
         int getViewFormantCount();
         std::array<double, 3> getViewFormantColor(int i);
 

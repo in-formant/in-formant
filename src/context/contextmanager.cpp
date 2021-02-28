@@ -8,9 +8,7 @@ using namespace std::chrono_literals;
 
 ContextManager::ContextManager(
                 int captureSampleRate,
-                const dur_ms &playbackBlockMinDuration,
-                const dur_ms &playbackBlockMaxDuration,
-                const dur_ms &playbackDuration,
+                const dur_ms &playbackBlockDuration,
                 int playbackSampleRate
             )
     : mConfig(std::make_unique<Config>()),
@@ -20,8 +18,8 @@ ContextManager::ContextManager(
       mInvglotSolver(makeInvglotSolver(mConfig->getInvglotAlgorithm())),
       mCaptureBuffer(std::make_unique<Audio::Buffer>(captureSampleRate)),
       mPlaybackQueue(std::make_unique<Audio::Queue>(
-                  playbackBlockMinDuration.count(), playbackBlockMaxDuration.count(),
-                  playbackDuration.count(), playbackSampleRate, [](auto...){})),
+                  playbackBlockDuration.count(),
+                  playbackSampleRate, [](auto...){})),
       mDataStore(std::make_unique<DataStore>()),
       mPipeline(std::make_unique<App::Pipeline>(
                   mCaptureBuffer.get(), mDataStore.get(), mConfig.get(),

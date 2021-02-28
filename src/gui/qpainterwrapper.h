@@ -10,13 +10,6 @@
 
 class QPainterWrapper : public QPainterWrapperBase {
 public:
-    enum class FrequencyScale : unsigned int {
-        Linear      = 0,
-        Logarithmic = 1,
-        Mel         = 2,
-        ERB         = 3,
-    };
-
     QPainterWrapper(QPainter *p);
    
     void setTimeRange(double start, double end);
@@ -57,12 +50,7 @@ public:
 
     static double mapTimeToX(double time, int width, double startTime, double endTime);
     static double mapFrequencyToY(double frequency, int height, FrequencyScale scale, double minFrequency, double maxFrequency);
-
-    static QImage drawSpectrogram(const rpm::vector<double> &amplitudes,
-            double sourceMin, double sourceMax,
-            int width, int height, int viewportWidth, int viewportHeight,
-            FrequencyScale scale, double minFrequency, double maxFrequency,
-            double minGain, double maxGain);
+    static double mapYToFrequency(double y, int height, FrequencyScale scale, double minFrequency, double maxFrequency);
 
 private:
     double transformFrequency(double frequency);
@@ -92,7 +80,7 @@ private:
 
     static QRgb mapAmplitudeToColor(double amplitude, double minGain, double maxGain);
 
-    static Eigen::SparseMatrix<double> constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax, double sourceMin, double sourceMax);
+    static Eigen::SparseMatrix<double> constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax, FrequencyScale sourceScale, double sourceMin, double sourceMax);
 
     static QVector<QRgb> cmap;
 };

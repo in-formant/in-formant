@@ -3,13 +3,16 @@
 
 #include "rpcxx.h"
 #include <optional>
+#include <algorithm>
 
 template<typename T>
 class TimeTrack {
 public:
-    using map_type       = rpm::map<double, T>;
-    using iterator       = typename map_type::iterator;
-    using const_iterator = typename map_type::const_iterator;
+    using vector_type    = rpm::vector<std::pair<double, T>>;
+    using iterator       = typename vector_type::iterator;
+    using const_iterator = typename vector_type::const_iterator;
+    
+    TimeTrack();
 
     void insert(double t, const T& o);
 
@@ -24,7 +27,7 @@ public:
     bool empty() const;
 
 private:
-    map_type mTrack;
+    vector_type mTrack;
 };
 
 template<typename T>

@@ -65,12 +65,17 @@ void Alsa::refreshDevices()
 
         Device dev(Backend::ALSA);
 
-        if (char *pch = strchr(desc, '\n'); pch != nullptr) {
-            *pch = '\0';
+        if (desc != nullptr) {
+            if (char *pch = strchr(desc, '\n'); pch != nullptr) {
+                *pch = '\0';
+            }
+            dev.name = desc;
+            free(desc);
         }
-
-        dev.name = desc;
-        free(desc);
+        else {
+            // If we couldn't find a DESC hint, fallback to using the alsa name.
+            dev.name = name;
+        }
 
         // Freeing this is handled by the Device destructor.
         dev.alsa.hintName = name;

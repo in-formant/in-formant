@@ -55,7 +55,6 @@ int main(int argc, char **argv)
 
     auto contextManager = std::make_unique<Main::ContextManager>(
             48'000,     // captureSampleRate
-            10ms, 25ms, // playbackBlock(Min/Max)Duration
             50ms,       // playbackDuration
             48'000      // playbackSampleRate
     );

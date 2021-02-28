@@ -12,7 +12,7 @@ static const rpm::vector<double>& getWindow(int N) {
         rpm::vector<double> w(N);
         for (int j = 0; j < N; ++j) { 
             w[j] = a0 - a1 * cos((2.0 * M_PI * j) / (N - 1))
-                      + a2 * cos((4.0 * M_PI * j) / (N - 1));
+                      + a2 * cos((4.0 * M_PI * j) / (N - 1))
                       - a3 * cos((6.0 * M_PI * j) / (N - 1));
         }
         windows[N] = w;
@@ -36,9 +36,7 @@ rpm::vector<double> Analysis::fft_n(Analysis::RealFFT& fft, const rpm::vector<do
         for (int j = 0; j < n; ++j) {
             double sample = signal[j];
 
-            int i = nfft / 2 - n / 2 + j;
-
-            fft.input(i) = sample * w[j];
+            fft.input(j) = sample * w[j];
         }
     }
     else {
@@ -59,7 +57,7 @@ rpm::vector<double> Analysis::fft_n(Analysis::RealFFT& fft, const rpm::vector<do
 
     rpm::vector<double> h(fft.getOutputLength());
     for (int k = 0; k < fft.getOutputLength(); ++k) {
-        h[k] = (fft.output(k) * std::conj(fft.output(k))).real();
+        h[k] = std::abs(fft.output(k) * std::conj(fft.output(k)));
     }
     return h;
 }

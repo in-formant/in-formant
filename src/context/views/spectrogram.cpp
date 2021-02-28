@@ -13,7 +13,7 @@ Spectrogram::Spectrogram()
     mThreadPool.setMaxThreadCount(numBlocksMax);
 
     qRegisterMetaType<rpm::vector<double>>("rpm::vector<double>");
-    qRegisterMetaType<QPainterWrapper::FrequencyScale>("QPainterWrapper::FrequencyScale");
+    qRegisterMetaType<FrequencyScale>("FrequencyScale");
 
     std::fill(mRendering.begin(), mRendering.end(), false);
 }

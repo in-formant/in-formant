@@ -30,9 +30,7 @@ namespace Main {
     public:
         ContextManager(
                 int captureSampleRate,
-                const dur_ms &playbackBlockMinDuration,
-                const dur_ms &playbackBlockMaxDuration,
-                const dur_ms &playbackDuration,
+                const dur_ms &playbackBlockDuration,
                 int playbackSampleRate);
 
         int exec();

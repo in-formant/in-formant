@@ -229,9 +229,21 @@ int Config::getViewFFTSize()
     return integerField(mTbl["view"], "fftSize", 2048);
 }
 
+void Config::setViewFFTSize(int nfft)
+{
+    mTbl["view"]["fftSize"].ref<int64_t>() = nfft;
+    emit viewFFTSizeChanged(nfft);
+}
+
 int Config::getViewMinGain()
 {
     return integerField(mTbl["view"], "minGain", -120);
+}
+
+void Config::setViewMinGain(int g)
+{
+    mTbl["view"]["minGain"].ref<int64_t>() = g;
+    emit viewMinGainChanged(g);
 }
 
 int Config::getViewMaxGain()
@@ -239,9 +251,31 @@ int Config::getViewMaxGain()
     return integerField(mTbl["view"], "maxGain", 0);
 }
 
-QPainterWrapper::FrequencyScale Config::getViewFrequencyScale()
+void Config::setViewMaxGain(int g)
 {
-    return enumField(mTbl["view"], "frequencyScale", QPainterWrapper::FrequencyScale::Mel);
+    mTbl["view"]["maxGain"].ref<int64_t>() = g;
+    emit viewMaxGainChanged(g);
+}
+
+FrequencyScale Config::getViewFrequencyScale()
+{
+    return enumField(mTbl["view"], "frequencyScale", FrequencyScale::ERB);
+}
+
+void Config::setViewFrequencyScale(FrequencyScale scale)
+{
+    mTbl["view"]["frequencyScale"].ref<int64_t>() = enumInt(scale);
+    emit viewFrequencyScaleChanged(enumInt(scale));
+}
+
+int Config::getViewFrequencyScaleNumeric()
+{
+    return enumInt(getViewFrequencyScale());
+}
+
+void Config::setViewFrequencyScale(int scale)
+{
+    setViewFrequencyScale(static_cast<FrequencyScale>(scale));
 }
 
 int Config::getViewFormantCount()

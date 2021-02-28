@@ -4,6 +4,7 @@
 #include "rpcxx.h"
 #include <soxr.h>
 #include <mutex>
+#include <atomic>
 
 namespace Module::Audio {
 
@@ -11,6 +12,7 @@ namespace Module::Audio {
     public:
         static constexpr int chMono = 1;
 
+        Resampler(int inRate = 0);
         Resampler(int inRate, int outRate);
         virtual ~Resampler();
 
@@ -33,9 +35,13 @@ namespace Module::Audio {
 
         void clear();
         rpm::vector<double> process(const double *pIn, int inLength);
-        
+       
+        static rpm::vector<double> oneShot(const double *pIn, int inLength, int src, int dst);
+
     private:
         void createResampler();
+        
+        int mId;
 
         soxr_io_spec_t      mSoxrIoSpec;
         soxr_quality_spec_t mSoxrQualitySpec;
@@ -45,6 +51,8 @@ namespace Module::Audio {
         std::mutex mMutex;
 
         int mInRate, mOutRate;
+
+        static std::atomic_int sId;
     };
 
 }

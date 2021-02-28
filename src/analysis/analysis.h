@@ -3,8 +3,9 @@
 
 #include "fft/fft.h"
 #include "freqz/freqz.h"
-#include "gammatonegram/gammatonegram.h"
 #include "pitch/pitch.h"
+#include "filter/filter.h"
+#include "filterbanks/filterbanks.h"
 #include "linpred/linpred.h"
 #include "formant/formant.h"
 #include "invglot/invglot.h"

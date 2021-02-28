@@ -23,6 +23,7 @@ void RenderContext::render(QPainterWrapper *painter)
 
     painter->setMinFrequency(mConfig->getViewMinFrequency());
     painter->setMaxFrequency(mConfig->getViewMaxFrequency());
+    painter->setFrequencyScale(mConfig->getViewFrequencyScale());
     painter->setMinGain(mConfig->getViewMinGain());
     painter->setMaxGain(mConfig->getViewMaxGain());
 

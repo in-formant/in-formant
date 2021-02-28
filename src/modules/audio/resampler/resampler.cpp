@@ -9,8 +9,22 @@
 
 using namespace Module::Audio;
 
+std::atomic_int Resampler::sId(0);
+
+Resampler::Resampler(int inRate)
+    : mId(sId++),
+      mSoxrIoSpec(soxr_io_spec(SOXR_FLOAT32_I, SOXR_FLOAT32_I)),
+      mSoxrQualitySpec(soxr_quality_spec(SOXR_32_BITQ, 0)),
+      mSoxrRuntimeSpec(soxr_runtime_spec(1)),
+      mSoxr(nullptr),
+      mInRate(inRate),
+      mOutRate(0)
+{
+}
+
 Resampler::Resampler(int inRate, int outRate)
-    : mSoxrIoSpec(soxr_io_spec(SOXR_FLOAT32_I, SOXR_FLOAT32_I)),
+    : mId(sId++),
+      mSoxrIoSpec(soxr_io_spec(SOXR_FLOAT32_I, SOXR_FLOAT32_I)),
       mSoxrQualitySpec(soxr_quality_spec(SOXR_32_BITQ, 0)),
       mSoxrRuntimeSpec(soxr_runtime_spec(1)),
       mSoxr(nullptr),
@@ -29,6 +43,7 @@ Resampler::~Resampler()
 
 void Resampler::setInputRate(int newInRate)
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     if (mInRate != newInRate) {
         mInRate = newInRate;
         createResampler();
@@ -37,6 +52,7 @@ void Resampler::setInputRate(int newInRate)
 
 void Resampler::setOutputRate(int newOutRate)
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     if (mOutRate != newOutRate) {
         mOutRate = newOutRate;
         createResampler();
@@ -45,8 +61,7 @@ void Resampler::setOutputRate(int newOutRate)
 
 void Resampler::setRate(int newInRate, int newOutRate)
 {
-    std::lock_guard<std::mutex> lock(mMutex);
- 
+    std::lock_guard<std::mutex> lock(mMutex); 
     if (mInRate != newInRate || mOutRate != newOutRate) {
         mInRate = newInRate;
         mOutRate = newOutRate;
@@ -115,8 +130,6 @@ rpm::vector<double> Resampler::process(const double *pIn, int inLength)
 
 void Resampler::createResampler()
 {
-    std::lock_guard<std::mutex> lock(mMutex);
-    
     if (mSoxr != nullptr) {
         soxr_delete(mSoxr);
     }
@@ -127,8 +140,20 @@ void Resampler::createResampler()
             &mSoxrQualitySpec,
             &mSoxrRuntimeSpec);
     if (mSoxr == nullptr) {
-        throw std::runtime_error(std::string("Audio::Resampler] Unable to create resampler: ") + soxr_strerror(err));
+        throw std::runtime_error(std::string("Audio::Resampler#") + std::to_string(mId) + "] Unable to create resampler: " + soxr_strerror(err));
     }
-    std::cout << "Audio::Resampler] Created " << mInRate << " --> " << mOutRate << std::endl;
+    std::cout << "Audio::Resampler#" << mId << "] Created " << mInRate << " --> " << mOutRate << std::endl;
 }
 
+rpm::vector<double> Resampler::oneShot(const double *pIn, int inLength, int src, int dst)
+{
+    size_t olen = (size_t) (inLength * dst / src + 0.5);
+    rpm::vector<float> out(olen);
+    size_t odone;
+    soxr_oneshot(src, dst, 1,
+                 pIn, inLength, nullptr,
+                 out.data(), olen, &odone,
+                 nullptr, nullptr, nullptr);
+    out.resize(odone);
+    return rpm::vector<double>(out.begin(), out.end());
+}

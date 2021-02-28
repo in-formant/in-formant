@@ -288,27 +288,41 @@ void QPainterWrapper::drawSpectrogram(
             const TimeTrack<Main::SpectrogramCoefs>::const_iterator& end)
 {
     int vh = viewport().height();
+  
+    int numBins = vh;
+    int numSlices = std::distance(begin, end);
+
+    QImage image(numSlices, numBins, QImage::Format_RGB32);
+    int ix = 0;
 
     for (auto it = begin; it != end; ++it) {
         double time = it->first;
         const auto& coefs = it->second;
 
-        double x = mapTimeToX(time);
-        double x2 = mapTimeToX(time + coefs.duration);
+        auto& slice = coefs.magnitudes;
 
-        auto& slice = coefs.amplitudes;
+        Eigen::VectorXd mapped;
 
-        auto ytrans = constructTransformY(slice.rows(), vh, mFrequencyScale, mMinFrequency, mMaxFrequency, coefs.minFrequency, coefs.maxFrequency);
+        if (mFrequencyScale == FrequencyScale::Linear) {
+            mapped = slice.reverse();
+        }
+        else {
+            auto ytrans = constructTransformY(slice.rows(), numBins, mFrequencyScale, mMinFrequency, mMaxFrequency, FrequencyScale::Linear, 0, coefs.sampleRate / 2);
+            mapped = (ytrans * slice).reverse();
+        }
 
-        Eigen::VectorXd mapped = (slice.transpose() * ytrans).reverse();
-
-        QImage image(1, mapped.size(), QImage::Format_RGB32);
         for (int vy = 0; vy < mapped.size(); ++vy) {
             QRgb *scanLineBits = reinterpret_cast<QRgb *>(image.scanLine(vy));
-            scanLineBits[0] = mapAmplitudeToColor(mapped(vy));
+            scanLineBits[ix] = mapAmplitudeToColor(mapped(vy));
         }
-        p->drawImage(x, 0, image.scaled(x2 - x, vh, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+
+        ix++;
     }
+   
+    double xstart = mapTimeToX(begin->first);
+    double xend = mapTimeToX(std::prev(end)->first);
+
+    p->drawImage(xstart, 0, image.scaled(xend - xstart, vh, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
 }
 
 void QPainterWrapper::drawFrequencyTrack(

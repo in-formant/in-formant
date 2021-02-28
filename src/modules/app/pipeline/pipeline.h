@@ -30,40 +30,32 @@ namespace Module::App
         void processAll();
 
     private:
-        Module::Audio::Buffer *captureBuffer;
-        Main::DataStore *dataStore;
-        Main::Config *config;
+        Module::Audio::Buffer *mCaptureBuffer;
+        Main::DataStore *mDataStore;
+        Main::Config *mConfig;
 
-        std::shared_ptr<Analysis::PitchSolver> pitchSolver;
-        std::shared_ptr<Analysis::LinpredSolver> linpredSolver;
-        std::shared_ptr<Analysis::FormantSolver> formantSolver;
-        std::shared_ptr<Analysis::InvglotSolver> invglotSolver;
+        std::shared_ptr<Analysis::PitchSolver> mPitchSolver;
+        std::shared_ptr<Analysis::LinpredSolver> mLinpredSolver;
+        std::shared_ptr<Analysis::FormantSolver> mFormantSolver;
+        std::shared_ptr<Analysis::InvglotSolver> mInvglotSolver;
 
-        std::atomic_int64_t time;
-        bool runningThreads;
+        std::atomic_int64_t mTime;
+        std::atomic_bool mRunningThreads;
+        std::atomic_bool mStopThreads;
         
-        Module::Audio::Buffer bufferSpectrogram;
-        std::thread threadSpectrogram;
+        Module::Audio::Buffer mBufferSpectrogram;
+        std::thread mThreadSpectrogram;
         void callbackSpectrogram();
+        Module::Audio::Resampler mSpectrumResampler;
+        std::unique_ptr<Analysis::RealFFT> mSpectrumFFT;
 
-        Module::Audio::Buffer bufferPitch;
-        std::thread threadPitch;
+        Module::Audio::Buffer mBufferPitch;
+        std::thread mThreadPitch;
         void callbackPitch();
 
-        Module::Audio::Buffer bufferFormants;
-        std::thread threadFormants;
+        Module::Audio::Buffer mBufferFormants;
+        std::thread mThreadFormants;
         void callbackFormants();
-
-        double fftSampleRate;
-        int fftSize;
-
-        double preEmphasisFrequency;
-        
-        double secondSampleRate;
-        int lpSpecLpOrder;
-
-        double formantSampleRate;
-        int formantLpOrder;
     };
 }
 

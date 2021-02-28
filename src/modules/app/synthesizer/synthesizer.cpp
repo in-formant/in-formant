@@ -9,7 +9,7 @@ using namespace Module::App;
 
 Synthesizer::Synthesizer(Module::Audio::Queue *playbackQueue)
     : playbackQueue(playbackQueue),
-      resampler(48'000, 48'000)
+      resampler(48'000)
 {
     playbackQueue->setCallback(App::Synthesizer::audioCallback);
     

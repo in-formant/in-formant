@@ -2,10 +2,10 @@
 #define AUDIO_BUFFER_H
 
 #include "rpcxx.h"
+#include "../../../atomicops.h"
+#include "../../../readerwriterqueue.h"
 #include "../resampler/resampler.h"
 #include <atomic>
-#include <mutex>
-#include <condition_variable>
 
 namespace Module::Audio {
 
@@ -14,11 +14,11 @@ namespace Module::Audio {
      */
     class Buffer {
     public:
-        Buffer(int sampleRate);
+        Buffer(double sampleRate = 0);
 
-        void setSampleRate(int sampleRate);
+        void setSampleRate(double sampleRate);
 
-        int getSampleRate() const;
+        double getSampleRate() const;
         int getLength() const;
 
         void pull(double *pOut, int outLength);
@@ -27,17 +27,13 @@ namespace Module::Audio {
         static void cancelPulls();
 
     private:
-        int mSampleRate;
+        int mId;
+        double mSampleRate;
 
-        std::atomic_int mLength;
-        rpm::deque<double> mData;
-
-        int mRequestedLength;
-
-        std::condition_variable mCv;
-        std::mutex mMutex;
+        moodycamel::BlockingReaderWriterQueue<double> mQueue;
 
         static std::atomic_bool sCancel;
+        static std::atomic_int sId;
     };
 
 }

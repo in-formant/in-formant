@@ -9,13 +9,18 @@
 #include <functional>
 #include <gaborator/gaborator.h>
 
+enum class FrequencyScale : unsigned int {
+    Linear      = 0,
+    Logarithmic = 1,
+    Mel         = 2,
+    ERB         = 3,
+};
+
 namespace Main {
 
     struct SpectrogramCoefs {
-        Eigen::VectorXd amplitudes;
-        double duration;
-        double minFrequency;
-        double maxFrequency;
+        Eigen::VectorXd magnitudes;
+        double sampleRate;
     };
 
     class DataStore {

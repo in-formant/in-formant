@@ -4,12 +4,11 @@
 
 using namespace Module::Audio;
 
-Queue::Queue(int minInDurationInMs, int maxInDurationInMs, int avgDurationInMs, int inSampleRate, QueueCallback callback)
-    : mMinInLength((inSampleRate * minInDurationInMs) / 1000),
-      mMaxInLength((inSampleRate * maxInDurationInMs) / 1000),
-      mAvgLength((inSampleRate * avgDurationInMs) / 1000),
-      mResampler(inSampleRate, 8000),
-      mCallback(callback)
+Queue::Queue(int blockDurationInMs, int inSampleRate, QueueCallback callback)
+    : mBlockDuration(blockDurationInMs),
+      mResampler(inSampleRate),
+      mCallback(callback),
+      mQueue((48000 * 1.5 * mBlockDuration) / 1000)
 {
 }
 
@@ -24,9 +23,7 @@ void Queue::setCallback(QueueCallback callback)
 
 void Queue::setOutSampleRate(int newOutSampleRate)
 {
-    mLock.lock();
     mResampler.setOutputRate(newOutSampleRate);
-    mLock.unlock();
 }
 
 int Queue::getInSampleRate() const
@@ -41,53 +38,51 @@ int Queue::getOutSampleRate() const
 
 void Queue::pushIfNeeded(void *userdata)
 {
-    mLock.lock();
+    int inputRate = mResampler.getInputRate();
+    int outputRate = mResampler.getOutputRate();
+    size_t queueSize = mQueue.size_approx();
 
-    int pushSize = mAvgLength - mDeque.size();
-    if (pushSize < mMinInLength) {
-        mLock.unlock();
+    float blockDuration = mBlockDuration.load();
+    size_t blockSizeSrc = (blockDuration * inputRate) / 1000;
+    size_t blockSizeDst = (blockDuration * outputRate) / 1000;
+
+    if (queueSize > blockSizeDst) {
+        // There's already enough data in the queue.
         return;
     }
-    
-    if (pushSize > mMaxInLength) {
-        pushSize = mMaxInLength;
-    }
-    
-    auto inputArray = std::make_unique<double[]>(pushSize);
-    
-    mCallback(inputArray.get(), pushSize, userdata);
-    
-    mDeque.insert(mDeque.end(), inputArray.get(), std::next(inputArray.get(), pushSize));
 
-    mLock.unlock();
+    rpm::vector<double> blockSrc(blockSizeSrc);
+    mCallback(blockSrc.data(), blockSizeSrc, userdata);
+   
+    rpm::vector<double> blockDst = mResampler.process(blockSrc.data(), blockSizeSrc);
+    for (const double& y : blockDst) {
+        mQueue.emplace(y);
+    }
 }
 
 void Queue::pull(float *pOut, int outLength)
 {
-    mLock.lock();
-  
-    int pullSize = mResampler.getRequiredInLength(outLength);
+    int outputRate = mResampler.getOutputRate();
+    size_t queueSize = mQueue.size_approx();
 
-    auto preResampleData = std::make_unique<double[]>(pullSize);
+    bool ranOutOfData = false;
 
-    int pullCopyLength;
-    if (pullSize > mDeque.size()) {
-        //std::cout << "Audio::Queue] not enough data to pull, padding with zeroes" << std::endl;
-        pullCopyLength = mDeque.size();
-    }
-    else {
-        pullCopyLength = pullSize;
+    int i = 0;
+    for (; i < outLength; ++i) {
+        if (!mQueue.try_dequeue(pOut[i])) {
+            ranOutOfData = true;
+            break;
+        }
     }
 
-    auto pullEndIt = std::next(mDeque.begin(), pullCopyLength);
-
-    std::copy(mDeque.begin(), pullEndIt, preResampleData.get());
-    std::fill(preResampleData.get() + pullCopyLength, std::next(preResampleData.get(), pullSize), 0.0f);
-
-    auto outVec = mResampler.process(preResampleData.get(), pullSize);
-    std::copy(outVec.begin(), outVec.end(), pOut);
-
-    mDeque.erase(mDeque.begin(), pullEndIt);
-
-    mLock.unlock();
+    if (ranOutOfData) {
+        // Pad the rest with zeroes.
+        for (; i < outLength; ++i) {
+            pOut[i] = 0.0;
+        }
+       
+        float newBlockDuration = mBlockDuration + 0.25;
+        std::cout << "Audio::Queue] Not enough data to pull. Adjusted block duration to " << newBlockDuration << " ms" << std::endl;
+        mBlockDuration = newBlockDuration;
+    }
 }
