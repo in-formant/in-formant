@@ -140,8 +140,7 @@ RUN cd qtbase-build && \
             -no-feature-concurrent \
             -no-feature-network \
             -no-feature-sql \
-            -no-feature-testlib \
-            -no-feature-xml && \
+            -no-feature-testlib && \
         make -j$(nproc) && \
         make install
 
@@ -159,6 +158,22 @@ ENV ver=5.15.2
 RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtquickcontrols2-everywhere-src-$ver.tar.xz && \
         tar -xvf qtquickcontrols2-everywhere-src-$ver.tar.xz
 RUN cd qtquickcontrols2-everywhere-src-$ver && \
+        /usr/$HOST/qt5/bin/qmake && \
+        make -j$(nproc) && \
+        make install
+
+ENV ver=5.15.2
+RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtcharts-everywhere-src-$ver.tar.xz && \
+        tar -xvf qtcharts-everywhere-src-$ver.tar.xz
+RUN cd qtcharts-everywhere-src-$ver && \
+        /usr/$HOST/qt5/bin/qmake && \
+        make -j$(nproc) && \
+        make install
+
+ENV ver=5.15.2
+RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtsvg-everywhere-src-$ver.tar.xz && \
+        tar -xvf qtsvg-everywhere-src-$ver.tar.xz
+RUN cd qtsvg-everywhere-src-$ver && \
         /usr/$HOST/qt5/bin/qmake && \
         make -j$(nproc) && \
         make install
@@ -245,14 +260,6 @@ RUN apt-get update -y && apt-get install -y git zip
 RUN git clone -b v1.2.0 https://github.com/trailofbits/pe-parse
 RUN cd pe-parse && \
         CC= CXX= cmake . -DCMAKE_INSTALL_PREFIX=/usr && \
-        make -j$(nproc) && \
-        make install
-
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtcharts-everywhere-src-$ver.tar.xz && \
-        tar -xvf qtcharts-everywhere-src-$ver.tar.xz
-RUN cd qtcharts-everywhere-src-$ver && \
-        /usr/$HOST/qt5/bin/qmake && \
         make -j$(nproc) && \
         make install
 

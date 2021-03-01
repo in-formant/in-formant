@@ -108,7 +108,6 @@ RUN cd qtbase-build && \
             -no-pch \
             -no-feature-concurrent \
             -no-feature-sql \
-            -no-feature-xml \
             QMAKE_APPLE_DEVICE_ARCHS=${HOST%%-*} && \
         make -j$(nproc) && \
         make install
@@ -125,6 +124,22 @@ ENV ver=5.15.2
 RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtquickcontrols2-everywhere-src-$ver.tar.xz && \
         tar -xvf qtquickcontrols2-everywhere-src-$ver.tar.xz
 RUN cd qtquickcontrols2-everywhere-src-$ver && \
+        /osxcross/target/$HOST/qt5/bin/qmake && \
+        make -j$(nproc) && \
+        make install
+
+ENV ver=5.15.2
+RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtcharts-everywhere-src-$ver.tar.xz && \
+        tar -xvf qtcharts-everywhere-src-$ver.tar.xz
+RUN cd qtcharts-everywhere-src-$ver && \
+        /osxcross/target/$HOST/qt5/bin/qmake && \
+        make -j$(nproc) && \
+        make install
+
+ENV ver=5.15.2
+RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtsvg-everywhere-src-$ver.tar.xz && \
+        tar -xvf qtsvg-everywhere-src-$ver.tar.xz
+RUN cd qtsvg-everywhere-src-$ver && \
         /osxcross/target/$HOST/qt5/bin/qmake && \
         make -j$(nproc) && \
         make install
@@ -185,14 +200,6 @@ RUN cd libdmg-hfsplus && \
         mkdir build && \
         cd build && \
         CC= CXX= cmake .. -DCMAKE_INSTALL_PREFIX=/usr && \
-        make -j$(nproc) && \
-        make install
-
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtcharts-everywhere-src-$ver.tar.xz && \
-        tar -xvf qtcharts-everywhere-src-$ver.tar.xz
-RUN cd qtcharts-everywhere-src-$ver && \
-        /osxcross/target/$HOST/qt5/bin/qmake && \
         make -j$(nproc) && \
         make install
 
