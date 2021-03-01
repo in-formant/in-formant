@@ -163,7 +163,7 @@ void Config::setLinpredAlgorithm(int alg)
 
 FormantAlgorithm Config::getFormantAlgorithm()
 {
-    return enumField(mTbl["solvers"], "formant", FormantAlgorithm::Deep);
+    return enumField(mTbl["solvers"], "formant", FormantAlgorithm::Filtered);
 }
 
 void Config::setFormantAlgorithm(FormantAlgorithm alg)
