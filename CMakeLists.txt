@@ -42,13 +42,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_C_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -ffast-math -mtune=generic -fvisibility=hidden")
+set(CMAKE_C_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -ffast-math -fvisibility=hidden")
 set(CMAKE_C_FLAGS_DEBUG           "-Og -g")
 set(CMAKE_C_FLAGS_RELEASE         "-O3 -g0 -DNDEBUG")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g")
 set(CMAKE_C_FLAGS_MINSIZEREL      "-Os -g0 -DNDEBUG")
 
-set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -ffast-math -mtune=generic -fvisibility=hidden -fvisibility-inlines-hidden")
+set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -ffast-math -fvisibility=hidden -fvisibility-inlines-hidden")
 set(CMAKE_CXX_FLAGS_DEBUG           "-Og -g")
 set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -g0 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g")
@@ -114,6 +114,7 @@ set(SOURCES
     src/analysis/fft/fft.h
     src/analysis/freqz/sosfreqz.cpp
     src/analysis/freqz/freqz.h
+    src/analysis/filterbanks/linear.cpp
     src/analysis/filterbanks/log.cpp
     src/analysis/filterbanks/mel.cpp
     src/analysis/filterbanks/erb.cpp
@@ -320,13 +321,13 @@ endif()
 ## PLATFORM SPECIFIC CODE
 
 if(CMAKE_BUILD_TYPE STREQUAL Release)
-    set_property(SOURCE ${SOURCES} PROPERTY COMPILE_FLAGS "-flto")
+    set_property(SOURCE "${SOURCES}" PROPERTY COMPILE_FLAGS "-flto")
     if(SYSTEM_WINDOWS)
         execute_process(
             COMMAND ${CMAKE_C_COMPILER} --print-file-name=liblto_plugin.so
             OUTPUT_VARIABLE lto_plugin_file)
         string(STRIP ${lto_plugin_file} lto_plugin_file)
-        set_property(SOURCE ${SOURCES} PROPERTY COMPILE_FLAGS "-Wl,--plugin=${lto_plugin_file}")
+        set_property(SOURCE "${SOURCES}" PROPERTY COMPILE_FLAGS "-Wl,--plugin=${lto_plugin_file}")
     endif()
 endif()
 

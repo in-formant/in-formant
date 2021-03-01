@@ -289,10 +289,15 @@ void QPainterWrapper::drawSpectrogram(
 {
     int vh = viewport().height();
   
-    int numBins = vh;
+    int numBins = 2 * vh;
     int numSlices = std::distance(begin, end);
+    
+    if (numBins == 0 || numSlices == 0) {
+        return;
+    }
 
     QImage image(numSlices, numBins, QImage::Format_RGB32);
+
     int ix = 0;
 
     for (auto it = begin; it != end; ++it) {
@@ -301,15 +306,9 @@ void QPainterWrapper::drawSpectrogram(
 
         auto& slice = coefs.magnitudes;
 
-        Eigen::VectorXd mapped;
-
-        if (mFrequencyScale == FrequencyScale::Linear) {
-            mapped = slice.reverse();
-        }
-        else {
-            auto ytrans = constructTransformY(slice.rows(), numBins, mFrequencyScale, mMinFrequency, mMaxFrequency, FrequencyScale::Linear, 0, coefs.sampleRate / 2);
-            mapped = (ytrans * slice).reverse();
-        }
+        auto ytrans = constructTransformY(slice.rows(), numBins, mFrequencyScale, mMinFrequency, mMaxFrequency, FrequencyScale::Linear, 0, coefs.sampleRate / 2);
+          
+        Eigen::VectorXd mapped = (ytrans * slice).reverse();
 
         for (int vy = 0; vy < mapped.size(); ++vy) {
             QRgb *scanLineBits = reinterpret_cast<QRgb *>(image.scanLine(vy));

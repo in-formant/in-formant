@@ -7,6 +7,8 @@
 
 namespace Analysis {
 
+    Eigen::SparseMatrix<double> linearFilterbank(double minFreqHz, double maxFreqHz, int linearBinCount, int fftBinCount, double sampleRateHz);
+
     Eigen::SparseMatrix<double> logFilterbank(double minFreqHz, double maxFreqHz, int melBinCount, int linearBinCount, double sampleRateHz);
 
     Eigen::SparseMatrix<double> melFilterbank(double minFreqHz, double maxFreqHz, int melBinCount, int linearBinCount, double sampleRateHz);

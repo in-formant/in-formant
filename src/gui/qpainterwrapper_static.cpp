@@ -115,7 +115,10 @@ Eigen::SparseMatrix<double> QPainterWrapper::constructTransformY(int h, int vh, 
 
     Eigen::SparseMatrix<double> ytrans;
 
-    if (freqScale == FrequencyScale::Logarithmic) {
+    if (freqScale == FrequencyScale::Linear) {
+        ytrans = Analysis::linearFilterbank(freqMin, freqMax, vh, h, 2 * sourceMax);
+    }
+    else if (freqScale == FrequencyScale::Logarithmic) {
         ytrans = Analysis::logFilterbank(freqMin, freqMax, vh, h, 2 * sourceMax);
     }
     else if (freqScale == FrequencyScale::Mel) {

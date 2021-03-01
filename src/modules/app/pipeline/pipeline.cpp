@@ -49,7 +49,7 @@ void Pipeline::callbackSpectrogram()
 {
     const double fs = mCaptureBuffer->getSampleRate();
     
-    constexpr double frameHop = 33.3 / 1000.0;
+    constexpr double frameHop = 12.5 / 1000.0;
     rpm::vector<double> m(frameHop * fs);
 
     double frameDuration;
