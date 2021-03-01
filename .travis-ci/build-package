@@ -1,0 +1,7 @@
+#!/bin/bash
+
+src=$(pwd)
+build=$(pwd)/build/$TARGET
+dist=$(pwd)/dist
+
+docker run $extra_args --rm -t -e CMAKE_BUILD_TYPE=Release -e target=$TARGET -e ARCH=$ARCH -v $src:/src -v $build:/build -v $dist:/dist clorika/sabuilder:$TARGET

@@ -1,0 +1,58 @@
+language: generic
+
+os: linux
+dist: focal
+services:
+- docker
+
+if: tag = "continuous"
+
+cache:
+  directories:
+  - $HOME/dockerfiles
+
+install:
+- travis_wait 60 .travis-ci/build-docker 
+
+script:
+- .travis-ci/build-package 
+
+jobs:
+  include:
+    - stage: builds
+      name: "Linux x86_64"
+      env: TARGET=linux
+    - name: "Windows 32 bits"
+      env: TARGET=win32
+    - name: "Windows 64 bits"
+      env: TARGET=win64
+    - name: "macOS x86_64"
+      env: TARGET=macos
+
+after_success:
+- git config --local user.name "Clo Yun-Hee Dufour"
+- git config --local user.email "cloyunhee@gmail.com"
+- git tag -f continuous
+- sudo rm -r build
+
+deploy:
+  provider: releases
+  token:
+    secure: "hOArzGL7GvpgNEYAo2I76ZuAhuBVcIL1Pkl1y0ERBgnq8cq6tGyKtFnEkeTWMItZjn4IdqxKV4iwlnhUmSPjk2SH+qmMqdhzoLih9shmpY1AnD9GoR1s0UZuIzr2JaQF5nAO+RsdrPOuxtCq77/QpoJ4i/ICNUTlZ7kzUTfE8lyfEWdo/Yr4BmOiJbq/eAByF1hEv21nxo2dVEA8zC6i8n8jh6sDRYgnSq9UcGhkSv1gDEgzRA0sXN49HDUxbPKkH3/JJM9gxR9CihMtWbds8OYIMpP32gPLvuJw4KDsEnS/KeHJgislnm0n1vsAdL9O5qWR+0MH74Osb/vtgqZ1CIK7SB6I3QUtv1Av265trpqxKJg2vaap47q+sT2Ekt8iMY7SfMnvTklpvDt8tFX9+z/IcpfpP8x1Jg5xyulAoXJCq1+QvH78YhIer8D6mQx10hoZ37saMON6HSn81bL18ab5puVj9o1wwUQ2T4BGwBHVdkE6xAMIrPniCy50BDkDUmtRQqF8UmvO+HqUvmTDcI1hUn7klabQ87WrN0WdOHdP/U56ydF2mX3G1A7kGwMd9WxeWH0nF1ur9kNM5CKRdFESCgbTnEEy9ZFq0PZvBmI6XQTLTvSp1UrINnX/8Wp2bjALzdfC7ntUsxqL0jQ/2T6RcwKtyhRe9Ed1zr5gUb4="
+  file_glob: true
+  file:
+  - dist/InFormant-*-Linux-x86_64.AppImage
+  - dist/InFormant-*-win32-x86.zip
+  - dist/InFormant-*-win64-x64.zip
+  - dist/InFormant-*-macOS-x86_64.dmg
+  overwrite: true
+  on:
+    branch: with-qt
+    tags: false
+
+env:
+  global:
+  - secure: "WuTQLAB38u0GcaZj2vufqqDg/28WcNHlE0iIRtsjLWat6iKXOlcXqvPQ5LCMU6O5lN9T384Cm5sYRUF8zrhH1DBCV/jk3EXGIwL/mbGXs73F8Szswae65z2Dt6O+QZksDldFzZhnPFasA64m8lN+bbypAnhu9knoZC+PP/6E/EhsaZ6myZZifVjTZQtukEIQ4V/Uh1AIcCKwczJMntavO7ewJntz+HVc+V96hlsT4KHnL01FaDNDIUwA7FdfEqZQb8KLIoQIiBaFTDq0h8FRhUKoAODY8941pGugpzucKX6Wk2GtOaluHh/0Ug31DmG6mj9Hi1xLf8KnfyPueZwmkywLzyAA/a6JGfux9uQtn3Ov8A3uDn4d5Odv+GmIIJijZesEgBvC6M9dH2amCD557xtJrdOjFt8Qo3CkUwNoh16Q9pO5Z4O/JYUh658vpLEPOMyP76LvKkIXXNO5SG1E11mTukS0RXIFaLVnEJC1pPYU4te6jJaX8qfEVTH07GMsjVt+UuYs7W6cEvQI7q9kPwDdAWPDVmHD9rJdFYAuHV1e5QcRLifZBGpjrPQ/I5yHMfNK207etla+JghTo1tAEcRkRKcYfnlmn8r8AdJ8S6A2VwIyTZQv20AloZANTTkYOEnyPt/oi4DfxkFYTpEqeVMafa1OOeOABuj5xSxYz84="
+  - secure: "XI2qtYRh6LAeCi3Wbx7u5FqNsliitOlpqogWy3yA69B1W6OP5f2BFn9ygvdmP3cxblmyToimAkOCXiPexDgZts0TxQJ7c0E96vYT/35fAaWct3bTgRChponso+PUBj2PHMcCQE4BkUenIrs06uXBVrDIJVb/jzves3EPFZZkFBcevTJHkBJ7eTEbXG4yF02lbvN5jaRuFbrgzS60C3Lp9OeLiypaESOL5y3uzp6n0qeTWauksxcdpcrEeRne6G416sLQY1r03yvLooNd95rMpVmxQlI2omSRpJoc5Tpesp7PMTA1Zhk1CSn0VE0GHENXCB5gmLYbBH5W856eATutwvJHo9nuLcCM0YqdAY6KngQS9uHHI0/oNTILfWAGxb61twHvoah5enUToDxLapGuqOzgQvpjx9SatoL3ebBQ1Pa7CI/dPRnQbnA29E4DZcJzr1v9EsU7VX0RuySWZUGaGMj1K9VVcbK/KLMf+1fdzV20H3pUy+T0LyP12QTpVehwi6qj2HdPIUE3l7f59gJ1WbN+oqQWJk7E4LLpYG1Mb/6ezZQXoDPZWcW5xVTmXhm3M3p5+aDr0kY9NZp/I3c8eub/W865DHqPl6RuKxeIi7djC72WJtuxv5h3l3U5uT0+r84BQTR+RjwPI2Wp295LbfbHaX3w1i2+RE44ORWp3iE="
+  - secure: "IvXDn0kWJfwzxp/bgqCPlKJanIEQG6e7E9NKQ4NYdr1vTNEaM3RhHKjFvUmFY53e+79twnK4JnFuESrSnn1fuqE2pDa2zHeK+OQCVH1293QDL6VPEn19S1T9pHA43sVk/9dx6BLfsmCAb9pMI0Y5K2d2FJDxl1LG01+LDaWhCuTSsNLB3+8avtvc7QTJwitgdSytzl2kPrc1clVocdkt06aEOmIQAgWEAZydnsU1hGUn5YFjsKfPMTfzz1PPcmcO0OxLK6HVUWi+7ZoHNUqg05TOmTDRyt1GOzMWH7TIQQxlaK5cqRDH/G3BvjUYJ7be/T93oawAWCnSEF9QAbeTbFGDeGYtcNnnIS7zu3zREqKE+X8oWRM+S2VR6tXopi52P9x1AkpRf/sGKJzHXGIcIVSu9zn/i44pqj1xoNKd/MtmgNXOjA5y5VG8d9VSRThx8HomThELCMa45cWOgXEWsznioeVkqNUUdTajUjyAH4IciYUYuXmliV3SvvbuLZrevrbgqrMWGA4/5FMXEY/ijf/dLAl6HdvSX2aTEvlZm7heDyxxjpyczlq3ImAjDbQqkPV1xt3Mau2vRdGMnU3j7mIHmeSGFTB9S0ZA1LVPgSDqq0ou7TPZnKsm1QrSGjpyHE326jsmOEb0xC0dIALsBNx2GyY8W+00aSukJXCCqJ8="
+  - secure: "ElatePbAy/QFjO9eaUpci3Q3OCulC1Eb5HBsjG2iDO3IhJ+81w8vkqAqyifYGMhM6ug3iTQciBVY3viTNydoEXbYxDon120XyStTr4YgsBg+TZNyOWALsLiOCXns4+oNLS70VPp7hEcpkMkTJAdqhJWLyGmJ+m7VTpvJQ5cOixo7g/vAWs84n7YyGi3Epn5GBfTUKbfBQFVEc7NvOA4wlfW7FPNvcQ2q4w8VdDnEKG64CqCQOjqHXGi01qQhZgKIF3je6xdgkfp42ghQ86zqVEtqBB+uU6qx9iz7MMf5RwCAvgSEDLPy3ioh9C61Yase9RgATDSzthiq3dSt4lLOv32zhU4KacHLCC/YwAd0d4TZO2QtwQBh4GhNh1zQO/YTV2uLaeORoUMlnbTUpvoiU1BY4hLer7A4L8/hAtShtovltgBIR6fLuZXU7O2x5LzXR4zsa0qPTbbL5drgR+nRq8Q8l6v1TwnrQbpmomGCo0xH7QbmMCqxJyNTWXDjE/hEo/M2SZrtClGNkX8ywkotf+kLLr8ebB5KYcHydnyIM/xU1bqnOfRXkyJciBg99+tS2E4GzWNpIYLYxka47lK4OuJPxctxX5+zvP1zaG+x/m+whh3O2gu6qWgY4EOhCrDX9ayF436yespVeN8oAu4X8PHBERgR7IJhJr0v2rM1s6Y="
