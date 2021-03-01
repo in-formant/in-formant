@@ -222,7 +222,7 @@ void Pipeline::processAll()
                   << "Adjusted block size to "
                   << blockSize << " samples" << std::endl;
     }
-    else if (lastBufferLength - bufferLength <= -1024) {
+    else if (bufferLength >= 512 && lastBufferLength - bufferLength <= -1024) {
         blockSize -= 128;
         std::cout << "Processing fast enough, "
                   << "adjusted block size to "
