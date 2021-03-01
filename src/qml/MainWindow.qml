@@ -257,7 +257,8 @@ ApplicationWindow {
                     Label { text: "Glottal inverse algorithm:" }
                     ComboBox {
                         implicitWidth: parent.width - 10
-                        model: [ "IAIF", "GFM-IAIF", "AM-GIF" ]
+                        //model: [ "IAIF", "GFM-IAIF", "AM-GIF" ]
+                        model: [ "IAIF", "GFM-IAIF" ]
                         currentIndex: config.invglotAlgorithm
                         onActivated: config.invglotAlgorithm = currentIndex
                         Layout.alignment: Qt.AlignHCenter
