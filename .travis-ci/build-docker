@@ -1,0 +1,29 @@
+#!/bin/bash
+
+cd docker
+
+echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+# Check if Dockerfile hash is different from the cached Dockerfile.
+cached_hash=$(test -f $HOME/dockerfiles/Dockerfile.$TARGET && sha256sum $HOME/dockerfiles/Dockerfile.$TARGET | cut -d ' ' -f 1)
+source_hash=$(sha256sum ./Dockerfile.$TARGET | cut -d ' ' -f 1)
+
+echo $cached_hash
+echo $source_hash
+
+if [ "x$cached_hash" = "x$source_hash" ]; then
+    echo "Pulling"
+    # If the hashes are the same, just pull the latest image.
+    docker pull clorika/sabuilder:$TARGET
+else
+    echo "Pushing"
+    # If the hashes are different, build the image and push.
+    if [ "x$TARGET" = "xlinux" ]; then
+        extra_args="--build-arg QT_EMAIL=$QT_EMAIL --build-arg QT_PW=$QT_PW"
+    fi
+    travis_wait 60 docker build . -f Dockerfile.$TARGET -t clorika/sabuilder:$TARGET $extra_args -q
+    docker push clorika/sabuilder:$TARGET
+
+    # Remember to update the cache.
+    cp Dockerfile.$TARGET $HOME/dockerfiles/Dockerfile.$TARGET
+fi
