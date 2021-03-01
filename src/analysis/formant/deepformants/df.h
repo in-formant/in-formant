@@ -8,6 +8,4 @@
 template<typename Derived>
 extern Eigen::ArrayXd build_feature_row(const Eigen::ArrayBase<Derived>& x);
 
-Eigen::ArrayXd predictFromFeatures(const Eigen::ArrayXd& features);
-
 #endif // DEEP_FORMANTS_H

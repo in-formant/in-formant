@@ -4,6 +4,15 @@
 #include "rpcxx.h"
 #include "../../modules/audio/resampler/resampler.h"
 
+#ifdef _WIN32
+extern "C" void __assert_fail(const char* expr, const char *filename, unsigned int line, const char *assert_func) noexcept;
+#endif
+
+#undef slots
+#undef ERROR
+#include <torch/script.h>
+#define slots Q_SLOTS
+
 namespace Analysis {
 
     struct FormantData {
@@ -45,9 +54,11 @@ namespace Analysis {
 
         class DeepFormants : public FormantSolver {
         public:
+            DeepFormants();
             FormantResult solve(const double *lpc, int lpcOrder, double sampleRate) override;
             void setFrameAudio(const rpm::vector<double>& x);
         private:
+            torch::jit::script::Module module;
             rpm::vector<double> xv;
             double fs;
         };

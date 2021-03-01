@@ -135,7 +135,6 @@ set(SOURCES
     src/analysis/linpred/linpred.h
     src/analysis/formant/deepformants/df.h
     src/analysis/formant/deepformants/features.cpp
-    src/analysis/formant/deepformants/torch.cpp
     src/analysis/formant/deepformants.cpp
     src/analysis/formant/simplelp.cpp
     src/analysis/formant/filteredlp.cpp

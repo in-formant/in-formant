@@ -215,14 +215,14 @@ void Pipeline::processAll()
     // dynamically adjust blockSize to consume all the buffer.
     static int lastBufferLength = 0;
     int bufferLength = mCaptureBuffer->getLength();
-    if (lastBufferLength - bufferLength >= 8192) {
+    if (blockSize <= 16384 && lastBufferLength - bufferLength >= 8192) {
         blockSize += 128;
         std::cout << "Processing too slowly, "
                   << bufferLength << " samples remaining. "
                   << "Adjusted block size to "
                   << blockSize << " samples" << std::endl;
     }
-    else if (bufferLength >= 512 && lastBufferLength - bufferLength <= -1024) {
+    else if (blockSize >= 512 && lastBufferLength - bufferLength <= -1024) {
         blockSize -= 128;
         std::cout << "Processing fast enough, "
                   << "adjusted block size to "

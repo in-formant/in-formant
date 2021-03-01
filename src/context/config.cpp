@@ -93,7 +93,8 @@ toml::table Main::getConfigTable()
 }
 
 Config::Config()
-    : mTbl(getConfigTable())
+    : mTbl(getConfigTable()),
+      mPaused(false)
 {
     initSubTable(mTbl, "solvers");
     initSubTable(mTbl, "view");
