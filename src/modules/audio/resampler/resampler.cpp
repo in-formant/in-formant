@@ -103,6 +103,11 @@ int Resampler::getExpectedOutLength(int inLength) const
     return (int) (inLength * mOutRate / mInRate + 0.5);
 }
 
+double Resampler::getDelay() const
+{
+    return soxr_delay(mSoxr);
+}
+
 rpm::vector<double> Resampler::process(const double *pIn, int inLength)
 {
     std::lock_guard<std::mutex> lock(mMutex);

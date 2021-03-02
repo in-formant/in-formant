@@ -31,7 +31,7 @@ namespace Module::Audio {
         int getRequiredInLength(int outLength) const;
         int getExpectedOutLength(int inLength) const;
     
-        int getDelay() const;
+        double getDelay() const;
 
         void clear();
         rpm::vector<double> process(const double *pIn, int inLength);

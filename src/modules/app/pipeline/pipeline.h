@@ -38,7 +38,7 @@ namespace Module::App
         std::shared_ptr<Analysis::FormantSolver>& mFormantSolver;
         std::shared_ptr<Analysis::InvglotSolver>& mInvglotSolver;
 
-        std::atomic_int64_t mTime;
+        std::atomic<double> mTime;
         std::atomic_bool mRunningThreads;
         std::atomic_bool mStopThreads;
         

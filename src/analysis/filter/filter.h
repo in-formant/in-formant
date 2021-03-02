@@ -18,6 +18,8 @@ namespace Analysis {
 
     rpm::vector<double> sosfilter(const rpm::vector<std::array<double, 6>>& sos, const rpm::vector<double>& x);
 
+    rpm::vector<double> sosfiltfilt(const rpm::vector<std::array<double, 6>>& sos, const rpm::vector<double>& x);
+
     rpm::vector<double> gaussianWindow(int length, double alpha);
     rpm::vector<double> blackmanHarrisWindow(int length);
 

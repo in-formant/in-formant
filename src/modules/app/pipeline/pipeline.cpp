@@ -1,6 +1,5 @@
 #include "pipeline.h"
 #include "../../../analysis/filter/filter.h"
-#include "../../../synthesis/synthesis.h"
 
 #include <iostream>
 
@@ -49,16 +48,16 @@ void Pipeline::callbackSpectrogram()
 {
     const double fs = mCaptureBuffer->getSampleRate();
     
-    constexpr double frameHop = 16.667 / 1000.0;
+    constexpr double frameHop = 12.5 / 1000.0;
     rpm::vector<double> m(frameHop * fs);
 
     double frameDuration;
     rpm::vector<double> slidingWindow;
     
-    auto hpsos = Analysis::butterworthHighpass(8, 40.0, fs);
+    auto hpsos = Analysis::butterworthHighpass(4, 40.0, fs);
     rpm::vector<rpm::vector<double>> zfhp(hpsos.size(), rpm::vector<double>(2, 0.0));
 
-    int64_t t = 0;
+    double t = 0;
 
     double maxHold = 1.0;
 
@@ -72,17 +71,17 @@ void Pipeline::callbackSpectrogram()
             frameDuration = 50.0 / 1000.0;
         }
         
-        slidingWindow.resize(frameDuration * dfs);
+        slidingWindow.resize(frameDuration * fs);
 
         mBufferSpectrogram.pull(m.data(), m.size());
-        m = Synthesis::sosfilter(hpsos, m, zfhp);
         auto out = mSpectrumResampler.process(m.data(), m.size());
 
         // Rotate to the left to make space for the latest chunk of audio.
         std::rotate(slidingWindow.begin(), std::next(slidingWindow.begin(), out.size()), slidingWindow.end());
         std::copy(out.begin(), out.end(), std::prev(slidingWindow.end(), out.size()));
 
-        auto fftVector = Analysis::fft_n(*mSpectrumFFT, slidingWindow); 
+        auto slidingWindowFiltered = Analysis::sosfiltfilt(hpsos, slidingWindow);
+        auto fftVector = Analysis::fft_n(*mSpectrumFFT, slidingWindowFiltered); 
         Eigen::VectorXd spectrum = Eigen::Map<Eigen::VectorXd>(fftVector.data(), fftVector.size());
 
         double max = spectrum.maxCoeff();
@@ -90,14 +89,14 @@ void Pipeline::callbackSpectrogram()
         spectrum /= max;
 
         mDataStore->beginWrite();
-        mDataStore->getSpectrogram().insert(t / fs, {
+        mDataStore->getSpectrogram().insert(t - frameDuration - mSpectrumResampler.getDelay() / dfs, {
             .magnitudes = spectrum,
             .sampleRate = dfs,
             .frameDuration = frameDuration,
         });
         mDataStore->endWrite();
 
-        t += m.size();
+        t += m.size() / fs;
     }
 }
 
@@ -107,7 +106,7 @@ void Pipeline::callbackPitch()
 
     rpm::vector<double> m(30.0 * fs / 1000.0);
 
-    int64_t t = 0;
+    double t = 0;
 
     while (mRunningThreads && !mStopThreads) {
         mBufferPitch.pull(m.data(), m.size());
@@ -116,13 +115,13 @@ void Pipeline::callbackPitch()
 
         mDataStore->beginWrite();
         if (pitchResult.voiced) {
-            mDataStore->getPitchTrack().insert(t / fs, pitchResult.pitch);
+            mDataStore->getPitchTrack().insert(t, pitchResult.pitch);
         }
         else {
-            mDataStore->getPitchTrack().insert(t / fs, std::nullopt);
+            mDataStore->getPitchTrack().insert(t, std::nullopt);
         }
         mDataStore->endWrite();
-        t += m.size();
+        t += m.size() / fs;
     }
 }
 
@@ -142,7 +141,7 @@ void Pipeline::callbackFormants()
     double fsLPC = 11000;
     Module::Audio::Resampler rsLPC(fs, fsLPC);
 
-    int64_t t = 0;
+    double t = 0;
 
     while (mRunningThreads && !mStopThreads) {
         mBufferFormants.pull(m.data(), m.size());
@@ -157,13 +156,16 @@ void Pipeline::callbackFormants()
         auto mLPC = rsLPC.process(m.data(), m.size());
 
         rpm::vector<double> lpc;
-
+      
+        double delay;
         if (auto deepFormantSolver = dynamic_cast<Analysis::Formant::DeepFormants *>(mFormantSolver.get())) {
             deepFormantSolver->setFrameAudio(mDF);
+            delay = rsDF.getDelay() / fsDF;
         }
         else {
             double gain;
             lpc = mLinpredSolver->solve(mLPC.data(), mLPC.size(), 10, &gain);
+            delay = rsLPC.getDelay() / fsLPC;
         }
 
         auto formantResult = mFormantSolver->solve(lpc.data(), lpc.size(), fsLPC);
@@ -174,26 +176,32 @@ void Pipeline::callbackFormants()
                     mDataStore->getFormantTrackCount(),
                     formantResult.formants.size());
                 ++i) {
-            mDataStore->getFormantTrack(i).insert(t / fs, formantResult.formants[i].frequency);
+            const double freq = formantResult.formants[i].frequency;
+            if (std::isfinite(freq)) {
+                mDataStore->getFormantTrack(i).insert(t - delay, freq);
+            }
+            else {
+                mDataStore->getFormantTrack(i).insert(t - delay, std::nullopt);
+            }
         }
         for (int i = formantResult.formants.size(); i < mDataStore->getFormantTrackCount(); ++i) {
-            mDataStore->getFormantTrack(i).insert(t / fs, std::nullopt);
+            mDataStore->getFormantTrack(i).insert(t - delay, std::nullopt);
         }
         mDataStore->endWrite();
-        t += m.size();
+        t += m.size() / fs;
     }
 }
 
 void Pipeline::processAll()
 {
+    const double fs = (double) mCaptureBuffer->getSampleRate();
+
     static int blockSize = 512;
     rpm::vector<double> data(blockSize);
     mCaptureBuffer->pull(data.data(), data.size());
-    mTime += blockSize;
+    mTime = mTime + blockSize / fs;
 
-    const double fs = (double) mCaptureBuffer->getSampleRate();
-
-    mDataStore->setTime((double) mTime / fs);
+    mDataStore->setTime(mTime);
 
     mBufferSpectrogram.setSampleRate(fs);
     mBufferPitch.setSampleRate(fs);
@@ -211,7 +219,7 @@ void Pipeline::processAll()
         mThreadFormants = std::thread(std::mem_fn(&Pipeline::callbackFormants), this);
     }
     
-    mDataStore->getSoundTrack().insert(mTime / fs, data);
+    mDataStore->getSoundTrack().insert(mTime, data);
 
     // dynamically adjust blockSize to consume all the buffer.
     static int lastBufferLength = 0;
