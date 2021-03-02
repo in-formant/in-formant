@@ -289,7 +289,7 @@ void QPainterWrapper::drawSpectrogram(
 {
     int vh = viewport().height();
   
-    int numBins = 2 * vh;
+    int numBins = vh;
     int numSlices = std::distance(begin, end);
     
     if (numBins == 0 || numSlices == 0) {

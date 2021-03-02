@@ -7,7 +7,7 @@ import QtCharts 2.15
 ApplicationWindow {
     id: synthWindow
     title: appName + " - Synthesizer"
-    visible: true
+    visible: false
 
     width: 400
     height: 300

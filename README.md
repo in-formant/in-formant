@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/clo-yunhee/in-formant.svg?branch=with-qt)](https://travis-ci.com/clo-yunhee/in-formant)
+
 # InFormant™ - a real-time pitch and formant tracking software
 
 ## Table of Contents
@@ -16,7 +18,7 @@ There are several prebuilt binaries included with each new release:
 * a DMG image, for macOS 10.14 Mojave or newer (only 64-bit PC architecture supported, no ARM binaries yet)
 * ~~an APK file, for Android 9 Pie or newer (**prefer [the Play Store version](https://play.google.com/store/apps/details?id=fr.cloyunhee.speechanalysis) for smaller downloads**)~~ 
 
-Android is not yet supported for 3.0.0.
+Android is not yet supported for 3.x
 
 ## How to compile from source (using Docker)
 
