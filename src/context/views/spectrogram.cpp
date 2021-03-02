@@ -58,6 +58,7 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
         painter->drawFrequencyTrack(f3.lower_bound(timeStart), f3.upper_bound(timeEnd), false);
     }
 
+    painter->drawTimeAxis();
     painter->drawFrequencyScale();
 
     //painter->setTimeSeriesPen(QPen(QColor(0xFFA500), 2));

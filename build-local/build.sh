@@ -21,6 +21,7 @@ if [ "x$build_type" = "xp" ]; then
             -DWITH_PROFILER=ON \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH \
+            -DCUR_VERSION=`cat ../version` \
         && \
     make -j$(nproc) && \
     cd .. && \
@@ -30,6 +31,7 @@ else
     cmake .. \
             -DCMAKE_BUILD_TYPE=$build_type \
             -DCMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH \
+            -DCUR_VERSION=`cat ../version` \
         && \
     make -j$(nproc) && \
     cd .. && \

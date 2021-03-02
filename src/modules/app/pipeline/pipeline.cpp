@@ -49,7 +49,7 @@ void Pipeline::callbackSpectrogram()
 {
     const double fs = mCaptureBuffer->getSampleRate();
     
-    constexpr double frameHop = 12.5 / 1000.0;
+    constexpr double frameHop = 16.667 / 1000.0;
     rpm::vector<double> m(frameHop * fs);
 
     double frameDuration;
@@ -93,6 +93,7 @@ void Pipeline::callbackSpectrogram()
         mDataStore->getSpectrogram().insert(t / fs, {
             .magnitudes = spectrum,
             .sampleRate = dfs,
+            .frameDuration = frameDuration,
         });
         mDataStore->endWrite();
 
@@ -138,7 +139,7 @@ void Pipeline::callbackFormants()
     double fsDF = 16000;
     Module::Audio::Resampler rsDF(fs, fsDF);
 
-    double fsLPC = 10000;
+    double fsLPC = 11000;
     Module::Audio::Resampler rsLPC(fs, fsLPC);
 
     int64_t t = 0;

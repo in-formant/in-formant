@@ -28,6 +28,7 @@ public:
 
     void setTimeSeriesPen(const QPen &pen);
 
+    void drawTimeAxis();
     void drawFrequencyScale();
 
     void drawTimeSeries(const rpm::vector<double> &y, double xstart, double xend, double ymin, double ymax); 

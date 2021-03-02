@@ -1,6 +1,8 @@
 #include "qpainterwrapper.h"
+#include <Eigen/src/Core/Array.h>
 #include <QPainterPath>
 #include <iostream>
+#include <qnamespace.h>
 
 QPainterWrapper::QPainterWrapper(QPainter *p)
     : QPainterWrapperBase(p),
@@ -90,6 +92,99 @@ double QPainterWrapper::mapFrequencyToY(double frequency)
     return mapFrequencyToY(frequency, p->viewport().height(), mFrequencyScale, mMinFrequency, mMaxFrequency);
 }
 
+void QPainterWrapper::drawTimeAxis()
+{
+    rpm::vector<double> majorTicks;
+    rpm::vector<double> minorTicks;
+    rpm::vector<double> minorMinorTicks;
+
+    int timeStart = std::floor(mTimeStart);
+    int timeEnd = std::ceil(mTimeEnd);
+
+    for (int timeInt = timeStart; timeInt <= timeEnd; ++timeInt) {
+        majorTicks.push_back(timeInt);
+        
+        // No need to be so detailed for negative time stamps.
+        if (timeInt < 0)
+            continue;
+
+        for (int division = 1; division <= 9; ++division) {
+            const double time = timeInt + division / 10.0;
+            if (division == 5)
+                minorTicks.push_back(time);
+            else
+                minorMinorTicks.push_back(time);
+        }
+    }
+
+    int y1 = viewport().height();
+    std::vector<bool> bits(viewport().width(), false);
+
+    QFont tickFont(p->font());
+    
+    p->setPen(QPen(Qt::white, 4, Qt::SolidLine, Qt::RoundCap));
+    tickFont.setPointSize(13);
+    p->setFont(tickFont);
+    for (const double val : majorTicks) {
+        const double x = mapTimeToX(val);
+        const auto valstr = QString::number(val, 'g');
+        const int horizAdvance = p->fontMetrics().horizontalAdvance(valstr);
+        const int descent = p->fontMetrics().descent();
+        const int fontHeight = p->fontMetrics().height();
+        QRect rect(x - horizAdvance / 2, y1 - 10 - descent, horizAdvance, fontHeight);
+        bool covered = false;
+        for (int tx = rect.x(); tx <= rect.x() + rect.width(); ++tx) {
+            if (tx >= 0 && tx < bits.size()
+                    && bits[tx]) {
+                covered = true;
+                break;
+            }
+        }
+        p->drawLine(x, y1, x, y1 - 8);
+        if (!covered) {
+            p->drawText(rect.x(), rect.y(), valstr);
+            for (int tx = rect.x(); tx <= rect.x() + rect.width(); ++tx) {
+                if (tx >= 0 && tx < bits.size())
+                    bits[tx] = true;
+            }
+        }
+    }
+
+    p->setPen(QPen(Qt::white, 3, Qt::SolidLine, Qt::RoundCap));
+    tickFont.setPointSize(11);
+    p->setFont(tickFont);
+    for (const double val : minorTicks) {
+        const double x = mapTimeToX(val);
+        const auto valstr = QString::number(val, 'g');
+        const int horizAdvance = p->fontMetrics().horizontalAdvance(valstr);
+        const int descent = p->fontMetrics().descent();
+        const int fontHeight = p->fontMetrics().height();
+        QRect rect(x - horizAdvance / 2, y1 - 10 - descent, horizAdvance, fontHeight);
+        bool covered = false;
+        for (int tx = rect.x(); tx <= rect.x() + rect.width(); ++tx) {
+            if (tx >= 0 && tx < bits.size()
+                    && bits[tx]) {
+                covered = true;
+                break;
+            }
+        }
+        p->drawLine(x, y1, x, y1 - 4);
+        if (!covered) {
+            p->drawText(rect.x(), rect.y(), valstr);
+            for (int tx = rect.x(); tx <= rect.x() + rect.width(); ++tx) {
+                if (tx >= 0 && tx < bits.size())
+                    bits[tx] = true;
+            }
+        }
+    }
+    
+    p->setPen(QPen(Qt::white, 2, Qt::SolidLine, Qt::RoundCap));
+    for (const double val : minorMinorTicks) {
+        const double x = mapTimeToX(val);
+        p->drawLine(x, y1, x, y1 - 2);
+    }
+}
+
 void QPainterWrapper::drawFrequencyScale()
 {
     rpm::vector<double> majorTicks;
@@ -174,7 +269,7 @@ void QPainterWrapper::drawFrequencyScale()
     p->setFont(tickFont);
     for (const double val : majorTicks) {
         const double y = mapFrequencyToY(val);
-        const auto valstr = QString("%1").arg(val, 'g');
+        const auto valstr = QString::number(val, 'g');
         const int horizAdvance = p->fontMetrics().horizontalAdvance(valstr);
         const int descent = p->fontMetrics().descent();
         const int fontHeight = p->fontMetrics().height();
@@ -204,7 +299,7 @@ void QPainterWrapper::drawFrequencyScale()
     p->setFont(tickFont);
     for (const double val : minorTicks) {
         const double y = mapFrequencyToY(val);
-        const auto valstr = QString("%1").arg(val, 'g');
+        const auto valstr = QString::number(val, 'g');
         const int horizAdvance = p->fontMetrics().horizontalAdvance(valstr);
         const int descent = p->fontMetrics().descent();
         const int fontHeight = p->fontMetrics().height();
@@ -232,7 +327,7 @@ void QPainterWrapper::drawFrequencyScale()
     p->setPen(QPen(Qt::white, 2, Qt::SolidLine, Qt::RoundCap));
     for (const double val : minorMinorTicks) {
         const double y = mapFrequencyToY(val);
-        const auto valstr = QString("%1").arg(val, 'g');
+        const auto valstr = QString::number(val, 'g');
         const int horizAdvance = p->fontMetrics().horizontalAdvance(valstr);
         const int descent = p->fontMetrics().descent();
         const int fontHeight = p->fontMetrics().height();
@@ -287,18 +382,21 @@ void QPainterWrapper::drawSpectrogram(
             const TimeTrack<Main::SpectrogramCoefs>::const_iterator& begin,
             const TimeTrack<Main::SpectrogramCoefs>::const_iterator& end)
 {
+    int vw = viewport().width();
     int vh = viewport().height();
-  
-    int numBins = vh;
+ 
     int numSlices = std::distance(begin, end);
     
-    if (numBins == 0 || numSlices == 0) {
+    if (numSlices < 2) {
         return;
     }
 
-    QImage image(numSlices, numBins, QImage::Format_RGB32);
+    int iw = 512;
+    int ih = vh;
+    int numBins = ih;
 
-    int ix = 0;
+    Eigen::ArrayXXd amplitudes = Eigen::ArrayXXd::Zero(ih, iw);
+    Eigen::ArrayXXd weights = Eigen::ArrayXXd::Zero(ih, iw);
 
     for (auto it = begin; it != end; ++it) {
         double time = it->first;
@@ -310,18 +408,35 @@ void QPainterWrapper::drawSpectrogram(
           
         Eigen::VectorXd mapped = (ytrans * slice).reverse();
 
-        for (int vy = 0; vy < mapped.size(); ++vy) {
-            QRgb *scanLineBits = reinterpret_cast<QRgb *>(image.scanLine(vy));
-            scanLineBits[ix] = mapAmplitudeToColor(mapped(vy));
+        int x1 = mapTimeToX(time - coefs.frameDuration, iw, mTimeStart, mTimeEnd);
+        int x2 = mapTimeToX(time, iw, mTimeStart, mTimeEnd);
+       
+        auto window = Analysis::blackmanHarrisWindow(x2 - x1 + 1);
+
+        for (int iy = 0; iy < mapped.size(); ++iy) {
+            for (int ix = x1; ix <= x2; ++ix) {
+                if (ix >= 0 && ix < iw) {
+                    amplitudes(iy, ix) += window[ix - x1] * mapped(iy);
+                    weights(iy, ix) += window[ix - x1];
+                }
+            }
         }
-
-        ix++;
     }
-   
-    double xstart = mapTimeToX(begin->first);
-    double xend = mapTimeToX(std::prev(end)->first);
 
-    p->drawImage(xstart, 0, image.scaled(xend - xstart, vh, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+    QImage image(iw, ih, QImage::Format_RGB32);
+    image.fill(Qt::black);
+
+    for (int iy = 0; iy < ih; ++iy) {
+        QRgb *scanLineBits = reinterpret_cast<QRgb *>(image.scanLine(iy));
+        for (int ix = 0; ix < iw; ++ix) {
+            const double w = weights(iy, ix);
+            if (w > 0) {
+                scanLineBits[ix] = mapAmplitudeToColor(amplitudes(iy, ix) / w);
+            }
+        }
+    }
+
+    p->drawImage(0, 0, image.scaled(vw, vh, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
 }
 
 void QPainterWrapper::drawFrequencyTrack(

@@ -14,7 +14,8 @@
 
 #include "synthwrapper.h"
 
-#define STR(arg) #arg
+#define STR_(arg) #arg
+#define STR(arg) STR_(arg)
 #define INFORMANT_VERSION_STR STR(INFORMANT_VERSION)
 
 namespace Main {
