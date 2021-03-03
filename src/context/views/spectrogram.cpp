@@ -5,14 +5,62 @@
 
 using namespace Main::View;
 
+std::atomic_bool SpectrogramWorker::sQueued;
+
+SpectrogramWorker::SpectrogramWorker()
+{
+    sQueued = false;
+}
+
+SpectrogramWorker::~SpectrogramWorker()
+{
+}
+
+bool SpectrogramWorker::queued()
+{
+    return sQueued;
+}
+
+void SpectrogramWorker::renderImage(
+        const rpm::vector<std::pair<double, SpectrogramCoefs>>& slices,
+        double timeStart,
+        double timeEnd,
+        FrequencyScale frequencyScale,
+        double minFrequency,
+        double maxFrequency,
+        double maxGain,
+        int vw, int vh)
+{
+    sQueued = true;
+    QImage image = QPainterWrapper::drawSpectrogram(
+                        slices,
+                        timeStart,
+                        timeEnd,
+                        frequencyScale,
+                        minFrequency,
+                        maxFrequency,
+                        maxGain);
+    emit imageRendered(image.scaled(vw, vh, Qt::IgnoreAspectRatio, Qt::SmoothTransformation), timeStart, timeEnd);
+    sQueued = false;
+}
+
 Spectrogram::Spectrogram()
 {
-    qRegisterMetaType<rpm::vector<double>>("rpm::vector<double>");
+    qRegisterMetaType<rpm::vector<std::pair<double, SpectrogramCoefs>>>("rpm::vector<std::pair<double, SpectrogramCoefs>>");
     qRegisterMetaType<FrequencyScale>("FrequencyScale");
+
+    auto* worker = new SpectrogramWorker;
+    worker->moveToThread(&mImageRenderThread);
+    QObject::connect(&mImageRenderThread, &QThread::finished, worker, &QObject::deleteLater);
+    QObject::connect(this, &Spectrogram::renderImage, worker, &SpectrogramWorker::renderImage);
+    QObject::connect(worker, &SpectrogramWorker::imageRendered, this, &Spectrogram::imageRendered);
+    mImageRenderThread.start();
 }
 
 Spectrogram::~Spectrogram()
 {
+    mImageRenderThread.quit();
+    mImageRenderThread.wait();
 }
 
 void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *dataStore)
@@ -39,7 +87,24 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     painter->setTimeRange(timeStart, timeEnd);
   
     if (config->getViewShowSpectrogram()) {
-        painter->drawSpectrogram(spectrogram.lower_bound(timeStart), spectrogram.upper_bound(timeEnd));
+        if (!SpectrogramWorker::queued()) {
+            rpm::vector<std::pair<double, SpectrogramCoefs>> slices(
+                    spectrogram.lower_bound(timeStart), spectrogram.upper_bound(timeEnd));
+            emit renderImage(std::move(slices), timeStart, timeEnd,
+                    config->getViewFrequencyScale(),
+                    config->getViewMinFrequency(),
+                    config->getViewMaxFrequency(),
+                    config->getViewMaxGain(),
+                    viewport.width(),
+                    viewport.height());
+        }
+        if (!mImage.isNull()) {
+            const double x1 = painter->mapTimeToX(mImageTimeStart);
+            const double x2 = painter->mapTimeToX(mImageTimeEnd);
+            painter->drawImage(
+                    QRectF(x1, 0, x2 - x1, painter->viewport().height()),
+                    mImage);
+        }
     }
     
     if (config->getViewShowPitch()) {
@@ -72,3 +137,9 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     dataStore->endRead();
 }
 
+void Spectrogram::imageRendered(QImage image, double timeStart, double timeEnd)
+{
+    mImage = image;
+    mImageTimeStart = timeStart;
+    mImageTimeEnd = timeEnd;
+}

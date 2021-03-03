@@ -17,7 +17,6 @@ public:
     void setFrequencyScale(FrequencyScale scale);
     void setMinFrequency(double minFrequency);
     void setMaxFrequency(double maxFrequency);
-    void setMinGain(double minGain);
     void setMaxGain(double maxGain);
 
     void setMajorTickFont(const QFont &font);
@@ -33,9 +32,6 @@ public:
 
     void drawTimeSeries(const rpm::vector<double> &y, double xstart, double xend, double ymin, double ymax); 
 
-    void drawSpectrogram(const TimeTrack<Main::SpectrogramCoefs>::const_iterator& begin,
-                         const TimeTrack<Main::SpectrogramCoefs>::const_iterator& end);
-
     void drawFrequencyTrack(const TimeTrack<double>::const_iterator& begin,
                             const TimeTrack<double>::const_iterator& end,
                             bool curve = false);
@@ -49,6 +45,15 @@ public:
     double mapTimeToX(double time);
     double mapFrequencyToY(double frequency);
 
+    static QImage drawSpectrogram(
+            const rpm::vector<std::pair<double, Main::SpectrogramCoefs>>& slices,
+            double timeStart,
+            double timeEnd,
+            FrequencyScale frequencyScale,
+            double minFrequency,
+            double maxFrequency,
+            double maxGain);
+
     static double mapTimeToX(double time, int width, double startTime, double endTime);
     static double mapFrequencyToY(double frequency, int height, FrequencyScale scale, double minFrequency, double maxFrequency);
     static double mapYToFrequency(double y, int height, FrequencyScale scale, double minFrequency, double maxFrequency);
@@ -57,15 +62,12 @@ private:
     double transformFrequency(double frequency);
     double inverseFrequency(double value);
 
-    QRgb mapAmplitudeToColor(double amplitude);
-
     double mTimeStart;
     double mTimeEnd;
 
     FrequencyScale mFrequencyScale;
     double mMinFrequency;
     double mMaxFrequency;
-    double mMinGain;
     double mMaxGain;
 
     QFont  mMajorTickFont;
@@ -78,8 +80,6 @@ private:
 
     static double transformFrequency(double frequency, FrequencyScale scale);
     static double inverseFrequency(double value, FrequencyScale scale);
-
-    static QRgb mapAmplitudeToColor(double amplitude, double minGain, double maxGain);
 
     static Eigen::SparseMatrix<double> constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax, FrequencyScale sourceScale, double sourceMin, double sourceMax);
 

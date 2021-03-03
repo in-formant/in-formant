@@ -11,7 +11,6 @@ QPainterWrapper::QPainterWrapper(QPainter *p)
       mFrequencyScale(FrequencyScale::Mel),
       mMinFrequency(60),
       mMaxFrequency(8000),
-      mMinGain(-120),
       mMaxGain(0)
 {
 }
@@ -35,11 +34,6 @@ void QPainterWrapper::setMinFrequency(double minFrequency)
 void QPainterWrapper::setMaxFrequency(double maxFrequency)
 {
     mMaxFrequency = maxFrequency;
-}
-
-void QPainterWrapper::setMinGain(double minGain)
-{
-    mMinGain = minGain;
 }
 
 void QPainterWrapper::setMaxGain(double maxGain)
@@ -387,72 +381,6 @@ void QPainterWrapper::drawTimeSeries(const rpm::vector<double>& y, double xstart
         drawCurve(points, 0.8);
         p->restore();
     }
-}
-
-QRgb QPainterWrapper::mapAmplitudeToColor(double amplitude)
-{
-    return mapAmplitudeToColor(amplitude, mMinGain, mMaxGain);
-}
-
-void QPainterWrapper::drawSpectrogram(
-            const TimeTrack<Main::SpectrogramCoefs>::const_iterator& begin,
-            const TimeTrack<Main::SpectrogramCoefs>::const_iterator& end)
-{
-    int vw = viewport().width();
-    int vh = viewport().height();
- 
-    int numSlices = std::distance(begin, end);
-    
-    if (numSlices < 2) {
-        return;
-    }
-
-    int iw = 512;
-    int ih = 300;
-    int numBins = ih;
-
-    Eigen::ArrayXXd amplitudes = Eigen::ArrayXXd::Zero(ih, iw);
-    Eigen::ArrayXXd weights = Eigen::ArrayXXd::Zero(ih, iw);
-
-    for (auto it = begin; it != end; ++it) {
-        double time = it->first;
-        const auto& coefs = it->second;
-
-        auto& slice = coefs.magnitudes;
-
-        auto ytrans = constructTransformY(slice.rows(), numBins, mFrequencyScale, mMinFrequency, mMaxFrequency, FrequencyScale::Linear, 0, coefs.sampleRate / 2);
-          
-        Eigen::VectorXd mapped = (ytrans * slice).reverse();
-
-        int x1 = mapTimeToX(time - coefs.frameDuration, iw, mTimeStart, mTimeEnd);
-        int x2 = mapTimeToX(time, iw, mTimeStart, mTimeEnd);
-       
-        auto window = Analysis::blackmanHarrisWindow(x2 - x1 + 1);
-
-        for (int iy = 0; iy < mapped.size(); ++iy) {
-            for (int ix = x1; ix <= x2; ++ix) {
-                if (ix >= 0 && ix < iw) {
-                    amplitudes(iy, ix) += window[ix - x1] * mapped(iy);
-                    weights(iy, ix) += window[ix - x1];
-                }
-            }
-        }
-    }
-
-    QImage image(iw, ih, QImage::Format_ARGB32_Premultiplied);
-    image.fill(Qt::black);
-
-    for (int iy = 0; iy < ih; ++iy) {
-        QRgb *scanLineBits = reinterpret_cast<QRgb *>(image.scanLine(iy));
-        for (int ix = 0; ix < iw; ++ix) {
-            const double w = weights(iy, ix);
-            if (w > 0) {
-                scanLineBits[ix] = mapAmplitudeToColor(amplitudes(iy, ix) / w);
-            }
-        }
-    }
-
-    p->drawImage(0, 0, image.scaled(vw, vh, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
 }
 
 void QPainterWrapper::drawFrequencyTrack(

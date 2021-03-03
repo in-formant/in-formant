@@ -63,39 +63,6 @@ double QPainterWrapper::mapYToFrequency(double y, int height, FrequencyScale sca
     return inverseFrequency(value, scale);
 }
 
-QRgb QPainterWrapper::mapAmplitudeToColor(double amplitude, double minGain, double maxGain)
-{
-    //double a = std::clamp((gain - minGain) / (maxGain - minGain), 0.0, 1.0);
-    double a = amplitude / pow(10, maxGain / 20);
-    a = sqrt(a) * 7;
-    
-    int leftIndex = std::floor(a * 255);
-
-    QColor c;
-
-    if (a < 1e-16) {
-        return QColor(Qt::transparent).rgba();
-    }
-
-    if (leftIndex <= 0) {
-        c = QColor::fromRgb(cmap[0]);
-    }
-    else if (leftIndex >= 255) {
-        c = QColor::fromRgb(cmap[255]);
-    }
-    else {
-        double frac = a * 255 - leftIndex;
-        QColor c1 = QColor::fromRgb(cmap[leftIndex]);
-        QColor c2 = QColor::fromRgb(cmap[leftIndex + 1]);
-        int r = frac * c1.red() + (1 - frac) * c2.red();
-        int g = frac * c1.green() + (1 - frac) * c2.green();
-        int b = frac * c1.blue() + (1 - frac) * c2.blue();
-        c = QColor::fromRgb(qRgb(r, g, b));
-    }
-
-    return c.rgba();
-}
-
 // ( vh, h, scale, minf, maxf, scalesrc, minsrc, maxsrc )
 using ytrans_key = std::tuple<int, int, FrequencyScale, double, double, FrequencyScale, double, double>;
 
@@ -136,5 +103,70 @@ Eigen::SparseMatrix<double> QPainterWrapper::constructTransformY(int h, int vh, 
     }
     
     return ytrans;
+}
+
+QImage QPainterWrapper::drawSpectrogram(
+            const rpm::vector<std::pair<double, Main::SpectrogramCoefs>>& slices,
+            double timeStart,
+            double timeEnd,
+            FrequencyScale frequencyScale,
+            double minFrequency,
+            double maxFrequency,
+            double maxGain)
+{
+    int numSlices = slices.size();
+
+    int iw = 1024;
+    int ih = 1024;
+    int numBins = ih;
+
+    Eigen::ArrayXXd amplitudes = Eigen::ArrayXXd::Zero(ih, iw);
+    Eigen::ArrayXXd weights = Eigen::ArrayXXd::Zero(ih, iw);
+
+    for (auto it = slices.begin(); it != slices.end(); ++it) {
+        double time = it->first;
+        const auto& coefs = it->second;
+
+        auto& slice = coefs.magnitudes;
+
+        auto ytrans = constructTransformY(slice.rows(), numBins, frequencyScale, minFrequency, maxFrequency, FrequencyScale::Linear, 0, coefs.sampleRate / 2);
+          
+        Eigen::VectorXd mapped = (ytrans * slice).reverse();
+
+        int x1 = mapTimeToX(time - coefs.frameDuration, iw, timeStart, timeEnd);
+        int x2 = mapTimeToX(time, iw, timeStart, timeEnd);
+       
+        auto window = Analysis::blackmanHarrisWindow(x2 - x1 + 1);
+
+        for (int iy = 0; iy < mapped.size(); ++iy) {
+            for (int ix = x1; ix <= x2; ++ix) {
+                if (ix >= 0 && ix < iw) {
+                    amplitudes(iy, ix) += window[ix - x1] * mapped(iy);
+                    weights(iy, ix) += window[ix - x1];
+                }
+            }
+        }
+    }
+
+    QImage image(iw, ih, QImage::Format_Indexed8);
+    image.setColorTable(cmap);
+
+    for (int iy = 0; iy < ih; ++iy) {
+        uint8_t *scanLineBits = reinterpret_cast<uint8_t *>(image.scanLine(iy));
+        for (int ix = 0; ix < iw; ++ix) {
+            const double w = weights(iy, ix);
+            if (w > 0) {
+                const double amplitude = amplitudes(iy, ix) / w;
+                const double adjusted = sqrt(amplitude / pow(10, maxGain / 20)) * 7;
+                int index = std::clamp((int) std::floor(adjusted * 255), 0, 255);
+                scanLineBits[ix] = index;
+            }
+            else {
+                scanLineBits[ix] = 0;
+            }
+        }
+    }
+    
+    return image;
 }
 
