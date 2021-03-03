@@ -140,9 +140,13 @@ void QPainterWrapper::drawTimeAxis()
                 break;
             }
         }
+        p->setPen(QPen(Qt::white, 4, Qt::SolidLine, Qt::RoundCap));
         p->drawLine(x, y1, x, y1 - 8);
         if (!covered) {
-            p->drawText(rect.x(), rect.y(), valstr);
+            QPainterPath textPath;
+            textPath.addText(rect.x(), rect.y(), tickFont, valstr);
+            p->strokePath(textPath, QPen(Qt::black, 3, Qt::SolidLine, Qt::RoundCap));
+            p->fillPath(textPath, Qt::white);
             for (int tx = rect.x(); tx <= rect.x() + rect.width(); ++tx) {
                 if (tx >= 0 && tx < bits.size())
                     bits[tx] = true;
@@ -170,7 +174,10 @@ void QPainterWrapper::drawTimeAxis()
         }
         p->drawLine(x, y1, x, y1 - 4);
         if (!covered) {
-            p->drawText(rect.x(), rect.y(), valstr);
+            QPainterPath textPath;
+            textPath.addText(rect.x(), rect.y(), tickFont, valstr);
+            p->strokePath(textPath, QPen(Qt::black, 3, Qt::SolidLine, Qt::RoundCap));
+            p->fillPath(textPath, Qt::white);
             for (int tx = rect.x(); tx <= rect.x() + rect.width(); ++tx) {
                 if (tx >= 0 && tx < bits.size())
                     bits[tx] = true;
@@ -264,7 +271,6 @@ void QPainterWrapper::drawFrequencyScale()
 
     QFont tickFont(p->font());
     
-    p->setPen(QPen(Qt::white, 4, Qt::SolidLine, Qt::RoundCap));
     tickFont.setPointSize(13);
     p->setFont(tickFont);
     for (const double val : majorTicks) {
@@ -285,8 +291,12 @@ void QPainterWrapper::drawFrequencyScale()
         if (covered) {
             continue;
         }
+        p->setPen(QPen(Qt::white, 4, Qt::SolidLine, Qt::RoundCap));
         p->drawLine(x1 - 8, y, x1, y);
-        p->drawText(rect.x(), rect.y(), valstr);
+        QPainterPath textPath;
+        textPath.addText(rect.x(), rect.y(), tickFont, valstr);
+        p->strokePath(textPath, QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap));
+        p->fillPath(textPath, Qt::white);
 
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
             if (ty >= 0 && ty < bits.size())
@@ -294,7 +304,6 @@ void QPainterWrapper::drawFrequencyScale()
         }
     }
 
-    p->setPen(QPen(Qt::white, 3, Qt::SolidLine, Qt::RoundCap));
     tickFont.setPointSize(11);
     p->setFont(tickFont);
     for (const double val : minorTicks) {
@@ -315,8 +324,12 @@ void QPainterWrapper::drawFrequencyScale()
         if (covered) {
             continue;
         }
+        p->setPen(QPen(Qt::white, 3, Qt::SolidLine, Qt::RoundCap));
         p->drawLine(x1 - 6, y, x1, y);
-        p->drawText(rect.x(), rect.y(), valstr);
+        QPainterPath textPath;
+        textPath.addText(rect.x(), rect.y(), tickFont, valstr);
+        p->strokePath(textPath, QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap));
+        p->fillPath(textPath, Qt::white);
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
             if (ty >= 0 && ty < bits.size())
                 bits[ty] = true;
@@ -324,7 +337,6 @@ void QPainterWrapper::drawFrequencyScale()
     }
 
     tickFont.setPointSize(10);
-    p->setPen(QPen(Qt::white, 2, Qt::SolidLine, Qt::RoundCap));
     for (const double val : minorMinorTicks) {
         const double y = mapFrequencyToY(val);
         const auto valstr = QString::number(val, 'g');
@@ -343,8 +355,12 @@ void QPainterWrapper::drawFrequencyScale()
         if (covered) {
             continue;
         }
+        p->setPen(QPen(Qt::white, 2, Qt::SolidLine, Qt::RoundCap));
         p->drawLine(x1 - 4, y, x1, y);
-        p->drawText(rect.x(), rect.y(), valstr);
+        QPainterPath textPath;
+        textPath.addText(rect.x(), rect.y(), tickFont, valstr);
+        p->strokePath(textPath, QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap));
+        p->fillPath(textPath, Qt::white);
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
             if (ty >= 0 && ty < bits.size())
                 bits[ty] = true;
@@ -456,10 +472,21 @@ void QPainterWrapper::drawFrequencyTrack(
         points.emplace_back(x, y);
     }
 
+    QPen pen = p->pen();
+    QPen outlinePen = pen;
+    outlinePen.setColor(Qt::black);
+    pen.setWidthF(pen.widthF() - 2.5);
+
     if (curve) {
+        p->setPen(outlinePen);
+        drawCurve(points);
+        p->setPen(pen);
         drawCurve(points);
     }
     else {
+        p->setPen(outlinePen);
+        p->drawPoints(points.data(), points.size());
+        p->setPen(pen);
         p->drawPoints(points.data(), points.size());
     }
 }
@@ -491,12 +518,29 @@ void QPainterWrapper::drawFrequencyTrack(
         segments.push_back(std::move(points));
     }
 
+    QPen pen = p->pen();
+    QPen outlinePen = pen;
+    outlinePen.setColor(Qt::black);
+    pen.setWidthF(pen.widthF() - 2.5);
+
     if (curve) {
+        p->setPen(outlinePen);
+        for (const auto& segmentPoints : segments) {
+            drawCurve(segmentPoints);
+        }
+        
+        p->setPen(pen);
         for (const auto& segmentPoints : segments) {
             drawCurve(segmentPoints);
         }
     }
     else {
+        p->setPen(outlinePen);
+        for (const auto& segmentPoints : segments) {
+            p->drawPoints(segmentPoints.data(), segmentPoints.size());
+        }
+
+        p->setPen(pen);
         for (const auto& segmentPoints : segments) {
             p->drawPoints(segmentPoints.data(), segmentPoints.size());
         }
@@ -547,6 +591,7 @@ void QPainterWrapper::drawCurve(const rpm::vector<QPointF>& points, double tensi
             path.cubicTo(ctrlPoints[2 * (i - 1) - 1], ctrlPoints[2 * (i - 1)], points[i]);
         }
         path.quadTo(ctrlPoints[2 * (len - 2) - 1], points[len - 1]);
+        
         p->drawPath(path);
     }
 }

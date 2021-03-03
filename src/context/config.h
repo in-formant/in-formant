@@ -98,7 +98,7 @@ namespace Main {
         void setViewFrequencyScale(int scale);
 
         int getViewFormantCount();
-        std::array<double, 3> getViewFormantColor(int i);
+        std::tuple<double, double, double> getViewFormantColor(int i);
 
         bool getViewShowSpectrogram();
         void setViewShowSpectrogram(bool b);

@@ -43,18 +43,23 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     }
     
     if (config->getViewShowPitch()) {
-        painter->setPen(QPen(Qt::cyan, 6, Qt::SolidLine, Qt::RoundCap));
-        painter->drawFrequencyTrack(pitchTrack.lower_bound(timeStart), pitchTrack.upper_bound(timeEnd));
+        painter->setPen(QPen(Qt::cyan, 8, Qt::SolidLine, Qt::RoundCap));
+        painter->drawFrequencyTrack(pitchTrack.lower_bound(timeStart), pitchTrack.upper_bound(timeEnd), false);
     }
 
     if (config->getViewShowFormants()) {
-        painter->setPen(QPen(Qt::green, 7, Qt::SolidLine, Qt::RoundCap));
+        double r, g, b;
+
+        std::tie(r, g, b) = config->getViewFormantColor(0);
+        painter->setPen(QPen(QColor::fromRgbF(r, g, b), 8, Qt::SolidLine, Qt::RoundCap));
         painter->drawFrequencyTrack(f1.lower_bound(timeStart), f1.upper_bound(timeEnd), false);
 
-        painter->setPen(QPen(Qt::darkYellow, 7, Qt::SolidLine, Qt::RoundCap));
+        std::tie(r, g, b) = config->getViewFormantColor(1);
+        painter->setPen(QPen(QColor::fromRgbF(r, g, b), 8, Qt::SolidLine, Qt::RoundCap));
         painter->drawFrequencyTrack(f2.lower_bound(timeStart), f2.upper_bound(timeEnd), false);
  
-        painter->setPen(QPen(Qt::magenta, 7, Qt::SolidLine, Qt::RoundCap));
+        std::tie(r, g, b) = config->getViewFormantColor(2);
+        painter->setPen(QPen(QColor::fromRgbF(r, g, b), 8, Qt::SolidLine, Qt::RoundCap));
         painter->drawFrequencyTrack(f3.lower_bound(timeStart), f3.upper_bound(timeEnd), false);
     }
 

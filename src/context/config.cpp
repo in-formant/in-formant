@@ -273,7 +273,7 @@ int Config::getViewFormantCount()
     return integerField(mTbl["view"], "formantCount", 4);
 }
 
-std::array<double, 3> Config::getViewFormantColor(int i)
+std::tuple<double, double, double> Config::getViewFormantColor(int i)
 {
     constexpr double defaultFormantColors[][3] = {
         {0.0,  1.0,  0.0},
