@@ -71,10 +71,10 @@ int GuiContext::exec()
 void GuiContext::setTimerSlow(bool slow)
 {
     if (slow) {
-        mUpdateTimer->setInterval(10ms);
+        mUpdateTimer->setInterval(50ms);
     }
     else {
-        mUpdateTimer->setInterval(33ms);
+        mUpdateTimer->setInterval(20ms);
     }
 }
 
