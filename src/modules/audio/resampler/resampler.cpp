@@ -1,4 +1,6 @@
 #include "resampler.h"
+#include "CDSPFIRFilter.h"
+#include <math.h>
 #include <string>
 #include <cmath>
 #include <cstring>
@@ -10,13 +12,10 @@
 using namespace Module::Audio;
 
 std::atomic_int Resampler::sId(0);
+rpm::map<std::pair<int, int>, int> Resampler::sInLenBeforeOutStart;
 
 Resampler::Resampler(int inRate)
     : mId(sId++),
-      mSoxrIoSpec(soxr_io_spec(SOXR_FLOAT32_I, SOXR_FLOAT32_I)),
-      mSoxrQualitySpec(soxr_quality_spec(SOXR_32_BITQ, 0)),
-      mSoxrRuntimeSpec(soxr_runtime_spec(1)),
-      mSoxr(nullptr),
       mInRate(inRate),
       mOutRate(0)
 {
@@ -24,48 +23,38 @@ Resampler::Resampler(int inRate)
 
 Resampler::Resampler(int inRate, int outRate)
     : mId(sId++),
-      mSoxrIoSpec(soxr_io_spec(SOXR_FLOAT32_I, SOXR_FLOAT32_I)),
-      mSoxrQualitySpec(soxr_quality_spec(SOXR_32_BITQ, 0)),
-      mSoxrRuntimeSpec(soxr_runtime_spec(1)),
-      mSoxr(nullptr),
       mInRate(inRate),
       mOutRate(outRate)
 {
-    createResampler();
+    setupResampler();
 }
 
 Resampler::~Resampler()
 {
-    if (mSoxr != nullptr) {
-        soxr_delete(mSoxr);
-    }
 }
 
 void Resampler::setInputRate(int newInRate)
 {
-    std::lock_guard<std::mutex> lock(mMutex);
     if (mInRate != newInRate) {
         mInRate = newInRate;
-        createResampler();
+        updateRatio();
     }
 }
 
 void Resampler::setOutputRate(int newOutRate)
 {
-    std::lock_guard<std::mutex> lock(mMutex);
     if (mOutRate != newOutRate) {
         mOutRate = newOutRate;
-        createResampler();
+        updateRatio();
     }
 }
 
 void Resampler::setRate(int newInRate, int newOutRate)
 {
-    std::lock_guard<std::mutex> lock(mMutex); 
     if (mInRate != newInRate || mOutRate != newOutRate) {
         mInRate = newInRate;
         mOutRate = newOutRate;
-        createResampler();
+        updateRatio();
     }
 }
 
@@ -105,60 +94,48 @@ int Resampler::getExpectedOutLength(int inLength) const
 
 double Resampler::getDelay() const
 {
-    return soxr_delay(mSoxr);
+    return mResampler->getLatencyFrac();
 }
 
 rpm::vector<double> Resampler::process(const double *pIn, int inLength)
 {
-    std::lock_guard<std::mutex> lock(mMutex);
+    rpm::vector<double> in(&pIn[0], &pIn[inLength]);
+    double *op;
+    int outLength = mResampler->process(in.data(), inLength, op);
 
-    if (inLength == 0) {
-        return {0.0f};
-    }
-    
-    rpm::vector<float> in(pIn, pIn + inLength);
-
-    int outLength = (int) (inLength * mOutRate / mInRate + 0.5);
-    rpm::vector<float> out(outLength);
-
-    soxr_process(
-            mSoxr,
-            in.data(),
-            inLength,
-            nullptr,
-            out.data(),
-            outLength,
-            nullptr);
-    
-    return rpm::vector<double>(out.begin(), out.end());
+    return rpm::vector<double>(&op[0], &op[outLength]);
 }
 
-void Resampler::createResampler()
+void Resampler::updateRatio()
 {
-    if (mSoxr != nullptr) {
-        soxr_delete(mSoxr);
-    }
-    soxr_error_t err;
-    mSoxr = soxr_create(mInRate, mOutRate, 1,
-            &err,
-            &mSoxrIoSpec,
-            &mSoxrQualitySpec,
-            &mSoxrRuntimeSpec);
-    if (mSoxr == nullptr) {
-        throw std::runtime_error(std::string("Audio::Resampler#") + std::to_string(mId) + "] Unable to create resampler: " + soxr_strerror(err));
-    }
+    std::lock_guard<std::mutex> lock(mMutex);
+    setupResampler();
     std::cout << "Audio::Resampler#" << mId << "] Created " << mInRate << " --> " << mOutRate << std::endl;
 }
 
-rpm::vector<double> Resampler::oneShot(const double *pIn, int inLength, int src, int dst)
+void Resampler::setupResampler()
 {
-    size_t olen = (size_t) (inLength * dst / src + 0.5);
-    rpm::vector<float> out(olen);
-    size_t odone;
-    soxr_oneshot(src, dst, 1,
-                 pIn, inLength, nullptr,
-                 out.data(), olen, &odone,
-                 nullptr, nullptr, nullptr);
-    out.resize(odone);
-    return rpm::vector<double>(out.begin(), out.end());
+    double resTransBand = (mOutRate < 6000 ? 40.0 : 20.0);
+
+    mResampler = std::make_unique<r8b::CDSPResampler>(mInRate, mOutRate, 65536, resTransBand, 206.91, r8b::fprMinPhase);
+
+    const int len = getInLenBeforeOutStart(mInRate, mOutRate, *mResampler);
+    double *op;
+    rpm::vector<double> in(len, 0.0);
+    mResampler->process(in.data(), len, op);
+}
+
+int Resampler::getInLenBeforeOutStart(int src, int dst, r8b::CDSPResampler& resampler)
+{
+    auto key = std::make_pair(src, dst);
+    auto it = sInLenBeforeOutStart.find(key);
+    int inLen;
+    if (it != sInLenBeforeOutStart.end()) {
+        inLen = it->second;
+    }
+    else {
+        inLen = resampler.getInLenBeforeOutStart();
+        sInLenBeforeOutStart[key] = inLen;
+    }
+    return inLen;
 }

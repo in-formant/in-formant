@@ -104,7 +104,7 @@ void Pipeline::callbackPitch()
 {
     const double fs = mCaptureBuffer->getSampleRate();
 
-    rpm::vector<double> m(30.0 * fs / 1000.0);
+    rpm::vector<double> m(40.0 * fs / 1000.0);
 
     double t = 0;
 

@@ -2,7 +2,7 @@
 #define AUDIO_RESAMPLER_H
 
 #include "rpcxx.h"
-#include <soxr.h>
+#include <CDSPResampler.h>
 #include <mutex>
 #include <atomic>
 
@@ -35,24 +35,21 @@ namespace Module::Audio {
 
         void clear();
         rpm::vector<double> process(const double *pIn, int inLength);
-       
-        static rpm::vector<double> oneShot(const double *pIn, int inLength, int src, int dst);
 
     private:
-        void createResampler();
+        void updateRatio();
+        void setupResampler();
         
         int mId;
 
-        soxr_io_spec_t      mSoxrIoSpec;
-        soxr_quality_spec_t mSoxrQualitySpec;
-        soxr_runtime_spec_t mSoxrRuntimeSpec;
-        soxr_t mSoxr;
-
         std::mutex mMutex;
-
+        std::unique_ptr<r8b::CDSPResampler> mResampler;
         int mInRate, mOutRate;
 
         static std::atomic_int sId;
+
+        static int getInLenBeforeOutStart(int src, int dst, r8b::CDSPResampler& resampler);
+        static rpm::map<std::pair<int, int>, int> sInLenBeforeOutStart;
     };
 
 }

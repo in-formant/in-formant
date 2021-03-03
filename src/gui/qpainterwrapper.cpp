@@ -439,7 +439,7 @@ void QPainterWrapper::drawSpectrogram(
         }
     }
 
-    QImage image(iw, ih, QImage::Format_RGB32);
+    QImage image(iw, ih, QImage::Format_ARGB32_Premultiplied);
     image.fill(Qt::black);
 
     for (int iy = 0; iy < ih; ++iy) {

@@ -2,6 +2,7 @@
 #include "../filter/filter.h"
 #include "rapt.h"
 #include "pitch.h"
+#include <soxr.h>
 #include <cmath>
 #include <algorithm>
 #include <numeric>
@@ -11,8 +12,8 @@ using namespace Analysis;
 
 Pitch::RAPT::RAPT()
 {
-    F0min   = 70;
-    F0max   = 500;
+    F0min   = 50;
+    F0max   = 600;
     cand_tr = 0.3;
     lag_wt  = 0.3;
     freq_wt = 0.02;
@@ -283,7 +284,7 @@ rpm::vector<double> downsampleSignal(const rpm::vector<double>& s, const double 
         nullptr);
     
     out.resize(odone);
-    
+
     return out;
 }
 

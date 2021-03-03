@@ -281,9 +281,14 @@ target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${
 target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LDFLAGS} ${TORCH_LIBRARIES} Qt5::Charts Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
 
 add_subdirectory(external/rpmalloc EXCLUDE_FROM_ALL)
+target_link_libraries(in-formant PRIVATE rpmalloc)
+
 add_subdirectory(external/soxr EXCLUDE_FROM_ALL)
-target_link_libraries(in-formant PRIVATE rpmalloc soxr)
-target_include_directories(in-formant SYSTEM PRIVATE external/soxr/src)
+target_link_libraries(in-formant PRIVATE soxr)
+target_include_directories(in-formant PRIVATE external/soxr/src)
+
+target_sources(in-formant PRIVATE external/r8brain-free-src/r8bbase.cpp)
+target_include_directories(in-formant PRIVATE external/r8brain-free-src)
 
 target_compile_definitions(in-formant PRIVATE
     -DINFORMANT_VERSION=${CUR_VERSION} -DARMA_DONT_USE_WRAPPER
