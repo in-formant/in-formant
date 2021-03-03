@@ -27,7 +27,7 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
 
     const QRect viewport = painter->viewport();
 
-    constexpr double viewDuration = 5.0;
+    const double viewDuration = config->getViewTimeSpan();
     const double timeStart = dataStore->getTime() - viewDuration;
     const double timeEnd = dataStore->getTime();
 
@@ -43,7 +43,7 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     }
     
     if (config->getViewShowPitch()) {
-        painter->setPen(QPen(Qt::cyan, 8, Qt::SolidLine, Qt::RoundCap));
+        painter->setPen(QPen(Qt::cyan, 10, Qt::SolidLine, Qt::RoundCap));
         painter->drawFrequencyTrack(pitchTrack.lower_bound(timeStart), pitchTrack.upper_bound(timeEnd), false);
     }
 

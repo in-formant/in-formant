@@ -147,6 +147,25 @@ ApplicationWindow {
 
                     MenuSeparator {}
 
+                    Label { text: "View duration:" }
+                    Slider {
+                        from: 2
+                        to: 30
+                        stepSize: 0.5
+                        value: config.viewTimeSpan
+                        onMoved: config.viewTimeSpan = value
+                        Label {
+                            id: timeSpanHandleLabel
+                            anchors.top: parent.handle.bottom
+                            anchors.topMargin: 5
+                            anchors.horizontalCenter: parent.handle.horizontalCenter
+                            text: config.viewTimeSpan + " s"
+                        }
+                        Layout.bottomMargin: timeSpanHandleLabel.height - 10
+                    }
+
+                    MenuSeparator {}
+
                     Label { text: "View frequency range:" }
                     RangeSlider {
                         from: mel(1)

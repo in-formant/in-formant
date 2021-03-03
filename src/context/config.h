@@ -25,6 +25,7 @@ namespace Main {
         Q_PROPERTY(int viewMaxFrequency     READ getViewMaxFrequency            WRITE setViewMaxFrequency       NOTIFY viewMaxFrequencyChanged)
         Q_PROPERTY(int viewFFTSize          READ getViewFFTSize                 WRITE setViewFFTSize            NOTIFY viewFFTSizeChanged)
         Q_PROPERTY(int viewMaxGain          READ getViewMaxGain                 WRITE setViewMaxGain            NOTIFY viewMaxGainChanged)
+        Q_PROPERTY(double viewTimeSpan      READ getViewTimeSpan                WRITE setViewTimeSpan           NOTIFY viewTimeSpanChanged)
         Q_PROPERTY(int viewFrequencyScale   READ getViewFrequencyScaleNumeric   WRITE setViewFrequencyScale     NOTIFY viewFrequencyScaleChanged)
         Q_PROPERTY(bool viewShowSpectrogram READ getViewShowSpectrogram         WRITE setViewShowSpectrogram    NOTIFY viewShowSpectrogramChanged)
         Q_PROPERTY(bool viewShowPitch       READ getViewShowPitch               WRITE setViewShowPitch          NOTIFY viewShowPitchChanged)
@@ -40,8 +41,8 @@ namespace Main {
         void viewMinFrequencyChanged(int);
         void viewMaxFrequencyChanged(int);
         void viewFFTSizeChanged(int);
-        void viewMinGainChanged(int);
         void viewMaxGainChanged(int);
+        void viewTimeSpanChanged(double);
         void viewFrequencyScaleChanged(int);
         void viewShowSpectrogramChanged(bool);
         void viewShowPitchChanged(bool);
@@ -90,6 +91,9 @@ namespace Main {
 
         int getViewMaxGain();
         void setViewMaxGain(int g);
+
+        double getViewTimeSpan();
+        void setViewTimeSpan(double dur);
 
         FrequencyScale getViewFrequencyScale();
         void setViewFrequencyScale(FrequencyScale scale);

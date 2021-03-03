@@ -247,6 +247,17 @@ void Config::setViewMaxGain(int g)
     emit viewMaxGainChanged(g);
 }
 
+double Config::getViewTimeSpan()
+{
+    return doubleField(mTbl["view"], "timeSpan", 5.0);
+}
+
+void Config::setViewTimeSpan(double dur)
+{
+    mTbl["view"]["timeSpan"].ref<double>() = dur;
+    emit viewTimeSpanChanged(dur);
+}
+
 FrequencyScale Config::getViewFrequencyScale()
 {
     return enumField(mTbl["view"], "frequencyScale", FrequencyScale::ERB);

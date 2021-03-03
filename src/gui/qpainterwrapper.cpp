@@ -408,7 +408,7 @@ void QPainterWrapper::drawSpectrogram(
     }
 
     int iw = 512;
-    int ih = vh;
+    int ih = 300;
     int numBins = ih;
 
     Eigen::ArrayXXd amplitudes = Eigen::ArrayXXd::Zero(ih, iw);
