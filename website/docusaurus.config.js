@@ -8,6 +8,14 @@ module.exports = {
   favicon: 'img/favicon.ico',
   organizationName: 'clo-yunhee', // Usually your GitHub org/user name.
   projectName: 'in-formant', // Usually your repo name.
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'fr'],
+    localeConfigs: {
+      en: { label: 'English' },
+      fr: { label: 'Français' },
+    },
+  },
   themeConfig: {
     navbar: {
       title: 'InFormant Documentation',
@@ -21,6 +29,10 @@ module.exports = {
           activeBasePath: 'docs',
           label: 'Docs',
           position: 'left',
+        },
+        {
+          type: 'localeDropdown',
+          position: 'right',
         },
         {
           href: 'https://github.com/clo-yunhee/in-formant',

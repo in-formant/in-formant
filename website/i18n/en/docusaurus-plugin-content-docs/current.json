@@ -1,0 +1,14 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.someSidebar.category.User Interface": {
+    "message": "User Interface",
+    "description": "The label for category User Interface in sidebar someSidebar"
+  },
+  "sidebar.someSidebar.category.Reporting": {
+    "message": "Reporting",
+    "description": "The label for category Reporting in sidebar someSidebar"
+  }
+}

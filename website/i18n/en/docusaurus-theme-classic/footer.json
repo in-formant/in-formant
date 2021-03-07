@@ -1,0 +1,18 @@
+{
+  "link.title.More": {
+    "message": "More",
+    "description": "The title of the footer links column with title=More in the footer"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/clo-yunhee/in-formant"
+  },
+  "link.item.label.Discord": {
+    "message": "Discord",
+    "description": "The label of footer link with label=Discord linking to https://discord.gg/SE9JaNB"
+  },
+  "copyright": {
+    "message": "Copyright © 2021 InFormant, Built with Docusaurus.",
+    "description": "The footer copyright"
+  }
+}

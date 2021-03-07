@@ -5,7 +5,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'User Interface',
+      label: 'User interface',
       items: [
         'ui1_overview',
         'ui2_spectrogram',

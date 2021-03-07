@@ -6,35 +6,46 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
 
+import Translate, {translate} from '@docusaurus/Translate';
+
 const features = [
   {
-    title: 'Real Time Feature Tracking',
+    title: translate({
+      id: 'homepage.realTimeFeatureTracking.title',
+      message: 'Real Time Feature Tracking',
+    }),
     // imageUrl: 'img/undraw_docusaurus_mountain.svg',
     description: (
-      <>
+      <Translate id="homepage.realTimeFeatureTracking.content">
         InFormant provides accurate pitch estimation and vocal tract resonance tracking,
         all happening in real time.
-      </>
+      </Translate>
     ),
   },
   {
-    title: 'Powerful Spectrogram',
+    title: translate({
+      id: 'homepage.powerfulSpectrogram.title',
+      message: 'Powerful Spectrogram',
+    }),
     // imageUrl: 'img/undraw_docusaurus_tree.svg',
     description: (
-      <>
+      <Translate id="homepage.powerfulSpectrogram.content">
         InFormant directly overlays the estimated pitch and resonance on top of an adaptive
         scrolling spectrogram view.
-      </>
+      </Translate>
     ),
   },
   {
-    title: 'Glottal Inverse Filtering',
+    title: translate({
+      id: 'homepage.glottalInverseFiltering.title',
+      message: 'Glottal Inverse Filtering',
+    }),
     // imageUrl: 'img/undraw_docusaurus_react.svg',
     description: (
-      <>
+      <Translate id="homepage.glottalInverseFiltering.content">
         InFormant also includes an experimental real time glottal inverse filtering algorithm
         that tries to predict the source glottal flow signal from the input signal.
-      </>
+      </Translate>
     ),
   },
 ];
@@ -60,7 +71,10 @@ function Home() {
   return (
     <Layout
       title={`Documentation`}
-      description="Homepage for the InFormant documentation">
+      description={translate({
+        id: 'homepage.description',
+        message: "Homepage for the InFormant documentation",
+      })}>
       <header className={clsx('hero hero--primary', styles.heroBanner)}>
         <div className="container">
           <h1 className="hero__title">{siteConfig.title}</h1>
@@ -73,7 +87,9 @@ function Home() {
                 styles.getStarted,
               )}
               to={useBaseUrl('docs/')}>
-              Get Started
+              <Translate id="homepage.getStarted">
+                Get Started
+              </Translate>
             </Link>
           </div>
         </div>
