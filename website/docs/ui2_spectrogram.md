@@ -2,7 +2,7 @@
 id: ui2_spectrogram
 title: The spectrogram
 sidebar_label: Spectrogram
-slug: /ui_spectrogram
+slug: /spectrogram-canvas
 ---
 
 This page will **NOT** go into detail on how to read a spectrogram by itself, for this I can recommend the following video by Zheanna from TransVoiceLessons on YouTube.

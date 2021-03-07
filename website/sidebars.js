@@ -9,6 +9,7 @@ module.exports = {
       items: [
         'ui1_overview',
         'ui2_spectrogram',
+        'ui3_settings',
       ],
     },
     {

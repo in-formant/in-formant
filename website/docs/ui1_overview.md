@@ -2,7 +2,7 @@
 id: ui1_overview
 title: Overview
 sidebar_label: Overview
-slug: /ui_overview
+slug: /ui-overview
 ---
 
 ![InFormant on startup](/img/ui1.1.png)
@@ -15,8 +15,6 @@ There are a total of four (4) visible elements:
 * the start/stop switch
 * the menu drawer
 * the synthesizer button
-
-Each one of these will have its own section in the documentation.
 
 The ***spectrogram canvas*** is where most of the action happens, this is where you'll be able to read
 the estimated pitch and resonance.
