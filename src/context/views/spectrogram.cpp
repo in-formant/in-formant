@@ -76,8 +76,9 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     const QRect viewport = painter->viewport();
 
     const double viewDuration = config->getViewTimeSpan();
-    const double timeStart = dataStore->getTime() - viewDuration;
-    const double timeEnd = dataStore->getTime();
+    const double timeDelay = 80.0 / 1000.0;
+    const double timeEnd = dataStore->getTime() - timeDelay;
+    const double timeStart = timeEnd - viewDuration;
 
     rpm::vector<double> sound =
         !dataStore->getSoundTrack().empty() 
@@ -88,9 +89,13 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
   
     if (config->getViewShowSpectrogram()) {
         if (!SpectrogramWorker::queued()) {
+            const double timeEndNoDelay = dataStore->getTime();
+            const double timeStartNoDelay = timeEndNoDelay - viewDuration - 2 * timeDelay;
+
             rpm::vector<std::pair<double, SpectrogramCoefs>> slices(
-                    spectrogram.lower_bound(timeStart), spectrogram.upper_bound(timeEnd));
-            emit renderImage(std::move(slices), timeStart, timeEnd,
+                    spectrogram.lower_bound(timeStartNoDelay), spectrogram.upper_bound(timeEndNoDelay));
+
+            emit renderImage(std::move(slices), timeStartNoDelay, timeEndNoDelay,
                     config->getViewFrequencyScale(),
                     config->getViewMinFrequency(),
                     config->getViewMaxFrequency(),
@@ -98,6 +103,7 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
                     viewport.width(),
                     viewport.height());
         }
+
         if (!mImage.isNull()) {
             const double x1 = painter->mapTimeToX(mImageTimeStart);
             const double x2 = painter->mapTimeToX(mImageTimeEnd);

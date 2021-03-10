@@ -475,7 +475,6 @@ void QPainterWrapper::drawFrequencyTrack(
     }
 }
 
-
 static inline void cubicControlPoints(const QPointF &p1, const QPointF &p2, const QPointF &p3, double t, QPointF &ctrl1, QPointF &ctrl2)
 {
     const double vx = p3.x() - p1.x();

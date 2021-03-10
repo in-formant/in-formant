@@ -70,7 +70,7 @@ static rpm::map<ytrans_key, Eigen::SparseMatrix<double>> ytrans_map;
 
 static std::mutex ytrans_mutex;
 
-Eigen::SparseMatrix<double> QPainterWrapper::constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax, FrequencyScale sourceScale, double sourceMin, double sourceMax)
+Eigen::SparseMatrix<double>& QPainterWrapper::constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax, FrequencyScale sourceScale, double sourceMin, double sourceMax)
 {
     std::lock_guard<std::mutex> ytrans_lock(ytrans_mutex);
 
@@ -100,10 +100,14 @@ Eigen::SparseMatrix<double> QPainterWrapper::constructTransformY(int h, int vh, 
     }
     else {
         std::cout << "!! Y axis transform was not supported" << std::endl;
+        return ytrans_map.begin()->second;
     }
     
-    return ytrans;
+    return ytrans_map[key];
 }
+
+static rpm::map<std::tuple<double, FrequencyScale, double, double>, Eigen::VectorXd> maps;
+static constexpr int mapsMaxSize = 8192;
 
 QImage QPainterWrapper::drawSpectrogram(
             const rpm::vector<std::pair<double, Main::SpectrogramCoefs>>& slices,
@@ -116,8 +120,8 @@ QImage QPainterWrapper::drawSpectrogram(
 {
     int numSlices = slices.size();
 
-    int iw = 1024;
-    int ih = 1024;
+    int iw = std::max(1024, 2 * numSlices);
+    int ih = 600;
     int numBins = ih;
 
     Eigen::ArrayXXd amplitudes = Eigen::ArrayXXd::Zero(ih, iw);
@@ -127,11 +131,27 @@ QImage QPainterWrapper::drawSpectrogram(
         double time = it->first;
         const auto& coefs = it->second;
 
-        auto& slice = coefs.magnitudes;
+        Eigen::VectorXd mapped;
 
-        auto ytrans = constructTransformY(slice.rows(), numBins, frequencyScale, minFrequency, maxFrequency, FrequencyScale::Linear, 0, coefs.sampleRate / 2);
-          
-        Eigen::VectorXd mapped = (ytrans * slice).reverse();
+        // Check if we haven't already rendered this slice with these parameters.
+        auto key = std::make_tuple(time, frequencyScale, minFrequency, maxFrequency);
+        auto mapsIt = maps.find(key);
+        if (mapsIt != maps.end()) {
+            // We have.
+            mapped = mapsIt->second;
+        }
+        else {
+            // We haven't: render it now.
+            auto& slice = coefs.magnitudes;
+            auto& ytrans = constructTransformY(slice.rows(), numBins, frequencyScale, minFrequency, maxFrequency, FrequencyScale::Linear, 0, coefs.sampleRate / 2);
+            mapped = (ytrans * slice).reverse();
+
+            // Clear the map every now and then.
+            if (maps.size() > mapsMaxSize) {
+                maps.clear();
+            }
+            maps[key] = mapped;
+        }
 
         int x1 = mapTimeToX(time - coefs.frameDuration, iw, timeStart, timeEnd);
         int x2 = mapTimeToX(time, iw, timeStart, timeEnd);

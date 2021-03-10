@@ -81,7 +81,7 @@ private:
     static double transformFrequency(double frequency, FrequencyScale scale);
     static double inverseFrequency(double value, FrequencyScale scale);
 
-    static Eigen::SparseMatrix<double> constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax, FrequencyScale sourceScale, double sourceMin, double sourceMax);
+    static Eigen::SparseMatrix<double>& constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax, FrequencyScale sourceScale, double sourceMin, double sourceMax);
 
     static QVector<QRgb> cmap;
 };
