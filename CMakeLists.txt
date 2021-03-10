@@ -69,6 +69,8 @@ set(SOURCES
     src/context/solvermakers.h
     src/context/synthwrapper.cpp
     src/context/synthwrapper.h
+    src/context/dataviswrapper.cpp
+    src/context/dataviswrapper.h
     src/context/config.cpp
     src/context/config.h
     src/context/contextmanager.cpp

@@ -34,9 +34,9 @@ ContextManager::ContextManager(
                   mPlaybackQueue.get())),
       mRenderContext(std::make_unique<RenderContext>(mConfig.get(), mDataStore.get())),
 #ifndef WITHOUT_SYNTH
-      mGuiContext(std::make_unique<GuiContext>(mConfig.get(), mRenderContext.get(), &mSynthWrapper))
+      mGuiContext(std::make_unique<GuiContext>(mConfig.get(), mRenderContext.get(), &mSynthWrapper, &mDataVisWrapper))
 #else
-      mGuiContext(std::make_unique<GuiContext>(mConfig.get(), mRenderContext.get()))
+      mGuiContext(std::make_unique<GuiContext>(mConfig.get(), mRenderContext.get(), &mDataVisWrapper))
 #endif
 {
     createViews();
@@ -139,6 +139,14 @@ void ContextManager::analysisThreadLoop()
             mAudioContext->tickAudio();
             mPipeline->processAll();
         }
+        
+        mDataStore->beginRead();
+        if (!mDataStore->getSoundTrack().empty()) {
+            mDataVisWrapper.setSound(mDataStore->getSoundTrack().back(), 16000);
+            mDataVisWrapper.setGif(mDataStore->getGifTrack().back(), 16000);
+        }
+        mDataStore->endRead();
+
         while (mConfig->isPaused() && mAnalysisRunning) {
             std::this_thread::sleep_for(0.5s);
         }

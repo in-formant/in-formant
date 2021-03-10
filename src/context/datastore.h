@@ -33,8 +33,6 @@ namespace Main {
         int beginRead();
         void endRead();
 
-        TimeTrack<rpm::vector<double>>& getSoundTrack();
-    
         double getTime() const;
         void setTime(double t);
 
@@ -46,13 +44,14 @@ namespace Main {
         int getFormantTrackCount() const;
         void setFormantTrackCount(int n);
 
+        TimeTrack<rpm::vector<double>>& getSoundTrack();
+        TimeTrack<rpm::vector<double>>& getGifTrack();
+    
     private:
         int mTrackLength;
 
         std::shared_mutex mMutex;
         int mCatchupCount;
-
-        TimeTrack<rpm::vector<double>> mSoundTrack;
 
         double mTime;
 
@@ -60,6 +59,9 @@ namespace Main {
         
         OptionalTimeTrack<double> mPitchTrack;
         rpm::vector<OptionalTimeTrack<double>> mFormantTracks;
+
+        TimeTrack<rpm::vector<double>> mSoundTrack;
+        TimeTrack<rpm::vector<double>> mGifTrack;
     };
 
 }

@@ -55,6 +55,10 @@ namespace Module::App
         Module::Audio::Buffer mBufferFormants;
         std::thread mThreadFormants;
         void callbackFormants();
+
+        Module::Audio::Buffer mBufferOscilloscope;
+        std::thread mThreadOscilloscope;
+        void callbackOscilloscope();
     };
 }
 

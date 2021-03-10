@@ -13,6 +13,7 @@
 #include <thread>
 
 #include "synthwrapper.h"
+#include "dataviswrapper.h"
 
 #define STR_(arg) #arg
 #define STR(arg) STR_(arg)
@@ -73,6 +74,8 @@ namespace Main {
         std::unique_ptr<App::Synthesizer> mSynthesizer;
         SynthWrapper mSynthWrapper;
 #endif
+        
+        DataVisWrapper mDataVisWrapper;
 
         std::unique_ptr<AudioContext> mAudioContext;
         std::unique_ptr<RenderContext> mRenderContext;

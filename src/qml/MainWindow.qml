@@ -24,7 +24,7 @@ ApplicationWindow {
     }
 
     Shortcut {
-        sequence: "P"
+        sequence: "Space"
         onActivated: config.paused = !config.paused
     }
 
@@ -69,6 +69,14 @@ ApplicationWindow {
                     icon.width = 2 * icon.width
                     icon.height = 2 * icon.height
                 }
+            }
+            
+            Button {
+                text: "Oscilloscope"
+                Material.background: Material.color(Material.DeepPurple, Material.ShadeA200)
+                Layout.alignment: Qt.AlignRight
+                Layout.rightMargin: 10
+                onPressed: oscilloscopeWindow.show()
             } 
 
             Button {
@@ -323,6 +331,10 @@ ApplicationWindow {
     }
 
     property SynthWindow synthWindow
+
+    OscilloscopeWindow {
+        id: oscilloscopeWindow
+    }
 
     Component.onCompleted: {
         if (HAS_SYNTH) {

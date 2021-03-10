@@ -3,5 +3,6 @@
     <qresource>
         <file alias="MainWindow.qml">../src/qml/MainWindow.qml</file>
         <file alias="SynthWindow.qml">../src/qml/SynthWindow.qml</file>
+        <file alias="OscilloscopeWindow.qml">../src/qml/OscilloscopeWindow.qml</file>
     </qresource>
 </RCC>

@@ -9,9 +9,9 @@ using namespace Main;
 using namespace std::chrono_literals;
 
 #ifndef WITHOUT_SYNTH
-GuiContext::GuiContext(Config *config, RenderContext *renderContext, SynthWrapper *synthWrapper)
+GuiContext::GuiContext(Config *config, RenderContext *renderContext, SynthWrapper *synthWrapper, DataVisWrapper *dataVisWrapper)
 #else
-GuiContext::GuiContext(Config *config, RenderContext *renderContext)
+GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrapper *dataVisWrapper)
 #endif
     : mConfig(config),
       mRenderContext(renderContext),
@@ -44,6 +44,8 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext)
     mQmlEngine->rootContext()->setContextProperty("HAS_SYNTH", false);
 #endif
 
+    mQmlEngine->rootContext()->setContextProperty("dataVis", dataVisWrapper);
+
     mQmlEngine->load(QUrl("qrc:/MainWindow.qml"));
    
     auto window = static_cast<QQuickWindow *>(mQmlEngine->rootObjects().first());
@@ -74,7 +76,7 @@ void GuiContext::setTimerSlow(bool slow)
         mUpdateTimer->setInterval(50ms);
     }
     else {
-        mUpdateTimer->setInterval(20ms);
+        mUpdateTimer->setInterval(33ms);
     }
 }
 

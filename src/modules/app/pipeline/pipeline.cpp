@@ -23,7 +23,8 @@ Pipeline::Pipeline(Module::Audio::Buffer *captureBuffer,
       mStopThreads(false),
       mBufferSpectrogram(16000),
       mBufferPitch(16000),
-      mBufferFormants(16000)
+      mBufferFormants(16000),
+      mBufferOscilloscope(16000)
 {
 }
 
@@ -42,6 +43,9 @@ Pipeline::~Pipeline()
 
     if (mThreadFormants.joinable())
         mThreadFormants.join();
+
+    if (mThreadOscilloscope.joinable())
+        mThreadOscilloscope.join();
 }
 
 void Pipeline::callbackSpectrogram()
@@ -192,6 +196,34 @@ void Pipeline::callbackFormants()
     }
 }
 
+void Pipeline::callbackOscilloscope()
+{
+    const double fs = mCaptureBuffer->getSampleRate();
+
+    rpm::vector<double> m(80.0 * fs / 1000.0);
+
+    double dfs = 8000;
+    Module::Audio::Resampler rs(fs, dfs);
+
+    double t = 0;
+
+    while (mRunningThreads && !mStopThreads) {
+        mBufferOscilloscope.pull(m.data(), m.size());
+
+        auto out = rs.process(m.data(), m.size());
+        auto invglotResult = mInvglotSolver->solve(out.data(), out.size(), dfs);
+
+        mDataStore->beginWrite();
+       
+        mDataStore->getSoundTrack().insert(t, out);
+        mDataStore->getGifTrack().insert(t, invglotResult.glotSig);
+
+        mDataStore->endWrite();
+
+        t += m.size() / fs;
+    }
+}
+
 void Pipeline::processAll()
 {
     const double fs = (double) mCaptureBuffer->getSampleRate();
@@ -206,20 +238,21 @@ void Pipeline::processAll()
     mBufferSpectrogram.setSampleRate(fs);
     mBufferPitch.setSampleRate(fs);
     mBufferFormants.setSampleRate(fs);
+    mBufferOscilloscope.setSampleRate(fs);
 
     rpm::vector<float> fdata(data.begin(), data.end());
     mBufferSpectrogram.push(fdata.data(), data.size());
     mBufferPitch.push(fdata.data(), data.size());
     mBufferFormants.push(fdata.data(), data.size());
+    mBufferOscilloscope.push(fdata.data(), data.size());
 
     bool shouldNotBeRunning = false;
     if (mRunningThreads.compare_exchange_strong(shouldNotBeRunning, true)) {
         mThreadSpectrogram = std::thread(std::mem_fn(&Pipeline::callbackSpectrogram), this);
         mThreadPitch = std::thread(std::mem_fn(&Pipeline::callbackPitch), this);
         mThreadFormants = std::thread(std::mem_fn(&Pipeline::callbackFormants), this);
+        mThreadOscilloscope = std::thread(std::mem_fn(&Pipeline::callbackOscilloscope), this);
     }
-    
-    mDataStore->getSoundTrack().insert(mTime, data);
 
     // dynamically adjust blockSize to consume all the buffer.
     static int lastBufferLength = 0;

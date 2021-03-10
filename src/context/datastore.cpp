@@ -34,11 +34,6 @@ void DataStore::endRead()
     mMutex.unlock_shared();
 }
 
-TimeTrack<rpm::vector<double>>& DataStore::getSoundTrack()
-{
-    return mSoundTrack;
-}
-
 double DataStore::getTime() const
 {
     return mTime;
@@ -72,6 +67,16 @@ int DataStore::getFormantTrackCount() const
 void DataStore::setFormantTrackCount(int n)
 {
     mFormantTracks.resize(n);
+}
+
+TimeTrack<rpm::vector<double>>& DataStore::getSoundTrack()
+{
+    return mSoundTrack;
+}
+
+TimeTrack<rpm::vector<double>>& DataStore::getGifTrack()
+{
+    return mGifTrack;
 }
 
 

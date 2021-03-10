@@ -11,6 +11,7 @@
 #include <QTimer>
 
 #include "synthwrapper.h"
+#include "dataviswrapper.h"
 
 namespace Main {
 
@@ -24,9 +25,9 @@ namespace Main {
 
     public:
 #ifndef WITHOUT_SYNTH
-        GuiContext(Config *config, RenderContext *renderContext, SynthWrapper *synthWrapper);
+        GuiContext(Config *config, RenderContext *renderContext, SynthWrapper *synthWrapper, DataVisWrapper *dataVisWrapper);
 #else
-        GuiContext(Config *config, RenderContext *renderContext);
+        GuiContext(Config *config, RenderContext *renderContext, DataVisWrapper *dataVisWrapper);
 #endif
 
         int exec();
