@@ -130,6 +130,7 @@ void ContextManager::startAnalysisThread()
 {
     mAnalysisRunning = true;
     mAnalysisThread = std::thread(std::mem_fn(&ContextManager::analysisThreadLoop), this);
+    mDatavisThread = std::thread(std::mem_fn(&ContextManager::datavisThreadLoop), this);
 }
 
 void ContextManager::analysisThreadLoop()
@@ -141,10 +142,6 @@ void ContextManager::analysisThreadLoop()
         }
         
         mDataStore->beginRead();
-        if (!mDataStore->getSoundTrack().empty()) {
-            mDataVisWrapper.setSound(mDataStore->getSoundTrack().back(), 16000);
-            mDataVisWrapper.setGif(mDataStore->getGifTrack().back(), 16000);
-        }
         mDataStore->endRead();
 
         while (mConfig->isPaused() && mAnalysisRunning) {
@@ -153,13 +150,30 @@ void ContextManager::analysisThreadLoop()
     }
 }
 
+void ContextManager::datavisThreadLoop()
+{
+    while (mAnalysisRunning) {
+        mDataStore->beginRead();
+        
+        if (!mDataStore->getSoundTrack().empty()) {
+            mDataVisWrapper.setSound(mDataStore->getSoundTrack().back(), 8000);
+            mDataVisWrapper.setGif(mDataStore->getGifTrack().back(), 8000);
+        }
+
+        mDataStore->endRead();
+
+        std::this_thread::sleep_for(50ms);
+    }
+}
+
 void ContextManager::stopAnalysisThread()
 {
     Module::Audio::Buffer::cancelPulls();
 
-    if (mAnalysisThread.joinable()) {
+    if (mAnalysisThread.joinable() || mDatavisThread.joinable()) {
         mAnalysisRunning = false;
         mAnalysisThread.join();
+        mDatavisThread.join();
     }
 }
 

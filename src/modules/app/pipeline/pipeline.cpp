@@ -1,5 +1,6 @@
 #include "pipeline.h"
 #include "../../../analysis/filter/filter.h"
+#include "../../../synthesis/synthesis.h"
 
 #include <iostream>
 
@@ -58,12 +59,12 @@ void Pipeline::callbackSpectrogram()
     double frameDuration;
     rpm::vector<double> slidingWindow;
     
-    auto hpsos = Analysis::butterworthHighpass(4, 40.0, fs);
-    rpm::vector<rpm::vector<double>> zfhp(hpsos.size(), rpm::vector<double>(2, 0.0));
-
     double t = 0;
 
     double maxHold = 1.0;
+
+    auto hpsos = Analysis::butterworthHighpass(8, 60.0, fs);
+    rpm::vector<rpm::vector<double>> zfhp(hpsos.size(), rpm::vector<double>(2, 0.0));
 
     while (mRunningThreads && !mStopThreads) {
         double dfs = 2 * mConfig->getViewMaxFrequency();
@@ -79,13 +80,13 @@ void Pipeline::callbackSpectrogram()
 
         mBufferSpectrogram.pull(m.data(), m.size());
         auto out = mSpectrumResampler.process(m.data(), m.size());
+        out = Synthesis::sosfilter(hpsos, out, zfhp);
 
         // Rotate to the left to make space for the latest chunk of audio.
         std::rotate(slidingWindow.begin(), std::next(slidingWindow.begin(), out.size()), slidingWindow.end());
         std::copy(out.begin(), out.end(), std::prev(slidingWindow.end(), out.size()));
 
-        auto slidingWindowFiltered = Analysis::sosfiltfilt(hpsos, slidingWindow);
-        auto fftVector = Analysis::fft_n(*mSpectrumFFT, slidingWindowFiltered); 
+        auto fftVector = Analysis::fft_n(*mSpectrumFFT, slidingWindow); 
         Eigen::VectorXd spectrum = Eigen::Map<Eigen::VectorXd>(fftVector.data(), fftVector.size());
 
         double max = spectrum.maxCoeff();

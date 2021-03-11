@@ -115,9 +115,9 @@ void Resampler::updateRatio()
 
 void Resampler::setupResampler()
 {
-    double resTransBand = (mOutRate < 6000 ? 40.0 : 20.0);
+    double resTransBand = (mOutRate < 6000 ? 20.0 : 10.0);
 
-    mResampler = std::make_unique<r8b::CDSPResampler>(mInRate, mOutRate, 65536, resTransBand, 206.91, r8b::fprMinPhase);
+    mResampler = std::make_unique<r8b::CDSPResampler>(mInRate, mOutRate, 65536, resTransBand, 206.91, r8b::fprLinearPhase);
 
     const int len = getInLenBeforeOutStart(mInRate, mOutRate, *mResampler);
     double *op;

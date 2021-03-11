@@ -45,6 +45,7 @@ namespace Main {
         
         void startAnalysisThread();
         void analysisThreadLoop();
+        void datavisThreadLoop();
         void stopAnalysisThread();
 
 #ifndef WITHOUT_SYNTH
@@ -84,6 +85,7 @@ namespace Main {
         rpm::map<std::string, std::unique_ptr<AbstractView>> mViews;
 
         std::thread mAnalysisThread;
+        std::thread mDatavisThread;
         std::atomic_bool mAnalysisRunning;
 
 #ifndef WITHOUT_SYNTH
