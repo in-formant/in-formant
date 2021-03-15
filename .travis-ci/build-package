@@ -4,4 +4,14 @@ src=$(pwd)
 build=$(pwd)/build/$TARGET
 dist=$(pwd)/dist
 
+git_tag=`git describe --tags`
+git_commit=`git rev-parse --short HEAD`
+
+if [ "x$git_tag" = "xcontinuous" ];
+then
+    version=`cat $src/version`
+    rm $src/version
+    echo "$version-$git_commit" > $src/version
+fi
+
 docker run $extra_args --rm -t -e CMAKE_BUILD_TYPE=Release -e target=$TARGET -e ARCH=$ARCH -v $src:/src -v $build:/build -v $dist:/dist clorika/sabuilder:$TARGET
