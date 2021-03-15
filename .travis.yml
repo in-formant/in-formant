@@ -5,7 +5,7 @@ dist: focal
 services:
 - docker
 
-if: tag != "continuous"
+if: branch = with-qt
 
 cache:
   directories:
