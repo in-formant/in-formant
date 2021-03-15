@@ -3,7 +3,6 @@
 
 #include "rpcxx.h"
 #include <CDSPResampler.h>
-#include <mutex>
 #include <atomic>
 
 namespace Module::Audio {
@@ -42,7 +41,6 @@ namespace Module::Audio {
         
         int mId;
 
-        std::mutex mMutex;
         std::unique_ptr<r8b::CDSPResampler> mResampler;
         int mInRate, mOutRate;
 

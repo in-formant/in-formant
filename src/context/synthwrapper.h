@@ -95,15 +95,15 @@ namespace Main {
         QVector<QPointF> mFilterResponse;
         double mFilterResponseDbMin;
         double mFilterResponseDbMax;
-        std::mutex mFilterResponseMutex;
+        QMutex mFilterResponseMutex;
 
         QVector<QPointF> mSource;
-        std::mutex mSourceMutex;
+        QMutex mSourceMutex;
 
         QVector<QPointF> mSourceSpectrum;
         double mSourceSpectrumDbMin;
         double mSourceSpectrumDbMax;
-        std::mutex mSourceSpectrumMutex;
+        QMutex mSourceSpectrumMutex;
     };
 
 }

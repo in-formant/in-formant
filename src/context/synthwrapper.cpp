@@ -136,7 +136,7 @@ void SynthWrapper::setFollowFormants(bool b)
 
 void SynthWrapper::setFilterResponse(const rpm::vector<double>& frequencies, const rpm::vector<double>& magnitudes)
 {
-    std::lock_guard<std::mutex> lock(mFilterResponseMutex);
+    QMutexLocker lock(&mFilterResponseMutex);
 
     mFilterResponse.resize(frequencies.size());
     double dBmin = DBL_MAX;
@@ -168,7 +168,7 @@ void SynthWrapper::setFilterResponse(const rpm::vector<double>& frequencies, con
 
 void SynthWrapper::setSource(const rpm::vector<double>& signal, double fs)
 {
-    std::lock_guard<std::mutex> lock(mSourceMutex);
+    QMutexLocker lock(&mSourceMutex);
     
     mSource.resize(signal.size());
     for (int k = 0; k < signal.size(); ++k) {
@@ -179,7 +179,7 @@ void SynthWrapper::setSource(const rpm::vector<double>& signal, double fs)
 
 void SynthWrapper::setSourceSpectrum(const rpm::vector<double>& frequencies, const rpm::vector<double>& magnitudes)
 {
-    std::lock_guard<std::mutex> lock(mSourceSpectrumMutex);
+    QMutexLocker lock(&mSourceSpectrumMutex);
 
     mSourceSpectrum.resize(frequencies.size());
     double dBmin = DBL_MAX;
@@ -199,7 +199,7 @@ void SynthWrapper::setSourceSpectrum(const rpm::vector<double>& frequencies, con
 
 void SynthWrapper::updateFilterResponseSeries(QXYSeries* series, QLogValueAxis *xAxis, QValueAxis* yAxis)
 {
-    std::lock_guard<std::mutex> lock(mFilterResponseMutex);
+    QMutexLocker lock(&mFilterResponseMutex);
     
     series->replace(mFilterResponse);
     xAxis->setRange(100, mFilterResponse.back().x());
@@ -210,7 +210,7 @@ void SynthWrapper::updateFilterResponseSeries(QXYSeries* series, QLogValueAxis *
 
 void SynthWrapper::updateSourceSeries(QXYSeries* series, QValueAxis* xAxis, QValueAxis* yAxis)
 {
-    std::lock_guard<std::mutex> lock(mSourceMutex);
+    QMutexLocker lock(&mSourceMutex);
     
     series->replace(mSource);
     xAxis->setRange(mSource.front().x(), mSource.back().x());
@@ -219,7 +219,7 @@ void SynthWrapper::updateSourceSeries(QXYSeries* series, QValueAxis* xAxis, QVal
 
 void SynthWrapper::updateSourceSpectrumSeries(QXYSeries* series, QLogValueAxis *xAxis, QValueAxis* yAxis)
 {
-    std::lock_guard<std::mutex> lock(mSourceSpectrumMutex);
+    QMutexLocker lock(&mSourceSpectrumMutex);
     
     series->replace(mSourceSpectrum);
     xAxis->setRange(100, mSourceSpectrum.back().x());

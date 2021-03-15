@@ -31,11 +31,11 @@ namespace Main {
     
     private:
         QVector<QPointF> mSound;
-        std::mutex mSoundMutex;
+        QMutex mSoundMutex;
 
         QVector<QPointF> mGif;
         double mGifStart, mGifEnd;
-        std::mutex mGifMutex;
+        QMutex mGifMutex;
     };
 
 }

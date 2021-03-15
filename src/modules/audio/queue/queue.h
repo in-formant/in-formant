@@ -6,7 +6,6 @@
 #include "../../../readerwriterqueue.h"
 #include "../resampler/resampler.h"
 #include <functional>
-#include <mutex>
 #include <atomic>
 
 namespace Module::Audio {
@@ -35,8 +34,6 @@ namespace Module::Audio {
         QueueCallback mCallback;
         
         moodycamel::BlockingReaderWriterQueue<double> mQueue;
-        
-        std::mutex mLock;
     };
 
 }

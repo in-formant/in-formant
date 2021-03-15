@@ -1,7 +1,7 @@
 #include "qpainterwrapper.h"
 #include <cmath>
 #include <iostream>
-#include <mutex>
+#include <QMutex>
 
 constexpr double mapToUnit(double v, double min, double max) {
     return (v - min) / (max - min);
@@ -68,11 +68,11 @@ using ytrans_key = std::tuple<int, int, FrequencyScale, double, double, Frequenc
 
 static rpm::map<ytrans_key, Eigen::SparseMatrix<double>> ytrans_map;
 
-static std::mutex ytrans_mutex;
+static QMutex ytrans_mutex;
 
 Eigen::SparseMatrix<double>& QPainterWrapper::constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax, FrequencyScale sourceScale, double sourceMin, double sourceMax)
 {
-    std::lock_guard<std::mutex> ytrans_lock(ytrans_mutex);
+    QMutexLocker ytrans_lock(&ytrans_mutex);
 
     auto key = std::make_tuple(vh, h, freqScale, freqMin, freqMax, sourceScale, sourceMin, sourceMax);
     auto it = ytrans_map.find(key);

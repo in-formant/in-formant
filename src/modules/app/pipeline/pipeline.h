@@ -16,6 +16,9 @@ namespace Module::App
     using millis = std::chrono::milliseconds;
     using namespace std::chrono_literals;
 
+    static const millis analysisThreadsWaitInterval = 100ms;
+    static const millis analysisThreadsWaitDuration = 100ms;
+
     class Pipeline {
     public:
         Pipeline(Module::Audio::Buffer *captureBuffer,

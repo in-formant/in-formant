@@ -108,7 +108,6 @@ rpm::vector<double> Resampler::process(const double *pIn, int inLength)
 
 void Resampler::updateRatio()
 {
-    std::lock_guard<std::mutex> lock(mMutex);
     setupResampler();
     std::cout << "Audio::Resampler#" << mId << "] Created " << mInRate << " --> " << mOutRate << std::endl;
 }

@@ -1,15 +1,16 @@
 #ifndef CONTEXT_TIMINGS_H
 #define CONTEXT_TIMINGS_H
 
+#include <QMutex>
+#include <QMutexLocker>
 #include <chrono>
-#include <mutex>
 #include <ostream>
 
 using dmilli = std::chrono::duration<double, std::milli>;
 using hr_clock = std::chrono::high_resolution_clock;
 using time_point = hr_clock::time_point;
 
-struct duration : public dmilli, std::mutex
+struct duration : public dmilli, public QMutex
 {
     duration() : dmilli(0), mSet(false) {}
     constexpr operator double() { return count(); }
@@ -27,11 +28,10 @@ private:
     bool mSet;
 };
 
-struct timer_guard : std::lock_guard<duration> {
-    timer_guard(duration& dur) 
-        : std::lock_guard<duration>(dur),
-          mStart(hr_clock::now()), mDur(dur) {
-    } 
+struct timer_guard {
+    timer_guard(duration& dur)
+        : mLocker(&dur), mStart(hr_clock::now()), mDur(dur)
+    {} 
     ~timer_guard() {
         mDur = (hr_clock::now() - mStart);
     }
@@ -41,6 +41,7 @@ struct timer_guard : std::lock_guard<duration> {
         return true;
     }
 private:
+    QMutexLocker mLocker;
     time_point mStart;
     duration& mDur;
 };

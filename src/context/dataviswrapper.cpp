@@ -10,8 +10,8 @@ DataVisWrapper::DataVisWrapper()
 
 void DataVisWrapper::setSound(const rpm::vector<double>& signal, double fs)
 {
-    std::lock_guard<std::mutex> lock(mSoundMutex);
-    std::lock_guard<std::mutex> lock2(mGifMutex);
+    QMutexLocker lock(&mSoundMutex);
+    QMutexLocker lock2(&mGifMutex);
 
     double absMax = 0;
     for (int k = 0; k < signal.size(); ++k) {
@@ -31,8 +31,8 @@ void DataVisWrapper::setSound(const rpm::vector<double>& signal, double fs)
 
 void DataVisWrapper::setGif(const rpm::vector<double>& signal, double fs)
 {
-    std::lock_guard<std::mutex> lock(mSoundMutex);
-    std::lock_guard<std::mutex> lock2(mGifMutex);
+    QMutexLocker lock(&mSoundMutex);
+    QMutexLocker lock2(&mGifMutex);
 
     double absMax = 0;
     for (int k = 0; k < signal.size(); ++k) {
@@ -76,8 +76,8 @@ void DataVisWrapper::setGif(const rpm::vector<double>& signal, double fs)
 
 void DataVisWrapper::updateSoundSeries(QXYSeries* series, QValueAxis* xAxis, QValueAxis* yAxis)
 {
-    std::lock_guard<std::mutex> lock(mSoundMutex);
-    std::lock_guard<std::mutex> lock2(mGifMutex);
+    QMutexLocker lock(&mSoundMutex);
+    QMutexLocker lock2(&mGifMutex);
     
     series->replace(mSound);
     xAxis->setRange(mGifStart, mGifEnd);
@@ -86,8 +86,8 @@ void DataVisWrapper::updateSoundSeries(QXYSeries* series, QValueAxis* xAxis, QVa
 
 void DataVisWrapper::updateGifSeries(QXYSeries* series, QValueAxis* xAxis, QValueAxis* yAxis)
 {
-    std::lock_guard<std::mutex> lock(mSoundMutex);
-    std::lock_guard<std::mutex> lock2(mGifMutex);
+    QMutexLocker lock(&mSoundMutex);
+    QMutexLocker lock2(&mGifMutex);
 
     series->replace(mGif);
     xAxis->setRange(mGifStart, mGifEnd);

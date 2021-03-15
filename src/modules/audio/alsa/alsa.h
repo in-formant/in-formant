@@ -2,10 +2,10 @@
 #define MODULE_ALSA_H
 
 #include "../base/base.h"
+#include <QMutex>
 #include <alsa/asoundlib.h>
 #include <atomic>
 #include <thread>
-#include <mutex>
 
 namespace Module::Audio {
 
@@ -41,10 +41,10 @@ namespace Module::Audio {
         void captureThreadLoop();
         void playbackThreadLoop();
 
-        std::mutex mCaptureMutex;
+        QMutex mCaptureMutex;
         snd_pcm_t *mCaptureHandle;
 
-        std::mutex mPlaybackMutex;
+        QMutex mPlaybackMutex;
         snd_pcm_t *mPlaybackHandle;
 
         std::atomic_bool mThreadsRunning;

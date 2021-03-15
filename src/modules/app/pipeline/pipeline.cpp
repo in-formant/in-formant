@@ -2,6 +2,7 @@
 #include "../../../analysis/filter/filter.h"
 #include "../../../synthesis/synthesis.h"
 
+#include <chrono>
 #include <iostream>
 
 using namespace Module::App;
@@ -66,7 +67,14 @@ void Pipeline::callbackSpectrogram()
     auto hpsos = Analysis::butterworthHighpass(8, 60.0, fs);
     rpm::vector<rpm::vector<double>> zfhp(hpsos.size(), rpm::vector<double>(2, 0.0));
 
+    auto time = std::chrono::steady_clock::now();
+
     while (mRunningThreads && !mStopThreads) {
+        if (std::chrono::steady_clock::now() - time >= analysisThreadsWaitInterval) {
+            std::this_thread::sleep_for(analysisThreadsWaitDuration);
+            time = std::chrono::steady_clock::now();
+        }
+
         double dfs = 2 * mConfig->getViewMaxFrequency();
         mSpectrumResampler.setRate(fs, dfs);
         
@@ -113,7 +121,14 @@ void Pipeline::callbackPitch()
 
     double t = 0;
 
+    auto time = std::chrono::steady_clock::now();
+
     while (mRunningThreads && !mStopThreads) {
+        if (std::chrono::steady_clock::now() - time >= analysisThreadsWaitInterval) {
+            std::this_thread::sleep_for(analysisThreadsWaitDuration);
+            time = std::chrono::steady_clock::now();
+        }
+        
         mBufferPitch.pull(m.data(), m.size());
 
         auto pitchResult = mPitchSolver->solve(m.data(), m.size(), fs);
@@ -148,7 +163,14 @@ void Pipeline::callbackFormants()
 
     double t = 0;
 
+    auto time = std::chrono::steady_clock::now();
+
     while (mRunningThreads && !mStopThreads) {
+        if (std::chrono::steady_clock::now() - time >= analysisThreadsWaitInterval) {
+            std::this_thread::sleep_for(analysisThreadsWaitDuration);
+            time = std::chrono::steady_clock::now();
+        }
+
         mBufferFormants.pull(m.data(), m.size());
 
         // Pre-emphasis and windowing.
@@ -208,7 +230,14 @@ void Pipeline::callbackOscilloscope()
 
     double t = 0;
 
+    auto time = std::chrono::steady_clock::now();
+
     while (mRunningThreads && !mStopThreads) {
+        if (std::chrono::steady_clock::now() - time >= analysisThreadsWaitInterval) {
+            std::this_thread::sleep_for(analysisThreadsWaitDuration);
+            time = std::chrono::steady_clock::now();
+        }
+
         mBufferOscilloscope.pull(m.data(), m.size());
 
         auto out = rs.process(m.data(), m.size());
