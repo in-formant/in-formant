@@ -348,6 +348,7 @@ endif()
 
 if(SYSTEM_WINDOWS)
     target_compile_definitions(in-formant PRIVATE -D_WIN32_WINNT=0x600 -D_USE_MATH_DEFINES)
+    target_sources(in-formant PRIVATE resources/winicon.rc)
 endif()
 
 if(SYSTEM_DARWIN)

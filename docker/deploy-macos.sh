@@ -8,6 +8,7 @@ mkdir -p $tmp/Contents/MacOS
 
 cp /src/dist-res/Info.plist $tmp/Contents
 cp /build/in-formant $tmp/Contents/MacOS/InFormant
+cp /src/resources/icons/in-formant.icns $tmp/Contents/Resources
 
 sed -i 's/@VERSION@/'"$version"'/g' $tmp/Contents/Info.plist 
 

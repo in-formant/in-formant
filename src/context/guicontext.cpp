@@ -27,6 +27,9 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrap
     qmlRegisterType<Gui::CanvasItem>("IfCanvas", 1, 0, "IfCanvas");
 
     mApp = std::make_unique<QApplication>(argc, argv);
+
+    QGuiApplication::setWindowIcon(QIcon(":/icons/in-formant.png"));
+
     mQmlEngine = std::make_unique<QQmlApplicationEngine>();
     mQmlEngine->addImportPath(QCoreApplication::applicationDirPath() + "/qml");
 #ifdef __APPLE__
@@ -51,7 +54,7 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrap
     auto window = static_cast<QQuickWindow *>(mQmlEngine->rootObjects().first());
     auto canvasItem = window->findChild<Gui::CanvasItem *>("IfCanvas");
     auto contentItem = window->contentItem();
-    
+
     canvasItem->setRenderContext(mRenderContext);
 
     canvasItem->installEventFilter(this);

@@ -16,6 +16,8 @@
         <string>APPL</string>
         <key>CFBundleSignature</key>
         <string>ifrm</string>
+        <key>CFBundleIconFile</key>
+        <string>in-formant.icns</string>
         <key>CFBundleExecutable</key>
         <string>InFormant</string>
         <key>NSMicrophoneUsageDescription</key>
