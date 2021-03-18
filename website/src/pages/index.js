@@ -77,9 +77,10 @@ function Home() {
       })}>
       <header className={clsx('hero hero--primary', styles.heroBanner)}>
         <div className="container">
-          <h1 className="hero__title">{siteConfig.title}</h1>
+          <h1 className="hero__title">
+            <img src="/img/logo-text-dark.png" alt={siteConfig.title} />
+          </h1>
           <p className="hero__subtitle">{siteConfig.tagline}</p>
-          <p className="hero__subtitle"><strong>THIS IS STILL UNDER CONSTRUCTION, IMAGES MISSING</strong></p>
           <div className={styles.buttons}>
             <Link
               className={clsx(

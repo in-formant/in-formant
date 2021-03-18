@@ -19,10 +19,10 @@ module.exports = {
   themeConfig: {
     navbar: {
       title: 'InFormant Documentation',
-      // logo: {
-      //   alt: 'InFormant Logo',
-      //   src: 'img/logo.svg',
-      // },
+      logo: {
+         alt: 'InFormant Logo',
+         src: 'img/logo.png',
+      },
       items: [
         {
           to: 'docs/',
