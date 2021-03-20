@@ -5,7 +5,9 @@ cmake_policy(SET CMP0077 NEW)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{MACOSX_DEPLOYMENT_TARGET})
 
-project(in-formant VERSION ${CUR_VERSION})
+string(FIND "${CUR_VERSION}" "-" dash_pos)
+string(SUBSTRING "${CUR_VERSION}" 0 ${dash_pos} parsed_version)
+project(in-formant VERSION ${parsed_version})
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_support")
 include(CheckSystemName)
