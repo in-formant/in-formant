@@ -379,6 +379,54 @@ int Config::getAnalysisPitchSampleRate()
     return integerField(mTbl["analysis"], "pitchSampleRate", 32000);
 }
 
+void Config::setAnalysisGranularity(double ms) {
+    mTbl["analysis"]["granularity"].ref<double>() = ms;
+}
+
+double Config::getAnalysisGranularity() {
+    return doubleField(mTbl["analysis"], "granularity", 10.0);
+}
+
+void Config::setAnalysisSpectrogramOverlap(double ms) {
+    mTbl["analysis"]["spectrogramOverlap"].ref<double>() = ms;
+}
+
+double Config::getAnalysisSpectrogramOverlap() {
+    return doubleField(mTbl["analysis"], "spectrogramOverlap", 12.5);
+}
+
+void Config::setAnalysisSpectrogramWindow(double ms) {
+    mTbl["analysis"]["spectrogramWindow"].ref<double>() = ms;
+}
+
+double Config::getAnalysisSpectrogramWindow() {
+    return doubleField(mTbl["analysis"], "spectrogramWindow", 50.0);
+}
+
+void Config::setAnalysisPitchWindow(double ms) {
+    mTbl["analysis"]["pitchWindow"].ref<double>() = ms;
+}
+
+double Config::getAnalysisPitchWindow() {
+    return doubleField(mTbl["analysis"], "pitchWindow", 40.0);
+}
+
+void Config::setAnalysisFormantWindow(double ms) {
+    mTbl["analysis"]["formantWindow"].ref<double>() = ms;
+}
+
+double Config::getAnalysisFormantWindow() {
+    return doubleField(mTbl["analysis"], "formantWindow", 20.0);
+}
+
+void Config::setAnalysisOscilloscopeWindow(double ms) {
+    mTbl["analysis"]["oscilloscopeWindow"].ref<double>() = ms;
+}
+
+double Config::getAnalysisOscilloscopeWindow() {
+    return doubleField(mTbl["analysis"], "oscilloscopeWindow", 80.0);
+}
+
 bool Config::isPaused()
 {
     return mPaused;

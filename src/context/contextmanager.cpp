@@ -136,10 +136,8 @@ void ContextManager::startAnalysisThread()
 void ContextManager::analysisThreadLoop()
 {
     while (mAnalysisRunning) {
-        if (auto timer = timer_guard(timings::update)) {
-            mAudioContext->tickAudio();
-            mPipeline->processAll();
-        }
+        mAudioContext->tickAudio();
+        mPipeline->processAll();
         
         mDataStore->beginRead();
         mDataStore->endRead();

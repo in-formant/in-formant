@@ -20,17 +20,15 @@ namespace Module::Audio {
         void setInputRate(int inRate);
         void setOutputRate(int outRate);
         void setRate(int inRate, int outRate);
-        void setQuality(int quality);
 
         int getInputRate() const;
         int getOutputRate() const;
         void getRate(int *pInRate, int *pOutRate) const;
-        int getQuality() const;
 
         int getRequiredInLength(int outLength) const;
         int getExpectedOutLength(int inLength) const;
-    
-        double getDelay() const;
+
+        double getLatency() const;
 
         void clear();
         rpm::vector<double> process(const double *pIn, int inLength);

@@ -92,9 +92,19 @@ int Resampler::getExpectedOutLength(int inLength) const
     return (int) (inLength * mOutRate / mInRate + 0.5);
 }
 
-double Resampler::getDelay() const
+double Resampler::getLatency() const
 {
-    return mResampler->getLatencyFrac();
+    return mResampler->getLatency() + mResampler->getLatencyFrac();
+}
+
+void Resampler::clear()
+{
+    mResampler->clear();
+
+    const int len = getInLenBeforeOutStart(mInRate, mOutRate, *mResampler);
+    double *op;
+    rpm::vector<double> in(len, 0.0);
+    mResampler->process(in.data(), len, op);
 }
 
 rpm::vector<double> Resampler::process(const double *pIn, int inLength)

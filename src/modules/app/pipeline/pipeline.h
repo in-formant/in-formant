@@ -42,26 +42,43 @@ namespace Module::App
         std::shared_ptr<Analysis::InvglotSolver>& mInvglotSolver;
 
         std::atomic<double> mTime;
-        std::atomic_bool mRunningThreads;
-        std::atomic_bool mStopThreads;
+        std::atomic_bool mThreadRunning;
+        std::atomic_bool mStopThread;
+
+        std::thread mProcessingThread;
+
+        Module::Audio::Buffer mBuffer;
+        double mSampleRate;
+
+        double mSpectrogramTime;
+        rpm::vector<double> mSpectrogramOverlap;
+        rpm::vector<double> mSpectrogramData;
+        Module::Audio::Resampler mSpectrogramResampler;
+        std::unique_ptr<Analysis::RealFFT> mSpectrogramFFT;
+        rpm::vector<std::array<double, 6>> mSpectrogramHighpass;
+        rpm::vector<rpm::vector<double>> mSpectrogramHighpassMemory;
+        double mSpectrogramHighpassSampleRate;
+        double mSpectrogramHold; 
+
+        double mPitchTime;
+        rpm::vector<double> mPitchData;
+        Module::Audio::Resampler mPitchResampler;
+ 
+        double mFormantTime;
+        rpm::vector<double> mFormantData;
+        rpm::vector<double> mFormantWindow;
+        Module::Audio::Resampler mFormantResamplerLPC;
+        Module::Audio::Resampler mFormantResampler16k;
         
-        Module::Audio::Buffer mBufferSpectrogram;
-        std::thread mThreadSpectrogram;
-        void callbackSpectrogram();
-        Module::Audio::Resampler mSpectrumResampler;
-        std::unique_ptr<Analysis::RealFFT> mSpectrumFFT;
+        double mOscilloscopeTime;
+        rpm::vector<double> mOscilloscopeData;
+        Module::Audio::Resampler mOscilloscopeResampler;
 
-        Module::Audio::Buffer mBufferPitch;
-        std::thread mThreadPitch;
-        void callbackPitch();
-
-        Module::Audio::Buffer mBufferFormants;
-        std::thread mThreadFormants;
-        void callbackFormants();
-
-        Module::Audio::Buffer mBufferOscilloscope;
-        std::thread mThreadOscilloscope;
-        void callbackOscilloscope();
+        void callbackProcessing();
+        void processSpectrogram();
+        void processPitch();
+        void processFormants();
+        void processOscilloscope();
     };
 }
 

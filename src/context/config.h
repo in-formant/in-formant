@@ -117,6 +117,24 @@ namespace Main {
         int getAnalysisLpOffset();
         int getAnalysisPitchSampleRate();
 
+        void setAnalysisGranularity(double ms); // default is 10ms
+        double getAnalysisGranularity();
+
+        void setAnalysisSpectrogramOverlap(double ms); // default is 12.5ms
+        double getAnalysisSpectrogramOverlap();
+
+        void setAnalysisSpectrogramWindow(double ms); // default is 50ms
+        double getAnalysisSpectrogramWindow();
+
+        void setAnalysisPitchWindow(double ms); // default is 40ms
+        double getAnalysisPitchWindow();
+
+        void setAnalysisFormantWindow(double ms); // default is 20ms
+        double getAnalysisFormantWindow();
+
+        void setAnalysisOscilloscopeWindow(double ms); // default is 80ms
+        double getAnalysisOscilloscopeWindow();
+
         // WILL NOT BE SERIALIZED
         bool isPaused();
         void setPaused(bool p);

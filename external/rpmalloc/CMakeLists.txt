@@ -22,3 +22,6 @@ else()
     target_compile_definitions(rpmalloc INTERFACE -DUSING_RPMALLOC=0)
 endif()
 
+add_library(rpcxx_only INTERFACE)
+target_include_directories(rpcxx_only SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/rpmalloc)
+target_compile_definitions(rpcxx_only INTERFACE -DUSING_RPMALLOC=0)
