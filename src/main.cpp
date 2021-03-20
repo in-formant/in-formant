@@ -46,7 +46,6 @@ int main(int argc, char **argv)
 {
 #ifdef _WIN32
     srand(time(nullptr));
-    ShowWindow(GetConsoleWindow(), SW_HIDE);
 #endif
 
     start_logger("InFormant");

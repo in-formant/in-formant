@@ -276,7 +276,7 @@ endif()
 if(SYSTEM_ANDROID)
     add_library(in-formant SHARED ${SOURCES} ${RESOURCES_OBJ})
 else()
-    add_executable(in-formant ${SOURCES} ${RESOURCES_OBJ})
+    add_executable(in-formant WIN32 ${SOURCES} ${RESOURCES_OBJ})
 endif()
 
 target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${FFTW_INCLUDE_DIRS} ${TOMLPP_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS})
