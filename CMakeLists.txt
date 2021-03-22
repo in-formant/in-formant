@@ -87,6 +87,7 @@ set(SOURCES
     src/context/datastore.h
     src/context/views/views.h
     src/context/views/spectrogram.cpp
+    src/context/views/spectrogram.h
     src/gui/qpainterwrapper.cpp
     src/gui/qpainterwrapper.h
     src/gui/qpainterwrapper_static.cpp

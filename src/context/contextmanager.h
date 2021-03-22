@@ -42,18 +42,18 @@ namespace Main {
         void loadConfig();
         
         void openAndStartAudioStreams();
-        
+
         void startAnalysisThread();
         void analysisThreadLoop();
-        void datavisThreadLoop();
         void stopAnalysisThread();
 
 #ifndef WITHOUT_SYNTH
         void startSynthesisThread();
         void synthesisThreadLoop();
-        void synthPushThreadLoop();
         void stopSynthesisThread();
 #endif
+        
+        void datavisThreadLoop();
 
         void setView(const std::string &name);
 
@@ -83,16 +83,16 @@ namespace Main {
         std::unique_ptr<GuiContext> mGuiContext;
 
         rpm::map<std::string, std::unique_ptr<AbstractView>> mViews;
-
+        
         std::thread mAnalysisThread;
-        std::thread mDatavisThread;
         std::atomic_bool mAnalysisRunning;
 
 #ifndef WITHOUT_SYNTH
         std::thread mSynthesisThread;
-        std::thread mSynthPushThread;
         std::atomic_bool mSynthesisRunning;
 #endif
+
+        std::thread mDatavisThread;
 
         int mViewMinFrequency;
         int mViewMaxFrequency;

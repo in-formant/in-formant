@@ -186,7 +186,7 @@ void QPainterWrapper::drawTimeAxis()
     }
 }
 
-void QPainterWrapper::drawFrequencyScale()
+QImage QPainterWrapper::drawFrequencyScale()
 {
     rpm::vector<double> majorTicks;
     rpm::vector<double> minorTicks;
@@ -260,13 +260,18 @@ void QPainterWrapper::drawFrequencyScale()
         }
     }
 
+    QImage image(viewport().width(), viewport().height(), QImage::Format_ARGB32_Premultiplied);
+    image.fill(Qt::transparent);
+    QPainter imp(&image);
+    imp.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
+
     int x1 = viewport().width();
     std::vector<bool> bits(viewport().height(), false);
 
     QFont tickFont(p->font());
     
     tickFont.setPointSize(13);
-    p->setFont(tickFont);
+    imp.setFont(tickFont);
     for (const double val : majorTicks) {
         const double y = mapFrequencyToY(val);
         const auto valstr = QString::number(val, 'g');
@@ -285,12 +290,12 @@ void QPainterWrapper::drawFrequencyScale()
         if (covered) {
             continue;
         }
-        p->setPen(QPen(Qt::white, 4, Qt::SolidLine, Qt::RoundCap));
-        p->drawLine(x1 - 8, y, x1, y);
+        imp.setPen(QPen(Qt::white, 4, Qt::SolidLine, Qt::RoundCap));
+        imp.drawLine(x1 - 8, y, x1, y);
         QPainterPath textPath;
         textPath.addText(rect.x(), rect.y(), tickFont, valstr);
-        p->strokePath(textPath, QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap));
-        p->fillPath(textPath, Qt::white);
+        imp.strokePath(textPath, QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap));
+        imp.fillPath(textPath, Qt::white);
 
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
             if (ty >= 0 && ty < bits.size())
@@ -299,13 +304,13 @@ void QPainterWrapper::drawFrequencyScale()
     }
 
     tickFont.setPointSize(11);
-    p->setFont(tickFont);
+    imp.setFont(tickFont);
     for (const double val : minorTicks) {
         const double y = mapFrequencyToY(val);
         const auto valstr = QString::number(val, 'g');
-        const int horizAdvance = p->fontMetrics().horizontalAdvance(valstr);
-        const int descent = p->fontMetrics().descent();
-        const int fontHeight = p->fontMetrics().height();
+        const int horizAdvance = imp.fontMetrics().horizontalAdvance(valstr);
+        const int descent = imp.fontMetrics().descent();
+        const int fontHeight = imp.fontMetrics().height();
         QRect rect(x1 - 10 - horizAdvance, y + descent, horizAdvance, fontHeight);
         bool covered = false;
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
@@ -318,12 +323,12 @@ void QPainterWrapper::drawFrequencyScale()
         if (covered) {
             continue;
         }
-        p->setPen(QPen(Qt::white, 3, Qt::SolidLine, Qt::RoundCap));
-        p->drawLine(x1 - 6, y, x1, y);
+        imp.setPen(QPen(Qt::white, 3, Qt::SolidLine, Qt::RoundCap));
+        imp.drawLine(x1 - 6, y, x1, y);
         QPainterPath textPath;
         textPath.addText(rect.x(), rect.y(), tickFont, valstr);
-        p->strokePath(textPath, QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap));
-        p->fillPath(textPath, Qt::white);
+        imp.strokePath(textPath, QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap));
+        imp.fillPath(textPath, Qt::white);
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
             if (ty >= 0 && ty < bits.size())
                 bits[ty] = true;
@@ -334,9 +339,9 @@ void QPainterWrapper::drawFrequencyScale()
     for (const double val : minorMinorTicks) {
         const double y = mapFrequencyToY(val);
         const auto valstr = QString::number(val, 'g');
-        const int horizAdvance = p->fontMetrics().horizontalAdvance(valstr);
-        const int descent = p->fontMetrics().descent();
-        const int fontHeight = p->fontMetrics().height();
+        const int horizAdvance = imp.fontMetrics().horizontalAdvance(valstr);
+        const int descent = imp.fontMetrics().descent();
+        const int fontHeight = imp.fontMetrics().height();
         QRect rect(x1 - 8 - horizAdvance, y + descent, horizAdvance, fontHeight);
         bool covered = false;
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
@@ -349,17 +354,20 @@ void QPainterWrapper::drawFrequencyScale()
         if (covered) {
             continue;
         }
-        p->setPen(QPen(Qt::white, 2, Qt::SolidLine, Qt::RoundCap));
-        p->drawLine(x1 - 4, y, x1, y);
+        imp.setPen(QPen(Qt::white, 2, Qt::SolidLine, Qt::RoundCap));
+        imp.drawLine(x1 - 4, y, x1, y);
         QPainterPath textPath;
         textPath.addText(rect.x(), rect.y(), tickFont, valstr);
-        p->strokePath(textPath, QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap));
-        p->fillPath(textPath, Qt::white);
+        imp.strokePath(textPath, QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap));
+        imp.fillPath(textPath, Qt::white);
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
             if (ty >= 0 && ty < bits.size())
                 bits[ty] = true;
         }
     }
+
+    imp.end();
+    return image;
 }
 
 void QPainterWrapper::drawTimeSeries(const rpm::vector<double>& y, double xstart, double xend, double ymin, double ymax)
@@ -383,7 +391,7 @@ void QPainterWrapper::drawTimeSeries(const rpm::vector<double>& y, double xstart
     }
 }
 
-void QPainterWrapper::drawFrequencyTrack(
+QImage QPainterWrapper::drawFrequencyTrack(
             const TimeTrack<double>::const_iterator& begin,
             const TimeTrack<double>::const_iterator& end,
             bool curve)
@@ -400,26 +408,34 @@ void QPainterWrapper::drawFrequencyTrack(
         points.emplace_back(x, y);
     }
 
+    QImage image(viewport().width(), viewport().height(), QImage::Format_ARGB32_Premultiplied);
+    image.fill(Qt::transparent);
+    QPainter imp(&image);
+    imp.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
+
     QPen pen = p->pen();
     QPen outlinePen = pen;
     outlinePen.setColor(Qt::black);
     pen.setWidthF(pen.widthF() - 2.5);
 
     if (curve) {
-        p->setPen(outlinePen);
+        imp.setPen(outlinePen);
         drawCurve(points);
-        p->setPen(pen);
+        imp.setPen(pen);
         drawCurve(points);
     }
     else {
-        p->setPen(outlinePen);
-        p->drawPoints(points.data(), points.size());
-        p->setPen(pen);
-        p->drawPoints(points.data(), points.size());
+        imp.setPen(outlinePen);
+        imp.drawPoints(points.data(), points.size());
+        imp.setPen(pen);
+        imp.drawPoints(points.data(), points.size());
     }
+
+    imp.end();
+    return image;
 }
 
-void QPainterWrapper::drawFrequencyTrack(
+QImage QPainterWrapper::drawFrequencyTrack(
             const OptionalTimeTrack<double>::const_iterator& begin,
             const OptionalTimeTrack<double>::const_iterator& end,
             bool curve)
@@ -446,33 +462,41 @@ void QPainterWrapper::drawFrequencyTrack(
         segments.push_back(std::move(points));
     }
 
+    QImage image(viewport().width(), viewport().height(), QImage::Format_ARGB32_Premultiplied);
+    image.fill(Qt::transparent);
+    QPainter imp(&image);
+    imp.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
+
     QPen pen = p->pen();
     QPen outlinePen = pen;
     outlinePen.setColor(Qt::black);
     pen.setWidthF(pen.widthF() - 2.5);
 
     if (curve) {
-        p->setPen(outlinePen);
+        imp.setPen(outlinePen);
         for (const auto& segmentPoints : segments) {
             drawCurve(segmentPoints);
         }
         
-        p->setPen(pen);
+        imp.setPen(pen);
         for (const auto& segmentPoints : segments) {
             drawCurve(segmentPoints);
         }
     }
     else {
-        p->setPen(outlinePen);
+        imp.setPen(outlinePen);
         for (const auto& segmentPoints : segments) {
-            p->drawPoints(segmentPoints.data(), segmentPoints.size());
+            imp.drawPoints(segmentPoints.data(), segmentPoints.size());
         }
 
-        p->setPen(pen);
+        imp.setPen(pen);
         for (const auto& segmentPoints : segments) {
-            p->drawPoints(segmentPoints.data(), segmentPoints.size());
+            imp.drawPoints(segmentPoints.data(), segmentPoints.size());
         }
     }
+
+    imp.end();
+    return image;
 }
 
 static inline void cubicControlPoints(const QPointF &p1, const QPointF &p2, const QPointF &p3, double t, QPointF &ctrl1, QPointF &ctrl2)

@@ -150,50 +150,9 @@ void ContextManager::analysisThreadLoop()
 
 void ContextManager::datavisThreadLoop()
 {
+#ifdef WITHOUT_SYNTH
     while (mAnalysisRunning) {
-        mDataStore->beginRead();
-        
-        if (!mDataStore->getSoundTrack().empty()) {
-            mDataVisWrapper.setSound(mDataStore->getSoundTrack().back(), 8000);
-            mDataVisWrapper.setGif(mDataStore->getGifTrack().back(), 8000);
-        }
-
-        mDataStore->endRead();
-
-        std::this_thread::sleep_for(50ms);
-    }
-}
-
-void ContextManager::stopAnalysisThread()
-{
-    Module::Audio::Buffer::cancelPulls();
-
-    if (mAnalysisThread.joinable() || mDatavisThread.joinable()) {
-        mAnalysisRunning = false;
-        mAnalysisThread.join();
-        mDatavisThread.join();
-    }
-}
-
-#ifndef WITHOUT_SYNTH
-
-void ContextManager::startSynthesisThread()
-{
-    mSynthesisRunning = true;
-    mSynthesisThread = std::thread(std::mem_fn(&ContextManager::synthesisThreadLoop), this);
-    mSynthPushThread = std::thread(std::mem_fn(&ContextManager::synthPushThreadLoop), this);
-}
-
-void ContextManager::synthPushThreadLoop()
-{ 
-    while (mSynthesisRunning) {
-        mPlaybackQueue->pushIfNeeded(mSynthesizer.get());
-        std::this_thread::sleep_for(20ms);
-    }
-}
-
-void ContextManager::synthesisThreadLoop()
-{
+#else // WITHOUT_SYNTH
     using Synth = Module::App::Synthesizer;
 
     QObject::connect(&mSynthWrapper, &SynthWrapper::noiseGainChanged, mSynthesizer.get(), &Synth::setNoiseGain);
@@ -214,10 +173,18 @@ void ContextManager::synthesisThreadLoop()
     for (int k = 0; k < fftFrequencies.size(); ++k) {
         fftFrequencies[k] = maxFrequencySource * (double) (k + 1) / (double) fftFrequencies.size();
     }
-    
-    while (mSynthesisRunning) {
-        mDataStore->beginRead();
 
+    while (mAnalysisRunning && mSynthesisRunning) {
+#endif // WITHOUT_SYNTH
+
+        mDataStore->beginRead();
+        
+        if (!mDataStore->getSoundTrack().empty()) {
+            mDataVisWrapper.setSound(mDataStore->getSoundTrack().back(), 8000);
+            mDataVisWrapper.setGif(mDataStore->getGifTrack().back(), 8000);
+        }
+        
+#ifndef WITHOUT_SYNTH
         if (mSynthWrapper.followPitch()) {
             if (!mDataStore->getPitchTrack().empty()) {
                 std::optional<double> p = mDataStore->getPitchTrack().back();
@@ -246,9 +213,11 @@ void ContextManager::synthesisThreadLoop()
             }
             mSynthesizer->setFormants(formants);
         }
+#endif // !WITHOUT_SYNTH
 
         mDataStore->endRead();
-
+        
+#ifndef WITHOUT_SYNTH
         if (mSynthWrapper.enabled()) {
             mSynthesizer->setMasterGain(1.0);
         }
@@ -274,20 +243,45 @@ void ContextManager::synthesisThreadLoop()
 
         auto sourceSpectrum = Analysis::fft_n(fft, source);
         mSynthWrapper.setSourceSpectrum(fftFrequencies, sourceSpectrum);
+#endif // !WITHOUT_SYNTH
 
-        std::this_thread::sleep_for(50ms);
+        std::this_thread::sleep_for(250ms);
+    }
+}
+
+void ContextManager::stopAnalysisThread()
+{
+    Module::Audio::Buffer::cancelPulls();
+
+    if (mAnalysisThread.joinable() || mDatavisThread.joinable()) {
+        mAnalysisRunning = false;
+        mAnalysisThread.join();
+        mDatavisThread.join();
+    }
+}
+
+#ifndef WITHOUT_SYNTH
+
+void ContextManager::startSynthesisThread()
+{
+    mSynthesisRunning = true;
+    mSynthesisThread = std::thread(std::mem_fn(&ContextManager::synthesisThreadLoop), this);
+}
+
+void ContextManager::synthesisThreadLoop()
+{ 
+    while (mSynthesisRunning) {
+        mPlaybackQueue->pushIfNeeded(mSynthesizer.get());
+        std::this_thread::sleep_for(20ms);
     }
 }
 
 void ContextManager::stopSynthesisThread()
 {
-    if (mSynthesisThread.joinable() || mSynthPushThread.joinable()) {
+    if (mSynthesisThread.joinable()) {
         mSynthesisRunning = false;
         if (mSynthesisThread.joinable()) {
             mSynthesisThread.join();
-        }
-        if (mSynthPushThread.joinable()) {
-            mSynthPushThread.join();
         }
     }
 }

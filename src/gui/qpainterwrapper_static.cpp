@@ -107,7 +107,7 @@ Eigen::SparseMatrix<double>& QPainterWrapper::constructTransformY(int h, int vh,
 }
 
 static rpm::map<std::tuple<double, FrequencyScale, double, double>, Eigen::VectorXd> maps;
-static constexpr int mapsMaxSize = 8192;
+static constexpr size_t mapsMaxSize = 1024UL * 1024UL * 128UL;
 
 QImage QPainterWrapper::drawSpectrogram(
             const rpm::vector<std::pair<double, Main::SpectrogramCoefs>>& slices,

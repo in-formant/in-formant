@@ -384,15 +384,7 @@ void Config::setAnalysisGranularity(double ms) {
 }
 
 double Config::getAnalysisGranularity() {
-    return doubleField(mTbl["analysis"], "granularity", 10.0);
-}
-
-void Config::setAnalysisSpectrogramOverlap(double ms) {
-    mTbl["analysis"]["spectrogramOverlap"].ref<double>() = ms;
-}
-
-double Config::getAnalysisSpectrogramOverlap() {
-    return doubleField(mTbl["analysis"], "spectrogramOverlap", 12.5);
+    return doubleField(mTbl["analysis"], "granularity", 20.0);
 }
 
 void Config::setAnalysisSpectrogramWindow(double ms) {

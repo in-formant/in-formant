@@ -54,8 +54,8 @@ void PortAudio::refreshDevices()
         Device device(Backend::PortAudio);
 
         device.portaudio.index = i;
-        device.portaudio.inputLatency = deviceInfo->defaultLowInputLatency;
-        device.portaudio.outputLatency = deviceInfo->defaultLowOutputLatency;
+        device.portaudio.inputLatency = deviceInfo->defaultHighInputLatency;
+        device.portaudio.outputLatency = deviceInfo->defaultHighOutputLatency;
         device.portaudio.sampleRate = deviceInfo->defaultSampleRate;
         device.name = deviceInfo->name;
 
@@ -113,7 +113,7 @@ void PortAudio::openCaptureStream(const Device *pDevice)
             &params,
             nullptr,
             pDevice->portaudio.sampleRate,
-            paFramesPerBufferUnspecified,
+            1024,
             paNoFlag,
             &PortAudio::captureCallback,
             this);
@@ -182,7 +182,7 @@ void PortAudio::openPlaybackStream(const Device *pDevice)
             nullptr,
             &params,
             pDevice->portaudio.sampleRate,
-            512,
+            256,
             paNoFlag,
             &PortAudio::playbackCallback,
             this);

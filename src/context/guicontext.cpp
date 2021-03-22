@@ -61,7 +61,7 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrap
     window->installEventFilter(this);
 
     mUpdateTimer = new QTimer(this);
-    mUpdateTimer->setTimerType(Qt::PreciseTimer);
+    mUpdateTimer->setTimerType(Qt::CoarseTimer);
     QObject::connect(mUpdateTimer, &QTimer::timeout, canvasItem, &QQuickItem::update);
     mUpdateTimer->moveToThread(qGuiApp->thread());
     setTimerSlow(false);
