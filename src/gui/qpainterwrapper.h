@@ -2,16 +2,20 @@
 #define QPAINTER_WRAPPER_H
 
 #include "rpcxx.h"
+#include "canvas_renderer.h"
 #include "../timetrack.h"
 #include "../context/datastore.h"
-#include "qpainterwrapperbase.h"
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
-class QPainterWrapper : public QPainterWrapperBase {
+#include <QImage>
+
+class QPainterWrapper {
 public:
-    QPainterWrapper(QPainter *p);
-   
+    QPainterWrapper(Gui::CanvasRenderer *p);
+    
+    QRect viewport() const;
+
     void setTimeRange(double start, double end);
 
     void setFrequencyScale(FrequencyScale scale);
@@ -19,40 +23,26 @@ public:
     void setMaxFrequency(double maxFrequency);
     void setMaxGain(double maxGain);
 
-    void setMajorTickFont(const QFont &font);
-    void setMajorTickPen(const QPen &pen);
-
-    void setMinorTickFont(const QFont &font);
-    void setMinorTickPen(const QPen &pen);
-
-    void setTimeSeriesPen(const QPen &pen);
-
     void drawTimeAxis();
-    QImage drawFrequencyScale();
+    void drawFrequencyScale();
 
     void drawTimeSeries(const rpm::vector<double> &y, double xstart, double xend, double ymin, double ymax); 
 
-    QImage drawFrequencyTrack(const TimeTrack<double>::const_iterator& begin,
+    void drawFrequencyTrack(const TimeTrack<double>::const_iterator& begin,
                             const TimeTrack<double>::const_iterator& end,
-                            bool curve = false);
+                            float radius,
+                            const QColor &color);
 
-    QImage drawFrequencyTrack(const OptionalTimeTrack<double>::const_iterator& begin,
+    void drawFrequencyTrack(const OptionalTimeTrack<double>::const_iterator& begin,
                             const OptionalTimeTrack<double>::const_iterator& end,
-                            bool curve = false);
-
-    void drawCurve(const rpm::vector<QPointF> &points, double tension = 0.5);
+                            float radius,
+                            const QColor &color);
 
     double mapTimeToX(double time);
     double mapFrequencyToY(double frequency);
 
-    static QImage drawSpectrogram(
-            const rpm::vector<std::pair<double, Main::SpectrogramCoefs>>& slices,
-            double timeStart,
-            double timeEnd,
-            FrequencyScale frequencyScale,
-            double minFrequency,
-            double maxFrequency,
-            double maxGain);
+    void drawSpectrogram(
+            const rpm::vector<std::pair<double, Main::SpectrogramCoefs>>& slices);
 
     static double mapTimeToX(double time, int width, double startTime, double endTime);
     static double mapFrequencyToY(double frequency, int height, FrequencyScale scale, double minFrequency, double maxFrequency);
@@ -61,6 +51,8 @@ public:
 private:
     double transformFrequency(double frequency);
     double inverseFrequency(double value);
+    
+    Gui::CanvasRenderer *p;
 
     double mTimeStart;
     double mTimeEnd;
@@ -69,14 +61,6 @@ private:
     double mMinFrequency;
     double mMaxFrequency;
     double mMaxGain;
-
-    QFont  mMajorTickFont;
-    QPen   mMajorTickPen;
-
-    QFont  mMinorTickFont;
-    QPen   mMinorTickPen;
-
-    QPen   mTimeSeriesPen;
 
     static double transformFrequency(double frequency, FrequencyScale scale);
     static double inverseFrequency(double value, FrequencyScale scale);

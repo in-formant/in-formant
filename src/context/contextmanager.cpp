@@ -70,11 +70,9 @@ ContextManager::ContextManager(
             [this](bool paused) {
                 if (paused) {
                     mAudioContext->stopCaptureStream();
-                    mGuiContext->setTimerSlow(true);
                 }
                 else {
                     mAudioContext->startCaptureStream();
-                    mGuiContext->setTimerSlow(false);
                 }
             });
 }

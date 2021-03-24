@@ -32,7 +32,7 @@ void SpectrogramWorker::renderImage(
         int vw, int vh)
 {
     sQueued = true;
-    QImage image = QPainterWrapper::drawSpectrogram(
+    /*QImage image = QPainterWrapper::drawSpectrogram(
                         slices,
                         timeStart,
                         timeEnd,
@@ -40,7 +40,7 @@ void SpectrogramWorker::renderImage(
                         minFrequency,
                         maxFrequency,
                         maxGain);
-    emit imageRendered(image.scaled(vw, vh, Qt::IgnoreAspectRatio, Qt::SmoothTransformation), timeStart, timeEnd);
+    emit imageRendered(image.scaled(vw, vh, Qt::IgnoreAspectRatio, Qt::SmoothTransformation), timeStart, timeEnd);*/
     sQueued = false;
 }
 
@@ -88,12 +88,16 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     painter->setTimeRange(timeStart, timeEnd);
   
     if (config->getViewShowSpectrogram()) {
-        if (!SpectrogramWorker::queued()) {
+        rpm::vector<std::pair<double, SpectrogramCoefs>> slices(
+                spectrogram.lower_bound(timeStart), spectrogram.upper_bound(timeEnd));
+        painter->drawSpectrogram(slices);
+    }
+
+
+        /*if (!SpectrogramWorker::queued()) {
             const double timeEndNoDelay = dataStore->getTime();
             const double timeStartNoDelay = timeEndNoDelay - viewDuration - 2 * timeDelay;
 
-            rpm::vector<std::pair<double, SpectrogramCoefs>> slices(
-                    spectrogram.lower_bound(timeStartNoDelay), spectrogram.upper_bound(timeEndNoDelay));
 
             emit renderImage(std::move(slices), timeStartNoDelay, timeEndNoDelay,
                     config->getViewFrequencyScale(),
@@ -112,86 +116,31 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
                     mImage,
                     QRectF({0,0}, mImage.size()));
         }
-    }
+    }*/
     
     if (config->getViewShowPitch()) {
-        const double lastPitchTrackTimeStart = mLastPitchTrackTimeStart;
-        const double lastPitchTrackTimeEnd = mLastPitchTrackTimeEnd;
-
-        if (mRenderedPitchTrack.isNull()
-                || mRenderedPitchTrack.size() != viewport.size()
-                || timeEnd - lastPitchTrackTimeEnd > pitchTrackRenderInterval
-                || fabs((lastPitchTrackTimeEnd - lastPitchTrackTimeStart) - viewDuration) < 1e-8
-                || mLastFrequencyScale != config->getViewFrequencyScale()
-                || mLastMinFrequency != config->getViewMinFrequency()
-                || mLastMaxFrequency != config->getViewMaxFrequency()) {
-            
-            painter->setPen(QPen(Qt::cyan, 10, Qt::SolidLine, Qt::RoundCap));
-            auto image = painter->drawFrequencyTrack(pitchTrack.lower_bound(timeStart), pitchTrack.upper_bound(timeEnd), false);
-            mRenderedPitchTrack.convertFromImage(image);
-            mLastPitchTrackTimeStart = timeStart;
-            mLastPitchTrackTimeEnd = timeEnd;
-        }
-
-        const double x1 = painter->mapTimeToX(mLastPitchTrackTimeStart);
-        const double x2 = painter->mapTimeToX(mLastPitchTrackTimeEnd);
-        painter->drawPixmap(
-                QRectF(x1, 0, x2 - x1, painter->viewport().height()),
-                mRenderedPitchTrack,
-                QRectF({0,0}, mRenderedPitchTrack.size()));
+        painter->drawFrequencyTrack(
+                pitchTrack.lower_bound(timeStart),
+                pitchTrack.upper_bound(timeEnd),
+                3, Qt::cyan);
     }
 
     if (config->getViewShowFormants()) {
         const int formantCount = config->getViewFormantCount();
-        
-        mRenderedFormantTracks.resize(formantCount);
-
-        double lastFormantTracksTimeStart = mLastFormantTracksTimeStart;
-        double lastFormantTracksTimeEnd = mLastFormantTracksTimeEnd;
 
         for (int i = 0; i < formantCount; ++i) {
-            if (mRenderedFormantTracks[i].isNull()
-                    || mRenderedFormantTracks[i].size() != viewport.size()
-                    || timeEnd - lastFormantTracksTimeEnd > formantTracksRenderInterval
-                    || fabs((lastFormantTracksTimeEnd - lastFormantTracksTimeStart) - viewDuration) < 1e-8
-                    || mLastFrequencyScale != config->getViewFrequencyScale()
-                    || mLastMinFrequency != config->getViewMinFrequency()
-                    || mLastMaxFrequency != config->getViewMaxFrequency()) {
-                
-                auto& fi = dataStore->getFormantTrack(i);
-                const auto [r, g, b] = config->getViewFormantColor(i);
-                painter->setPen(QPen(QColor::fromRgbF(r, g, b), 8, Qt::SolidLine, Qt::RoundCap));
-                auto image = painter->drawFrequencyTrack(fi.lower_bound(timeStart), fi.upper_bound(timeEnd), false);
-                mRenderedFormantTracks[i].convertFromImage(image);
-                mLastFormantTracksTimeStart = timeStart;
-                mLastFormantTracksTimeEnd = timeEnd;
-            }
-
-            const double x1 = painter->mapTimeToX(mLastFormantTracksTimeStart);
-            const double x2 = painter->mapTimeToX(mLastFormantTracksTimeEnd);
-            painter->drawPixmap(
-                    QRectF(x1, 0, x2 - x1, painter->viewport().height()),
-                    mRenderedFormantTracks[i],
-                    QRectF({0,0}, mRenderedFormantTracks[i].size()));
+            auto& fi = dataStore->getFormantTrack(i);
+            const auto [r, g, b] = config->getViewFormantColor(i);
+        
+            painter->drawFrequencyTrack(
+                    fi.lower_bound(timeStart),
+                    fi.upper_bound(timeEnd),
+                    3, QColor::fromRgbF(r, g, b));
         }
     }
 
     painter->drawTimeAxis();
-    
-    if (mRenderedFrequencyScale.isNull()
-            || mRenderedFrequencyScale.size() != viewport.size()
-            || mLastFrequencyScale != config->getViewFrequencyScale()
-            || mLastMinFrequency != config->getViewMinFrequency()
-            || mLastMaxFrequency != config->getViewMaxFrequency()) {
-        mRenderedFrequencyScale.convertFromImage(painter->drawFrequencyScale());
-        mLastFrequencyScale = config->getViewFrequencyScale();
-        mLastMinFrequency = config->getViewMinFrequency();
-        mLastMaxFrequency = config->getViewMaxFrequency();
-    }
-    painter->drawPixmap(0, 0, mRenderedFrequencyScale);
-
-    //painter->setTimeSeriesPen(QPen(QColor(0xFFA500), 2));
-    //painter->drawTimeSeries(sound, 0, viewport.width(), -1, 1);
+    painter->drawFrequencyScale();
 
     dataStore->endRead();
 }

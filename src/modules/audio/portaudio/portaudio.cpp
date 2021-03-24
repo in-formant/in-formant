@@ -35,12 +35,25 @@ void PortAudio::refreshDevices()
         throw std::runtime_error(std::string("Audio::PortAudio] ") + Pa_GetErrorText(deviceCount));
     }
 
-    PaDeviceIndex defaultCaptureDevice = Pa_GetDefaultInputDevice();
+    PaHostApiIndex defaultHostApi;
+#if defined(__linux__)
+    defaultHostApi = Pa_HostApiTypeIdToHostApiIndex(paALSA);
+#elif defined(_WIN32)
+    defaultHostApi = Pa_HostApiTypeIdToHostApiIndex(paWDMKS);
+#elif defined(__APPLE__)
+    defaultHostApi = Pa_HostApiTypeIdToHostApiIndex(paCoreAudio);
+#else
+    defaultHostApi = Pa_GetDefaultHostApi();
+#endif
+
+    const PaHostApiInfo *hostApiInfo = Pa_GetHostApiInfo(defaultHostApi);
+
+    PaDeviceIndex defaultCaptureDevice = hostApiInfo->defaultInputDevice;
     if (defaultCaptureDevice == paNoDevice) {
         throw std::runtime_error("Audio::PortAudio] No default input device found");
     }
 
-    PaDeviceIndex defaultPlaybackDevice = Pa_GetDefaultOutputDevice();
+    PaDeviceIndex defaultPlaybackDevice = hostApiInfo->defaultOutputDevice;
     if (defaultPlaybackDevice == paNoDevice) {
         throw std::runtime_error("Audio::PortAudio] No default output device found");
     }

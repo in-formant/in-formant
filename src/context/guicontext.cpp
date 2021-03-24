@@ -28,6 +28,9 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrap
 
     mApp = std::make_unique<QApplication>(argc, argv);
 
+    // Only supports OpenGL for now.
+    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::OpenGLRhi);
+
     QGuiApplication::setWindowIcon(QIcon(":/icons/in-formant.png"));
 
     mQmlEngine = std::make_unique<QQmlApplicationEngine>();
@@ -59,28 +62,11 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrap
 
     canvasItem->installEventFilter(this);
     window->installEventFilter(this);
-
-    mUpdateTimer = new QTimer(this);
-    mUpdateTimer->setTimerType(Qt::CoarseTimer);
-    QObject::connect(mUpdateTimer, &QTimer::timeout, canvasItem, &QQuickItem::update);
-    mUpdateTimer->moveToThread(qGuiApp->thread());
-    setTimerSlow(false);
 }
 
 int GuiContext::exec()
 {
-    QMetaObject::invokeMethod(mUpdateTimer, "start", Q_ARG(int, 0));
     return mApp->exec();
-}
-
-void GuiContext::setTimerSlow(bool slow)
-{
-    if (slow) {
-        mUpdateTimer->setInterval(50ms);
-    }
-    else {
-        mUpdateTimer->setInterval(33ms);
-    }
 }
 
 void GuiContext::setView(GuiView *view)

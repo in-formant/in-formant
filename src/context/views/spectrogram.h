@@ -61,19 +61,6 @@ namespace Main::View {
         QPixmap mImage;
         double mImageTimeStart;
         double mImageTimeEnd;
-
-        QPixmap mRenderedFrequencyScale;
-        FrequencyScale mLastFrequencyScale;
-        double mLastMinFrequency;
-        double mLastMaxFrequency;
-
-        rpm::vector<QPixmap> mRenderedFormantTracks;
-        double mLastFormantTracksTimeStart;
-        double mLastFormantTracksTimeEnd;
-
-        QPixmap mRenderedPitchTrack;
-        double mLastPitchTrackTimeStart;
-        double mLastPitchTrackTimeEnd;
     };
 
 }

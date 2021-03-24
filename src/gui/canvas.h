@@ -1,27 +1,32 @@
 #ifndef GUI_CANVAS_H
 #define GUI_CANVAS_H
 
-#include <QQuickPaintedItem>
-#include <QSGRenderNode>
+#include <QQuickFramebufferObject>
+#include <QOpenGLFramebufferObject>
 
 namespace Main {
     class RenderContext;
 }
 
 namespace Gui
-{
-    class CanvasItem : public QQuickPaintedItem
+{   
+    class CanvasRenderer;
+
+    class CanvasItem : public QQuickFramebufferObject
     {
+        Q_OBJECT
     public:
-        CanvasItem(QQuickItem *parent = nullptr);
+        CanvasItem();
 
         void setRenderContext(Main::RenderContext *renderContext);
-
-        void paint(QPainter *painter) override;
+        
+        Renderer *createRenderer() const;
 
     private:
         Main::RenderContext *mRenderContext;
     };
 }
+
+#include "canvas_renderer.h"
 
 #endif // GUI_CANVAS_H

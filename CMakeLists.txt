@@ -91,9 +91,12 @@ set(SOURCES
     src/gui/qpainterwrapper.cpp
     src/gui/qpainterwrapper.h
     src/gui/qpainterwrapper_static.cpp
-    src/gui/qpainterwrapperbase.h
     src/gui/cmap.cpp
-    src/gui/canvas.cpp
+    src/gui/shaders/text.h
+    src/gui/font.cpp
+    src/gui/font.h
+    src/gui/canvas_item.cpp
+    src/gui/canvas_renderer.cpp
     src/gui/canvas.h
     src/android_redirect_log.cpp
     src/modules/audio/base/base.cpp
@@ -188,10 +191,11 @@ set(SOURCES
 ### REQUIRED MODULES
 
 find_package(PkgConfig REQUIRED)
-#pkg_check_modules(Eigen3 REQUIRED eigen3)
 pkg_check_modules(FFTW REQUIRED fftw3)
 
 find_package(Eigen3 REQUIRED NO_MODULE)
+
+find_package(OpenGL REQUIRED)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
@@ -203,8 +207,8 @@ set_target_properties(torch PROPERTIES
     MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
 )
 
-find_package(Qt5 5.15 COMPONENTS Charts Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core REQUIRED)
-foreach(c Charts Quick QuickControls2 QuickTemplates2 Qml Widgets Gui Core)
+find_package(Qt5 5.15 COMPONENTS Charts Quick QuickControls2 QuickTemplates2 Qml Widgets OpenGL Gui Core REQUIRED)
+foreach(c Charts Quick QuickControls2 QuickTemplates2 Qml Widgets OpenGL Gui Core)
     if(${Qt5${c}_FOUND})
         get_target_property(Qt5${c}_LIBRARY_FILE ${Qt5${c}_LIBRARIES} LOCATION)
         message(STATUS "Found Qt5${c}: ${Qt5${c}_LIBRARY_FILE}")
@@ -283,7 +287,10 @@ else()
 endif()
 
 target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${FFTW_INCLUDE_DIRS} ${TOMLPP_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS})
-target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LDFLAGS} ${TORCH_LIBRARIES} Qt5::Charts Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::Gui Qt5::Core)
+target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LDFLAGS} ${TORCH_LIBRARIES} Qt5::Charts Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::OpenGL Qt5::Gui Qt5::Core OpenGL::GL)
+
+add_subdirectory(external/freetype EXCLUDE_FROM_ALL)
+target_link_libraries(in-formant PRIVATE freetype)
 
 add_subdirectory(external/rpmalloc EXCLUDE_FROM_ALL)
 target_link_libraries(in-formant PRIVATE rpmalloc)

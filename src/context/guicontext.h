@@ -32,7 +32,6 @@ namespace Main {
 
         int exec();
     
-        void setTimerSlow(bool slow);
         void setView(GuiView *view);
 
     protected:
@@ -55,8 +54,6 @@ namespace Main {
 
         std::unique_ptr<QApplication> mApp;
         std::unique_ptr<QQmlApplicationEngine> mQmlEngine;
-
-        QTimer *mUpdateTimer;
 
         friend class GuiView;
     };

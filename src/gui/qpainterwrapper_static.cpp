@@ -109,14 +109,8 @@ Eigen::SparseMatrix<double>& QPainterWrapper::constructTransformY(int h, int vh,
 static rpm::map<std::tuple<double, FrequencyScale, double, double>, Eigen::VectorXd> maps;
 static constexpr size_t mapsMaxSize = 1024UL * 1024UL * 128UL;
 
-QImage QPainterWrapper::drawSpectrogram(
-            const rpm::vector<std::pair<double, Main::SpectrogramCoefs>>& slices,
-            double timeStart,
-            double timeEnd,
-            FrequencyScale frequencyScale,
-            double minFrequency,
-            double maxFrequency,
-            double maxGain)
+void QPainterWrapper::drawSpectrogram(
+            const rpm::vector<std::pair<double, Main::SpectrogramCoefs>>& slices)
 {
     int numSlices = slices.size();
 
@@ -134,7 +128,7 @@ QImage QPainterWrapper::drawSpectrogram(
         Eigen::VectorXd mapped;
 
         // Check if we haven't already rendered this slice with these parameters.
-        auto key = std::make_tuple(time, frequencyScale, minFrequency, maxFrequency);
+        auto key = std::make_tuple(time, mFrequencyScale, mMinFrequency, mMaxFrequency);
         auto mapsIt = maps.find(key);
         if (mapsIt != maps.end()) {
             // We have.
@@ -143,7 +137,7 @@ QImage QPainterWrapper::drawSpectrogram(
         else {
             // We haven't: render it now.
             auto& slice = coefs.magnitudes;
-            auto& ytrans = constructTransformY(slice.rows(), numBins, frequencyScale, minFrequency, maxFrequency, FrequencyScale::Linear, 0, coefs.sampleRate / 2);
+            auto& ytrans = constructTransformY(slice.rows(), numBins, mFrequencyScale, mMinFrequency, mMaxFrequency, FrequencyScale::Linear, 0, coefs.sampleRate / 2);
             mapped = (ytrans * slice).reverse();
 
             // Clear the map every now and then.
@@ -153,8 +147,8 @@ QImage QPainterWrapper::drawSpectrogram(
             maps[key] = mapped;
         }
 
-        int x1 = mapTimeToX(time - coefs.frameDuration, iw, timeStart, timeEnd);
-        int x2 = mapTimeToX(time, iw, timeStart, timeEnd);
+        int x1 = mapTimeToX(time - coefs.frameDuration, iw, mTimeStart, mTimeEnd);
+        int x2 = mapTimeToX(time, iw, mTimeStart, mTimeEnd);
        
         auto window = Analysis::blackmanHarrisWindow(x2 - x1 + 1);
 
@@ -168,25 +162,36 @@ QImage QPainterWrapper::drawSpectrogram(
         }
     }
 
-    QImage image(iw, ih, QImage::Format_Indexed8);
-    image.setColorTable(cmap);
+    struct pixel { uint8_t r, g, b, a; };
+    
+    rpm::vector<pixel> image(iw * ih);
 
     for (int iy = 0; iy < ih; ++iy) {
-        uint8_t *scanLineBits = reinterpret_cast<uint8_t *>(image.scanLine(iy));
         for (int ix = 0; ix < iw; ++ix) {
             const double w = weights(iy, ix);
             if (w > 0) {
                 const double amplitude = amplitudes(iy, ix) / w;
-                const double adjusted = sqrt(amplitude / pow(10, maxGain / 20)) * 7;
+                const double adjusted = sqrt(amplitude / pow(10, mMaxGain / 20)) * 7;
                 int index = std::clamp((int) std::floor(adjusted * 255), 0, 255);
-                scanLineBits[ix] = index;
+                QColor c = QColor::fromRgb(cmap[index]);
+                int r, g, b;
+                c.getRgb(&r, &g, &b);
+                image[iy * iw + ix].r = r;
+                image[iy * iw + ix].g = g;
+                image[iy * iw + ix].b = b;
+                image[iy * iw + ix].a = 255;
             }
             else {
-                scanLineBits[ix] = 0;
+                image[iy * iw + ix].r = 0;
+                image[iy * iw + ix].g = 0;
+                image[iy * iw + ix].b = 0;
+                image[iy * iw + ix].a = 255;
             }
         }
     }
-    
-    return image;
+  
+    p->prepareSpectrogramDraw(); 
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, iw, ih, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+    p->drawSpectrogram();
 }
 
