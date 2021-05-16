@@ -294,8 +294,10 @@ endif()
 target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${FFTW_INCLUDE_DIRS} ${TOMLPP_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS})
 target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LDFLAGS} ${TORCH_LIBRARIES} Qt5::Charts Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::OpenGL Qt5::Gui Qt5::Core OpenGL::GL)
 
+set(BUILD_SHARED_LIBS TRUE)
 add_subdirectory(external/freetype EXCLUDE_FROM_ALL)
 target_link_libraries(in-formant PRIVATE freetype)
+set(BUILD_SHARED_LIBS)
 
 add_subdirectory(external/rpmalloc EXCLUDE_FROM_ALL)
 target_link_libraries(in-formant PRIVATE rpmalloc)

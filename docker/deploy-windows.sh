@@ -17,6 +17,7 @@ export PATH=/usr/$HOST/qt5/bin:$GCC_DLL_DIR:$PATH
 
 cp /build/in-formant.exe $tmp/InFormant-$version.exe
 cp /build/external/soxr/bin/libsoxr.dll $tmp
+cp /build/external/freetype/libfreetype.dll $tmp
 
 cp /usr/lib/gcc/$HOST/9.3-posix/libgomp-1.dll \
     /usr/lib/gcc/$HOST/9.3-posix/libgfortran-5.dll \
@@ -30,4 +31,4 @@ cp /usr/lib/gcc/$HOST/9.3-posix/libgomp-1.dll \
     $tmp
 
 cd /dist
-zip -r InFormant-$version-$DIST_SUFFIX.zip $tmp
+zip -9 -r InFormant-$version-$DIST_SUFFIX.zip $tmp
