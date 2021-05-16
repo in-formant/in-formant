@@ -219,6 +219,9 @@ RUN rm -r /dockerbuild
 
 COPY macos-toolchain.cmake /usr/macos-toolchain.cmake
 
+RUN apt-get update -y && apt-get install -y ccache
+ENV CCACHE_DIR=/ccache
+
 CMD cd /build && \
         export version=`cat /src/version` && \
         export MACOSX_DEPLOYMENT_TARGET=10.13 && \

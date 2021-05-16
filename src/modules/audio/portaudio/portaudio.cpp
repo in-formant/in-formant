@@ -39,7 +39,7 @@ void PortAudio::refreshDevices()
 #if defined(__linux__)
     defaultHostApi = Pa_HostApiTypeIdToHostApiIndex(paALSA);
 #elif defined(_WIN32)
-    defaultHostApi = Pa_HostApiTypeIdToHostApiIndex(paWDMKS);
+    defaultHostApi = Pa_HostApiTypeIdToHostApiIndex(paMME);
 #elif defined(__APPLE__)
     defaultHostApi = Pa_HostApiTypeIdToHostApiIndex(paCoreAudio);
 #else

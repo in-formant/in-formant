@@ -15,6 +15,7 @@ public:
     TimeTrack();
 
     void insert(double t, const T& o);
+    void remove_before(double t);
 
     iterator lower_bound(double t);
     iterator upper_bound(double t);

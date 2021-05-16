@@ -65,6 +65,16 @@ Spectrogram::~Spectrogram()
 
 void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *dataStore)
 {
+    const double realTimeEnd = dataStore->getRealTime();
+
+    dataStore->beginWrite();
+    constexpr double keepDuration = 50.0;
+    const double keepTimeStart = realTimeEnd - keepDuration;
+    dataStore->getSpectrogram().remove_before(keepTimeStart);
+    dataStore->getSoundTrack().remove_before(keepTimeStart);
+    dataStore->getGifTrack().remove_before(keepTimeStart);
+    dataStore->endWrite();
+
     dataStore->beginRead();
 
     auto& spectrogram = dataStore->getSpectrogram();
@@ -74,7 +84,7 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
 
     const double viewDuration = config->getViewTimeSpan();
     const double timeDelay = 80.0 / 1000.0;
-    const double timeEnd = dataStore->getTime() - timeDelay;
+    const double timeEnd = realTimeEnd - timeDelay;
     const double timeStart = timeEnd - viewDuration;
     
     const double pitchTrackRenderInterval = 50.0 / 1000.0;
@@ -92,31 +102,6 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
                 spectrogram.lower_bound(timeStart), spectrogram.upper_bound(timeEnd));
         painter->drawSpectrogram(slices);
     }
-
-
-        /*if (!SpectrogramWorker::queued()) {
-            const double timeEndNoDelay = dataStore->getTime();
-            const double timeStartNoDelay = timeEndNoDelay - viewDuration - 2 * timeDelay;
-
-
-            emit renderImage(std::move(slices), timeStartNoDelay, timeEndNoDelay,
-                    config->getViewFrequencyScale(),
-                    config->getViewMinFrequency(),
-                    config->getViewMaxFrequency(),
-                    config->getViewMaxGain(),
-                    viewport.width(),
-                    viewport.height());
-        }
-
-        if (!mImage.isNull()) {
-            const double x1 = painter->mapTimeToX(mImageTimeStart);
-            const double x2 = painter->mapTimeToX(mImageTimeEnd);
-            painter->drawPixmap(
-                    QRectF(x1, 0, x2 - x1, painter->viewport().height()),
-                    mImage,
-                    QRectF({0,0}, mImage.size()));
-        }
-    }*/
     
     if (config->getViewShowPitch()) {
         painter->drawFrequencyTrack(

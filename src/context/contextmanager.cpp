@@ -70,9 +70,11 @@ ContextManager::ContextManager(
             [this](bool paused) {
                 if (paused) {
                     mAudioContext->stopCaptureStream();
+                    mDataStore->stopRealTime();
                 }
                 else {
                     mAudioContext->startCaptureStream();
+                    mDataStore->startRealTime();
                 }
             });
 }

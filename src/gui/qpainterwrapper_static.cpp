@@ -1,4 +1,5 @@
 #include "qpainterwrapper.h"
+#include "../context/timings.h"
 #include <cmath>
 #include <iostream>
 #include <QMutex>
@@ -112,86 +113,56 @@ static constexpr size_t mapsMaxSize = 1024UL * 1024UL * 128UL;
 void QPainterWrapper::drawSpectrogram(
             const rpm::vector<std::pair<double, Main::SpectrogramCoefs>>& slices)
 {
-    int numSlices = slices.size();
+    // Divide the sequence of spectrogram slices into multiple sequences of similar slices.
 
-    int iw = std::max(1024, 2 * numSlices);
-    int ih = 600;
-    int numBins = ih;
+    int lastNfft = 0;
+    double lastSampleRate = 0;
+    double lastFrameDuration = 0;
 
-    Eigen::ArrayXXd amplitudes = Eigen::ArrayXXd::Zero(ih, iw);
-    Eigen::ArrayXXd weights = Eigen::ArrayXXd::Zero(ih, iw);
+    rpm::vector<rpm::vector<std::pair<double, Main::SpectrogramCoefs>>> segments;
+    rpm::vector<std::pair<double, Main::SpectrogramCoefs>> currentSegment;
 
-    for (auto it = slices.begin(); it != slices.end(); ++it) {
-        double time = it->first;
-        const auto& coefs = it->second;
-
-        Eigen::VectorXd mapped;
-
-        // Check if we haven't already rendered this slice with these parameters.
-        auto key = std::make_tuple(time, mFrequencyScale, mMinFrequency, mMaxFrequency);
-        auto mapsIt = maps.find(key);
-        if (mapsIt != maps.end()) {
-            // We have.
-            mapped = mapsIt->second;
+    for (const auto& slice : slices) {
+        if ((slice.second.magnitudes.size() != lastNfft
+                    || slice.second.sampleRate != lastSampleRate
+                    || slice.second.frameDuration != lastFrameDuration)
+                && !currentSegment.empty()) {
+            segments.push_back(std::move(currentSegment));
+            lastNfft = slice.second.magnitudes.size();
+            lastSampleRate = slice.second.sampleRate;
+            lastFrameDuration = slice.second.frameDuration;
         }
-        else {
-            // We haven't: render it now.
-            auto& slice = coefs.magnitudes;
-            auto& ytrans = constructTransformY(slice.rows(), numBins, mFrequencyScale, mMinFrequency, mMaxFrequency, FrequencyScale::Linear, 0, coefs.sampleRate / 2);
-            mapped = (ytrans * slice).reverse();
-
-            // Clear the map every now and then.
-            if (maps.size() > mapsMaxSize) {
-                maps.clear();
-            }
-            maps[key] = mapped;
-        }
-
-        int x1 = mapTimeToX(time - coefs.frameDuration, iw, mTimeStart, mTimeEnd);
-        int x2 = mapTimeToX(time, iw, mTimeStart, mTimeEnd);
-       
-        auto window = Analysis::blackmanHarrisWindow(x2 - x1 + 1);
-
-        for (int iy = 0; iy < mapped.size(); ++iy) {
-            for (int ix = x1; ix <= x2; ++ix) {
-                if (ix >= 0 && ix < iw) {
-                    amplitudes(iy, ix) += window[ix - x1] * mapped(iy);
-                    weights(iy, ix) += window[ix - x1];
-                }
-            }
-        }
+        currentSegment.push_back(slice);
     }
 
-    struct pixel { uint8_t r, g, b, a; };
+    if (!currentSegment.empty()) {
+        segments.push_back(std::move(currentSegment));
+    }
+   
+    static rpm::vector<GLfloat> segmentTexture;
+   
+    for (const auto& segment : segments) {
+        const int nfft = segment[0].second.magnitudes.size();
+        const double sampleRate = segment[0].second.sampleRate;
+        const double frameDuration = segment[0].second.frameDuration;
     
-    rpm::vector<pixel> image(iw * ih);
+        const int segmentLen = segment.size();
 
-    for (int iy = 0; iy < ih; ++iy) {
-        for (int ix = 0; ix < iw; ++ix) {
-            const double w = weights(iy, ix);
-            if (w > 0) {
-                const double amplitude = amplitudes(iy, ix) / w;
-                const double adjusted = sqrt(amplitude / pow(10, mMaxGain / 20)) * 7;
-                int index = std::clamp((int) std::floor(adjusted * 255), 0, 255);
-                QColor c = QColor::fromRgb(cmap[index]);
-                int r, g, b;
-                c.getRgb(&r, &g, &b);
-                image[iy * iw + ix].r = r;
-                image[iy * iw + ix].g = g;
-                image[iy * iw + ix].b = b;
-                image[iy * iw + ix].a = 255;
-            }
-            else {
-                image[iy * iw + ix].r = 0;
-                image[iy * iw + ix].g = 0;
-                image[iy * iw + ix].b = 0;
-                image[iy * iw + ix].a = 255;
+        segmentTexture.resize(nfft * segmentLen);
+        for (int y = 0; y < nfft; ++y) {
+            for (int x = 0; x < segmentLen; ++x) {
+                segmentTexture[y * segmentLen + x] = segment[x].second.magnitudes(y);
             }
         }
+    
+        p->prepareSpectrogramDraw(cmap);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, segmentLen, nfft, 0, GL_RED, GL_FLOAT, segmentTexture.data());
+        p->drawSpectrogram(
+                sampleRate / 2,
+                mFrequencyScale,
+                mMinFrequency, mMaxFrequency,
+                mapTimeToX(segment.front().first - frameDuration / 2),
+                mapTimeToX(segment.back().first + frameDuration / 2));
     }
-  
-    p->prepareSpectrogramDraw(); 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, iw, ih, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
-    p->drawSpectrogram();
 }
 

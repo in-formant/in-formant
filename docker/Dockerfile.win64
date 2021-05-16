@@ -278,6 +278,9 @@ RUN cd qttools-everywhere-src-$ver/src/windeployqt && \
 
 RUN rm -r /dockerbuild
 
+RUN apt-get update -y && apt-get install -y ccache
+ENV CCACHE_DIR=/ccache
+
 CMD cd /build && \
         export version=`cat /src/version` && \
         cmake \

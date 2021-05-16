@@ -9,6 +9,7 @@
 
 #include "font.h"
 #include "shaders/spec.h"
+#include "../context/datastore.h"
 
 namespace Main {
     class RenderContext;
@@ -42,8 +43,13 @@ namespace Gui {
 
         void drawLine(float x1, float y1, float x2, float y2, const QColor &color, float thickness);
 
-        void prepareSpectrogramDraw();
-        void drawSpectrogram();
+        void prepareSpectrogramDraw(const QVector<QRgb>& colorTable);
+        void drawSpectrogram(
+                float fftFrequency,
+                FrequencyScale freqScale,
+                float minFrequency,
+                float maxFrequency,
+                float x1, float x2);
 
         QRect viewport() const;
 

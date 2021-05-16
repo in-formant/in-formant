@@ -40,6 +40,9 @@ if(SYSTEM_ANDROID)
     list(APPEND ANDROID_EXTRA_LIBS "$ENV{ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/9.0.9/lib/linux/${OMP_DIR}/libomp.so")
 endif()
 
+set(CMAKE_C_COMPILER_LAUNCHER "ccache")
+set(CMAKE_CXX_COMPILER_LAUNCHER "ccache")
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -168,6 +171,8 @@ set(SOURCES
     src/analysis/gci/xewgrdel.cpp
     src/analysis/util/find_peaks.cpp
     src/analysis/util/find_roots.cpp
+    src/analysis/util/aberth.cpp
+    src/analysis/util/aberth.h
     src/analysis/util/laguerre.cpp
     src/analysis/util/laguerre.h
     src/analysis/util/polish_root.cpp

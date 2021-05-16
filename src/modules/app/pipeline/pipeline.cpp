@@ -123,7 +123,9 @@ void Pipeline::callbackProcessing()
 
 void Pipeline::processSpectrogram()
 {
-    const double spectrogramWindow  = mConfig->getAnalysisSpectrogramWindow()  / 1000;
+    timer_guard timer(timings::updateSpectrogram);
+
+    const double spectrogramWindow  = mConfig->getAnalysisSpectrogramWindow() / 1000;
     const double fsView = 2 * mConfig->getViewMaxFrequency();
 
     const int spectrogramSamples = spectrogramWindow * fsView;
@@ -165,7 +167,7 @@ void Pipeline::processSpectrogram()
         {
             .magnitudes = spectrum,
             .sampleRate = fsView,
-            .frameDuration = mSpectrogramData.size() / mSampleRate,
+            .frameDuration = mSpectrogramData.size() / fsView,
         }
     );
 
@@ -174,6 +176,8 @@ void Pipeline::processSpectrogram()
 
 void Pipeline::processPitch()
 {
+    timer_guard timer(timings::updatePitch);
+
     auto pitchResult = mPitchSolver->solve(mPitchData.data(), mPitchData.size(), mSampleRate);
     
     mDataStore->beginWrite();
@@ -190,6 +194,8 @@ void Pipeline::processPitch()
 
 void Pipeline::processFormants()
 {
+    timer_guard timer(timings::updateFormants);
+
     constexpr double preemphFrequency = 100;
     constexpr double fsLPC = 11000;
     constexpr double fs16k = 16000;
@@ -254,6 +260,8 @@ void Pipeline::processFormants()
 
 void Pipeline::processOscilloscope()
 {
+    timer_guard timer(timings::updateOscilloscope);
+
     constexpr double fsOsc = 8000;
 
     mOscilloscopeResampler.setRate(mSampleRate, fsOsc);
@@ -272,6 +280,10 @@ void Pipeline::processOscilloscope()
 void Pipeline::processAll()
 {
     const double fs = (double) mCaptureBuffer->getSampleRate();
+
+    if (mTime == 0) {
+        mDataStore->startRealTime();
+    }
 
     static int blockSize = 512;
     rpm::vector<double> data(blockSize);

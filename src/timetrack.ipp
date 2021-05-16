@@ -24,6 +24,12 @@ void TimeTrack<T>::insert(double t, const T& o)
 }
 
 template<typename T>
+void TimeTrack<T>::remove_before(double t)
+{
+    mTrack.erase(mTrack.begin(), upper_bound(t));
+}
+
+template<typename T>
 typename TimeTrack<T>::iterator TimeTrack<T>::lower_bound(double t)
 {
     return std::lower_bound(mTrack.begin(), mTrack.end(), t, KeyComp<T>());

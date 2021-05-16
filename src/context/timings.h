@@ -51,6 +51,11 @@ std::ostream& operator<<(std::ostream&, const duration&);
 namespace timings {
     extern duration render;
     extern duration update;
+
+    extern duration updateSpectrogram;
+    extern duration updatePitch;
+    extern duration updateFormants;
+    extern duration updateOscilloscope;
 }
 
 #endif // CONTEXT_TIMINGS_H

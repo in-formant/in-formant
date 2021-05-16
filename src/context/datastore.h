@@ -5,6 +5,7 @@
 #include "../timetrack.h"
 #include "../analysis/analysis.h"
 #include <array>
+#include <chrono>
 #include <shared_mutex>
 #include <functional>
 
@@ -30,11 +31,15 @@ namespace Main {
         void beginWrite();
         void endWrite();
 
-        int beginRead();
+        void beginRead();
         void endRead();
 
         double getTime() const;
         void setTime(double t);
+
+        double getRealTime() const;
+        void startRealTime();
+        void stopRealTime();
 
         TimeTrack<SpectrogramCoefs>& getSpectrogram();
 
@@ -51,9 +56,12 @@ namespace Main {
         int mTrackLength;
 
         std::shared_mutex mMutex;
-        int mCatchupCount;
 
-        double mTime;
+        volatile double mTime;
+
+        bool mIsRealTimeStarted;
+        double mRealTimeOffset;
+        std::chrono::time_point<std::chrono::high_resolution_clock> mRealTimeStart;
 
         TimeTrack<SpectrogramCoefs> mSpectrogram;
         

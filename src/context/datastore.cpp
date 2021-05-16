@@ -1,37 +1,34 @@
 #include "datastore.h"
+#include <chrono>
 
 using namespace Main;
 
 DataStore::DataStore()
     : mTrackLength(0),
-      mCatchupCount(1),
-      mTime(0)
+      mTime(0),
+      mIsRealTimeStarted(false),
+      mRealTimeOffset(0)
 {
 }
 
 void DataStore::beginWrite()
 {
-    mMutex.lock();
+    //mMutex.lock();
 }
 
 void DataStore::endWrite()
 {
-    mCatchupCount++;
-    mMutex.unlock();
+    //mMutex.unlock();
 }
 
-int DataStore::beginRead()
+void DataStore::beginRead()
 {
-    mMutex.lock_shared();
-
-    int catchup = 0;
-    std::swap(mCatchupCount, catchup);
-    return catchup;
+    //mMutex.lock_shared();
 }
 
 void DataStore::endRead()
 {
-    mMutex.unlock_shared();
+    //mMutex.unlock_shared();
 }
 
 double DataStore::getTime() const
@@ -42,6 +39,29 @@ double DataStore::getTime() const
 void DataStore::setTime(double t)
 {
     mTime = t;
+}
+
+double DataStore::getRealTime() const
+{
+    if (!mIsRealTimeStarted)
+        return mRealTimeOffset;
+    
+    auto now = std::chrono::high_resolution_clock::now();
+    return mRealTimeOffset +
+        std::chrono::duration_cast<std::chrono::duration<double>>(
+                now - mRealTimeStart).count();
+}
+
+void DataStore::startRealTime()
+{
+    mRealTimeStart = std::chrono::high_resolution_clock::now();
+    mIsRealTimeStarted = true;
+}
+
+void DataStore::stopRealTime()
+{
+    mRealTimeOffset += getRealTime();
+    mIsRealTimeStarted = false;
 }
 
 TimeTrack<SpectrogramCoefs>& DataStore::getSpectrogram()

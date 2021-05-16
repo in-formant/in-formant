@@ -54,11 +54,18 @@ void CanvasRenderer::render()
     std::string renderTimeString = QString("Render: %1 ms").arg(timings::render).toStdString();
     std::string updateTimeString = QString("Update: %1 ms").arg(timings::update).toStdString();
 
+    /*std::cout << "Update spectrogram:  " << timings::updateSpectrogram << "\n"
+              << "       pitch:        " << timings::updatePitch << "\n"
+              << "       formants:     " << timings::updateFormants << "\n"
+              << "       oscilloscope: " << timings::updateOscilloscope << "\n\n";*/
+
     float y = 10;
     QRect textBox;
+
     textBox = textBoundsNormal(renderTimeString);
     y += textBox.height();
     drawTextNormalOutlined(10, y, Qt::white, renderTimeString);
+
     textBox = textBoundsNormal(updateTimeString);
     y += textBox.height() + 10;
     drawTextNormalOutlined(10, y, Qt::white, updateTimeString);
@@ -162,31 +169,60 @@ void CanvasRenderer::drawLine(float x1, float y1, float x2, float y2, const QCol
     glEnd();
 }
 
-void CanvasRenderer::prepareSpectrogramDraw()
+void CanvasRenderer::prepareSpectrogramDraw(const QVector<QRgb>& colorTable)
 {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, mSpecTex);
+
+    rpm::vector<GLfloat> r(colorTable.size());
+    rpm::vector<GLfloat> g(colorTable.size());
+    rpm::vector<GLfloat> b(colorTable.size());
+    rpm::vector<GLfloat> a(colorTable.size());
+
+    for (int i = 0; i < colorTable.size(); ++i) {
+        const QColor c = QColor::fromRgb(colorTable[i]);
+            
+        r[i] = c.redF();
+        g[i] = c.greenF();
+        b[i] = c.blueF();
+        a[i] = 1.0f;
+    }
+    
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_R, colorTable.size(), r.data());
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_G, colorTable.size(), g.data());
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_B, colorTable.size(), b.data());
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_A, colorTable.size(), a.data());
 }
 
-void CanvasRenderer::drawSpectrogram()
+void CanvasRenderer::drawSpectrogram(
+        float fftFrequency,
+        FrequencyScale freqScale,
+        float minFrequency,
+        float maxFrequency,
+        float x1,
+        float x2)
 {   
     mSpecProgram->bind();
 
     QMatrix4x4 projection;
     projection.ortho(0, mWidth, mHeight, 0, -1, 1);
-    mTextProgram->setUniformValue("projection", projection);
+    mSpecProgram->setUniformValue("projection", projection);
+
+    mSpecProgram->setUniformValue("fftFrequency", fftFrequency);
+    mSpecProgram->setUniformValue("frequencyScale", static_cast<int>(freqScale));
+    mSpecProgram->setUniformValue("minFrequency", minFrequency);
+    mSpecProgram->setUniformValue("maxFrequency", maxFrequency);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(mSpecVao);
     
-    float w = mWidth;
     float h = mHeight;
 
     float vertices[4][4] = {
-        { w, 0, 1.0f, 1.0f },
-        { w, h, 1.0f, 0.0f },
-        { 0, h, 0.0f, 0.0f },
-        { 0, 0, 0.0f, 1.0f },
+        { x2, 0, 1.0f, 1.0f },
+        { x2, h, 1.0f, 0.0f },
+        { x1, h, 0.0f, 0.0f },
+        { x1, 0, 0.0f, 1.0f },
     };
     
     glBindTexture(GL_TEXTURE_2D, mSpecTex);
