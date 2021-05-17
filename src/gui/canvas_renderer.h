@@ -43,13 +43,16 @@ namespace Gui {
 
         void drawLine(float x1, float y1, float x2, float y2, const QColor &color, float thickness);
 
-        void prepareSpectrogramDraw(const QVector<QRgb>& colorTable);
+        void prepareSpectrogramDraw();
         void drawSpectrogram(
                 float fftFrequency,
                 FrequencyScale freqScale,
                 float minFrequency,
                 float maxFrequency,
-                float x1, float x2);
+                float maxGain,
+                const QVector<QRgb>& colorTable,
+                float x1, float x2,
+                float y1, float y2);
 
         QRect viewport() const;
 

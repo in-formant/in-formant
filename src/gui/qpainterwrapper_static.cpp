@@ -64,52 +64,6 @@ double QPainterWrapper::mapYToFrequency(double y, int height, FrequencyScale sca
     return inverseFrequency(value, scale);
 }
 
-// ( vh, h, scale, minf, maxf, scalesrc, minsrc, maxsrc )
-using ytrans_key = std::tuple<int, int, FrequencyScale, double, double, FrequencyScale, double, double>;
-
-static rpm::map<ytrans_key, Eigen::SparseMatrix<double>> ytrans_map;
-
-static QMutex ytrans_mutex;
-
-Eigen::SparseMatrix<double>& QPainterWrapper::constructTransformY(int h, int vh, FrequencyScale freqScale, double freqMin, double freqMax, FrequencyScale sourceScale, double sourceMin, double sourceMax)
-{
-    QMutexLocker ytrans_lock(&ytrans_mutex);
-
-    auto key = std::make_tuple(vh, h, freqScale, freqMin, freqMax, sourceScale, sourceMin, sourceMax);
-    auto it = ytrans_map.find(key);
-    if (it != ytrans_map.end()) {
-        return it->second;
-    }
-
-    Eigen::SparseMatrix<double> ytrans;
-
-    if (freqScale == FrequencyScale::Linear) {
-        ytrans = Analysis::linearFilterbank(freqMin, freqMax, vh, h, 2 * sourceMax);
-    }
-    else if (freqScale == FrequencyScale::Logarithmic) {
-        ytrans = Analysis::logFilterbank(freqMin, freqMax, vh, h, 2 * sourceMax);
-    }
-    else if (freqScale == FrequencyScale::Mel) {
-        ytrans = Analysis::melFilterbank(freqMin, freqMax, vh, h, 2 * sourceMax);
-    }
-    else if (freqScale == FrequencyScale::ERB) {
-        ytrans = Analysis::erbFilterbank(freqMin, freqMax, vh, h, 2 * sourceMax);
-    }
-
-    if (ytrans.size() > 0) {
-        ytrans_map.emplace(key, ytrans);
-    }
-    else {
-        std::cout << "!! Y axis transform was not supported" << std::endl;
-        return ytrans_map.begin()->second;
-    }
-    
-    return ytrans_map[key];
-}
-
-static rpm::map<std::tuple<double, FrequencyScale, double, double>, Eigen::VectorXd> maps;
-static constexpr size_t mapsMaxSize = 1024UL * 1024UL * 128UL;
-
 void QPainterWrapper::drawSpectrogram(
             const rpm::vector<std::pair<double, Main::SpectrogramCoefs>>& slices)
 {
@@ -117,20 +71,18 @@ void QPainterWrapper::drawSpectrogram(
 
     int lastNfft = 0;
     double lastSampleRate = 0;
-    double lastFrameDuration = 0;
 
     rpm::vector<rpm::vector<std::pair<double, Main::SpectrogramCoefs>>> segments;
     rpm::vector<std::pair<double, Main::SpectrogramCoefs>> currentSegment;
 
     for (const auto& slice : slices) {
         if ((slice.second.magnitudes.size() != lastNfft
-                    || slice.second.sampleRate != lastSampleRate
-                    || slice.second.frameDuration != lastFrameDuration)
+                    || slice.second.sampleRate != lastSampleRate)
                 && !currentSegment.empty()) {
             segments.push_back(std::move(currentSegment));
+            currentSegment.clear();
             lastNfft = slice.second.magnitudes.size();
             lastSampleRate = slice.second.sampleRate;
-            lastFrameDuration = slice.second.frameDuration;
         }
         currentSegment.push_back(slice);
     }
@@ -140,11 +92,10 @@ void QPainterWrapper::drawSpectrogram(
     }
    
     static rpm::vector<GLfloat> segmentTexture;
-   
+
     for (const auto& segment : segments) {
         const int nfft = segment[0].second.magnitudes.size();
         const double sampleRate = segment[0].second.sampleRate;
-        const double frameDuration = segment[0].second.frameDuration;
     
         const int segmentLen = segment.size();
 
@@ -155,14 +106,18 @@ void QPainterWrapper::drawSpectrogram(
             }
         }
     
-        p->prepareSpectrogramDraw(cmap);
+        p->prepareSpectrogramDraw();
         glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, segmentLen, nfft, 0, GL_RED, GL_FLOAT, segmentTexture.data());
         p->drawSpectrogram(
                 sampleRate / 2,
                 mFrequencyScale,
                 mMinFrequency, mMaxFrequency,
-                mapTimeToX(segment.front().first - frameDuration / 2),
-                mapTimeToX(segment.back().first + frameDuration / 2));
+                mMaxGain,
+                cmap,
+                mapTimeToX(segment.front().first),
+                mapTimeToX(segment.back().first),
+                mapFrequencyToY(mMinFrequency),
+                mapFrequencyToY(mMaxFrequency));
     }
 }
 

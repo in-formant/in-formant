@@ -21,7 +21,6 @@ namespace Main {
     struct SpectrogramCoefs {
         Eigen::VectorXd magnitudes;
         double sampleRate;
-        double frameDuration;
     };
 
     class DataStore {

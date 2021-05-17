@@ -51,12 +51,12 @@ Font::Font(FT_Library ft, const QString &font, int pixelSize)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         mCharacters.emplace((char) c, FontCharacter {
-            .texture = texture,
-            .width = face->glyph->bitmap.width,
-            .height = face->glyph->bitmap.rows,
-            .bearingX = face->glyph->bitmap_left,
-            .bearingY = face->glyph->bitmap_top,
-            .advance = face->glyph->advance.x 
+            texture,
+            face->glyph->bitmap.width,
+            face->glyph->bitmap.rows,
+            face->glyph->bitmap_left,
+            face->glyph->bitmap_top,
+            face->glyph->advance.x 
         });
     }
 

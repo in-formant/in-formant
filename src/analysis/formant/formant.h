@@ -10,7 +10,11 @@ extern "C" void __assert_fail(const char* expr, const char *filename, unsigned i
 
 #undef slots
 #undef ERROR
+#pragma warning(push, 0)
+#ifdef _WIN32
+#endif
 #include <torch/script.h>
+#pragma warning(pop)
 #define slots Q_SLOTS
 
 namespace Analysis {

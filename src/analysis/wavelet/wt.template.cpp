@@ -459,7 +459,7 @@ int Wt::CAT(TYPE, _swt_)(const TYPE * const restrict input, int input_len,
     if(level < 1)
         return -1;
 
-    if(level > swt_max_level(input_len))
+    if((int)level > swt_max_level(input_len))
         return -2;
 
     if(output_len != swt_buffer_length(input_len))
@@ -486,7 +486,7 @@ int Wt::CAT(TYPE, _swt_)(const TYPE * const restrict input, int input_len,
                                                     filter_len, output, 1,
                                                     1);
     }
- cleanup:
+// cleanup:
     return -3;
 }
 

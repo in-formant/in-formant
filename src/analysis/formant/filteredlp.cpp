@@ -37,10 +37,7 @@ FormantResult FilteredLP::solve(const double *lpc, int lpcOrder, double sampleRa
         if (r >= 0.6 && r < 1.0) {
             FormantData formant = calculateFormant(r, phi, sampleRate);
             if (formant.frequency > 50.0 && formant.frequency < sampleRate / 2 - 50.0) {
-                pickedRoots.push_back({
-                    .d = formant,
-                    .r = z,
-                });
+                pickedRoots.push_back({formant, z});
             }
         }
     }
@@ -223,7 +220,7 @@ rpm::vector<int> peak_picking(const rpm::vector<double> &nsdf)
 	rpm::vector<int> max_positions{};
 	int pos = 0;
 	int cur_max_pos = 0;
-	ssize_t size = nsdf.size();
+	int size = nsdf.size();
 
 	while (pos < (size - 1) / 3 && nsdf[pos] > 0)
 		pos++;

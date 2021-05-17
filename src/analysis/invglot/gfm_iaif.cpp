@@ -153,8 +153,5 @@ InvglotResult GFM_IAIF::solve(const double *xData, int length, double sampleRate
         g[i] /= gMax;
     }
 
-    return {
-        .sampleRate = sampleRate,
-        .glotSig = g,
-    };
+    return {sampleRate, g};
 }

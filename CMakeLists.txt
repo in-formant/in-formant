@@ -2,8 +2,13 @@ cmake_minimum_required(VERSION 3.5)
 cmake_policy(SET CMP0048 NEW)
 cmake_policy(SET CMP0075 NEW)
 cmake_policy(SET CMP0077 NEW)
+cmake_policy(SET CMP0071 OLD)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{MACOSX_DEPLOYMENT_TARGET})
+
+if("x${CUR_VERSION}" STREQUAL "x")
+    set(CUR_VERSION "3.1-dev")
+endif()
 
 string(FIND "${CUR_VERSION}" "-" dash_pos)
 string(SUBSTRING "${CUR_VERSION}" 0 ${dash_pos} parsed_version)
@@ -40,24 +45,36 @@ if(SYSTEM_ANDROID)
     list(APPEND ANDROID_EXTRA_LIBS "$ENV{ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/9.0.9/lib/linux/${OMP_DIR}/libomp.so")
 endif()
 
-set(CMAKE_C_COMPILER_LAUNCHER "ccache")
-set(CMAKE_CXX_COMPILER_LAUNCHER "ccache")
+#set(CMAKE_C_COMPILER_LAUNCHER "ccache")
+#set(CMAKE_CXX_COMPILER_LAUNCHER "ccache")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_C_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -ffast-math -fvisibility=hidden")
-set(CMAKE_C_FLAGS_DEBUG           "-Og -g")
-set(CMAKE_C_FLAGS_RELEASE         "-O3 -g0 -DNDEBUG")
-set(CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g")
-set(CMAKE_C_FLAGS_MINSIZEREL      "-Os -g0 -DNDEBUG")
+if(MSVC)
+    set(CMAKE_C_FLAGS_DEBUG           "/Od /Z7")
+    set(CMAKE_C_FLAGS_RELEASE         "/O2y -DNDEBUG")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO  "/O2y /Z7")
+    set(CMAKE_C_FLAGS_MINSIZEREL      "/Os -DNDEBUG")
+    set(CMAKE_CXX_FLAGS_DEBUG           "/Od /Z7")
+    set(CMAKE_CXX_FLAGS_RELEASE         "/O2y -DNDEBUG")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/O2y /Z7")
+    set(CMAKE_CXX_FLAGS_MINSIZEREL      "/Os -DNDEBUG")
+else()
+    set(CMAKE_C_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -ffast-math -fvisibility=hidden")
+    set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -ffast-math -fvisibility=hidden -fvisibility-inlines-hidden")
+    set(CMAKE_C_FLAGS_DEBUG           "-Og -g")
+    set(CMAKE_C_FLAGS_RELEASE         "-O3 -g0 -DNDEBUG")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g")
+    set(CMAKE_C_FLAGS_MINSIZEREL      "-Os -g0 -DNDEBUG")
+    set(CMAKE_CXX_FLAGS_DEBUG           "-Og -g")
+    set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -g0 -DNDEBUG")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g")
+    set(CMAKE_CXX_FLAGS_MINSIZEREL      "-Os -g0 -DNDEBUG")
+endif()
 
-set(CMAKE_CXX_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -ffast-math -fvisibility=hidden -fvisibility-inlines-hidden")
-set(CMAKE_CXX_FLAGS_DEBUG           "-Og -g")
-set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -g0 -DNDEBUG")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g")
-set(CMAKE_CXX_FLAGS_MINSIZEREL      "-Os -g0 -DNDEBUG")
+
 
 set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -195,8 +212,15 @@ set(SOURCES
 
 ### REQUIRED MODULES
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(FFTW REQUIRED fftw3)
+if(MSVC)
+    find_package(FFTW3 REQUIRED)
+    set(FFTW_INCLUDE_DIRS ${FFTW3_INCLUDE_DIRS})
+    set(FFTW_LIBRARIES ${FFTW3_LIBRARIES})
+    set(FFTW_LIBRARY_DIRS ${FFTW3_LIBRARY_DIRS})
+else()
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(FFTW REQUIRED fftw)
+endif()
 
 find_package(Eigen3 REQUIRED NO_MODULE)
 
@@ -205,12 +229,11 @@ find_package(OpenGL REQUIRED)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+set(CMAKE_BUILD_TYPE_bak ${CMAKE_BUILD_TYPE})
+set(CMAKE_BUILD_TYPE Release)
 find_package(Torch REQUIRED)
-set_target_properties(torch PROPERTIES
-    MAP_IMPORTED_CONFIG_DEBUG Release
-    MAP_IMPORTED_CONFIG_MINSIZEREL Release
-    MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
-)
+set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE_bak})
+
 
 find_package(Qt5 5.15 COMPONENTS Charts Quick QuickControls2 QuickTemplates2 Qml Widgets OpenGL Gui Core REQUIRED)
 foreach(c Charts Quick QuickControls2 QuickTemplates2 Qml Widgets OpenGL Gui Core)
@@ -238,27 +261,34 @@ if(TRUE)
     )
 endif()
 
-pkg_check_modules(alsa QUIET alsa)
-if(alsa_FOUND)
-    message(STATUS "Including audio module: alsa")
-    set(AUDIO_USE_ALSA TRUE)
-    list(APPEND SOURCES
-        src/modules/audio/alsa/alsa.cpp
-        src/modules/audio/alsa/alsa.h
-    )
+if(NOT WIN32)
+    pkg_check_modules(alsa QUIET alsa)
+    if(alsa_FOUND)
+        message(STATUS "Including audio module: alsa")
+        set(AUDIO_USE_ALSA TRUE)
+        list(APPEND SOURCES
+            src/modules/audio/alsa/alsa.cpp
+            src/modules/audio/alsa/alsa.h
+        )
+    endif()
+
+    pkg_check_modules(pulse QUIET libpulse)
+    if(pulse_FOUND)
+        message(STATUS "Including audio module: pulse")
+        set(AUDIO_USE_PULSE TRUE)
+        list(APPEND SOURCES
+            src/modules/audio/pulse/pulse.cpp
+            src/modules/audio/pulse/pulse.h
+        )
+    endif()
+endif(NOT WIN32)
+
+if(MSVC)
+    find_package(portaudio REQUIRED)
+elseif()
+    pkg_check_modules(portaudio QUIET portaudio-2.0)
 endif()
 
-pkg_check_modules(pulse QUIET libpulse)
-if(pulse_FOUND)
-    message(STATUS "Including audio module: pulse")
-    set(AUDIO_USE_PULSE TRUE)
-    list(APPEND SOURCES
-        src/modules/audio/pulse/pulse.cpp
-        src/modules/audio/pulse/pulse.h
-    )
-endif()
-
-pkg_check_modules(portaudio QUIET portaudio-2.0)
 if(portaudio_FOUND)
     message(STATUS "Including audio module: portaudio")
     set(AUDIO_USE_PORTAUDIO TRUE)
@@ -292,7 +322,8 @@ else()
 endif()
 
 target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${FFTW_INCLUDE_DIRS} ${TOMLPP_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS})
-target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LDFLAGS} ${TORCH_LIBRARIES} Qt5::Charts Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::OpenGL Qt5::Gui Qt5::Core OpenGL::GL)
+target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LIBRARIES} ${TORCH_LIBRARIES} Qt5::Charts Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::OpenGL Qt5::Gui Qt5::Core OpenGL::GL)
+target_link_directories(in-formant PRIVATE ${FFTW_LIBRARY_DIRS})
 
 set(BUILD_SHARED_LIBS TRUE)
 add_subdirectory(external/freetype EXCLUDE_FROM_ALL)
@@ -300,7 +331,7 @@ target_link_libraries(in-formant PRIVATE freetype)
 set(BUILD_SHARED_LIBS)
 
 add_subdirectory(external/rpmalloc EXCLUDE_FROM_ALL)
-target_link_libraries(in-formant PRIVATE rpmalloc)
+target_link_libraries(in-formant PRIVATE rpcxx_only)
 
 add_subdirectory(external/soxr EXCLUDE_FROM_ALL)
 target_link_libraries(in-formant PRIVATE soxr)
@@ -330,9 +361,13 @@ if(AUDIO_USE_PULSE)
 endif()
 
 if(AUDIO_USE_PORTAUDIO)
-    target_include_directories(in-formant SYSTEM PRIVATE ${portaudio_INCLUDE_DIRS})
-    target_link_libraries(in-formant PRIVATE ${portaudio_LIBRARIES})
+    target_include_directories(in-formant SYSTEM PRIVATE ${portaudio_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS})
+    target_link_libraries(in-formant PRIVATE ${portaudio_LIBRARIES} ${PORTAUDIO_LIBRARIES})
+    target_link_directories(in-formant PRIVATE ${portaudio_LIBRARY_DIRS} ${PORTAUDIO_LIBRARY_DIRS})
     target_compile_definitions(in-formant PRIVATE -DAUDIO_USE_PORTAUDIO=1)
+    if(MSVC)
+        target_link_libraries(in-formant PRIVATE portaudio.lib)
+    endif()
 endif()
 
 if(AUDIO_USE_OBOE)
@@ -346,7 +381,7 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL Release)
     set_property(SOURCE "${SOURCES}" PROPERTY COMPILE_FLAGS "-flto")
-    if(SYSTEM_WINDOWS)
+    if(SYSTEM_WINDOWS AND NOT MSVC)
         execute_process(
             COMMAND ${CMAKE_C_COMPILER} --print-file-name=liblto_plugin.so
             OUTPUT_VARIABLE lto_plugin_file)
@@ -364,7 +399,7 @@ if(SYSTEM_DARWIN OR SYSTEM_ANDROID)
 endif()
 
 if(SYSTEM_WINDOWS)
-    target_compile_definitions(in-formant PRIVATE -D_WIN32_WINNT=0x600 -D_USE_MATH_DEFINES)
+    target_compile_definitions(in-formant PRIVATE -D_WIN32_WINNT=0x600 -D_USE_MATH_DEFINES -DNOMINMAX)
     target_sources(in-formant PRIVATE resources/winicon.rc)
 endif()
 

@@ -27,10 +27,11 @@ uniform sampler2D tex;
 uniform vec3 colorMap[256];
 
 uniform float fftFrequency;
-
 uniform int frequencyScale; // Linear, Log, Mel, ERB
 uniform float minFrequency;
 uniform float maxFrequency;
+
+uniform float maxGain;
 
 #define INV_LOG_2   1.44269504089
 #define INV_LOG_10  0.4342944819
@@ -63,19 +64,22 @@ void main()
     // TexCoords: [0,1] => [0,fftFrequency]
     // FragCoord: [0,1] => [0,maxFrequency]
 
-    float ty = 1 - TexCoords.y;
+    float ty = TexCoords.y;
 
-    float freq = reverse(transform(minFrequency) + ty * transform(maxFrequency));
+    float freq = reverse(transform(minFrequency) + ty * (transform(maxFrequency) - transform(minFrequency)));
 
     ty = freq / fftFrequency;
    
     if (ty < 0 || ty > 1) {
         color = vec4(0.0, 0.0, 0.0, 1.0);
     }
-    else { 
+    else {
         float amplitude = float(texture(tex, vec2(TexCoords.x, ty)));
 
-        color = vec4(vec3(1.0, 0.2, 0.0) * sqrt(amplitude) * 15, 1.0);
+        float adjusted = sqrt(amplitude / pow(10, maxGain / 20)) * 7;
+        int index = (int) clamp(floor(adjusted * 255), 0, 255);
+
+        color = vec4(colorMap[index], 1.0);
     }
 }  
 )foo";

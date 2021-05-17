@@ -125,10 +125,9 @@ void Pipeline::processSpectrogram()
 {
     timer_guard timer(timings::updateSpectrogram);
 
-    const double spectrogramWindow  = mConfig->getAnalysisSpectrogramWindow() / 1000;
     const double fsView = 2 * mConfig->getViewMaxFrequency();
 
-    const int spectrogramSamples = spectrogramWindow * fsView;
+    const int spectrogramSamples = mConfig->getViewFFTSize();
 
     // Resample.
     mSpectrogramResampler.setRate(mSampleRate, fsView);
@@ -163,13 +162,7 @@ void Pipeline::processSpectrogram()
 
     mDataStore->beginWrite();
 
-    mDataStore->getSpectrogram().insert(mSpectrogramTime - mSpectrogramData.size() / mSampleRate,
-        {
-            .magnitudes = spectrum,
-            .sampleRate = fsView,
-            .frameDuration = mSpectrogramData.size() / fsView,
-        }
-    );
+    mDataStore->getSpectrogram().insert(mSpectrogramTime - mSpectrogramData.size() / mSampleRate, {spectrum, fsView});
 
     mDataStore->endWrite();
 }

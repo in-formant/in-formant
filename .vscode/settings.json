@@ -1,0 +1,6 @@
+{
+    "cmake.configureSettings": {
+        "CMAKE_TOOLCHAIN_FILE": "E:\\vcpkg\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+    },
+    "cmake.generator": "NMake Makefiles JOM"
+}

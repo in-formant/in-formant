@@ -33,16 +33,10 @@ PitchResult Pitch::RAPT::solve(const double *data, int length, int sampleRate)
     double f0 = computeFrame(data, length, sampleRate);
 
     if (f0 != 0.0) {
-        return {
-            .pitch = f0,
-            .voiced = true,
-        };
+        return {f0, true};
     }
     else {
-        return {
-            .pitch = 0.0,
-            .voiced = false,
-        };
+        return {0.0, false};
     }
 }
 
@@ -119,11 +113,12 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
 
     if (frames.size() != nbFrames) {
         Frame defaultFrame = {
-            .cands = { { .localCost = vo_bias, .voiced = false } },
-            .rms = 1e-10,
-            .rr = 1.0,
-            .ar = { 1.0 },
-            .S = -0.25,
+            { { vo_bias, false } },
+            1e-10,
+             1.0,
+            { 1.0 },
+            {},
+            -0.25,
         };
         frames.resize(nbFrames, defaultFrame);
     }
@@ -292,7 +287,7 @@ rpm::vector<double> calculateDownsampledNCCF(const rpm::vector<double>& dss, con
 {
     rpm::vector<double> dsNCCF(dsK2 + 1, 0.0);
 
-    double dse0;
+    double dse0 = 0.0;
     for (int l = 0; l < dsn; ++l) {
         dse0 += dss[l] * dss[l];
     }
@@ -410,10 +405,10 @@ rpm::vector<RAPT::Cand> createCosts(const rpm::vector<std::pair<double, double>>
     int i = 0;
     for (const auto& [k, y] : peaks) {
         costs[i] = {
-            .localCost = 1.0 - y * (1.0 - beta * k),
-            .voiced = true,
-            .L = k,
-            .C = y,
+            1.0 - y * (1.0 - beta * k),
+            true,
+            k,
+            y,
         };
         i++;
     }
@@ -427,8 +422,8 @@ rpm::vector<RAPT::Cand> createCosts(const rpm::vector<std::pair<double, double>>
     }
 
     costs[i] = {
-        .localCost = vo_bias + maxCij,
-        .voiced = false
+        vo_bias + maxCij,
+        false
     };
 
     std::sort(costs.begin(), costs.end(),

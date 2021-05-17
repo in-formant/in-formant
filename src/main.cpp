@@ -41,7 +41,9 @@ int start_logger(const char *app_name);
 int Main::argc;
 char **Main::argv;
 
+#ifndef _MSC_VER
 __attribute__((visibility ("default")))
+#endif
 int main(int argc, char **argv)
 {
 #ifdef _WIN32

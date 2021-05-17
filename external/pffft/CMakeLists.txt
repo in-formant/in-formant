@@ -16,9 +16,9 @@ option(USE_SCALAR_VECT "use 4-element vector scalar operations (if no other SIMD
 
 # test options
 option(USE_BENCH_FFTW   "use (system-installed) FFTW3 in fft benchmark?" OFF)
-option(USE_BENCH_GREEN  "use Green FFT in fft benchmark? - if exists in subdir" ON)
-option(USE_BENCH_KISS   "use KissFFT in fft benchmark? - if exists in subdir" ON)
-option(USE_BENCH_POCKET "use PocketFFT in fft benchmark? - if exists in subdir" ON)
+option(USE_BENCH_GREEN  "use Green FFT in fft benchmark? - if exists in subdir" OFF)
+option(USE_BENCH_KISS   "use KissFFT in fft benchmark? - if exists in subdir" OFF)
+option(USE_BENCH_POCKET "use PocketFFT in fft benchmark? - if exists in subdir" OFF)
 
 option(USE_DEBUG_ASAN  "use GCC's address sanitizer?" OFF)
 

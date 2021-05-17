@@ -49,8 +49,8 @@ FormantResult DeepFormants::solve(const double *, int, double)
     FormantResult formantResult;
     for (int i = 0; i < 4; ++i) {
         formantResult.formants.push_back({
-            .frequency = 1000 * result(i),
-            .bandwidth = 80,
+            1000 * result(i),
+            80,
         });
     }
 

@@ -21,7 +21,7 @@ peak_picking(const rpm::vector<T> &nsdf)
 	rpm::vector<int> max_positions{};
 	int pos = 0;
 	int cur_max_pos = 0;
-	ssize_t size = nsdf.size();
+	int size = nsdf.size();
 
 	while (pos < (size - 1) / 3 && nsdf[pos] > 0)
 		pos++;
@@ -139,7 +139,7 @@ Analysis::Pitch::MPM::solve(const double *data, int length, int sample_rate)
 	}
 
 	if (estimates.empty())
-		return { .pitch = 0.0, .voiced = false };
+		return { 0.0, false };
 
 	T actual_cutoff = MPM_CUTOFF * highest_amplitude;
 	T period = 0;
@@ -154,6 +154,6 @@ Analysis::Pitch::MPM::solve(const double *data, int length, int sample_rate)
 	T pitch_estimate = ((double) sample_rate / period);
 
 	return (pitch_estimate > MPM_LOWER_PITCH_CUTOFF)
-                    ? Analysis::PitchResult { .pitch = pitch_estimate, .voiced = true }
-                    : Analysis::PitchResult { .pitch = 0.0, .voiced = false };
+                    ? Analysis::PitchResult { pitch_estimate, true }
+                    : Analysis::PitchResult { 0.0, 			  false };
 }

@@ -77,7 +77,9 @@ rpm::vector<double> Burg::solve(const double *x, int length, int lpcOrder, doubl
         gain = 1e-10;
     }
     gain *= n;
-    std::transform(lpc.begin(), lpc.end(), lpc.begin(), std::negate<>());
+    for (auto& x : lpc) {
+        x = -x;
+    }
     if (pGain != nullptr)
         *pGain = gain;
     return lpc;

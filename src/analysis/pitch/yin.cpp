@@ -72,11 +72,11 @@ PitchResult Yin::solve(const double *data, int length, int sampleRate)
     }
 
     if (k == length / 2 || mCMND[k] >= mThreshold) {
-        return {.pitch = 0.0, .voiced = false};
+        return {0.0, false};
     }
     else {
         double pitch = (double) sampleRate / (double) k;
-        return {.pitch = pitch, .voiced = true};
+        return {pitch, true};
     }
 }
 

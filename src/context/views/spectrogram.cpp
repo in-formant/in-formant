@@ -80,15 +80,10 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     auto& spectrogram = dataStore->getSpectrogram();
     auto& pitchTrack = dataStore->getPitchTrack();
 
-    const QRect viewport = painter->viewport();
-
     const double viewDuration = config->getViewTimeSpan();
     const double timeDelay = 80.0 / 1000.0;
     const double timeEnd = realTimeEnd - timeDelay;
     const double timeStart = timeEnd - viewDuration;
-    
-    const double pitchTrackRenderInterval = 50.0 / 1000.0;
-    const double formantTracksRenderInterval = 50.0 / 1000.0;
 
     rpm::vector<double> sound =
         !dataStore->getSoundTrack().empty() 
@@ -100,6 +95,7 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     if (config->getViewShowSpectrogram()) {
         rpm::vector<std::pair<double, SpectrogramCoefs>> slices(
                 spectrogram.lower_bound(timeStart), spectrogram.upper_bound(timeEnd));
+        std::sort(slices.begin(), slices.end(), [](auto& a, auto& b) { return a.first > b.first; });
         painter->drawSpectrogram(slices);
     }
     

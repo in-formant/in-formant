@@ -65,6 +65,13 @@ double QPainterWrapper::mapFrequencyToY(double frequency)
     return mapFrequencyToY(frequency, p->viewport().height(), mFrequencyScale, mMinFrequency, mMaxFrequency);
 }
 
+static std::string numberToString(double val)
+{
+    std::stringstream ss;
+    ss << val;
+    return ss.str();
+}
+
 void QPainterWrapper::drawTimeAxis()
 {
     rpm::vector<double> majorTicks;
@@ -95,8 +102,8 @@ void QPainterWrapper::drawTimeAxis()
     
     for (const double val : majorTicks) {
         const double x = mapTimeToX(val);
-        const auto valstr = QString::number(val, 'g');
-        QRect rect = p->textBoundsSmall(valstr.toStdString());
+        const auto valstr = numberToString(val);
+        QRect rect = p->textBoundsSmall(valstr);
         rect.translate(x - rect.width() / 2, y1 - 10);
         bool covered = false;
         for (int tx = rect.x(); tx <= rect.x() + rect.width(); ++tx) {
@@ -108,7 +115,7 @@ void QPainterWrapper::drawTimeAxis()
         }
         p->drawLine(x, y1, x, y1 - 8, Qt::white, 3);
         if (!covered && val >= 0) {
-            p->drawTextSmallOutlined(x - rect.width() / 2, y1 - 10, Qt::white, valstr.toStdString(), Qt::black);
+            p->drawTextSmallOutlined(x - rect.width() / 2, y1 - 10, Qt::white, valstr, Qt::black);
             for (int tx = rect.x(); tx <= rect.x() + rect.width(); ++tx) {
                 if (tx >= 0 && tx < bits.size())
                     bits[tx] = true;
@@ -118,8 +125,8 @@ void QPainterWrapper::drawTimeAxis()
 
     for (const double val : minorTicks) {
         const double x = mapTimeToX(val);
-        const auto valstr = QString::number(val, 'g');
-        QRect rect = p->textBoundsSmaller(valstr.toStdString());
+        const auto valstr = numberToString(val);
+        QRect rect = p->textBoundsSmaller(valstr);
         rect.translate(x - rect.width() / 2, y1 - 10);
         bool covered = false;
         for (int tx = rect.x(); tx <= rect.x() + rect.width(); ++tx) {
@@ -131,7 +138,7 @@ void QPainterWrapper::drawTimeAxis()
         }
         p->drawLine(x, y1, x, y1 - 4, Qt::white, 2);
         if (!covered) {
-            p->drawTextSmallerOutlined(x - rect.width() / 2, y1 - 10, Qt::white, valstr.toStdString(), Qt::black);
+            p->drawTextSmallerOutlined(x - rect.width() / 2, y1 - 10, Qt::white, valstr, Qt::black);
             for (int tx = rect.x(); tx <= rect.x() + rect.width(); ++tx) {
                 if (tx >= 0 && tx < bits.size())
                     bits[tx] = true;
@@ -238,8 +245,8 @@ void QPainterWrapper::drawFrequencyScale()
     
     for (const double val : majorTicks) {
         const double y = mapFrequencyToY(val);
-        const auto valstr = QString::number(val, 'g');
-        QRect rect = p->textBoundsNormal(valstr.toStdString());
+        const auto valstr = numberToString(val);
+        QRect rect = p->textBoundsNormal(valstr);
         rect.translate(x1 - 12 - rect.width(), y + rect.height() / 2);
         bool covered = false;
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
@@ -253,7 +260,7 @@ void QPainterWrapper::drawFrequencyScale()
             continue;
         }
         p->drawLine(x1 - 8, y, x1, y, Qt::white, 3);
-        p->drawTextNormalOutlined(rect.x(), rect.y(), Qt::white, valstr.toStdString(), Qt::black);
+        p->drawTextNormalOutlined(rect.x(), rect.y(), Qt::white, valstr, Qt::black);
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
             if (ty >= 0 && ty < bits.size())
                 bits[ty] = true;
@@ -262,8 +269,8 @@ void QPainterWrapper::drawFrequencyScale()
 
     for (const double val : minorTicks) {
         const double y = mapFrequencyToY(val);
-        const auto valstr = QString::number(val, 'g');
-        QRect rect = p->textBoundsSmall(valstr.toStdString());
+        const auto valstr = numberToString(val);
+        QRect rect = p->textBoundsSmall(valstr);
         rect.translate(x1 - 12 - rect.width(), y + rect.height() / 2);
         bool covered = false;
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
@@ -277,7 +284,7 @@ void QPainterWrapper::drawFrequencyScale()
             continue;
         }
         p->drawLine(x1 - 6, y, x1, y, Qt::white, 2);
-        p->drawTextSmallOutlined(rect.x(), rect.y(), Qt::white, valstr.toStdString(), Qt::black);
+        p->drawTextSmallOutlined(rect.x(), rect.y(), Qt::white, valstr, Qt::black);
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
             if (ty >= 0 && ty < bits.size())
                 bits[ty] = true;
@@ -286,8 +293,8 @@ void QPainterWrapper::drawFrequencyScale()
 
     for (const double val : minorMinorTicks) {
         const double y = mapFrequencyToY(val);
-        const auto valstr = QString::number(val, 'g');
-        QRect rect = p->textBoundsSmaller(valstr.toStdString());
+        const auto valstr = numberToString(val);
+        QRect rect = p->textBoundsSmaller(valstr);
         rect.translate(x1 - 12 - rect.width(), y + rect.height() / 2);
         bool covered = false;
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
@@ -301,7 +308,7 @@ void QPainterWrapper::drawFrequencyScale()
             continue;
         }
         p->drawLine(x1 - 4, y, x1, y, Qt::white, 2);
-        p->drawTextSmallerOutlined(rect.x(), rect.y(), Qt::white, valstr.toStdString(), Qt::black);
+        p->drawTextSmallerOutlined(rect.x(), rect.y(), Qt::white, valstr, Qt::black);
         for (int ty = rect.y(); ty <= rect.y() + rect.height(); ++ty) {
             if (ty >= 0 && ty < bits.size())
                 bits[ty] = true;

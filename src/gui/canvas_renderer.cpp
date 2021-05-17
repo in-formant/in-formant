@@ -51,8 +51,13 @@ void CanvasRenderer::render()
     QPainterWrapper painter(this);
     mRenderContext->render(&painter);
     
-    std::string renderTimeString = QString("Render: %1 ms").arg(timings::render).toStdString();
-    std::string updateTimeString = QString("Update: %1 ms").arg(timings::update).toStdString();
+    std::stringstream ss1;
+    ss1 << "Render: " << timings::render;
+    auto renderTimeString = ss1.str();
+
+    std::stringstream ss2;
+    ss2 << "Update: " << timings::update;
+    auto updateTimeString = ss2.str();
 
     /*std::cout << "Update spectrogram:  " << timings::updateSpectrogram << "\n"
               << "       pitch:        " << timings::updatePitch << "\n"
@@ -169,29 +174,10 @@ void CanvasRenderer::drawLine(float x1, float y1, float x2, float y2, const QCol
     glEnd();
 }
 
-void CanvasRenderer::prepareSpectrogramDraw(const QVector<QRgb>& colorTable)
+void CanvasRenderer::prepareSpectrogramDraw()
 {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, mSpecTex);
-
-    rpm::vector<GLfloat> r(colorTable.size());
-    rpm::vector<GLfloat> g(colorTable.size());
-    rpm::vector<GLfloat> b(colorTable.size());
-    rpm::vector<GLfloat> a(colorTable.size());
-
-    for (int i = 0; i < colorTable.size(); ++i) {
-        const QColor c = QColor::fromRgb(colorTable[i]);
-            
-        r[i] = c.redF();
-        g[i] = c.greenF();
-        b[i] = c.blueF();
-        a[i] = 1.0f;
-    }
-    
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_R, colorTable.size(), r.data());
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_G, colorTable.size(), g.data());
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_B, colorTable.size(), b.data());
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_A, colorTable.size(), a.data());
 }
 
 void CanvasRenderer::drawSpectrogram(
@@ -199,8 +185,12 @@ void CanvasRenderer::drawSpectrogram(
         FrequencyScale freqScale,
         float minFrequency,
         float maxFrequency,
+        float maxGain,
+        const QVector<QRgb>& colorTable,
         float x1,
-        float x2)
+        float x2,
+        float y1,
+        float y2)
 {   
     mSpecProgram->bind();
 
@@ -208,21 +198,27 @@ void CanvasRenderer::drawSpectrogram(
     projection.ortho(0, mWidth, mHeight, 0, -1, 1);
     mSpecProgram->setUniformValue("projection", projection);
 
+    std::array<QVector3D, 256> cmap;
+    for (int i = 0; i < 256; ++i) {
+        QColor color = QColor::fromRgb(colorTable[i]);
+        cmap[i] = QVector3D(color.redF(), color.greenF(), color.blueF());
+    }
+    mSpecProgram->setUniformValueArray("colorMap", cmap.data(), 256);
+
     mSpecProgram->setUniformValue("fftFrequency", fftFrequency);
     mSpecProgram->setUniformValue("frequencyScale", static_cast<int>(freqScale));
     mSpecProgram->setUniformValue("minFrequency", minFrequency);
     mSpecProgram->setUniformValue("maxFrequency", maxFrequency);
+    mSpecProgram->setUniformValue("maxGain", maxGain);
 
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(mSpecVao);
-    
-    float h = mHeight;
 
     float vertices[4][4] = {
-        { x2, 0, 1.0f, 1.0f },
-        { x2, h, 1.0f, 0.0f },
-        { x1, h, 0.0f, 0.0f },
-        { x1, 0, 0.0f, 1.0f },
+        { x2, y1, 1.0f, 1.0f },
+        { x2, y2, 1.0f, 0.0f },
+        { x1, y2, 0.0f, 0.0f },
+        { x1, y1, 0.0f, 1.0f },
     };
     
     glBindTexture(GL_TEXTURE_2D, mSpecTex);
@@ -260,6 +256,8 @@ void CanvasRenderer::drawText(Font *font, float x, float y, const QColor &color,
 
     std::string::const_iterator c;
     for (c = text.begin(); c != text.end(); ++c) {
+        if (*c == '\0') break;
+
         FontCharacter ch = font->charFor(*c);
 
         float xpos = x + ch.bearingX;
