@@ -245,7 +245,7 @@ void ContextManager::datavisThreadLoop()
         mSynthWrapper.setSourceSpectrum(fftFrequencies, sourceSpectrum);
 #endif // !WITHOUT_SYNTH
 
-        std::this_thread::sleep_for(250ms);
+        std::this_thread::sleep_for(20ms);
     }
 }
 
