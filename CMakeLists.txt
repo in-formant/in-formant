@@ -219,7 +219,7 @@ if(MSVC)
     set(FFTW_LIBRARY_DIRS ${FFTW3_LIBRARY_DIRS})
 else()
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(FFTW REQUIRED fftw)
+    pkg_check_modules(FFTW REQUIRED fftw3)
 endif()
 
 find_package(Eigen3 REQUIRED NO_MODULE)
