@@ -285,7 +285,7 @@ endif(NOT WIN32)
 
 if(MSVC)
     find_package(portaudio REQUIRED)
-elseif()
+else()
     pkg_check_modules(portaudio QUIET portaudio-2.0)
 endif()
 
