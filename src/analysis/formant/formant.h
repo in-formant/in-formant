@@ -30,7 +30,6 @@ namespace Analysis {
 
     class FormantSolver {
     public:
-        virtual ~FormantSolver() {}
         virtual FormantResult solve(const double *lpc, int lpcOrder, double sampleRate) = 0;
     };
 
