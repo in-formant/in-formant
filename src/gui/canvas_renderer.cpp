@@ -8,22 +8,27 @@
 using namespace Gui;
 
 constexpr GLuint maxTextureWidth = 4096;
-constexpr GLuint maxTextureHeight = 4096;
+constexpr GLuint maxTextureHeight = 16384;
 
 void CanvasRenderer::initialize(Main::RenderContext *renderContext)
 {
     mRenderContext = renderContext;
     initializeOpenGLFunctions();
-    initFramebuffers();
     initFonts();
     initShaders();
+
+    mSpecTex.resize(4);
+    for (auto& tex : mSpecTex) {
+        initTexture(tex);
+    }
 }
 
 void CanvasRenderer::cleanup()
 {
-    deleteFramebuffers();
     deleteFonts();
     deleteShaders();
+
+    glDeleteTextures(mSpecTex.size(), mSpecTex.data());
 }
 
 void CanvasRenderer::synchronize(QQuickFramebufferObject *item)
@@ -176,8 +181,10 @@ void CanvasRenderer::drawLine(float x1, float y1, float x2, float y2, const QCol
 
 void CanvasRenderer::prepareSpectrogramDraw()
 {
+    std::rotate(mSpecTex.begin(), mSpecTex.begin() + 1, mSpecTex.end());
+
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, mSpecTex);
+    glBindTexture(GL_TEXTURE_2D, mSpecTex[0]);
 }
 
 void CanvasRenderer::drawSpectrogram(
@@ -221,7 +228,7 @@ void CanvasRenderer::drawSpectrogram(
         { x1, y1, 0.0f, 1.0f },
     };
     
-    glBindTexture(GL_TEXTURE_2D, mSpecTex);
+    glBindTexture(GL_TEXTURE_2D, mSpecTex[0]);
 
     glBindBuffer(GL_ARRAY_BUFFER, mSpecVbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
@@ -359,15 +366,6 @@ void CanvasRenderer::initFonts()
     FT_Done_FreeType(ft);
 }
 
-void CanvasRenderer::initFramebuffers()
-{
-    GLint defaultFbo;
-    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &defaultFbo);
-    mDefaultFbo = defaultFbo;
-
-    initFramebuffer(mSpecFbo, mSpecTex);
-}
-
 void CanvasRenderer::initShaders()
 {
     mTextProgram = createShaderProgram(Shaders::textVertex, Shaders::textFragment);
@@ -402,11 +400,6 @@ void CanvasRenderer::deleteFonts()
     delete mFontSmaller;
 }
 
-void CanvasRenderer::deleteFramebuffers()
-{
-    deleteFramebuffer(mSpecFbo, mSpecTex);
-}
-
 void CanvasRenderer::deleteShaders()
 {
     delete mTextProgram;
@@ -417,22 +410,6 @@ void CanvasRenderer::deleteShaders()
     glDeleteVertexArrays(1, &mSpecVao);
     glDeleteBuffers(1, &mSpecVbo);
 }
-
-void CanvasRenderer::initFramebuffer(GLuint &fbo, GLuint &texture)
-{
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-    initTexture(texture);
-
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-} 
 
 void CanvasRenderer::initTexture(GLuint &texture)
 {
@@ -445,12 +422,6 @@ void CanvasRenderer::initTexture(GLuint &texture)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void CanvasRenderer::deleteFramebuffer(GLuint fbo, GLuint texture)
-{
-    glDeleteTextures(1, &texture);
-    glDeleteFramebuffers(1, &fbo);
 }
 
 QOpenGLShaderProgram *CanvasRenderer::createShaderProgram(

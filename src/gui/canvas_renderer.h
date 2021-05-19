@@ -58,16 +58,11 @@ namespace Gui {
 
     private:
         void initFonts();
-        void initFramebuffers();
-        //void initTextures();
         void initShaders();
         void deleteFonts();
-        void deleteFramebuffers();
         void deleteShaders();
 
-        void initFramebuffer(GLuint &fbo, GLuint &texture);
         void initTexture(GLuint &texture);
-        void deleteFramebuffer(GLuint fbo, GLuint texture);
         QOpenGLShaderProgram *createShaderProgram(const char *vertexSource, const char *fragmentSource);
 
         void drawText(Font *font, float x, float y, const QColor &color, const std::string &text);
@@ -82,14 +77,12 @@ namespace Gui {
         Font *mFontSmall;
         Font *mFontSmaller;
 
-        GLuint mDefaultFbo;
-
         QOpenGLShaderProgram *mTextProgram;
         GLuint mTextVao, mTextVbo;
 
         QOpenGLShaderProgram *mSpecProgram;
         GLuint mSpecVao, mSpecVbo;
-        GLuint mSpecFbo, mSpecTex;
+        rpm::vector<GLuint> mSpecTex;
     };
 
 }

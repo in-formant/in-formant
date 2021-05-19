@@ -20,7 +20,7 @@ namespace Gui
 
         void setRenderContext(Main::RenderContext *renderContext);
         
-        Renderer *createRenderer() const;
+        Renderer *createRenderer() const override;
 
     private:
         Main::RenderContext *mRenderContext;
