@@ -7,7 +7,7 @@ cmake_policy(SET CMP0071 OLD)
 set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{MACOSX_DEPLOYMENT_TARGET})
 
 if("x${CUR_VERSION}" STREQUAL "x")
-    set(CUR_VERSION "3.1-dev")
+    set(CUR_VERSION "3.0.4-dev")
 endif()
 
 string(FIND "${CUR_VERSION}" "-" dash_pos)
@@ -53,13 +53,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(MSVC)
-    set(CMAKE_C_FLAGS_DEBUG           "/Od /Z7")
+    set(CMAKE_C_FLAGS_DEBUG           "/Od /DEBUG /Z7")
     set(CMAKE_C_FLAGS_RELEASE         "/O2y -DNDEBUG")
-    set(CMAKE_C_FLAGS_RELWITHDEBINFO  "/O2y /Z7")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO  "/O2y /DEBUG /Z7")
     set(CMAKE_C_FLAGS_MINSIZEREL      "/Os -DNDEBUG")
-    set(CMAKE_CXX_FLAGS_DEBUG           "/Od /Z7")
+    set(CMAKE_CXX_FLAGS_DEBUG           "/Od /DEBUG /Z7")
     set(CMAKE_CXX_FLAGS_RELEASE         "/O2y -DNDEBUG")
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/O2y /Z7")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/O2y /DEBUG /Z7")
     set(CMAKE_CXX_FLAGS_MINSIZEREL      "/Os -DNDEBUG")
 else()
     set(CMAKE_C_FLAGS "-fPIC -ftree-vectorize -fno-omit-frame-pointer -fno-math-errno -ffast-math -fvisibility=hidden")
@@ -83,6 +83,7 @@ set(CMAKE_AUTOMOC ON)
 
 set(SOURCES
     src/main.cpp
+    src/windows_exception_handler.cpp
     src/timetrack.h
     src/timetrack.ipp
     src/context/timings.cpp
@@ -401,6 +402,7 @@ endif()
 if(SYSTEM_WINDOWS)
     target_compile_definitions(in-formant PRIVATE -D_WIN32_WINNT=0x600 -D_USE_MATH_DEFINES -DNOMINMAX)
     target_sources(in-formant PRIVATE resources/winicon.rc)
+    target_link_libraries(in-formant PRIVATE ntdll dbghelp)
 endif()
 
 if(SYSTEM_DARWIN)

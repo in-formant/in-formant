@@ -1,4 +1,5 @@
 #include "canvas.h"
+#include <stdexcept>
 
 using namespace Gui;
 

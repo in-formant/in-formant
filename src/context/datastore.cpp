@@ -45,7 +45,7 @@ double DataStore::getRealTime() const
 {
     if (!mIsRealTimeStarted)
         return mRealTimeOffset;
-    
+
     auto now = std::chrono::high_resolution_clock::now();
     return mRealTimeOffset +
         std::chrono::duration_cast<std::chrono::duration<double>>(
@@ -60,7 +60,7 @@ void DataStore::startRealTime()
 
 void DataStore::stopRealTime()
 {
-    mRealTimeOffset += getRealTime();
+    mRealTimeOffset = getRealTime();
     mIsRealTimeStarted = false;
 }
 

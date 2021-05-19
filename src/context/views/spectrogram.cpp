@@ -67,13 +67,13 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
 {
     const double realTimeEnd = dataStore->getRealTime();
 
-    dataStore->beginWrite();
+    /*dataStore->beginWrite();
     constexpr double keepDuration = 50.0;
     const double keepTimeStart = realTimeEnd - keepDuration;
     dataStore->getSpectrogram().remove_before(keepTimeStart);
     dataStore->getSoundTrack().remove_before(keepTimeStart);
     dataStore->getGifTrack().remove_before(keepTimeStart);
-    dataStore->endWrite();
+    dataStore->endWrite();*/
 
     dataStore->beginRead();
 

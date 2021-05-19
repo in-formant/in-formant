@@ -9,6 +9,7 @@
 #include <thread>
 
 #include <QApplication>
+#include <QMessageBox>
 
 #ifdef _WIN32
 # include <windows.h>
@@ -41,12 +42,18 @@ int start_logger(const char *app_name);
 int Main::argc;
 char **Main::argv;
 
+#ifdef _WIN32
+#include <windows.h>
+LONG WINAPI TopLevelExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo);
+#endif
+
 #ifndef _MSC_VER
 __attribute__((visibility ("default")))
 #endif
 int main(int argc, char **argv)
 {
 #ifdef _WIN32
+    SetUnhandledExceptionFilter(TopLevelExceptionHandler);
     srand(time(nullptr));
 #endif
 
