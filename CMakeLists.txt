@@ -262,7 +262,7 @@ if(TRUE)
     )
 endif()
 
-if(NOT WIN32)
+if(NOT MSVC)
     pkg_check_modules(alsa QUIET alsa)
     if(alsa_FOUND)
         message(STATUS "Including audio module: alsa")
@@ -282,7 +282,7 @@ if(NOT WIN32)
             src/modules/audio/pulse/pulse.h
         )
     endif()
-endif(NOT WIN32)
+endif(NOT MSVC)
 
 if(MSVC)
     find_package(portaudio REQUIRED)
