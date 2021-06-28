@@ -38,8 +38,11 @@ Analysis::FormantSolver *Main::makeFormantSolver(FormantAlgorithm alg)
         return new Analysis::Formant::SimpleLP;
     case FormantAlgorithm::Filtered:
         return new Analysis::Formant::FilteredLP;
+#ifdef ENABLE_TORCH
     case FormantAlgorithm::Deep:
         return new Analysis::Formant::DeepFormants;
+#else
+#endif
     default:
         throw std::runtime_error("ContextManager] Unknown formant estimation algorithm.");
     }

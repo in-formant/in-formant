@@ -161,8 +161,11 @@ void Config::setLinpredAlgorithm(int alg)
     setLinpredAlgorithm(static_cast<LinpredAlgorithm>(alg));
 }
 
-FormantAlgorithm Config::getFormantAlgorithm()
+FormantAlgorithm Config::getFormantAlgorithm(bool internal)
 {
+    if (!internal && getFormantAlgorithm(true) == FormantAlgorithm::Deep) {
+        setFormantAlgorithm(FormantAlgorithm::Filtered);
+    }
     return enumField(mTbl["solvers"], "formant", FormantAlgorithm::Filtered);
 }
 

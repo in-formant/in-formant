@@ -50,6 +50,12 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrap
     mQmlEngine->rootContext()->setContextProperty("HAS_SYNTH", false);
 #endif
 
+#ifdef ENABLE_TORCH
+    mQmlEngine->rootContext()->setContextProperty("HAS_TORCH", true);
+#else
+    mQmlEngine->rootContext()->setContextProperty("HAS_TORCH", false);
+#endif
+
     mQmlEngine->rootContext()->setContextProperty("dataVis", dataVisWrapper);
 
     mQmlEngine->load(QUrl("qrc:/MainWindow.qml"));

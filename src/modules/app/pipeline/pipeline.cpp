@@ -190,8 +190,6 @@ void Pipeline::processFormants()
     timer_guard timer(timings::updateFormants);
 
     constexpr double preemphFrequency = 200;
-    constexpr double fsLPC = 11000;
-    constexpr double fs16k = 16000;
     
     const double preemphFactor = exp(-(2.0 * M_PI * preemphFrequency) / mSampleRate);
     
@@ -199,8 +197,13 @@ void Pipeline::processFormants()
         mFormantWindow = Analysis::gaussianWindow(mFormantData.size(), 2.5);
     }
 
+    constexpr double fsLPC = 11000;
     mFormantResamplerLPC.setRate(mSampleRate, fsLPC);
+
+#ifdef ENABLE_TORCH
+    constexpr double fs16k = 16000;
     mFormantResampler16k.setRate(mSampleRate, fs16k);
+#endif
 
     // Preemphasis and windowing.
     static double lastPreviousSample = 0.0;
@@ -214,18 +217,24 @@ void Pipeline::processFormants()
 
     // Resample.
     auto mLPC = mFormantResamplerLPC.process(mFormantData.data(), mFormantData.size());
+#ifdef ENABLE_TORCH
     auto m16k = mFormantResampler16k.process(mFormantData.data(), mFormantData.size());
+#endif
     
     rpm::vector<double> lpc;
 
+#ifdef ENABLE_TORCH
     if (auto dfSolver = dynamic_cast<Analysis::Formant::DeepFormants *>(mFormantSolver.get())) {
         dfSolver->setFrameAudio(m16k);
         // Pass an empty lpc vector in this case.
     }
     else {
+#endif
         double gain;
         lpc = mLinpredSolver->solve(mLPC.data(), mLPC.size(), 10, &gain);
+#ifdef ENABLE_TORCH
     }
+#endif
 
     auto formantResult = mFormantSolver->solve(lpc.data(), lpc.size(), fsLPC);
 

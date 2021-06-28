@@ -1,6 +1,9 @@
 #include "contextmanager.h"
 #include "timings.h"
+
+#ifdef ENABLE_TORCH
 #include "../analysis/formant/deepformants/df.h"
+#endif
 
 #include <chrono>
 #include <iostream>
@@ -41,8 +44,10 @@ ContextManager::ContextManager(
       mGuiContext(std::make_unique<GuiContext>(mConfig.get(), mRenderContext.get(), &mDataVisWrapper))
 #endif
 {
+#ifdef ENABLE_TORCH
     // Load the DF model.
     DFModelHolder::initialize();
+#endif
 
     createViews();
     loadConfig();

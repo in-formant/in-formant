@@ -68,7 +68,7 @@ namespace Main {
         int getLinpredAlgorithmNumeric();
         void setLinpredAlgorithm(int alg);
 
-        FormantAlgorithm getFormantAlgorithm();
+        FormantAlgorithm getFormantAlgorithm(bool internal = false);
         void setFormantAlgorithm(FormantAlgorithm alg);
         
         int getFormantAlgorithmNumeric();

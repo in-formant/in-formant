@@ -262,7 +262,9 @@ ApplicationWindow {
                     Label { text: "Formant algorithm:" }
                     ComboBox {
                         implicitWidth: parent.width - 10
-                        model: [ "Simple LPC", "Filtered LPC", "DeepFormants" ]
+                        model: HAS_TORCH 
+                                    ? [ "Simple LPC", "Filtered LPC", "DeepFormants" ] 
+                                    : [ "Simple LPC", "Filtered LPC" ]
                         currentIndex: config.formantAlgorithm
                         onActivated: config.formantAlgorithm = currentIndex
                         Layout.alignment: Qt.AlignHCenter

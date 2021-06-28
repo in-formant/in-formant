@@ -7,7 +7,7 @@ cmake_policy(SET CMP0071 OLD)
 set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{MACOSX_DEPLOYMENT_TARGET})
 
 if("x${CUR_VERSION}" STREQUAL "x")
-    set(CUR_VERSION "3.0.4-dev")
+    set(CUR_VERSION "3.1")
 endif()
 
 string(FIND "${CUR_VERSION}" "-" dash_pos)
@@ -163,10 +163,6 @@ set(SOURCES
     src/analysis/linpred/covar.cpp
     src/analysis/linpred/burg.cpp
     src/analysis/linpred/linpred.h
-    src/analysis/formant/deepformants/df.h
-    src/analysis/formant/deepformants/features.cpp
-    src/analysis/formant/deepformants/model.cpp
-    src/analysis/formant/deepformants.cpp
     src/analysis/formant/simplelp.cpp
     src/analysis/formant/filteredlp.cpp
     src/analysis/formant/formant.h
@@ -227,15 +223,6 @@ endif()
 find_package(Eigen3 REQUIRED NO_MODULE)
 
 find_package(OpenGL REQUIRED)
-
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
-set(CMAKE_BUILD_TYPE_bak ${CMAKE_BUILD_TYPE})
-set(CMAKE_BUILD_TYPE Release)
-find_package(Torch REQUIRED)
-set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE_bak})
-
 
 find_package(Qt5 5.15 COMPONENTS Charts Quick QuickControls2 QuickTemplates2 Qml Widgets OpenGL Gui Core REQUIRED)
 foreach(c Charts Quick QuickControls2 QuickTemplates2 Qml Widgets OpenGL Gui Core)
@@ -315,6 +302,16 @@ if(SYSTEM_ANDROID)
     )
 endif()
 
+if(ENABLE_TORCH)
+    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+    set(CMAKE_BUILD_TYPE_bak ${CMAKE_BUILD_TYPE})
+    set(CMAKE_BUILD_TYPE Release)
+    find_package(Torch REQUIRED)
+    set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE_bak})
+endif()
+
 ### CREATE CMAKE TARGET
 
 if(SYSTEM_ANDROID)
@@ -323,8 +320,8 @@ else()
     add_executable(in-formant WIN32 ${SOURCES} ${RESOURCES_OBJ})
 endif()
 
-target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${FFTW_INCLUDE_DIRS} ${TOMLPP_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS})
-target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LIBRARIES} ${TORCH_LIBRARIES} Qt5::Charts Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::OpenGL Qt5::Gui Qt5::Core OpenGL::GL)
+target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${FFTW_INCLUDE_DIRS} ${TOMLPP_INCLUDE_DIR})
+target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LIBRARIES} Qt5::Charts Qt5::Quick Qt5::QuickControls2 Qt5::QuickTemplates2 Qt5::Qml Qt5::Widgets Qt5::OpenGL Qt5::Gui Qt5::Core OpenGL::GL)
 target_link_directories(in-formant PRIVATE ${FFTW_LIBRARY_DIRS})
 
 set(BUILD_SHARED_LIBS TRUE)
@@ -377,6 +374,17 @@ if(AUDIO_USE_OBOE)
     target_include_directories(in-formant SYSTEM PRIVATE ${OBOE_DIR}/include)
     target_link_libraries(in-formant PRIVATE oboe)
     target_compile_definitions(in-formant PRIVATE -DAUDIO_USE_OBOE=1)
+endif()
+
+if (ENABLE_TORCH)
+    target_include_directories(in-formant SYSTEM PRIVATE ${TORCH_INCLUDE_DIRS})
+    target_link_libraries(in-formant PRIVATE ${TORCH_LIBRARIES})
+    target_compile_definitions(in-formant PRIVATE -DENABLE_TORCH)
+    target_sources(in-formant PRIVATE
+        src/analysis/formant/deepformants/df.h
+        src/analysis/formant/deepformants/features.cpp
+        src/analysis/formant/deepformants/model.cpp
+        src/analysis/formant/deepformants.cpp)
 endif()
 
 ## PLATFORM SPECIFIC CODE

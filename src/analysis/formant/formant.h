@@ -4,6 +4,8 @@
 #include "rpcxx.h"
 #include "../../modules/audio/resampler/resampler.h"
 
+#ifdef ENABLE_TORCH
+
 #ifdef _WIN32
 extern "C" void __assert_fail(const char* expr, const char *filename, unsigned int line, const char *assert_func) noexcept;
 #endif
@@ -16,6 +18,8 @@ extern "C" void __assert_fail(const char* expr, const char *filename, unsigned i
 #include <torch/script.h>
 #pragma warning(pop)
 #define slots Q_SLOTS
+
+#endif
 
 namespace Analysis {
 
@@ -55,6 +59,7 @@ namespace Analysis {
             KarmaState *state;
         };
 
+#ifdef ENABLE_TORCH
         class DeepFormants : public FormantSolver {
         public:
             FormantResult solve(const double *lpc, int lpcOrder, double sampleRate) override;
@@ -63,6 +68,7 @@ namespace Analysis {
             rpm::vector<double> xv;
             double fs;
         };
+#endif
     };
 
 };
