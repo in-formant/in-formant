@@ -45,6 +45,9 @@ char **Main::argv;
 #ifdef _WIN32
 #include <windows.h>
 LONG WINAPI TopLevelExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo);
+#ifdef DEBUG_THREAD
+void windowsDebugCallback(std::future<void> future);
+#endif
 #endif
 
 #ifndef _MSC_VER
@@ -55,6 +58,11 @@ int main(int argc, char **argv)
 #ifdef _WIN32
     SetUnhandledExceptionFilter(TopLevelExceptionHandler);
     srand(time(nullptr));
+    #ifdef DEBUG_THREAD
+    std::promise<void> exitSignal;
+    std::future<void> exitSignalFuture = exitSignal.get_future();
+    std::thread debugThread(windowsDebugCallback, std::move(exitSignalFuture));
+    #endif
 #endif
 
     start_logger("InFormant");
@@ -71,6 +79,14 @@ int main(int argc, char **argv)
             48'000      // playbackSampleRate
     );
 
-    return contextManager->exec();
+    int ret = contextManager->exec();
+
+    #ifdef DEBUG_THREAD
+    exitSignal.set_value();
+    if (debugThread.joinable())
+        debugThread.join();
+    #endif
+
+    return ret;
 }
 

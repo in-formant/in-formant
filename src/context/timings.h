@@ -56,6 +56,8 @@ namespace timings {
     extern duration updatePitch;
     extern duration updateFormants;
     extern duration updateOscilloscope;
+
+    extern duration synth;
 }
 
 #endif // CONTEXT_TIMINGS_H

@@ -1,6 +1,7 @@
 #ifndef WITHOUT_SYNTH
 
 #include "../../../analysis/analysis.h"
+#include "../../../context/timings.h"
 #include "synthesizer.h"
 #include <random>
 #include <iostream>
@@ -202,23 +203,7 @@ void Synthesizer::generateAudio(int requestedLength)
 
     int inputLength = resampler.getRequiredInLength(requestedLength);
 
-    auto noise = Synthesis::aspirateNoise(inputLength);
-
-    rpm::vector<double> glot;
-    glot.reserve(inputLength);
-   
-    if (glotSurplus.size() > 0) {
-        if (glotSurplus.size() <= inputLength) {
-            glot.insert(glot.begin(), glotSurplus.begin(), glotSurplus.end());
-            glotSurplus.clear();
-        }
-        else {
-            glot.insert(glot.begin(), glotSurplus.begin(), std::next(glotSurplus.begin(), inputLength));
-            glotSurplus.erase(glotSurplus.begin(), std::next(glotSurplus.begin(), inputLength));
-        }
-    }
-
-    double glotFs = resampler.getInputRate();
+    // Still update the parameters regardless of whether we're generating noise/glot or not.
     rpm::vector<double> pitches(inputLength);
     rpm::vector<double> Rds(inputLength);
     rpm::vector<double> tcs(inputLength);
@@ -237,53 +222,87 @@ void Synthesizer::generateAudio(int requestedLength)
         realGlotTc = tcs.back();
     }
 
-    while (glot.size() < inputLength) {
-        auto frame = Synthesis::lfGenFrame(pitches[glot.size()], glotFs, Rds[glot.size()], tcs[glot.size()]);
+    rpm::vector<double> output(inputLength, 0.0);
 
-        glot.insert(glot.end(), frame.begin(), frame.end());
-    }
+    if (realMasterGain > 1e-7) {
 
-    if (glot.size() > inputLength) {
-        if (inputLength > 0) {
-            glotSurplus.insert(glotSurplus.end(), std::next(glot.begin(), inputLength), glot.end());
+        // GENERATE NOISE
+
+        rpm::vector<double> outputNoise(inputLength, 0.0);
+        double outputNoiseMax = 1e-13;
+
+        /*if (realNoiseGain > 1e-7)*/ {
+            auto noise = Synthesis::aspirateNoise(inputLength);
+
+            outputNoise = Synthesis::sosfilter(realFilter, noise, zfNoise);
+            for (int i = 0; i < inputLength; ++i) {
+                if (fabs(outputNoise[i]) > outputNoiseMax) {
+                    outputNoiseMax = fabs(outputNoise[i]);
+                }
+            }
         }
-        glot.resize(inputLength);
-    }
+        
+        // GENERATE GLOT
 
-    // Anti-alias glot.
-    static rpm::vector<std::array<double, 6>> lpsos;
-    static int lastSampleRate = 0;
+        rpm::vector<double> outputGlot(inputLength, 0.0);
+        double outputGlotMax = 1e-13;
 
-    if (lpsos.empty() || lastSampleRate != glotFs) {
-        lastSampleRate = glotFs;
-        lpsos = Analysis::butterworthLowpass(10, glotFs * 0.49, glotFs);
-    }
+        if (realGlotGain > 1e-7) {
+            rpm::vector<double> glot;
+            glot.reserve(inputLength);
+        
+            if (glotSurplus.size() > 0) {
+                if (glotSurplus.size() <= inputLength) {
+                    glot.insert(glot.begin(), glotSurplus.begin(), glotSurplus.end());
+                    glotSurplus.clear();
+                }
+                else {
+                    glot.insert(glot.begin(), glotSurplus.begin(), std::next(glotSurplus.begin(), inputLength));
+                    glotSurplus.erase(glotSurplus.begin(), std::next(glotSurplus.begin(), inputLength));
+                }
+            }
 
-    static rpm::vector<rpm::vector<double>> lpglotmem(20, rpm::vector<double>(4, 0.0));
-    glot = Synthesis::sosfilter(lpsos, glot, lpglotmem);
+            double glotFs = resampler.getInputRate();
 
-    auto outputNoise = Synthesis::sosfilter(realFilter, noise, zfNoise);
-    double outputNoiseMax = 0.0;
-    for (int i = 0; i < inputLength; ++i) {
-        if (fabs(outputNoise[i]) > outputNoiseMax) {
-            outputNoiseMax = fabs(outputNoise[i]);
+            while (glot.size() < inputLength) {
+                auto frame = Synthesis::lfGenFrame(pitches[glot.size()], glotFs, Rds[glot.size()], tcs[glot.size()]);
+
+                glot.insert(glot.end(), frame.begin(), frame.end());
+            }
+
+            if (glot.size() > inputLength) {
+                if (inputLength > 0) {
+                    glotSurplus.insert(glotSurplus.end(), std::next(glot.begin(), inputLength), glot.end());
+                }
+                glot.resize(inputLength);
+            }
+
+            // Anti-alias glot.
+            static rpm::vector<std::array<double, 6>> lpsos;
+            static int lastSampleRate = 0;
+
+            if (lpsos.empty() || lastSampleRate != glotFs) {
+                lastSampleRate = glotFs;
+                lpsos = Analysis::butterworthLowpass(10, glotFs * 0.49, glotFs);
+            }
+
+            static rpm::vector<rpm::vector<double>> lpglotmem(20, rpm::vector<double>(4, 0.0));
+            glot = Synthesis::sosfilter(lpsos, glot, lpglotmem);
+
+            outputGlot = Synthesis::sosfilter(realFilter, glot, zfGlot);
+            for (int i = 0; i < inputLength; ++i) {
+                if (fabs(outputGlot[i]) > outputGlotMax) {
+                    outputGlotMax = fabs(outputGlot[i]);
+                }
+            }
         }
-    }
 
-    auto outputGlot = Synthesis::sosfilter(realFilter, glot, zfGlot);
-    double outputGlotMax = 0.0;
-    for (int i = 0; i < inputLength; ++i) {
-        if (fabs(outputGlot[i]) > outputGlotMax) {
-            outputGlotMax = fabs(outputGlot[i]);
+        for (int i = 0; i < inputLength; ++i) {
+            output[i] = realNoiseGain * 0.2 * outputNoise[i] / outputNoiseMax;
+            if (voiced)
+                output[i] += realGlotGain * outputGlot[i] / outputGlotMax;
+            output[i] *= 0.8 * realMasterGain;
         }
-    }
-
-    rpm::vector<double> output(inputLength);
-    for (int i = 0; i < inputLength; ++i) {
-        output[i] = realNoiseGain * 0.2 * outputNoise[i] / outputNoiseMax;
-        if (voiced)
-            output[i] += realGlotGain * outputGlot[i] / outputGlotMax;
-        output[i] *= 0.8 * realMasterGain;
     }
 
     output = resampler.process(output.data(), output.size());
@@ -293,6 +312,8 @@ void Synthesizer::generateAudio(int requestedLength)
 
 void Synthesizer::audioCallback(double *output, int length, void *userdata)
 {
+    timer_guard timer(timings::synth);
+
     auto self = static_cast<Synthesizer *>(userdata);
 
     // Update the real parameters.
@@ -321,12 +342,9 @@ void Synthesizer::audioCallback(double *output, int length, void *userdata)
 
     self->realFilter = Synthesis::frequencyShiftFilter(self->realFormants, self->resampler.getInputRate(), self->realFilterShift);
 
-    // Generate the audio.
-    self->generateAudio(length);
-
-    // If we need to generate a bit more, then do so.
+    // Generate the audio by chunks of fixed size.
     while (self->surplus.size() < length) {
-        self->generateAudio(256);
+        self->generateAudio(4096);
     }
 
     // Move the appropriate amount of samples from the surplus bank to the output buffer.

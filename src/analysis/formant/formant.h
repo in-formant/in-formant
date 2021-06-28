@@ -57,11 +57,9 @@ namespace Analysis {
 
         class DeepFormants : public FormantSolver {
         public:
-            DeepFormants();
             FormantResult solve(const double *lpc, int lpcOrder, double sampleRate) override;
             void setFrameAudio(const rpm::vector<double>& x);
         private:
-            torch::jit::script::Module module;
             rpm::vector<double> xv;
             double fs;
         };

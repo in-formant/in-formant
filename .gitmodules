@@ -12,18 +12,9 @@
 [submodule "docker/windeployqt"]
 	path = docker/windeployqt
 	url = https://github.com/clo-yunhee/windeployqt
-[submodule "docker/docker/macdeployqt"]
-	path = docker/docker/macdeployqt
-	url = https://github.com/clo-yunhee/macdeployqt
 [submodule "docker/macdeployqt"]
 	path = docker/macdeployqt
 	url = https://github.com/clo-yunhee/macdeployqt
-[submodule "docker/libs-corebase"]
-	path = docker/libs-corebase
-	url = https://github.com/clo-yunhee/libs-corebase
-[submodule "docker/libs-base"]
-	path = docker/libs-base
-	url = https://github.com/clo-yunhee/libs-base
 [submodule "external/rpmalloc"]
 	path = external/rpmalloc
 	url = https://github.com/mjansson/rpmalloc

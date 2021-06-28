@@ -10,6 +10,8 @@ namespace timings {
     duration updatePitch;
     duration updateFormants;
     duration updateOscilloscope;
+
+    duration synth;
 }
 
 std::ostream& operator<<(std::ostream& os, const duration& dur)
