@@ -67,18 +67,9 @@ void CanvasRenderer::synchronize(QQuickFramebufferObject *item)
 
 void CanvasRenderer::render()
 {
-    if (!mDefaultFbo.has_value()) {
-        GLint fbo;
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fbo);
-        mDefaultFbo = fbo;
-    }
-
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
   
-    glMatrixMode(GL_PROJECTION); 
-    glLoadIdentity();
-    glOrtho(0, mWidth, mHeight, 0, -1, 1);
     glViewport(0, 0, mWidth, mHeight);
 
     glEnable(GL_BLEND);
@@ -89,7 +80,7 @@ void CanvasRenderer::render()
 
     QPainterWrapper painter(this);
     mRenderContext->render(&painter);
-    
+
     std::stringstream ss1;
     ss1 << "Render: " << timings::render;
     auto renderTimeString = ss1.str();
@@ -187,7 +178,7 @@ void CanvasRenderer::drawPoint(const QPointF &point, float radius, const QColor 
 {
     radius *= mZoomScale * (mDpi * mDevicePixelRatio) / 96;
 
-    constexpr int N = 24;
+    /*constexpr int N = 24;
     float vertices[2*(N+1)];
     for (int i = 0; i <= N; ++i) {
         float angle = 2 * M_PI * i / N;
@@ -195,19 +186,54 @@ void CanvasRenderer::drawPoint(const QPointF &point, float radius, const QColor 
         float y = sin(angle) * radius;
         vertices[2*i] = point.x() + x;
         vertices[2*i+1] = mHeight - point.y() + y;
-    }
-    glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
+    }*/
+    /*glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(2, GL_FLOAT, 0, vertices);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, N+1);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, N+1);*/
+
+    mCircleProgram->bind();
+
+    float w = mWidth;
+    float h = mHeight;
+
+    QMatrix4x4 projection;
+    projection.ortho(0, w, 0, h, -1, 1);
+    mCircleProgram->setUniformValue("projection", projection);
+
+    mCircleProgram->setUniformValue("resolution", mWidth, mHeight);
+    mCircleProgram->setUniformValue("center", point.x(), point.y());
+    mCircleProgram->setUniformValue("radius", radius);
+    mCircleProgram->setUniformValue("fillColor", color.redF(), color.greenF(), color.blueF());
+    
+    float x1 = point.x() - 1.5 * radius;
+    float x2 = point.x() + 1.5 * radius;
+    float y1 = point.y() - 1.5 * radius;
+    float y2 = point.y() + 1.5 * radius;
+
+    glBindVertexArray(mCircleVao);
+
+    float vertices[4][2] = {
+        { x2, y1 },
+        { x2, y2 },
+        { x1, y2 },
+        { x1, y1 },
+    };
+
+    glBindBuffer(GL_ARRAY_BUFFER, mCircleVbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    glBindVertexArray(0);
+
+    mCircleProgram->release();
 }
 
 void CanvasRenderer::drawLine(float x1, float y1, float x2, float y2, const QColor &color, float thickness)
 {
     thickness *= mZoomScale * (mDpi * mDevicePixelRatio) / 96;
-
-    y1 = mHeight - y1;
-    y2 = mHeight - y2;
 
     float dx = x2 - x1;
     float dy = y2 - y1;
@@ -221,13 +247,38 @@ void CanvasRenderer::drawLine(float x1, float y1, float x2, float y2, const QCol
     float qy1 = y1 - 0.5 * thickness * ny;
     float qy2 = y2 + 0.5 * thickness * ny;
 
-    glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex2f(qx1, qy1);
-    glVertex2f(qx1, qy2);
-    glVertex2f(qx2, qy2);
-    glVertex2f(qx2, qy1);
-    glEnd();
+    mCircleProgram->bind();
+
+    float w = mWidth;
+    float h = mHeight;
+
+    QMatrix4x4 projection;
+    projection.ortho(0, w, 0, h, -1, 1);
+    mCircleProgram->setUniformValue("projection", projection);
+
+    mCircleProgram->setUniformValue("resolution", mWidth, mHeight);
+    mCircleProgram->setUniformValue("center", (qx1+qx2)/2, (qy1+qy2)/2);
+    mCircleProgram->setUniformValue("radius", thickness);
+    mCircleProgram->setUniformValue("fillColor", color.redF(), color.greenF(), color.blueF());
+
+    glBindVertexArray(mCircleVao);
+
+    float vertices[4][2] = {
+        { qx1, qy2 },
+        { qx1, qy1 },
+        { qx2, qy1 },
+        { qx2, qy2 },
+    };
+
+    glBindBuffer(GL_ARRAY_BUFFER, mCircleVbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    glBindVertexArray(0);
+
+    mCircleProgram->release();
 }
 
 void CanvasRenderer::drawSpectrogram(
@@ -471,6 +522,18 @@ void CanvasRenderer::initShaders()
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 4, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    mCircleProgram = createShaderProgram(Shaders::circleVertex, Shaders::circleFragment);
+
+    glGenVertexArrays(1, &mCircleVao);
+    glGenBuffers(1, &mCircleVbo);
+    glBindVertexArray(mCircleVao);
+    glBindBuffer(GL_ARRAY_BUFFER, mCircleVbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 2 * 4, nullptr, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }

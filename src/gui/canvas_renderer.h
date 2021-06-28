@@ -9,6 +9,7 @@
 
 #include "font.h"
 #include "shaders/spec.h"
+#include "shaders/circle.h"
 #include "../context/datastore.h"
 
 namespace Main {
@@ -97,13 +98,10 @@ namespace Gui {
         QOpenGLShaderProgram *mSpecProgram;
         GLuint mSpecVao, mSpecVbo;
 
-        QOpenGLShaderProgram *mSpec2Program;
-        GLuint mSpec2Vao, mSpec2Vbo;
+        QOpenGLShaderProgram *mCircleProgram;
+        GLuint mCircleVao, mCircleVbo;
 
-        std::optional<GLuint> mDefaultFbo;
         GLuint mSpecTex;
-
-        int mSpecTexMaxWidth, mSpecTexMaxHeight;
     };
 
 }

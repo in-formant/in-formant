@@ -1,5 +1,6 @@
 #include "../gui/canvas.h"
 #include "contextmanager.h"
+#include "qsurfaceformat.h"
 #include "rendercontext.h"
 #include <QQmlContext>
 #include <iostream>
@@ -22,6 +23,15 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrap
     QCoreApplication::setOrganizationDomain("in-formant.app");
     QCoreApplication::setOrganizationName("InFormant");
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
+    QSurfaceFormat format;
+    format.setDepthBufferSize(24);
+    format.setStencilBufferSize(8);
+    format.setSamples(4);
+    format.setVersion(3, 2);
+    format.setRenderableType(QSurfaceFormat::OpenGL);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    QSurfaceFormat::setDefaultFormat(format);
 
     QQuickStyle::setStyle("Material");
     qmlRegisterType<Gui::CanvasItem>("IfCanvas", 1, 0, "IfCanvas");
