@@ -201,20 +201,13 @@ RUN cd mingw-w64-v$ver && \
         make install
 
 # Build portaudio
-RUN wget http://www.portaudio.com/archives/pa_stable_v190600_20161030.tgz && \
-        tar -xvf pa_stable_v190600_20161030.tgz
+RUN wget http://files.portaudio.com/archives/pa_stable_v190700_20210406.tgz && \
+        tar -xvf pa_stable_v190700_20210406.tgz
 RUN cd portaudio && \
-        sed -i 's/-I\\$(top_srcdir)\/src\/hostapi\/wasapi\/mingw-include//g' configure.in && \
-        sed -i \
-            -e 's/\((_MSC_VER >= 1400)\)/\1 || defined(__MINGW64_VERSION_MAJOR)/g' \
-            -e 's/Avrt.h/avrt.h/g' \
-            -e 's/Audioclient.h/audioclient.h/g' \
-            -e 's/\(<mmdeviceapi.h>\)/\1\n#include <functiondiscoverykeys_devpkey.h>/g' \
-            src/hostapi/wasapi/pa_win_wasapi.c && \
         autoconf && \
         mkdir objs && \
         cd objs && \
-        ../configure --host=$HOST --prefix=/usr/$HOST --enable-shared --disable-static --with-host_os=mingw --with-winapi=wmme,directx,wasapi,wdmks && \
+        ../configure --host=$HOST --prefix=/usr/$HOST --enable-shared --disable-static --with-host_os=mingw --with-winapi=wmme,directx,wasapi && \
         make -j$(nproc) && \
         make install
 
@@ -288,6 +281,7 @@ CMD cd /build && \
             -DCMAKE_TOOLCHAIN_FILE=/usr/win64-toolchain.cmake \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
             -DCMAKE_PREFIX_PATH=/usr/libtorch \
+            -DENABLE_TORCH=TRUE \
             /src && \
         make -j$(nproc) && \
         DIST_SUFFIX=win64-x64 \

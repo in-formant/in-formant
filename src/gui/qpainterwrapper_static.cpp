@@ -1,7 +1,6 @@
 #include "qpainterwrapper.h"
 #include "../context/timings.h"
 #include <cmath>
-#include <corecrt_math.h>
 #include <iostream>
 #include <QMutex>
 
@@ -182,77 +181,5 @@ void QPainterWrapper::drawSpectrogram(const rpm::vector<std::pair<double, Main::
             mTimeStart,
             mTimeEnd);
     }
-
-/*
-    double timeStart = slices.front().first;
-    double timeEnd = slices.back().first;
-
-    // Texture height is the max value that NFFT can take.
-    constexpr int maxNfft = 4096;
-
-    // Render them by chunks of fixed length.
-    constexpr int chunkSize = 2048;
-
-    rpm::vector<GLint> nffts(chunkSize);
-    rpm::vector<GLfloat> sampleRates(chunkSize);
-    rpm::vector<GLfloat> texture(chunkSize * maxNfft);
-
-    int toBeRendered = slices.size();
-    int ioff = 0;
-
-    while (toBeRendered > 0) {
-        std::fill(texture.begin(), texture.end(), 0.0);
-
-        int actualChunkSize = std::min<int>(chunkSize, toBeRendered);
-
-        for (int ic = 0; ic < actualChunkSize; ++ic) {
-            const auto& slice = slices[ioff + ic].second;
-            const auto& fftData = slice.magnitudes;
-            const int nfft = fftData.size();
-
-            nffts[ic] = nfft;
-            sampleRates[ic] = slice.sampleRate;
-
-            for (int k = 0; k < nfft; ++k) {
-                texture[k * chunkSize + ic] = fftData(k);
-                //texture[ic * maxNfft + k] = fftData(k);
-            }
-
-            p->drawSpectrogram(
-                    actualChunkSize,
-                    nffts,
-                    sampleRates,
-                    texture,
-                    mFrequencyScale,
-                    mMinFrequency, mMaxFrequency,
-                    mMaxGain,
-                    cmap,
-                    timeStart + (timeEnd - timeStart) * (float(ioff - 1) / float(slices.size())),
-                    timeStart + (timeEnd - timeStart) * (float(ioff + actualChunkSize) / float(slices.size())),
-                    mTimeStart,
-                    mTimeEnd);
-        }
-
-        ioff += actualChunkSize;
-        toBeRendered -= actualChunkSize;
-    }
-    */
-
-    /*for (const auto& tx : textures) {
-        p->prepareSpectrogramDraw();
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tx.segmentLen, tx.nfft, GL_RED, GL_FLOAT, tx.texture.data());
-        p->drawSpectrogram(
-                tx.segmentLen,
-                tx.nfft,
-                tx.sampleRate / 2,
-                mFrequencyScale,
-                mMinFrequency, mMaxFrequency,
-                mMaxGain,
-                cmap,
-                tx.timeStart,
-                tx.timeEnd,
-                mTimeStart,
-                mTimeEnd);
-    }*/
 }
 

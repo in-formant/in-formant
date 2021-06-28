@@ -83,7 +83,6 @@ set(CMAKE_AUTOMOC ON)
 
 set(SOURCES
     src/main.cpp
-    src/windows_exception_handler.cpp
     src/timetrack.h
     src/timetrack.ipp
     src/context/timings.cpp
@@ -250,7 +249,7 @@ if(TRUE)
     )
 endif()
 
-if(NOT MSVC)
+if(NOT WIN32)
     pkg_check_modules(alsa QUIET alsa)
     if(alsa_FOUND)
         message(STATUS "Including audio module: alsa")
@@ -270,7 +269,7 @@ if(NOT MSVC)
             src/modules/audio/pulse/pulse.h
         )
     endif()
-endif(NOT MSVC)
+endif(NOT WIN32)
 
 if(MSVC)
     find_package(portaudio REQUIRED)
@@ -411,6 +410,7 @@ endif()
 if(SYSTEM_WINDOWS)
     target_compile_definitions(in-formant PRIVATE -D_WIN32_WINNT=0x600 -D_USE_MATH_DEFINES -DNOMINMAX)
     target_link_libraries(in-formant PRIVATE ntdll dbghelp)
+    target_sources(in-formant PRIVATE src/windows_exception_handler.cpp)
     if(CMAKE_BUILD_TYPE STREQUAL Debug
             OR CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
         target_compile_definitions(in-formant PRIVATE -DDEBUG_THREAD)

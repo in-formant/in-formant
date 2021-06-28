@@ -12,6 +12,7 @@ void CanvasRenderer::initialize(Main::RenderContext *renderContext)
     mRenderContext = renderContext;
     initializeOpenGLFunctions();
 
+#ifdef GL_DEBUG_OUTPUT
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback([](GLenum source,
                                 GLenum type,
@@ -22,6 +23,7 @@ void CanvasRenderer::initialize(Main::RenderContext *renderContext)
                                 const void *userParam) {
                                     std::cout << message << std::endl;
                                 }, nullptr);
+#endif
 
     initFonts();
     initShaders();

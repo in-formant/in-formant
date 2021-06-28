@@ -3,6 +3,8 @@
 
 #include <Eigen/Dense>
 
+#ifdef ENABLE_TORCH 
+
 #undef slots
 #undef ERROR
 #pragma warning(push, 0)
@@ -29,5 +31,7 @@ private:
 
     static std::unique_ptr<DFModelHolder> sInstance;
 };
+
+#endif
 
 #endif // DEEP_FORMANTS_H

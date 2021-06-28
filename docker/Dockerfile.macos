@@ -150,8 +150,8 @@ ENV CC /osxcross/target/bin/$HOST-clang
 ENV CXX /osxcross/target/bin/$HOST-clang++
 
 # Build portaudio
-RUN wget http://www.portaudio.com/archives/pa_stable_v190600_20161030.tgz && \
-        tar -xvf pa_stable_v190600_20161030.tgz
+RUN wget http://files.portaudio.com/archives/pa_stable_v190700_20210406.tgz && \
+        tar -xvf pa_stable_v190700_20210406.tgz
 RUN cd portaudio && \
         autoconf && \
         mkdir objs && \
@@ -231,6 +231,7 @@ CMD cd /build && \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
             -DCMAKE_PREFIX_PATH=/usr/libtorch \
             -DEigen3_DIR=/osxcross/target/$HOST/share/eigen3/cmake \ 
+            -DENABLE_TORCH=TRUE \
             /src && \
         make -j$(nproc) && \
         DIST_SUFFIX=macos-x86_64 \

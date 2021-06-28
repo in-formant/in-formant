@@ -74,8 +74,8 @@ RUN cd pkg-config-$ver && \
 ENV PKG_CONFIG_PATH=/usr/lib64/pkgconfig:/usr/share/pkgconfig:/usr/local/pkgconfig:/usr/local/lib64/pkgconfig:/usr/local/share/pkgconfig
 
 # Build portaudio
-RUN wget http://www.portaudio.com/archives/pa_stable_v190600_20161030.tgz && \
-        tar -xvf pa_stable_v190600_20161030.tgz
+RUN wget http://files.portaudio.com/archives/pa_stable_v190700_20210406.tgz && \
+        tar -xvf pa_stable_v190700_20210406.tgz
 RUN cd portaudio && \
         mkdir objs && \
         cd objs && \
@@ -140,6 +140,7 @@ CMD cd /build && \
             -DCUR_VERSION=$version \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
             -DCMAKE_PREFIX_PATH="/opt/Qt5/5.15.2/gcc_64;/usr/libtorch" \
+            -DENABLE_TORCH=TRUE \
             /src && \
         make -j$(nproc) && \
         /src/docker/deploy-linux.sh
