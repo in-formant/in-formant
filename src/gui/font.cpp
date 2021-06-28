@@ -1,4 +1,5 @@
 #include "font.h"
+#include "freetype/freetype.h"
 #include <QFile>
 #include <iostream>
 
@@ -19,9 +20,47 @@ Font::Font(FT_Library ft, const QString &font, int pixelSize)
         std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
         return;
     }
-
+    
     FT_Set_Pixel_Sizes(face, 0, pixelSize);
+    buildTextures(face);
+    FT_Done_Face(face);
+}
 
+Font::Font(FT_Library ft, const QString &font, double pointSize, double dpi)
+{
+    QFile fontFile(font);
+    if (!fontFile.open(QIODevice::ReadOnly)) {
+        std::cout << "ERROR::FREETYPE: Failed to read font file" << std::endl;
+        return;
+    }
+    QByteArray buffer = fontFile.readAll();
+    fontFile.close();
+
+    FT_Face face;
+    if (FT_New_Memory_Face(ft, (const FT_Byte *) buffer.constData(), buffer.size(), 0, &face)) {
+        std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+        return;
+    }
+
+    FT_Set_Char_Size(face, pointSize * 64, 0, dpi, 0);
+    buildTextures(face);
+    FT_Done_Face(face);
+}
+
+Font::~Font()
+{
+    for (const auto& [c, character] : mCharacters) {
+        glDeleteTextures(1, &character.texture);
+    }
+}
+
+const FontCharacter &Font::charFor(char c)
+{
+    return mCharacters[c];
+}
+
+void Font::buildTextures(FT_Face face)
+{
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     for (unsigned char c = 0; c < 255; ++c) {
@@ -59,18 +98,4 @@ Font::Font(FT_Library ft, const QString &font, int pixelSize)
             face->glyph->advance.x 
         });
     }
-
-    FT_Done_Face(face);
-}
-
-Font::~Font()
-{
-    for (const auto& [c, character] : mCharacters) {
-        glDeleteTextures(1, &character.texture);
-    }
-}
-
-const FontCharacter &Font::charFor(char c)
-{
-    return mCharacters[c];
 }

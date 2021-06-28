@@ -1,7 +1,6 @@
 #include "qpainterwrapper.h"
 #include "../context/timings.h"
 #include <cmath>
-#include <corecrt_math.h>
 #include <iostream>
 #include <QMutex>
 
@@ -67,8 +66,6 @@ double QPainterWrapper::mapYToFrequency(double y, int height, FrequencyScale sca
 
 void QPainterWrapper::drawSpectrogram(const rpm::vector<std::pair<double, Main::SpectrogramCoefs>>& slices)
 {
-    timer_guard timer(timings::render);
-
     if (slices.empty()) {
         return;
     }
@@ -97,7 +94,7 @@ void QPainterWrapper::drawSpectrogram(const rpm::vector<std::pair<double, Main::
 
     lastTimeEnd = slices.back().first;
 
-    const int sliceCount = slices.size() - firstSliceIndexToRender;
+    const int sliceCount = (int) slices.size() - firstSliceIndexToRender;
 
     if (sliceCount > 0) {
         // Split it into two chunks if it overlaps the texture width.

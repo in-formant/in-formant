@@ -21,6 +21,7 @@ namespace Main {
         Q_PROPERTY(int linpredAlgorithm     READ getLinpredAlgorithmNumeric     WRITE setLinpredAlgorithm       NOTIFY linpredAlgorithmChanged)
         Q_PROPERTY(int formantAlgorithm     READ getFormantAlgorithmNumeric     WRITE setFormantAlgorithm       NOTIFY formantAlgorithmChanged)
         Q_PROPERTY(int invglotAlgorithm     READ getInvglotAlgorithmNumeric     WRITE setInvglotAlgorithm       NOTIFY invglotAlgorithmChanged)
+        Q_PROPERTY(double viewZoom          READ getViewZoom                    WRITE setViewZoom               NOTIFY viewZoomChanged)
         Q_PROPERTY(int viewMinFrequency     READ getViewMinFrequency            WRITE setViewMinFrequency       NOTIFY viewMinFrequencyChanged)
         Q_PROPERTY(int viewMaxFrequency     READ getViewMaxFrequency            WRITE setViewMaxFrequency       NOTIFY viewMaxFrequencyChanged)
         Q_PROPERTY(int viewFFTSize          READ getViewFFTSize                 WRITE setViewFFTSize            NOTIFY viewFFTSizeChanged)
@@ -38,6 +39,7 @@ namespace Main {
         void formantAlgorithmChanged(int);
         void invglotAlgorithmChanged(int);
         void audioBackendChanged(int);
+        void viewZoomChanged(double);
         void viewMinFrequencyChanged(int);
         void viewMaxFrequencyChanged(int);
         void viewFFTSizeChanged(int);
@@ -79,6 +81,9 @@ namespace Main {
         
         int getInvglotAlgorithmNumeric();
         void setInvglotAlgorithm(int alg);
+
+        double getViewZoom();
+        void setViewZoom(double scale);
 
         int getViewMinFrequency();
         void setViewMinFrequency(int f);

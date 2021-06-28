@@ -9,5 +9,7 @@
         <file>icons/stop.svg</file>
         <file>icons/menu.svg</file>
         <file>icons/menu_open.svg</file>
+        <file>icons/zoom_in.svg</file>
+        <file>icons/zoom_out.svg</file>
     </qresource>
 </RCC>

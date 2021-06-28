@@ -25,6 +25,8 @@ namespace Gui {
         
         void render();
 
+        void setZoomScale(double zoomScale);
+
         void drawTextNormal(float x, float y, const QColor &color, const std::string &text);
         void drawTextNormalOutlined(float x, float y, const QColor &color, const std::string &text, const QColor &outlineColor = Qt::black);
         QRect textBoundsNormal(const std::string &text);
@@ -80,7 +82,10 @@ namespace Gui {
 
         Main::RenderContext *mRenderContext;
 
+        double mDevicePixelRatio;
         int mWidth, mHeight;
+        double mDpi;
+        double mZoomScale, mZoomScaleText;
 
         Font *mFontNormal;
         Font *mFontSmall;
