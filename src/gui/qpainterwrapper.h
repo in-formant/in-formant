@@ -23,6 +23,8 @@ public:
     
     QRect viewport() const;
 
+    void setZoom(double scale);
+
     void setTimeRange(double start, double end);
 
     void setFrequencyScale(FrequencyScale scale);

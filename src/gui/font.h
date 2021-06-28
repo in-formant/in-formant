@@ -22,11 +22,14 @@ namespace Gui {
     class Font {
     public:
         Font(FT_Library ft, const QString &font, int pixelSize);
+        Font(FT_Library ft, const QString &font, double pointSize, double dpi);
         ~Font();
         
         const FontCharacter &charFor(char c);
 
     private:
+        void buildTextures(FT_Face face);
+
         rpm::map<char, FontCharacter> mCharacters;
     };
 

@@ -206,6 +206,17 @@ void Config::setInvglotAlgorithm(int alg)
     setInvglotAlgorithm(static_cast<InvglotAlgorithm>(alg));
 }
 
+double Config::getViewZoom()
+{
+    return doubleField(mTbl["view"], "zoomScale", 1.0);
+}
+
+void Config::setViewZoom(double scale)
+{
+    mTbl["view"]["zoomScale"].ref<double>() = scale;
+    emit viewZoomChanged(scale);
+}
+
 int Config::getViewMinFrequency()
 {
     return integerField(mTbl["view"], "minFrequency", 1);

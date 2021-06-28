@@ -4,6 +4,8 @@
 #include "qpainterwrapper.h"
 #include <iostream>
 #include <cmath>
+#include <QQuickWindow>
+#include <QScreen>
 
 using namespace Gui;
 
@@ -24,6 +26,11 @@ void CanvasRenderer::initialize(Main::RenderContext *renderContext)
                                     std::cout << message << std::endl;
                                 }, nullptr);
 #endif
+
+    mDevicePixelRatio = 1.0;
+    mDpi = 96.0;
+
+    mZoomScale = 1.0;
 
     initFonts();
     initShaders();
@@ -48,8 +55,16 @@ void CanvasRenderer::cleanup()
 
 void CanvasRenderer::synchronize(QQuickFramebufferObject *item)
 {
-    mWidth = item->width();
-    mHeight = item->height();
+    mDevicePixelRatio = item->window()->devicePixelRatio();
+    mWidth = item->width() * mDevicePixelRatio;
+    mHeight = item->height() * mDevicePixelRatio;
+    mDpi = item->window()->screen()->logicalDotsPerInch();
+
+    mZoomScale = 1.0;
+    mZoomScaleText = 1.0;
+
+    deleteFonts();
+    initFonts();
 }
 
 void CanvasRenderer::render()
@@ -95,6 +110,24 @@ void CanvasRenderer::render()
     textBox = textBoundsNormal(updateTimeString);
     y += textBox.height() + 10;
     drawTextNormalOutlined(10, y, Qt::white, updateTimeString);
+}
+
+void CanvasRenderer::setZoomScale(double zoomScale)
+{
+    if (mZoomScale != zoomScale) {
+        mZoomScale = zoomScale;
+
+        // Rescale max zoom from 0.5-5x to 0.75-2x for fonts.
+        if (mZoomScale > 1) {
+            mZoomScaleText = 1 + (mZoomScale - 1) * (2.0 / 5.0);
+        }
+        else {
+            mZoomScaleText = 1 - (1 - mZoomScale) * (0.5 / 0.75);
+        }
+
+        deleteFonts();
+        initFonts();
+    }
 }
 
 void CanvasRenderer::drawTextNormal(float x, float y, const QColor &color, const std::string &text)
@@ -154,7 +187,9 @@ void CanvasRenderer::drawScatterWithOutline(const rpm::vector<QPointF> &points, 
 
 void CanvasRenderer::drawPoint(const QPointF &point, float radius, const QColor &color)
 {
-    constexpr int N = 8;
+    radius *= mZoomScale * (mDpi * mDevicePixelRatio) / 96;
+
+    constexpr int N = 24;
     float vertices[2*(N+1)];
     for (int i = 0; i <= N; ++i) {
         float angle = 2 * M_PI * i / N;
@@ -171,6 +206,8 @@ void CanvasRenderer::drawPoint(const QPointF &point, float radius, const QColor 
 
 void CanvasRenderer::drawLine(float x1, float y1, float x2, float y2, const QColor &color, float thickness)
 {
+    thickness *= mZoomScale * (mDpi * mDevicePixelRatio) / 96;
+
     y1 = mHeight - y1;
     y2 = mHeight - y2;
 
@@ -348,7 +385,7 @@ void CanvasRenderer::drawText(Font *font, float x, float y, const QColor &color,
 
 void CanvasRenderer::drawTextOutlined(Font *font, float x, float y, const QColor &color, const std::string &text, const QColor &outlineColor)
 {
-    constexpr float delta = 0.66667;
+    const float delta = 0.66667 * mZoomScaleText;
 
     for (int dxi = -1; dxi <= 1; dxi += 2) {
         for (int dyi = -1; dyi <= 1; dyi += 2) {
@@ -406,9 +443,9 @@ void CanvasRenderer::initFonts()
         return;
     }
 
-    mFontNormal = new Font(ft, ":/Roboto.ttf", 18);
-    mFontSmall = new Font(ft, ":/Roboto.ttf", 16);
-    mFontSmaller = new Font(ft, ":/Roboto.ttf", 14);
+    mFontNormal = new Font(ft, ":/Roboto.ttf", std::min(14 * mDevicePixelRatio * mZoomScaleText, 24.0), mDpi);
+    mFontSmall = new Font(ft, ":/Roboto.ttf", std::min(12 * mDevicePixelRatio * mZoomScaleText, 20.0), mDpi);
+    mFontSmaller = new Font(ft, ":/Roboto.ttf", std::min(10 * mDevicePixelRatio * mZoomScaleText, 18.0), mDpi);
 
     FT_Done_FreeType(ft);
 }

@@ -19,6 +19,11 @@ QRect QPainterWrapper::viewport() const
     return p->viewport();
 }
 
+void QPainterWrapper::setZoom(double scale)
+{
+    p->setZoomScale(scale);
+}
+
 void QPainterWrapper::setTimeRange(double start, double end)
 {
     mTimeStart = start;

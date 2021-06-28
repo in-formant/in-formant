@@ -14,8 +14,9 @@ RenderContext::RenderContext(Config *config, DataStore *dataStore)
 
 void RenderContext::render(QPainterWrapper *painter)
 {
-    //timer_guard timer(timings::render);
+    timer_guard timer(timings::render);
 
+    painter->setZoom(mConfig->getViewZoom());
     painter->setMinFrequency(mConfig->getViewMinFrequency());
     painter->setMaxFrequency(mConfig->getViewMaxFrequency());
     painter->setFrequencyScale(mConfig->getViewFrequencyScale());

@@ -63,6 +63,8 @@ int main(int argc, char **argv)
     std::future<void> exitSignalFuture = exitSignal.get_future();
     std::thread debugThread(windowsDebugCallback, std::move(exitSignalFuture));
     #endif
+
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
 
     start_logger("InFormant");

@@ -60,7 +60,33 @@ ApplicationWindow {
                 }
             }
 
+            RowLayout {
+                id: zoomPanel
+                anchors.left: drawerButton.right
+
+                spacing: 0
+
+                ToolButton {
+                    icon.source: "icons/zoom_out.svg"
+                    onPressed: if (config.viewZoom <= 2.0) config.viewZoom -= 0.1; else config.viewZoom -= 0.5
+                    enabled: config.viewZoom >= 0.6
+                }
+
+                Label {
+                    text: (Math.round(100 * config.viewZoom)) + "%"
+                    color: "lightgrey"
+                }
+
+                ToolButton {
+                    icon.source: "icons/zoom_in.svg"
+                    onPressed: if (config.viewZoom < 2.0) config.viewZoom += 0.1; else config.viewZoom += 0.5
+                    enabled: config.viewZoom < 5.0
+                }
+            }
+
             ToolButton {
+                anchors.left: zoomPanel.right
+                
                 icon.source: config.paused ? "icons/play_arrow.svg" : "icons/stop.svg"
                 checked: config.paused 
                 onPressed: config.paused = !config.paused 
@@ -71,21 +97,27 @@ ApplicationWindow {
                 }
             }
             
-            Button {
-                text: "Oscilloscope"
-                Material.background: Material.color(Material.DeepPurple, Material.ShadeA200)
-                Layout.alignment: Qt.AlignRight
-                Layout.rightMargin: 10
-                onPressed: oscilloscopeWindow.show()
-            } 
+            RowLayout {
+                anchors.right: parent.right
 
-            Button {
-                visible: HAS_SYNTH
-                text: "Synthesizer"
-                Material.background: Material.color(Material.DeepPurple, Material.ShadeA200)
-                Layout.alignment: Qt.AlignRight
-                Layout.rightMargin: 10
-                onPressed: synthWindow.show()
+                spacing: 1
+
+                Button {
+                    text: "Oscilloscope"
+                    Material.background: Material.color(Material.DeepPurple, Material.ShadeA200)
+                    Layout.alignment: Qt.AlignRight
+                    Layout.rightMargin: 10
+                    onPressed: oscilloscopeWindow.show()
+                } 
+
+                Button {
+                    visible: HAS_SYNTH
+                    text: "Synthesizer"
+                    Material.background: Material.color(Material.DeepPurple, Material.ShadeA200)
+                    Layout.alignment: Qt.AlignRight
+                    Layout.rightMargin: 10
+                    onPressed: synthWindow.show()
+                }
             }
         }
     }
