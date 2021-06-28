@@ -45,14 +45,23 @@ namespace Gui {
 
         void prepareSpectrogramDraw();
         void drawSpectrogram(
-                float fftFrequency,
+                int xOffset,
+                int chunkSize1,
+                int chunkSize2,
+                int totalSize,
+                const rpm::vector<GLint>& nffts,
+                const rpm::vector<GLfloat>& sampleRates,
+                const rpm::vector<GLfloat>& chunkData1,
+                const rpm::vector<GLfloat>& chunkData2,
                 FrequencyScale freqScale,
                 float minFrequency,
                 float maxFrequency,
                 float maxGain,
                 const QVector<QRgb>& colorTable,
-                float x1, float x2,
-                float y1, float y2);
+                float sliceTimeStart,
+                float sliceTimeEnd,
+                float timeStart,
+                float timeEnd);
 
         QRect viewport() const;
 
@@ -62,7 +71,7 @@ namespace Gui {
         void deleteFonts();
         void deleteShaders();
 
-        void initTexture(GLuint &texture);
+        void initTexture(GLuint &texture, int width, int height);
         QOpenGLShaderProgram *createShaderProgram(const char *vertexSource, const char *fragmentSource);
 
         void drawText(Font *font, float x, float y, const QColor &color, const std::string &text);
@@ -82,7 +91,14 @@ namespace Gui {
 
         QOpenGLShaderProgram *mSpecProgram;
         GLuint mSpecVao, mSpecVbo;
-        rpm::vector<GLuint> mSpecTex;
+
+        QOpenGLShaderProgram *mSpec2Program;
+        GLuint mSpec2Vao, mSpec2Vbo;
+
+        std::optional<GLuint> mDefaultFbo;
+        GLuint mSpecTex;
+
+        int mSpecTexMaxWidth, mSpecTexMaxHeight;
     };
 
 }

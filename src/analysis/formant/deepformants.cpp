@@ -9,23 +9,6 @@ using Analysis::FormantResult;
 
 using namespace Eigen;
 
-DeepFormants::DeepFormants()
-{
-    try {
-        QFile file(":/model.pt");
-        if (file.open(QIODevice::ReadOnly)) {
-            QByteArray buffer = file.readAll();
-            std::string data(buffer.data(), buffer.size());
-            std::istringstream stream(data);
-            module = torch::jit::load(stream, c10::kCPU);
-            file.close();
-        }
-    }
-    catch (const c10::Error& e) {
-        std::cerr << "Error loading the model: " << e.msg() << std::endl;
-    }
-}
-
 void DeepFormants::setFrameAudio(const rpm::vector<double>& x)
 {
     xv = x;
@@ -42,7 +25,7 @@ FormantResult DeepFormants::solve(const double *, int, double)
         input[0][i] = features(i);
     }
 
-    torch::Tensor output = module.forward({input}).toTensor();
+    torch::Tensor output = DFModelHolder::instance()->torchModule()->forward({input}).toTensor();
 
     ArrayXd result = Map<ArrayXf>(output.data_ptr<float>(), output.size(1)).cast<double>();
 

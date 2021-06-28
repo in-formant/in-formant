@@ -1,6 +1,8 @@
 #include "contextmanager.h"
 #include "timings.h"
+#include "../analysis/formant/deepformants/df.h"
 
+#include <chrono>
 #include <iostream>
 
 using namespace Main;
@@ -39,6 +41,9 @@ ContextManager::ContextManager(
       mGuiContext(std::make_unique<GuiContext>(mConfig.get(), mRenderContext.get(), &mDataVisWrapper))
 #endif
 {
+    // Load the DF model.
+    DFModelHolder::initialize();
+
     createViews();
     loadConfig();
     mDataStore->setFormantTrackCount(4);
@@ -138,9 +143,6 @@ void ContextManager::analysisThreadLoop()
     while (mAnalysisRunning) {
         mAudioContext->tickAudio();
         mPipeline->processAll();
-        
-        mDataStore->beginRead();
-        mDataStore->endRead();
 
         while (mConfig->isPaused() && mAnalysisRunning) {
             std::this_thread::sleep_for(0.5s);
@@ -174,8 +176,12 @@ void ContextManager::datavisThreadLoop()
         fftFrequencies[k] = maxFrequencySource * (double) (k + 1) / (double) fftFrequencies.size();
     }
 
+    auto lastSourceCopyTime = std::chrono::steady_clock::now();
+
     while (mAnalysisRunning && mSynthesisRunning) {
 #endif // WITHOUT_SYNTH
+
+        auto now = std::chrono::steady_clock::now();
 
         mDataStore->beginRead();
         
@@ -238,11 +244,16 @@ void ContextManager::datavisThreadLoop()
 
         mSynthWrapper.setFilterResponse(frequencies, Analysis::sosfreqz(filter, wn));
         
-        auto source = mSynthesizer->getSourceCopy(maxFrequencySource * 2, 25.0);
-        mSynthWrapper.setSource(source, maxFrequencySource * 2);
+        // Only update the source every 300s.
+        if (now - lastSourceCopyTime > 300ms) {
+            auto source = mSynthesizer->getSourceCopy(maxFrequencySource * 2, 25.0);
+            mSynthWrapper.setSource(source, maxFrequencySource * 2);
 
-        auto sourceSpectrum = Analysis::fft_n(fft, source);
-        mSynthWrapper.setSourceSpectrum(fftFrequencies, sourceSpectrum);
+            auto sourceSpectrum = Analysis::fft_n(fft, source);
+            mSynthWrapper.setSourceSpectrum(fftFrequencies, sourceSpectrum);
+
+            lastSourceCopyTime = now;
+        }
 #endif // !WITHOUT_SYNTH
 
         std::this_thread::sleep_for(20ms);

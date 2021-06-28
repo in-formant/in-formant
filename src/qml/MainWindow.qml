@@ -213,8 +213,8 @@ ApplicationWindow {
                     
                     Label { text: "FFT size" }
                     Slider {
-                        from: Math.log2(16)
-                        to: Math.log2(16384)
+                        from: Math.log2(512)
+                        to: Math.log2(4096)
                         stepSize: 1
                         value: Math.log2(config.viewFFTSize)
                         onMoved: config.viewFFTSize = Math.pow(2, Math.round(value))

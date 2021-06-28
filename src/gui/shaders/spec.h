@@ -4,9 +4,12 @@
 namespace Gui::Shaders {
 
 constexpr const char *specVertex = R"foo(
-#version 330
+#version 130
+#extension GL_ARB_explicit_attrib_location : enable
+#extension GL_ARB_separate_shader_objects : enable
+
 layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>
-out vec2 TexCoords;
+layout (location = 1) out vec2 TexCoords;
 
 uniform mat4 projection;
 
@@ -18,15 +21,17 @@ void main()
 )foo";
 
 constexpr const char *specFragment = R"foo(
-#version 330
-in vec2 TexCoords;
-out vec4 color;
+#version 130
+#extension GL_ARB_explicit_attrib_location : enable
+#extension GL_ARB_separate_shader_objects : enable
+
+layout (location = 0) out vec4 color;
+layout (location = 1) in vec2 TexCoords;
 
 uniform sampler2D tex;
 
 uniform vec3 colorMap[256];
 
-uniform float fftFrequency;
 uniform int frequencyScale; // Linear, Log, Mel, ERB
 uniform float minFrequency;
 uniform float maxFrequency;
@@ -64,11 +69,18 @@ void main()
     // TexCoords: [0,1] => [0,fftFrequency]
     // FragCoord: [0,1] => [0,maxFrequency]
 
+    int chunkIndex = int(floor(mod(TexCoords.x, 1) * 2048));
+
+    int nfft = int(texelFetch(tex, ivec2(chunkIndex, 4096), 0));
+    float sampleRate = float(texelFetch(tex, ivec2(chunkIndex, 4097), 0));
+
     float ty = TexCoords.y;
 
     float freq = reverse(transform(minFrequency) + ty * (transform(maxFrequency) - transform(minFrequency)));
 
-    ty = freq / fftFrequency;
+    ty = freq / (sampleRate / 2.0);
+    
+    ty *= (float(nfft) / 4096.0);
    
     if (ty < 0 || ty > 1) {
         color = vec4(0.0, 0.0, 0.0, 1.0);

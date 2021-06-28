@@ -10,6 +10,13 @@
 
 #include <QImage>
 
+struct SpectrogramTextureData {
+    double timeStart, timeEnd;
+    double sampleRate;
+    int nfft, segmentLen;
+    rpm::vector<GLfloat> texture;
+};
+
 class QPainterWrapper {
 public:
     QPainterWrapper(Gui::CanvasRenderer *p);
@@ -41,8 +48,7 @@ public:
     double mapTimeToX(double time);
     double mapFrequencyToY(double frequency);
 
-    void drawSpectrogram(
-            const rpm::vector<std::pair<double, Main::SpectrogramCoefs>>& slices);
+    void drawSpectrogram(const rpm::vector<std::pair<double, Main::SpectrogramCoefs>>& slices);
 
     static double mapTimeToX(double time, int width, double startTime, double endTime);
     static double mapFrequencyToY(double frequency, int height, FrequencyScale scale, double minFrequency, double maxFrequency);

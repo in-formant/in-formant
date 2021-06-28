@@ -165,6 +165,7 @@ set(SOURCES
     src/analysis/linpred/linpred.h
     src/analysis/formant/deepformants/df.h
     src/analysis/formant/deepformants/features.cpp
+    src/analysis/formant/deepformants/model.cpp
     src/analysis/formant/deepformants.cpp
     src/analysis/formant/simplelp.cpp
     src/analysis/formant/filteredlp.cpp
@@ -401,8 +402,15 @@ endif()
 
 if(SYSTEM_WINDOWS)
     target_compile_definitions(in-formant PRIVATE -D_WIN32_WINNT=0x600 -D_USE_MATH_DEFINES -DNOMINMAX)
-    target_sources(in-formant PRIVATE resources/winicon.rc)
     target_link_libraries(in-formant PRIVATE ntdll dbghelp)
+    if(CMAKE_BUILD_TYPE STREQUAL Debug
+            OR CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
+        target_compile_definitions(in-formant PRIVATE -DDEBUG_THREAD)
+        target_sources(in-formant PRIVATE src/windows_debug.cpp)
+    endif()
+    add_custom_target(in-formant-ico DEPENDS resources/icons/in-formant.ico)
+    add_dependencies(in-formant in-formant-ico)
+    target_sources(in-formant PRIVATE resources/winicon.rc)
 endif()
 
 if(SYSTEM_DARWIN)

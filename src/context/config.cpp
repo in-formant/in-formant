@@ -333,7 +333,7 @@ std::tuple<double, double, double> Config::getViewFormantColor(int i)
 
 bool Config::getViewShowSpectrogram()
 {
-    return boolField(mTbl["view"], "showSpectrogram", true);
+    return boolField(mTbl["view"], "showSpectrogram", false);
 }
 
 void Config::setViewShowSpectrogram(bool b)

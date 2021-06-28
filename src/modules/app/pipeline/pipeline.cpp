@@ -189,7 +189,7 @@ void Pipeline::processFormants()
 {
     timer_guard timer(timings::updateFormants);
 
-    constexpr double preemphFrequency = 100;
+    constexpr double preemphFrequency = 200;
     constexpr double fsLPC = 11000;
     constexpr double fs16k = 16000;
     
