@@ -7,7 +7,7 @@ cmake_policy(SET CMP0071 OLD)
 set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{MACOSX_DEPLOYMENT_TARGET})
 
 if("x${CUR_VERSION}" STREQUAL "x")
-    set(CUR_VERSION "3.1")
+    set(CUR_VERSION "3.1.1")
 endif()
 
 string(FIND "${CUR_VERSION}" "-" dash_pos)
