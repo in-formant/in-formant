@@ -59,6 +59,7 @@ void CanvasRenderer::synchronize(QQuickFramebufferObject *item)
     mDpi = item->window()->screen()->logicalDotsPerInch();
 
     mZoomScale = 1.0;
+    mZoomScaleText = 1.0;
 
     deleteFonts();
     initFonts();
@@ -440,9 +441,9 @@ void CanvasRenderer::initFonts()
         return;
     }
 
-    mFontNormal = new Font(ft, ":/Roboto.ttf", 14 * mDevicePixelRatio * mZoomScaleText, mDpi);
-    mFontSmall = new Font(ft, ":/Roboto.ttf", 12 * mDevicePixelRatio * mZoomScaleText, mDpi);
-    mFontSmaller = new Font(ft, ":/Roboto.ttf", 10 * mDevicePixelRatio * mZoomScaleText, mDpi);
+    mFontNormal = new Font(ft, ":/Roboto.ttf", std::min(14 * mDevicePixelRatio * mZoomScaleText, 24.0), mDpi);
+    mFontSmall = new Font(ft, ":/Roboto.ttf", std::min(12 * mDevicePixelRatio * mZoomScaleText, 20.0), mDpi);
+    mFontSmaller = new Font(ft, ":/Roboto.ttf", std::min(10 * mDevicePixelRatio * mZoomScaleText, 18.0), mDpi);
 
     FT_Done_FreeType(ft);
 }
