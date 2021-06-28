@@ -5,6 +5,7 @@ set -e
 tmp=/InFormant.app
 
 mkdir -p $tmp/Contents/MacOS
+mkdir -p $tmp/Contents/Resources
 
 cp /src/dist-res/Info.plist $tmp/Contents
 cp /build/in-formant $tmp/Contents/MacOS/InFormant
