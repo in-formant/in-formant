@@ -192,6 +192,8 @@ void ContextManager::datavisThreadLoop()
         
         if (!mDataStore->getSoundTrack().empty()) {
             mDataVisWrapper.setSound(mDataStore->getSoundTrack().back(), 8000);
+        }
+        if (!mDataStore->getGifTrack().empty()) {
             mDataVisWrapper.setGif(mDataStore->getGifTrack().back(), 8000);
         }
         
