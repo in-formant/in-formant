@@ -4,8 +4,8 @@
 namespace Gui::Shaders {
 
 constexpr const char *textVertex = R"foo(
-#version 330
-layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>
+#version 130
+in vec4 vertex; // <vec2 pos, vec2 tex>
 out vec2 TexCoords;
 
 uniform mat4 projection;
@@ -18,7 +18,7 @@ void main()
 )foo";
 
 constexpr const char *textFragment = R"foo(
-#version 330
+#version 130
 in vec2 TexCoords;
 out vec4 color;
 
@@ -35,3 +35,4 @@ void main()
 }
 
 #endif // GUI_SHADERS_TEXT_H
+

@@ -34,71 +34,79 @@ ApplicationWindow {
         RowLayout {
             anchors.fill: parent
 
-            ToolButton {
-                id: drawerButton
-                icon.source: drawer.visible ? "icons/menu_open.svg" : "icons/menu.svg"
-                checked: drawer.visible 
-                onPressed: drawer.visible = !drawer.visible
-
-                transform: [
-                    Rotation {
-                        angle: 90 * drawer.position
-                        origin.x: drawerButton.x + drawerButton.width / 2
-                        origin.y: drawerButton.y + drawerButton.height / 2
-                    },
-                    Scale {
-                        xScale: 1 - 0.15 * drawer.position
-                        yScale: 1 - 0.15 * drawer.position
-                        origin.x: drawerButton.x + drawerButton.width / 2
-                        origin.y: drawerButton.y + drawerButton.height / 2
-                    }
-                ]
-
-                Component.onCompleted: {
-                    icon.width = 2 * icon.width
-                    icon.height = 2 * icon.height
-                }
-            }
-
             RowLayout {
-                id: zoomPanel
-                anchors.left: drawerButton.right
+                Layout.alignment: Qt.AlignLeft
 
                 spacing: 0
 
                 ToolButton {
-                    icon.source: "icons/zoom_out.svg"
-                    onPressed: if (config.viewZoom <= 2.0) config.viewZoom -= 0.1; else config.viewZoom -= 0.5
-                    enabled: config.viewZoom >= 0.6
+                    id: drawerButton
+                    icon.source: drawer.visible ? "icons/menu_open.svg" : "icons/menu.svg"
+                    checked: drawer.visible 
+                    onPressed: drawer.visible = !drawer.visible
+
+                    transform: [
+                        Rotation {
+                            angle: 90 * drawer.position
+                            origin.x: drawerButton.x + drawerButton.width / 2
+                            origin.y: drawerButton.y + drawerButton.height / 2
+                        },
+                        Scale {
+                            xScale: 1 - 0.15 * drawer.position
+                            yScale: 1 - 0.15 * drawer.position
+                            origin.x: drawerButton.x + drawerButton.width / 2
+                            origin.y: drawerButton.y + drawerButton.height / 2
+                        }
+                    ]
+
+                    Component.onCompleted: {
+                        icon.width = 2 * icon.width
+                        icon.height = 2 * icon.height
+                    }
                 }
 
-                Label {
-                    text: (Math.round(100 * config.viewZoom)) + "%"
-                    color: "lightgrey"
+                RowLayout {
+                    Layout.fillHeight: true
+
+                    id: zoomPanel
+
+                    spacing: -2
+
+                    ToolButton {
+                        Layout.alignment: Qt.AlignLeft
+                        icon.source: "icons/zoom_out.svg"
+                        onPressed: if (config.viewZoom <= 2.0) config.viewZoom -= 0.1; else config.viewZoom -= 0.5
+                        enabled: config.viewZoom >= 0.6
+                    }
+
+                    Label {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: (Math.round(100 * config.viewZoom)) + "%"
+                        color: "lightgrey"
+                    }
+
+                    ToolButton {
+                        Layout.alignment: Qt.AlignRight
+                        icon.source: "icons/zoom_in.svg"
+                        onPressed: if (config.viewZoom < 2.0) config.viewZoom += 0.1; else config.viewZoom += 0.5
+                        enabled: config.viewZoom < 5.0
+                    }
                 }
 
                 ToolButton {
-                    icon.source: "icons/zoom_in.svg"
-                    onPressed: if (config.viewZoom < 2.0) config.viewZoom += 0.1; else config.viewZoom += 0.5
-                    enabled: config.viewZoom < 5.0
-                }
-            }
-
-            ToolButton {
-                anchors.left: zoomPanel.right
-                
-                icon.source: config.paused ? "icons/play_arrow.svg" : "icons/stop.svg"
-                checked: config.paused 
-                onPressed: config.paused = !config.paused 
-                
-                Component.onCompleted: {
-                    icon.width = 2 * icon.width
-                    icon.height = 2 * icon.height
+                    icon.source: config.paused ? "icons/play_arrow.svg" : "icons/stop.svg"
+                    checked: config.paused 
+                    onPressed: config.paused = !config.paused 
+                    
+                    Component.onCompleted: {
+                        icon.width = 2 * icon.width
+                        icon.height = 2 * icon.height
+                    }
                 }
             }
             
             RowLayout {
-                anchors.right: parent.right
+                Layout.alignment: Qt.AlignRight
 
                 spacing: 1
 

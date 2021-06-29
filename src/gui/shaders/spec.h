@@ -5,11 +5,9 @@ namespace Gui::Shaders {
 
 constexpr const char *specVertex = R"foo(
 #version 130
-#extension GL_ARB_explicit_attrib_location : enable
-#extension GL_ARB_separate_shader_objects : enable
 
-layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>
-layout (location = 1) out vec2 TexCoords;
+in vec4 vertex; // <vec2 pos, vec2 tex>
+out vec2 TexCoords;
 
 uniform mat4 projection;
 
@@ -22,11 +20,9 @@ void main()
 
 constexpr const char *specFragment = R"foo(
 #version 130
-#extension GL_ARB_explicit_attrib_location : enable
-#extension GL_ARB_separate_shader_objects : enable
 
-layout (location = 0) out vec4 color;
-layout (location = 1) in vec2 TexCoords;
+out vec4 color;
+in vec2 TexCoords;
 
 uniform sampler2D tex;
 
