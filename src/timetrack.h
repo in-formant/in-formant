@@ -4,6 +4,7 @@
 #include "rpcxx.h"
 #include <optional>
 #include <algorithm>
+#include <mutex>
 
 template<typename T>
 class TimeTrack {
@@ -13,6 +14,7 @@ public:
     using const_iterator = typename vector_type::const_iterator;
     
     TimeTrack();
+    TimeTrack(const TimeTrack&);
 
     void insert(double t, const T& o);
     void remove_before(double t);
@@ -29,6 +31,7 @@ public:
 
 private:
     vector_type mTrack;
+    mutable std::mutex mMutex;
 };
 
 template<typename T>

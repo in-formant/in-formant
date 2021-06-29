@@ -18,50 +18,67 @@ TimeTrack<T>::TimeTrack()
 }
 
 template<typename T>
+TimeTrack<T>::TimeTrack(const TimeTrack<T> &other)
+    : mTrack(other.mTrack.begin(), other.mTrack.end())
+{
+}
+
+template<typename T>
 void TimeTrack<T>::insert(double t, const T& o)
 {
-    mTrack.emplace(upper_bound(t), t, o);
+    std::lock_guard<std::mutex> lock(mMutex);
+    mTrack.emplace(
+        std::upper_bound(mTrack.begin(), mTrack.end(), t, KeyComp<T>()),
+        t, o);
 }
 
 template<typename T>
 void TimeTrack<T>::remove_before(double t)
 {
-    mTrack.erase(mTrack.begin(), upper_bound(t));
+    std::lock_guard<std::mutex> lock(mMutex);
+    mTrack.erase(mTrack.begin(), 
+        std::upper_bound(mTrack.begin(), mTrack.end(), t, KeyComp<T>()));
 }
 
 template<typename T>
 typename TimeTrack<T>::iterator TimeTrack<T>::lower_bound(double t)
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     return std::lower_bound(mTrack.begin(), mTrack.end(), t, KeyComp<T>());
 }
 
 template<typename T>
 typename TimeTrack<T>::iterator TimeTrack<T>::upper_bound(double t)
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     return std::upper_bound(mTrack.begin(), mTrack.end(), t, KeyComp<T>());
 }
 
 template<typename T>
 typename TimeTrack<T>::const_iterator TimeTrack<T>::lower_bound(double t) const
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     return std::lower_bound(mTrack.begin(), mTrack.end(), t, KeyComp<T>());
 }
 
 template<typename T>
 typename TimeTrack<T>::const_iterator TimeTrack<T>::upper_bound(double t) const
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     return std::upper_bound(mTrack.begin(), mTrack.end(), t, KeyComp<T>());
 }
 
 template<typename T>
 const T& TimeTrack<T>::back() const
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     return mTrack.back().second;
 }
 
 template<typename T>
 bool TimeTrack<T>::empty() const
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     return mTrack.empty();
 }
 
