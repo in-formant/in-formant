@@ -231,7 +231,6 @@ CMD cd /build && \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
             -DCMAKE_PREFIX_PATH=/usr/libtorch \
             -DEigen3_DIR=/osxcross/target/$HOST/share/eigen3/cmake \ 
-            -DENABLE_TORCH=TRUE \
             /src && \
         make -j$(nproc) && \
         DIST_SUFFIX=macos-x86_64 \

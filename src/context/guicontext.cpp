@@ -24,15 +24,6 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrap
     QCoreApplication::setOrganizationName("InFormant");
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-    QSurfaceFormat format;
-    format.setDepthBufferSize(24);
-    format.setStencilBufferSize(8);
-    format.setSamples(4);
-    format.setVersion(3, 2);
-    format.setRenderableType(QSurfaceFormat::OpenGL);
-    format.setProfile(QSurfaceFormat::CoreProfile);
-    QSurfaceFormat::setDefaultFormat(format);
-
     QQuickStyle::setStyle("Material");
     qmlRegisterType<Gui::CanvasItem>("IfCanvas", 1, 0, "IfCanvas");
 
@@ -48,7 +39,7 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrap
 #ifdef __APPLE__
     mQmlEngine->addImportPath(QCoreApplication::applicationDirPath() + "/../Resources/qml");
 #endif
-    
+
     mQmlEngine->rootContext()->setContextProperty("appName", "InFormant " INFORMANT_VERSION_STR);
 
     mQmlEngine->rootContext()->setContextProperty("config", mConfig);
@@ -78,6 +69,8 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrap
 
     canvasItem->installEventFilter(this);
     window->installEventFilter(this);
+
+    window->show();
 }
 
 int GuiContext::exec()

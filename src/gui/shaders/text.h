@@ -4,9 +4,9 @@
 namespace Gui::Shaders {
 
 constexpr const char *textVertex = R"foo(
-#version 130
-in vec4 vertex; // <vec2 pos, vec2 tex>
-out vec2 TexCoords;
+#version 120
+attribute vec4 vertex; // <vec2 pos, vec2 tex>
+varying vec2 TexCoords;
 
 uniform mat4 projection;
 
@@ -18,17 +18,16 @@ void main()
 )foo";
 
 constexpr const char *textFragment = R"foo(
-#version 130
-in vec2 TexCoords;
-out vec4 color;
+#version 120
+varying vec2 TexCoords;
 
 uniform sampler2D text;
 uniform vec3 textColor;
 
 void main()
 {    
-    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);
-    color = vec4(textColor, 1.0) * sampled;
+    vec4 sampled = vec4(1.0, 1.0, 1.0, texture2D(text, TexCoords).r);
+    gl_FragColor = vec4(textColor, 1.0) * sampled;
 }  
 )foo";
 

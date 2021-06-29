@@ -4,10 +4,10 @@
 namespace Gui::Shaders {
 
 constexpr const char *specVertex = R"foo(
-#version 130
+#version 120
 
-in vec4 vertex; // <vec2 pos, vec2 tex>
-out vec2 TexCoords;
+attribute vec4 vertex; // <vec2 pos, vec2 tex>
+varying vec2 TexCoords;
 
 uniform mat4 projection;
 
@@ -19,10 +19,9 @@ void main()
 )foo";
 
 constexpr const char *specFragment = R"foo(
-#version 130
+#version 120
 
-out vec4 color;
-in vec2 TexCoords;
+varying vec2 TexCoords;
 
 uniform sampler2D tex;
 
@@ -39,25 +38,25 @@ uniform float maxGain;
 #define ERB_A       21.33228113095401739888262
 
 float transform(float f) {
-    if (frequencyScale == 0)
-        return f;
-    else if (frequencyScale == 1)
+    if (frequencyScale == 1)
         return log(f) * INV_LOG_2;
     else if (frequencyScale == 2)
-        return 2595 * log(1 + f / 700) * INV_LOG_10;
+        return 2595.0 * log(1.0 + f / 700.0) * INV_LOG_10;
     else if (frequencyScale == 3)
-        return ERB_A * log(1 + 0.00437 * f) * INV_LOG_10;
+        return ERB_A * log(1.0 + 0.00437 * f) * INV_LOG_10;
+    else
+        return f;
 }
 
 float reverse(float v) {
-    if (frequencyScale == 0)
-        return v;
-    else if (frequencyScale == 1)
-        return pow(2, v);
+    if (frequencyScale == 1)
+        return pow(2.0, v);
     else if (frequencyScale == 2)
-        return 700 * (pow(10, v / 2595) - 1);
+        return 700.0 * (pow(10.0, v / 2595.0) - 1.0);
     else if (frequencyScale == 3)
-        return (pow(10, v / ERB_A) - 1) / 0.00437;
+        return (pow(10.0, v / ERB_A) - 1.0) / 0.00437;
+    else
+        return v;
 }
 
 void main()
@@ -65,10 +64,14 @@ void main()
     // TexCoords: [0,1] => [0,fftFrequency]
     // FragCoord: [0,1] => [0,maxFrequency]
 
-    int chunkIndex = int(floor(mod(TexCoords.x, 1) * 2048));
+    int chunkIndex = int(floor(mod(TexCoords.x, 1.0) * 2048.0));
 
-    int nfft = int(texelFetch(tex, ivec2(chunkIndex, 4096), 0));
-    float sampleRate = float(texelFetch(tex, ivec2(chunkIndex, 4097), 0));
+    float txl_x = (2.0 * float(chunkIndex) + 1.0) / (2.0 * 2048.0);
+    float txl_y1 = (2.0 * 4096.0 + 1.0) / (2.0 * 4098.0);
+    float txl_y2 = (2.0 * 4097.0 + 1.0) / (2.0 * 4098.0);
+
+    int nfft = int(texture2D(tex, vec2(txl_x, txl_y1)));
+    float sampleRate = float(texture2D(tex, vec2(txl_x, txl_y2)));
 
     float ty = TexCoords.y;
 
@@ -78,16 +81,16 @@ void main()
     
     ty *= (float(nfft) / 4096.0);
    
-    if (ty < 0 || ty > 1) {
-        color = vec4(0.0, 0.0, 0.0, 1.0);
+    if (ty < 0.0 || ty >= 4096.0 / 4098.0) {
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     }
     else {
-        float amplitude = float(texture(tex, vec2(TexCoords.x, ty)));
+        float amplitude = float(texture2D(tex, vec2(TexCoords.x, ty)));
 
-        float adjusted = sqrt(amplitude / pow(10, maxGain / 20)) * 7;
-        int index = (int) clamp(floor(adjusted * 255), 0, 255);
+        float adjusted = sqrt(amplitude / pow(10.0, maxGain / 20.0)) * 7.0;
+        int index = int(clamp(floor(adjusted * 255.0), 0.0, 255.0));
 
-        color = vec4(colorMap[index], 1.0);
+        gl_FragColor = vec4(colorMap[index], 1.0);
     }
 }  
 )foo";

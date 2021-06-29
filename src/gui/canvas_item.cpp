@@ -38,7 +38,7 @@ protected:
 
     QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override {
         QOpenGLFramebufferObjectFormat format;
-        format.setSamples(2);
+        format.setSamples(4);
         return new QOpenGLFramebufferObject(size, format);
     }
 

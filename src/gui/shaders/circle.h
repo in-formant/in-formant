@@ -4,8 +4,8 @@
 namespace Gui::Shaders {
 
 constexpr const char *circleVertex = R"foo(
-#version 130
-in vec4 vertex;
+#version 120
+attribute vec4 vertex;
 
 uniform mat4 projection;
 
@@ -16,8 +16,7 @@ void main()
 )foo";
 
 constexpr const char *circleFragment = R"foo(
-#version 130
-out vec4 color;
+#version 120
 
 uniform vec2 resolution;
 uniform vec2 center;
@@ -33,7 +32,7 @@ vec4 circle(vec2 uv, vec2 pos, float rad, vec3 color)
 
 void main()
 {
-    color = circle(gl_FragCoord.xy, center, radius, fillColor);
+    gl_FragColor = circle(gl_FragCoord.xy, center, radius, fillColor);
 }  
 )foo";
 

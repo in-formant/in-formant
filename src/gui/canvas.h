@@ -3,6 +3,7 @@
 
 #include <QQuickFramebufferObject>
 #include <QOpenGLFramebufferObject>
+#include <QQuickWindow>
 
 namespace Main {
     class RenderContext;
@@ -21,7 +22,7 @@ namespace Gui
         void setRenderContext(Main::RenderContext *renderContext);
         
         Renderer *createRenderer() const override;
-
+    
     private:
         Main::RenderContext *mRenderContext;
     };
