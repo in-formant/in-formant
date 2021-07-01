@@ -17,7 +17,7 @@ static std::wstringstream ss;
 void DisplayError(std::wstringstream& ss, DWORD NTStatusMessage)
 {
     LPVOID lpMessageBuffer;
-    HMODULE Hand = LoadLibrary("NTDLL.DLL");
+    HMODULE Hand = LoadLibrary(L"NTDLL.DLL");
 
     FormatMessage( 
         FORMAT_MESSAGE_ALLOCATE_BUFFER | 

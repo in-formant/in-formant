@@ -1,8 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import QtQuick.Controls 2.15
-import QtQuick.Controls.Material 2.15
-import IfCanvas 1.0
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
+import QtQuick.Controls.Material
+import IfCanvas 
 
 ApplicationWindow {
     id: mainWindow
@@ -41,7 +41,7 @@ ApplicationWindow {
 
                 ToolButton {
                     id: drawerButton
-                    icon.source: drawer.visible ? "icons/menu_open.svg" : "icons/menu.svg"
+                    icon.source: drawer.visible ? "qrc:/icons/menu_open.svg" : "qrc:/icons/menu.svg"
                     checked: drawer.visible 
                     onPressed: drawer.visible = !drawer.visible
 
@@ -74,7 +74,7 @@ ApplicationWindow {
 
                     ToolButton {
                         Layout.alignment: Qt.AlignLeft
-                        icon.source: "icons/zoom_out.svg"
+                        icon.source: "qrc:/icons/zoom_out.svg"
                         onPressed: if (config.viewZoom <= 2.0) config.viewZoom -= 0.1; else config.viewZoom -= 0.5
                         enabled: config.viewZoom >= 0.6
                     }
@@ -87,14 +87,14 @@ ApplicationWindow {
 
                     ToolButton {
                         Layout.alignment: Qt.AlignRight
-                        icon.source: "icons/zoom_in.svg"
+                        icon.source: "qrc:/icons/zoom_in.svg"
                         onPressed: if (config.viewZoom < 2.0) config.viewZoom += 0.1; else config.viewZoom += 0.5
                         enabled: config.viewZoom < 5.0
                     }
                 }
 
                 ToolButton {
-                    icon.source: config.paused ? "icons/play_arrow.svg" : "icons/stop.svg"
+                    icon.source: config.paused ? "qrc:/icons/play_arrow.svg" : "qrc:/icons/stop.svg"
                     checked: config.paused 
                     onPressed: config.paused = !config.paused 
                     

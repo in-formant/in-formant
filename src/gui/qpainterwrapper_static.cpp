@@ -78,8 +78,8 @@ void QPainterWrapper::drawSpectrogram(const rpm::vector<std::pair<double, Main::
 
     static int xOffset = 0;
 
-    static rpm::vector<GLint> nffts(texWidth, 0);
-    static rpm::vector<GLfloat> sampleRates(texWidth, 0.0);
+    static std::array<GLint, texWidth> nffts;
+    static std::array<GLfloat, texWidth> sampleRates;
 
     // Only render the slices that have not been rendered yet. 
 
@@ -108,8 +108,13 @@ void QPainterWrapper::drawSpectrogram(const rpm::vector<std::pair<double, Main::
             sliceCount2 = 0;
         }
 
-        rpm::vector<GLfloat> data1(sliceCount1 * texHeight, 0.0);
-        rpm::vector<GLfloat> data2(sliceCount2 * texHeight, 0.0);
+        static rpm::vector<GLfloat> data1, data2;
+
+        data1.resize(sliceCount1 * texHeight);
+        data2.resize(sliceCount2 * texHeight);
+
+        std::fill(data1.begin(), data1.end(), 0.0);
+        std::fill(data2.begin(), data2.end(), 0.0);
 
         for (int ioff = 0; ioff < sliceCount; ++ioff) {
             const auto& slice = slices[firstSliceIndexToRender + ioff].second;

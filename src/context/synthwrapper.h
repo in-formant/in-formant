@@ -6,11 +6,7 @@
 #include <QObject>
 #include "../modules/app/synthesizer/synthesizer.h"
 
-#include <QXYSeries>
-#include <QValueAxis>
-#include <QLogValueAxis>
-
-using namespace QtCharts;
+#include <QtCharts>
 
 namespace Main {
    

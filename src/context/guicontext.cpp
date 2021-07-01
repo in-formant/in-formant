@@ -1,5 +1,6 @@
 #include "../gui/canvas.h"
 #include "contextmanager.h"
+#include "qsgrendererinterface.h"
 #include "qsurfaceformat.h"
 #include "rendercontext.h"
 #include <QQmlContext>
@@ -22,7 +23,6 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrap
     QCoreApplication::setApplicationVersion(INFORMANT_VERSION_STR);
     QCoreApplication::setOrganizationDomain("in-formant.app");
     QCoreApplication::setOrganizationName("InFormant");
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QQuickStyle::setStyle("Material");
     qmlRegisterType<Gui::CanvasItem>("IfCanvas", 1, 0, "IfCanvas");
@@ -30,7 +30,8 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrap
     mApp = std::make_unique<QApplication>(argc, argv);
 
     // Only supports OpenGL for now.
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::OpenGLRhi);
+    QQuickWindow::setSceneGraphBackend("rhi");
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
     QGuiApplication::setWindowIcon(QIcon(":/icons/in-formant.png"));
 
@@ -63,7 +64,6 @@ GuiContext::GuiContext(Config *config, RenderContext *renderContext, DataVisWrap
    
     auto window = static_cast<QQuickWindow *>(mQmlEngine->rootObjects().first());
     auto canvasItem = window->findChild<Gui::CanvasItem *>("IfCanvas");
-    auto contentItem = window->contentItem();
 
     canvasItem->setRenderContext(mRenderContext);
 

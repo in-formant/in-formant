@@ -134,7 +134,7 @@ static inline void get_user_config_file(char *out, unsigned int maxlen, const ch
 		out[0] = 0;
 		return;
 	}
-	if (!SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, out))) {
+	if (!SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, out))) {
 		out[0] = 0;
 		return;
 	}
@@ -254,7 +254,7 @@ static inline void get_user_config_folder(char *out, unsigned int maxlen, const 
 		out[0] = 0;
 		return;
 	}
-	if (!SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, out))) {
+	if (!SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, out))) {
 		out[0] = 0;
 		return;
 	}
@@ -468,7 +468,7 @@ static inline void get_user_cache_folder(char *out, unsigned int maxlen, const c
 		out[0] = 0;
 		return;
 	}
-	if (!SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, out))) {
+	if (!SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, out))) {
 		out[0] = 0;
 		return;
 	}

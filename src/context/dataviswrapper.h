@@ -4,10 +4,7 @@
 #include <QObject>
 #include "datastore.h"
 
-#include <QXYSeries>
-#include <QValueAxis>
-
-using namespace QtCharts;
+#include <QtCharts>
 
 namespace Main {
 

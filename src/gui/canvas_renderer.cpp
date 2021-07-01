@@ -299,8 +299,8 @@ void CanvasRenderer::drawSpectrogram(
         int chunkSize1,
         int chunkSize2,
         int totalSize,
-        const rpm::vector<GLint>& nffts,
-        const rpm::vector<GLfloat>& sampleRates,
+        const std::array<GLint, 2048>& nffts,
+        const std::array<GLfloat, 2048>& sampleRates,
         const rpm::vector<GLfloat>& chunkData1,
         const rpm::vector<GLfloat>& chunkData2,
         FrequencyScale freqScale,
@@ -323,7 +323,7 @@ void CanvasRenderer::drawSpectrogram(
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, chunkSize2, 4096, GL_RED, GL_FLOAT, chunkData2.data());
     }
 
-    rpm::vector<GLfloat> extraData(2048 * 2);
+    std::array<GLfloat, 2048 * 2> extraData;
     for (int x = 0; x < 2048; ++x) {
         extraData[0 * 2048 + x] = nffts[x];
         extraData[1 * 2048 + x] = sampleRates[x];

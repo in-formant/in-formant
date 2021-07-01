@@ -41,7 +41,7 @@ struct timer_guard {
         return true;
     }
 private:
-    QMutexLocker mLocker;
+    QMutexLocker<duration> mLocker;
     time_point mStart;
     duration& mDur;
 };
