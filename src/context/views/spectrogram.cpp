@@ -31,7 +31,7 @@ void Spectrogram::render(QPainterWrapper *painter, Config *config, DataStore *da
     auto& pitchTrack = dataStore->getPitchTrack();
 
     const double viewDuration = config->getViewTimeSpan();
-    const double timeDelay = 100.0 / 1000.0;
+    const double timeDelay = 50.0 / 1000.0;
     const double timeEnd = realTimeEnd - timeDelay;
     const double timeStart = timeEnd - viewDuration;
 

@@ -138,7 +138,7 @@ void QPainterWrapper::drawSpectrogram(const rpm::vector<std::pair<double, Main::
                     data1[k * sliceCount + ioff] = fftData(k);
                 }
                 else {
-                    data2[k * sliceCount + ioff] = fftData(k);
+                    data2[k * sliceCount + (ioff - sliceCount1)] = fftData(k);
                 }
             }
         }

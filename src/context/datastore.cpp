@@ -13,22 +13,22 @@ DataStore::DataStore()
 
 void DataStore::beginWrite()
 {
-    //mMutex.lock();
+    mLock.lockForWrite();
 }
 
 void DataStore::endWrite()
 {
-    //mMutex.unlock();
+    mLock.unlock();
 }
 
 void DataStore::beginRead()
 {
-    //mMutex.lock_shared();
+    mLock.lockForRead();
 }
 
 void DataStore::endRead()
 {
-    //mMutex.unlock_shared();
+    mLock.unlock();
 }
 
 double DataStore::getTime() const

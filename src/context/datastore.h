@@ -6,8 +6,8 @@
 #include "../analysis/analysis.h"
 #include <array>
 #include <chrono>
-#include <shared_mutex>
 #include <functional>
+#include <QReadWriteLock>
 
 enum class FrequencyScale : unsigned int {
     Linear      = 0,
@@ -54,7 +54,7 @@ namespace Main {
     private:
         int mTrackLength;
 
-        std::shared_mutex mMutex;
+        QReadWriteLock mLock;
 
         volatile double mTime;
 

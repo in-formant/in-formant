@@ -53,7 +53,7 @@ void DataVisWrapper::setGif(const rpm::vector<double>& signal, double fs)
 
     mGifEnd = (double) zcr / fs * 1000;
     
-    constexpr int periods = 5;
+    constexpr int periods = 7;
     int periodNum = 0;
 
     for (int i = zcr; i >= 1; --i) {

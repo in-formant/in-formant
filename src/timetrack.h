@@ -31,7 +31,6 @@ public:
 
 private:
     vector_type mTrack;
-    mutable std::mutex mMutex;
 };
 
 template<typename T>

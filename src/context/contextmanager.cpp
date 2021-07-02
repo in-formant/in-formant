@@ -181,12 +181,8 @@ void ContextManager::datavisThreadLoop()
         fftFrequencies[k] = maxFrequencySource * (double) (k + 1) / (double) fftFrequencies.size();
     }
 
-    auto lastSourceCopyTime = std::chrono::steady_clock::now();
-
     while (mAnalysisRunning && mSynthesisRunning) {
 #endif // WITHOUT_SYNTH
-
-        auto now = std::chrono::steady_clock::now();
 
         mDataStore->beginRead();
         
@@ -251,16 +247,11 @@ void ContextManager::datavisThreadLoop()
 
         mSynthWrapper.setFilterResponse(frequencies, Analysis::sosfreqz(filter, wn));
         
-        // Only update the source every 300s.
-        if (now - lastSourceCopyTime > 300ms) {
-            auto source = mSynthesizer->getSourceCopy(maxFrequencySource * 2, 25.0);
-            mSynthWrapper.setSource(source, maxFrequencySource * 2);
+        auto source = mSynthesizer->getSourceCopy(maxFrequencySource * 2, 25.0);
+        mSynthWrapper.setSource(source, maxFrequencySource * 2);
 
-            auto sourceSpectrum = Analysis::fft_n(fft, source);
-            mSynthWrapper.setSourceSpectrum(fftFrequencies, sourceSpectrum);
-
-            lastSourceCopyTime = now;
-        }
+        auto sourceSpectrum = Analysis::fft_n(fft, source);
+        mSynthWrapper.setSourceSpectrum(fftFrequencies, sourceSpectrum);
 #endif // !WITHOUT_SYNTH
 
         std::this_thread::sleep_for(20ms);
