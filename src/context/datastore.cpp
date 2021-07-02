@@ -81,7 +81,7 @@ OptionalTimeTrack<double>& DataStore::getFormantTrack(int i)
 
 int DataStore::getFormantTrackCount() const
 {
-    return mFormantTracks.size();
+    return (int) mFormantTracks.size();
 }
 
 void DataStore::setFormantTrackCount(int n)

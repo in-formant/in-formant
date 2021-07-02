@@ -48,7 +48,7 @@ inline double G(double x, int L, double alpha)
 
 static void calcGaussian(rpm::vector<double>& win, double alpha)
 {
-    const int L = win.size();
+    const int L = (int) win.size();
     
     double Gmh = G(-0.5, L, alpha);
     double GmhpLpGmhmL = G(-0.5 + L, L, alpha) - G(-0.5 - L, L, alpha);

@@ -6,8 +6,8 @@ rpm::vector<double> Synthesis::filter(
         const rpm::vector<double>& x,
         rpm::vector<double>& zf)
 {
-    const int la = a.size();
-    const int lb = b.size();
+    const int la = (int) a.size();
+    const int lb = (int) b.size();
     const int lab = std::max(la, lb);
 
     rpm::vector<double> bp = b;
@@ -21,7 +21,7 @@ rpm::vector<double> Synthesis::filter(
     }
 
     const int lz = lab - 1;
-    const int lx = x.size();
+    const int lx = (int) x.size();
 
     rpm::vector<double> y(lx);
     zf.resize(lz);

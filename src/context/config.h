@@ -137,6 +137,15 @@ namespace Main {
         void setAnalysisOscilloscopeWindow(double ms); // default is 80ms
         double getAnalysisOscilloscopeWindow();
 
+        void setAnalysisPitchSpacing(double ms); // default is 80ms
+        double getAnalysisPitchSpacing();
+
+        void setAnalysisFormantSpacing(double ms); // default is 80ms
+        double getAnalysisFormantSpacing();
+
+        void setAnalysisOscilloscopeSpacing(double ms); // default is 160ms
+        double getAnalysisOscilloscopeSpacing();
+
         // WILL NOT BE SERIALIZED
         bool isPaused();
         void setPaused(bool p);

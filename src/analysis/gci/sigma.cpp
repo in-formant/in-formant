@@ -25,7 +25,7 @@ rpm::vector<double> SIGMA::analyse(const rpm::vector<double>& lx, double fs)
     rpm::vector<double> swc = Analysis::swt(lx, wavelet, nlev, 0, true);
 
     // Calculate multiscale product
-    int dlen = Wt::swt_buffer_length(lx.size());
+    int dlen = (int) Wt::swt_buffer_length((int) lx.size());
     rpm::vector<double> mp(dlen, 1.0);
     for (int k = 1; k * dlen < (int) swc.size(); ++k) {
         for (int i = 0; i < dlen; ++i) {
@@ -67,7 +67,7 @@ rpm::vector<double> SIGMA::analyse(const rpm::vector<double>& lx, double fs)
     // --- GCI Detection ---
 
     // Model GD slope
-    const int nr = (gwlen * fs) / 2 - 1;
+    const int nr = ((int) std::round(gwlen * fs)) / 2 - 1;
     const int mngrdellen = 2 * nr + 1;
     rpm::vector<double> mngrdel(mngrdellen);
     for (int i = 0; i < mngrdellen; ++i) {
@@ -75,11 +75,11 @@ rpm::vector<double> SIGMA::analyse(const rpm::vector<double>& lx, double fs)
     }
     rpm::vector<double> cmngrdel(ngrdel.size(), 0.0);
 
-    const int snfv = gcic.size();
+    const int snfv = (int) gcic.size();
     arma::mat nfv(3, snfv, arma::fill::zeros);
 
     for (int i = 0; i < snfv; ++i) {
-        int lbnd = std::round(gcic[i] - nr);
+        int lbnd = (int) std::round(gcic[i] - nr);
         int ubnd = lbnd + mngrdellen - 1;
 
         if (lbnd >= 0 && ubnd < (int) ngrdel.size()) {
@@ -109,7 +109,7 @@ rpm::vector<double> SIGMA::analyse(const rpm::vector<double>& lx, double fs)
     bool status = ngmm.learn(nfv, 3, arma::eucl_dist, arma::random_subset, 10, 5, 1e-8, false);
 
     // Find cluster with lowest crnmp sum
-    int I = arma::index_min(ngmm.means.row(0));
+    int I = (int) arma::index_min(ngmm.means.row(0));
    
     // If the candidate belongs to the chosen cluster then keep 
     for (int i = 0; i < snfv; ++i) {

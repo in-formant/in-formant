@@ -57,12 +57,17 @@ void Pipeline::callbackProcessing()
 
     while (mThreadRunning && !mStopThread) {
         const double granularity        = mConfig->getAnalysisGranularity()        / 1000;
+
         const double pitchWindow        = mConfig->getAnalysisPitchWindow()        / 1000;
         const double formantWindow      = mConfig->getAnalysisFormantWindow()      / 1000;
         const double oscilloscopeWindow = mConfig->getAnalysisOscilloscopeWindow() / 1000;
 
+        const double pitchSpacing        = mConfig->getAnalysisPitchSpacing()        / 1000;
+        const double formantSpacing      = mConfig->getAnalysisFormantSpacing()      / 1000;
+        const double oscilloscopeSpacing = mConfig->getAnalysisOscilloscopeSpacing() / 1000;
+
         block.resize(granularity * mSampleRate);
-        mBuffer.pull(block.data(), block.size());
+        mBuffer.pull(block.data(), (int) block.size());
         
         timer_guard timer(timings::update);
 
@@ -85,7 +90,7 @@ void Pipeline::callbackProcessing()
         processSpectrogram();
 
         // Process for pitch if needed.
-        if (time - mPitchTime >= pitchWindow) {
+        if (time - mPitchTime >= pitchSpacing) {
             const int windowSamples = pitchWindow * mSampleRate;
             mPitchTime = time;
             mPitchData.resize(windowSamples);
@@ -96,7 +101,7 @@ void Pipeline::callbackProcessing()
         }
 
         // Process for formants if needed.
-        if (time - mFormantTime >= formantWindow) {
+        if (time - mFormantTime >= formantSpacing) {
             const int windowSamples = formantWindow * mSampleRate;
             mFormantTime = time;
             mFormantData.resize(windowSamples);
@@ -107,7 +112,7 @@ void Pipeline::callbackProcessing()
         }
 
         // Process for oscilloscope if needed.
-        if (time - mOscilloscopeTime >= oscilloscopeWindow) {
+        if (time - mOscilloscopeTime >= oscilloscopeSpacing) {
             const int windowSamples = oscilloscopeWindow * mSampleRate;
             mOscilloscopeTime = time;
             mOscilloscopeData.resize(windowSamples);
@@ -131,7 +136,7 @@ void Pipeline::processSpectrogram()
 
     // Resample.
     mSpectrogramResampler.setRate(mSampleRate, fsView);
-    auto outOverlap = mSpectrogramResampler.process(mSpectrogramOverlap.data(), mSpectrogramOverlap.size());
+    auto outOverlap = mSpectrogramResampler.process(mSpectrogramOverlap.data(), (int) mSpectrogramOverlap.size());
 
     // De-emphasize the very low frequencies.
     if (mSpectrogramHighpassSampleRate != fsView) {
@@ -171,7 +176,7 @@ void Pipeline::processPitch()
 {
     timer_guard timer(timings::updatePitch);
 
-    auto pitchResult = mPitchSolver->solve(mPitchData.data(), mPitchData.size(), mSampleRate);
+    auto pitchResult = mPitchSolver->solve(mPitchData.data(), (int) mPitchData.size(), mSampleRate);
     
     mDataStore->beginWrite();
 
@@ -194,7 +199,7 @@ void Pipeline::processFormants()
     const double preemphFactor = exp(-(2.0 * M_PI * preemphFrequency) / mSampleRate);
     
     if (mFormantWindow.size() != mFormantData.size()) {
-        mFormantWindow = Analysis::gaussianWindow(mFormantData.size(), 2.5);
+        mFormantWindow = Analysis::gaussianWindow((int) mFormantData.size(), 2.5);
     }
 
     constexpr double fsLPC = 11000;
@@ -207,7 +212,7 @@ void Pipeline::processFormants()
 
     // Preemphasis and windowing.
     static double lastPreviousSample = 0.0;
-    for (int i = mFormantData.size() - 1; i >= 1; --i) {
+    for (int i = (int) mFormantData.size() - 1; i >= 1; --i) {
         mFormantData[i] = mFormantWindow[i]
                             * (mFormantData[i] - preemphFactor * mFormantData[i - 1]);
     }
@@ -216,9 +221,9 @@ void Pipeline::processFormants()
     lastPreviousSample = m0;
 
     // Resample.
-    auto mLPC = mFormantResamplerLPC.process(mFormantData.data(), mFormantData.size());
+    auto mLPC = mFormantResamplerLPC.process(mFormantData.data(), (int) mFormantData.size());
 #ifdef ENABLE_TORCH
-    auto m16k = mFormantResampler16k.process(mFormantData.data(), mFormantData.size());
+    auto m16k = mFormantResampler16k.process(mFormantData.data(), (int) mFormantData.size());
 #endif
     
     rpm::vector<double> lpc;
@@ -231,19 +236,19 @@ void Pipeline::processFormants()
     else {
 #endif
         double gain;
-        lpc = mLinpredSolver->solve(mLPC.data(), mLPC.size(), 10, &gain);
+        lpc = mLinpredSolver->solve(mLPC.data(), (int) mLPC.size(), 10, &gain);
 #ifdef ENABLE_TORCH
     }
 #endif
 
-    auto formantResult = mFormantSolver->solve(lpc.data(), lpc.size(), fsLPC);
+    auto formantResult = mFormantSolver->solve(lpc.data(), (int) lpc.size(), fsLPC);
 
     mDataStore->beginWrite();
 
     for (int i = 0;
-            i < std::min<int>(
-                mDataStore->getFormantTrackCount(),
-                formantResult.formants.size());
+            i < std::min(
+                    mDataStore->getFormantTrackCount(),
+                    (int) formantResult.formants.size());
             ++i) {
         const double frequency = formantResult.formants[i].frequency;
         if (std::isnormal(frequency)) {
@@ -253,7 +258,7 @@ void Pipeline::processFormants()
             mDataStore->getFormantTrack(i).insert(mFormantTime, std::nullopt);
         }
     }
-    for (int i = formantResult.formants.size(); i < mDataStore->getFormantTrackCount(); ++i) {
+    for (int i = (int) formantResult.formants.size(); i < mDataStore->getFormantTrackCount(); ++i) {
         mDataStore->getFormantTrack(i).insert(mFormantTime, std::nullopt);
     }
 
@@ -268,8 +273,8 @@ void Pipeline::processOscilloscope()
 
     mOscilloscopeResampler.setRate(mSampleRate, fsOsc);
 
-    auto out = mOscilloscopeResampler.process(mOscilloscopeData.data(), mOscilloscopeData.size());
-    auto invglotResult = mInvglotSolver->solve(out.data(), out.size(), fsOsc);
+    auto out = mOscilloscopeResampler.process(mOscilloscopeData.data(), (int) mOscilloscopeData.size());
+    auto invglotResult = mInvglotSolver->solve(out.data(), (int) out.size(), fsOsc);
 
     mDataStore->beginWrite();
    
@@ -289,14 +294,14 @@ void Pipeline::processAll()
 
     static int blockSize = 512;
     rpm::vector<double> data(blockSize);
-    mCaptureBuffer->pull(data.data(), data.size());
+    mCaptureBuffer->pull(data.data(), (int) data.size());
     mTime = mTime + blockSize / fs;
 
     mDataStore->setTime(mTime);
     mSampleRate = fs;
 
     rpm::vector<float> fdata(data.begin(), data.end());
-    mBuffer.push(fdata.data(), data.size());
+    mBuffer.push(fdata.data(), (int) data.size());
 
     bool shouldNotBeRunning = false;
     if (mThreadRunning.compare_exchange_strong(shouldNotBeRunning, true)) {

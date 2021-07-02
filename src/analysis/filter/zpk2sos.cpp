@@ -21,7 +21,7 @@ static std::pair<rpm::vector<std::complex<double>>, rpm::vector<double>> cplxrea
         }
     }
 
-    const int m = cplx.size();
+    const int m = (int) cplx.size();
     rpm::vector<std::complex<double>> zc;
 
     for (int i = 0; i < m; i += 2) {
@@ -56,11 +56,11 @@ rpm::vector<std::array<double, 6>> Analysis::zpk2sos(
     auto [zc, zr] = cplxreal(z);
     auto [pc, pr] = cplxreal(p);
 
-    const int nzc = zc.size();
-    const int npc = pc.size();
+    const int nzc = (int) zc.size();
+    const int npc = (int) pc.size();
 
-    int nzr = zr.size();
-    int npr = pr.size();
+    int nzr = (int) zr.size();
+    int npr = (int) pr.size();
 
     // Pair up real zeroes.
     int nzrsec;

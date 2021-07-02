@@ -21,7 +21,7 @@ peak_picking(const rpm::vector<T> &nsdf)
 	rpm::vector<int> max_positions{};
 	int pos = 0;
 	int cur_max_pos = 0;
-	int size = nsdf.size();
+	int size = (int) nsdf.size();
 
 	while (pos < (size - 1) / 3 && nsdf[pos] > 0)
 		pos++;
@@ -74,7 +74,7 @@ acorr_r(rpm::vector<T> &audio_buffer)
 	if (audio_buffer.size() == 0)
 		throw std::invalid_argument("audio_buffer shouldn't be empty");
 
-        const int N = audio_buffer.size();
+        const int N = (int) audio_buffer.size();
 
         int nfft = 2 * N - 1;
  

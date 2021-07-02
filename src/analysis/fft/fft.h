@@ -36,7 +36,7 @@ namespace Analysis
     class ReReFFT
     {
     public:
-        ReReFFT(size_t n, fftw_r2r_kind method);
+        ReReFFT(int n, fftw_r2r_kind method);
         ~ReReFFT();
         
         double data(int index) const;
@@ -44,12 +44,12 @@ namespace Analysis
 
         void compute();
 
-        size_t getLength() const;
+        int getLength() const;
 
     private:
         void checkIndex(int index) const;
 
-        size_t mSize;
+        int mSize;
         fftw_plan mPlan;
 
         double *mData;
@@ -58,7 +58,7 @@ namespace Analysis
     class RealFFT
     {
     public:
-        RealFFT(size_t n);
+        RealFFT(int n);
         ~RealFFT();
 
         double input(int index) const;
@@ -70,14 +70,14 @@ namespace Analysis
         void computeForward();
         void computeBackward();
 
-        size_t getInputLength() const;
-        size_t getOutputLength() const;
+        int getInputLength() const;
+        int getOutputLength() const;
 
     private:
         void checkInputIndex(int index) const;
         void checkOutputIndex(int index) const;
 
-        size_t mSize;
+        int mSize;
         fftw_plan mPlanForward;
         fftw_plan mPlanBackward;
 
@@ -88,7 +88,7 @@ namespace Analysis
     class ComplexFFT
     {
     public:
-        ComplexFFT(size_t n);
+        ComplexFFT(int n);
         ~ComplexFFT();
 
         std::dcomplex data(int index) const;
@@ -97,12 +97,12 @@ namespace Analysis
         void computeForward();
         void computeBackward();
 
-        size_t getLength() const;
+        int getLength() const;
 
     private:
         void checkIndex(int index) const;
 
-        size_t mSize;
+        int mSize;
         fftw_plan mPlanForward;
         fftw_plan mPlanBackward;
 

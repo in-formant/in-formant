@@ -115,8 +115,8 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
         Frame defaultFrame = {
             { { vo_bias, false } },
             1e-10,
-             1.0,
-            { 1.0 },
+            1.0,
+            1.0,
             {},
             -0.25,
         };
@@ -133,13 +133,13 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
     
         // Pre-emphasis.
         const double alpha = expf(-7000 / Fs);
-        for (int i = s.size() - 1; i >= 1; --i) {
+        for (int i = (int) s.size() - 1; i >= 1; --i) {
             s[i] -= alpha * s[i - 1];
         }
 
         // Calculate AR.
         double gain;
-        frm.ar = lpc.solve(s.data(), s.size(), lpcOrder, &gain);
+        frm.ar = lpc.solve(s.data(), (int) s.size(), lpcOrder, &gain);
         frm.ar.insert(frm.ar.begin(), 1.0);
         frm.S = 0.2 / (expDistItakura(frm.ar, frames.back().ar) - 0.8);
     }
@@ -164,8 +164,8 @@ rpm::vector<double> RAPT::computePath()
     transitionMatrices.resize(nbFrames);
 
     for (int i = 1; i < nbFrames; ++i) {
-        const int nj = frames[i].cands.size();
-        const int nk = frames[i - 1].cands.size();
+        const int nj = (int) frames[i].cands.size();
+        const int nk = (int) frames[i - 1].cands.size();
 
         auto& mat = transitionMatrices[i];
         mat.resize(nj);
@@ -230,7 +230,7 @@ rpm::vector<double> RAPT::computePath()
 
     rpm::vector<double> pitches(nbFrames);
  
-    const int nj = D[1].size();
+    const int nj = (int) D[1].size();
 
     rpm::vector<int> indices(nj);
     std::iota(indices.begin(), indices.end(), 0);
@@ -323,7 +323,7 @@ rpm::vector<std::pair<double, double>> findPeaksWithThreshold(const rpm::vector<
 
     double threshold = cand_tr * max;
 
-    auto allPeaks = findPeaks(nccf.data(), nccf.size());
+    auto allPeaks = findPeaks(nccf.data(), (int) nccf.size());
 
     rpm::vector<std::pair<double, double>> peaks;
 
@@ -470,7 +470,7 @@ double expDistItakura(const rpm::vector<double>& ar1, const rpm::vector<double>&
 
 rpm::vector<double> lpcar2ra(const rpm::vector<double>& ar)
 {
-    const int p = ar.size();
+    const int p = (int) ar.size();
     
     rpm::vector<double> ra(p);
 
@@ -502,7 +502,7 @@ rpm::vector<double> lpcar2rr(const rpm::vector<double>& ar)
 
 rpm::vector<double> lpcar2rf(const rpm::vector<double>& ar)
 {
-    const int p = ar.size();
+    const int p = (int) ar.size();
 
     rpm::vector<double> rf = ar;
     
@@ -522,7 +522,7 @@ rpm::vector<double> lpcar2rf(const rpm::vector<double>& ar)
 
 rpm::vector<double> lpcrf2rr(const rpm::vector<double>& rf)
 {
-    const int p1 = rf.size();
+    const int p1 = (int) rf.size();
     const int p0 = p1 - 1;
 
     if (p0 > 0) {

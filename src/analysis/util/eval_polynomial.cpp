@@ -4,7 +4,7 @@ rpm::vector<std::complex<double>> Analysis::evaluatePolynomialComplexVector(cons
 {
     rpm::vector<std::complex<double>> y(x.size(), poly[poly.size() - 1]);
 
-    for (int i = poly.size() - 2; i >= 0; --i) {
+    for (int i = (int) poly.size() - 2; i >= 0; --i) {
         for (int k = 0; k < x.size(); ++k) {
             y[k] = y[k] * x[k] + poly[i];
         }
@@ -18,7 +18,7 @@ void Analysis::evaluatePolynomialWithDerivative(const rpm::vector<double>& poly,
     double p = poly[poly.size() - 1];
     double dp = 0.0;
 
-    for (int i = poly.size() - 2; i >= 0; --i) {
+    for (int i = (int) poly.size() - 2; i >= 0; --i) {
         dp = dp * x + p;
         p = p * x + poly[i];
     }
@@ -32,7 +32,7 @@ void Analysis::evaluatePolynomialWithDerivative(const rpm::vector<double>& poly,
     std::complex<double> p = poly[poly.size() - 1];
     std::complex<double> dp = 0.0;
 
-    for (int i = poly.size() - 2; i >= 0; --i) {
+    for (int i = (int) poly.size() - 2; i >= 0; --i) {
         dp = dp * z + p;
         p = p * z + poly[i];
     }
@@ -43,7 +43,7 @@ void Analysis::evaluatePolynomialWithDerivative(const rpm::vector<double>& poly,
 
 rpm::vector<std::complex<double>> Analysis::evaluatePolynomialDerivatives(const rpm::vector<std::complex<double>>& poly, const std::complex<double>& x, int numberOfDerivatives)
 {
-    const int degree = poly.size() - 1;
+    const int degree = (int) poly.size() - 1;
     rpm::vector<std::complex<double>> derivatives(numberOfDerivatives + 1);
     numberOfDerivatives = numberOfDerivatives > degree ? degree : numberOfDerivatives;
 

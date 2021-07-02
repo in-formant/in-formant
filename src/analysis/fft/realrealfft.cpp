@@ -3,7 +3,7 @@
 
 using namespace Analysis;
 
-ReReFFT::ReReFFT(size_t n, fftw_r2r_kind method)
+ReReFFT::ReReFFT(int n, fftw_r2r_kind method)
     : mSize(n),
       mData(fftw_alloc_real(n))
 {
@@ -36,7 +36,7 @@ void ReReFFT::compute()
     fftw_execute(mPlan);
 }
 
-size_t ReReFFT::getLength() const
+int ReReFFT::getLength() const
 {
     return mSize;
 }

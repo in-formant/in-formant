@@ -31,7 +31,7 @@ rpm::vector<data_t> swt(const rpm::vector<data_t>& _data, const Wt::DiscreteWave
     if (endLevel > maxLevel)
         throw std::runtime_error("Level value is too high");
 
-    int outputLen = Wt::swt_buffer_length(data.size());
+    int outputLen = (int) Wt::swt_buffer_length((int) data.size());
 
     if (outputLen < 1)
         throw std::runtime_error("Invalid output length");
@@ -42,7 +42,7 @@ rpm::vector<data_t> swt(const rpm::vector<data_t>& _data, const Wt::DiscreteWave
     rpm::vector<data_t> ret;
 
     for (int i = startLevel + 1; i < endLevel + 1; ++i) {
-        int dataSize = data.size();
+        int dataSize = (int) data.size();
 
         if constexpr (std::is_same<data_t, double>::value) {
             cD.resize(outputLen, data_t(0.0));

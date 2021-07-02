@@ -3,7 +3,7 @@
 std::pair<rpm::vector<double>, rpm::vector<double>>
 Analysis::findZerocros(const rpm::vector<double>& y, char m)
 {
-    const int n = y.size();
+    const int n = (int) y.size();
 
     rpm::vector<double> s(n);
     rpm::vector<double> k(n - 1);

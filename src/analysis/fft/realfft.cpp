@@ -5,7 +5,7 @@ using namespace Analysis;
 
 QMutex Analysis::sFFTWPlanMutex;
 
-RealFFT::RealFFT(size_t n)
+RealFFT::RealFFT(int n)
     : mSize(n),
       mIn(fftw_alloc_real(n)),
       mOut(fftw_alloc_complex(n / 2 + 1))
@@ -59,12 +59,12 @@ void RealFFT::computeBackward()
     fftw_execute(mPlanBackward);
 }
 
-size_t RealFFT::getInputLength() const
+int RealFFT::getInputLength() const
 {
     return mSize;
 }
 
-size_t RealFFT::getOutputLength() const
+int RealFFT::getOutputLength() const
 {
     return mSize / 2 + 1;
 }

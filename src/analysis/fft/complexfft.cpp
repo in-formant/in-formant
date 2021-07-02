@@ -3,7 +3,7 @@
 
 using namespace Analysis;
 
-ComplexFFT::ComplexFFT(size_t n)
+ComplexFFT::ComplexFFT(int n)
     : mSize(n),
       mData(fftw_alloc_complex(n))
 {
@@ -43,7 +43,7 @@ void ComplexFFT::computeBackward()
     fftw_execute(mPlanBackward);
 }
 
-size_t ComplexFFT::getLength() const
+int ComplexFFT::getLength() const
 {
     return mSize;
 }

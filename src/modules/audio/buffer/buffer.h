@@ -30,7 +30,7 @@ namespace Module::Audio {
         int mId;
         double mSampleRate;
 
-        moodycamel::BlockingReaderWriterQueue<double> mQueue;
+        moodycamel::BlockingReaderWriterQueue<float> mQueue;
 
         static std::atomic_bool sCancel;
         static std::atomic_int sId;

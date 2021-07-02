@@ -63,8 +63,8 @@ static void calcGaussian(rpm::vector<double>& win, double alpha)
 */
 
 static rpm::vector<double> conv(const rpm::vector<double>& x, const rpm::vector<double>& y) {
-    int lx = x.size();
-    int ly = y.size();
+    int lx = (int) x.size();
+    int ly = (int) y.size();
     int lw = lx + ly - 1;
     rpm::vector<double> w(lw, 0.0);
     for (int k = 0; k < lw; ++k) {

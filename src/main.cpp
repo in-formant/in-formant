@@ -42,6 +42,8 @@ int start_logger(const char *app_name);
 int Main::argc;
 char **Main::argv;
 
+std::unique_ptr<Main::ContextManager> Main::contextManager;
+
 #ifdef _WIN32
 #include <windows.h>
 LONG WINAPI TopLevelExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo);
@@ -73,13 +75,13 @@ int main(int argc, char **argv)
     Main::argc = argc;
     Main::argv = argv;
 
-    auto contextManager = std::make_unique<Main::ContextManager>(
+    Main::contextManager = std::make_unique<Main::ContextManager>(
             48'000,     // captureSampleRate
             50ms,       // playbackDuration
             48'000      // playbackSampleRate
     );
 
-    int ret = contextManager->exec();
+    int ret = Main::contextManager->exec();
 
     #ifdef DEBUG_THREAD
     exitSignal.set_value();

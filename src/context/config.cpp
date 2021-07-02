@@ -433,6 +433,30 @@ double Config::getAnalysisOscilloscopeWindow() {
     return doubleField(mTbl["analysis"], "oscilloscopeWindow", 80.0);
 }
 
+void Config::setAnalysisPitchSpacing(double ms) {
+    mTbl["analysis"]["pitchSpacing"].ref<double>() = ms;
+}
+
+double Config::getAnalysisPitchSpacing() {
+    return doubleField(mTbl["analysis"], "pitchSpacing", 80.0);
+}
+
+void Config::setAnalysisFormantSpacing(double ms) {
+    mTbl["analysis"]["formantSpacing"].ref<double>() = ms;
+}
+
+double Config::getAnalysisFormantSpacing() {
+    return doubleField(mTbl["analysis"], "formantSpacing", 80.0);
+}
+
+void Config::setAnalysisOscilloscopeSpacing(double ms) {
+    mTbl["analysis"]["oscilloscopeSpacing"].ref<double>() = ms;
+}
+
+double Config::getAnalysisOscilloscopeSpacing() {
+    return doubleField(mTbl["analysis"], "oscilloscopeSpacing", 160.0);
+}
+
 bool Config::isPaused()
 {
     return mPaused;

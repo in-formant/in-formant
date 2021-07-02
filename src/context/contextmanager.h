@@ -28,6 +28,9 @@ namespace Main {
     extern int argc;
     extern char **argv;
 
+    class ContextManager;
+    extern std::unique_ptr<ContextManager> contextManager;
+
     class ContextManager {
     public:
         ContextManager(

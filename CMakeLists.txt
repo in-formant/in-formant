@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.5)
 cmake_policy(SET CMP0048 NEW)
 cmake_policy(SET CMP0075 NEW)
 cmake_policy(SET CMP0077 NEW)
-cmake_policy(SET CMP0071 OLD)
+cmake_policy(SET CMP0071 NEW)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{MACOSX_DEPLOYMENT_TARGET})
 
 if("x${CUR_VERSION}" STREQUAL "x")
-    set(CUR_VERSION "3.1.1")
+    set(CUR_VERSION "3.1.2")
 endif()
 
 string(FIND "${CUR_VERSION}" "-" dash_pos)

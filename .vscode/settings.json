@@ -1,6 +1,7 @@
 {
     "cmake.configureSettings": {
         "CMAKE_TOOLCHAIN_FILE": "K:\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake",
+        "CMAKE_PREFIX_PATH": "K:\\Qt\\6.1.2\\msvc2019_64",
         "ENABLE_TORCH": "FALSE"
     },
     "cmake.generator": "NMake Makefiles JOM"

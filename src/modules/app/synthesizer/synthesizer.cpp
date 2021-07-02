@@ -127,7 +127,12 @@ bool Synthesizer::isVoiced() const
 rpm::vector<std::array<double, 6>> Synthesizer::getFilterCopy(double *fs) const
 {
     *fs = resampler.getInputRate();
-    return realFilter;
+    
+    realFilterMutex.lock();
+    auto filterCopy = realFilter;
+    realFilterMutex.unlock();
+
+    return filterCopy;
 }
 
 rpm::vector<double> Synthesizer::getSourceCopy(double fs, double durationInMs) const
@@ -305,7 +310,7 @@ void Synthesizer::generateAudio(int requestedLength)
         }
     }
 
-    output = resampler.process(output.data(), output.size());
+    output = resampler.process(output.data(), (int) output.size());
 
     surplus.insert(surplus.end(), output.begin(), output.end());
 }
@@ -340,7 +345,9 @@ void Synthesizer::audioCallback(double *output, int length, void *userdata)
         }
     }
 
+    self->realFilterMutex.lock();
     self->realFilter = Synthesis::frequencyShiftFilter(self->realFormants, self->resampler.getInputRate(), self->realFilterShift);
+    self->realFilterMutex.unlock();
 
     // Generate the audio by chunks of fixed size.
     while (self->surplus.size() < length) {

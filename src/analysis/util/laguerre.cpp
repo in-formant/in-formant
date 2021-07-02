@@ -8,7 +8,7 @@ std::complex<double> Analysis::laguerreRoot(const rpm::vector<std::complex<doubl
     rpm::vector<std::complex<double>> ys(3);
     ys = evaluatePolynomialDerivatives(P, xk, 2);
   
-    const int n = P.size() - 1;
+    const int n = (int) P.size() - 1;
 
     for (int it = 0; it < maxIt; ++it) {
         if (std::abs(ys[0]) < accuracy)
@@ -39,7 +39,7 @@ std::complex<double> Analysis::laguerreRoot(const rpm::vector<std::complex<doubl
 
 rpm::vector<std::complex<double>> Analysis::laguerreDeflate(const rpm::vector<std::complex<double>>& P, const std::complex<double>& root)
 {
-    const int n = P.size() - 1;
+    const int n = (int) P.size() - 1;
 
     rpm::vector<std::complex<double>> Q(n);
     Q[n - 1] = P[n];
@@ -58,7 +58,7 @@ rpm::vector<std::complex<double>> Analysis::laguerreSolve(const rpm::vector<doub
     rpm::vector<std::complex<double>> P(realP.rbegin(), realP.rend());
     auto Pi = P;
 
-    const int N = P.size() - 1;
+    const int N = (int) P.size() - 1;
 
     rpm::vector<std::complex<double>> R(N);
 

@@ -33,7 +33,7 @@ namespace Module::Audio {
         Resampler mResampler;
         QueueCallback mCallback;
         
-        moodycamel::BlockingReaderWriterQueue<double> mQueue;
+        moodycamel::BlockingReaderWriterQueue<float> mQueue;
     };
 
 }

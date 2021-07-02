@@ -37,7 +37,7 @@ double Buffer::getSampleRate() const
 
 int Buffer::getLength() const
 {
-    return mQueue.size_approx();
+    return (int) mQueue.size_approx();
 }
 
 void Buffer::pull(double *pOut, int outLength)

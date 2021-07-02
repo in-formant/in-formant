@@ -74,14 +74,14 @@ void PortAudio::refreshDevices()
 
         if (deviceInfo->maxInputChannels > 0) {
             if (i == defaultCaptureDevice) {
-                mDefaultCaptureDeviceIndex = mCaptureDevices.size();
+                mDefaultCaptureDeviceIndex = (int) mCaptureDevices.size();
             }
             mCaptureDevices.push_back(device);
         }
 
         if (deviceInfo->maxOutputChannels > 0) {
             if (i == defaultPlaybackDevice) {
-                mDefaultPlaybackDeviceIndex = mPlaybackDevices.size();
+                mDefaultPlaybackDeviceIndex = (int) mPlaybackDevices.size();
             }
             mPlaybackDevices.push_back(device);
         }
@@ -133,7 +133,7 @@ void PortAudio::openCaptureStream(const Device *pDevice)
     checkError();
 
     mPauseCapture = true;
-    setCaptureBufferSampleRate(pDevice->portaudio.sampleRate);
+    setCaptureBufferSampleRate((int) std::round(pDevice->portaudio.sampleRate));
 }
 
 void PortAudio::startCaptureStream()
@@ -202,7 +202,7 @@ void PortAudio::openPlaybackStream(const Device *pDevice)
     checkError();
 
     mPausePlayback = true;
-    mPlaybackQueue->setOutSampleRate(pDevice->portaudio.sampleRate);
+    mPlaybackQueue->setOutSampleRate((int) std::round(pDevice->portaudio.sampleRate));
 }
 
 void PortAudio::startPlaybackStream()

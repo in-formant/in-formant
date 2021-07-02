@@ -3,8 +3,8 @@
 #include <iostream>
 
 static rpm::vector<double> conv(const rpm::vector<double>& x, const rpm::vector<double>& y) {
-    int lx = x.size();
-    int ly = y.size();
+    int lx = (int) x.size();
+    int ly = (int) y.size();
     int lw = lx + ly - 1;
     rpm::vector<double> w(lw, 0.0);
     for (int k = 0; k < lw; ++k) {
@@ -60,7 +60,7 @@ rpm::vector<std::array<double, 6>> Synthesis::frequencyShiftFilter(const rpm::ve
         roots.push_back(std::polar(r, phi));
     }
 
-    const int npoles = roots.size();
+    const int npoles = (int) roots.size();
     for (int i = 0; i < npoles; ++i) {
         roots.push_back(std::conj(roots[i]));
     }
@@ -69,7 +69,7 @@ rpm::vector<std::array<double, 6>> Synthesis::frequencyShiftFilter(const rpm::ve
         std::polar(0.9, freqMin * 2.0 * M_PI / Fs),
     };
 
-    const int nzeros = zeros.size();
+    const int nzeros = (int) zeros.size();
     for (int i = 0; i < nzeros; ++i) {
         zeros.push_back(std::conj(zeros[i]));
     }

@@ -2,8 +2,8 @@
 
 rpm::vector<double> Analysis::filter(const rpm::vector<double>& a, const rpm::vector<double>& x)
 {
-    const int nx = x.size();
-    const int na = a.size();
+    const int nx = (int) x.size();
+    const int na = (int) a.size();
 
     rpm::vector<double> y(nx);
 
@@ -21,9 +21,9 @@ rpm::vector<double> Analysis::filter(const rpm::vector<double>& a, const rpm::ve
 
 rpm::vector<double> Analysis::filter(const rpm::vector<double>& b, const rpm::vector<double>& a, const rpm::vector<double>& x)
 {
-    const int nx = x.size();
-    const int nb = b.size();
-    const int na = a.size();
+    const int nx = (int) x.size();
+    const int nb = (int) b.size();
+    const int na = (int) a.size();
 
     rpm::vector<double> y(nx);
 

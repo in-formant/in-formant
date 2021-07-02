@@ -220,7 +220,7 @@ rpm::vector<int> peak_picking(const rpm::vector<double> &nsdf)
 	rpm::vector<int> max_positions{};
 	int pos = 0;
 	int cur_max_pos = 0;
-	int size = nsdf.size();
+	int size = (int) nsdf.size();
 
 	while (pos < (size - 1) / 3 && nsdf[pos] > 0)
 		pos++;

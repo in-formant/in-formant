@@ -139,13 +139,13 @@ int Wt::CAT(TYPE, _downcoef_axis)(const TYPE * const restrict input, const Array
                     CAT(TYPE, _swt_a)(input_row, input_info.shape[axis],
                                       wavelet,
                                       output_row, output_info.shape[axis],
-                                      swt_level);
+                                      (unsigned int) swt_level);
                     break;
                 case COEF_DETAIL:
                     CAT(TYPE, _swt_d)(input_row, input_info.shape[axis],
                                       wavelet,
                                       output_row, output_info.shape[axis],
-                                      swt_level);
+                                      (unsigned int) swt_level);
                     break;
                 }
                 break;

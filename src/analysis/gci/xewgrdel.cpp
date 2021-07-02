@@ -10,7 +10,7 @@ std::tuple<rpm::vector<double>, rpm::vector<double>, rpm::vector<double>, int>
 SIGMA::xewgrdel(const rpm::vector<double>& u, double fs, double gwlen, double fwlen)
 {
     // Force window length to be odd.
-    int gw = 2 * (gwlen * fs / 2) + 1;
+    int gw = 2 * (int) std::round(gwlen * fs) / 2 + 1;
 
     rpm::vector<double> ghw(gw);
     rpm::vector<double> ghwn(gw);
@@ -41,7 +41,7 @@ SIGMA::xewgrdel(const rpm::vector<double>& u, double fs, double gwlen, double fw
     int toff = (gw - 1) / 2;
 
     // Force window length to be odd
-    int fw = 2 * (fwlen * fs / 2) + 1;
+    int fw = 2 * (int) std::round(fwlen * fs) / 2 + 1;
 
     if (fw > 1) {
         rpm::vector<double> daw(fw);

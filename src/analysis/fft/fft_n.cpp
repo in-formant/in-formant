@@ -24,7 +24,7 @@ static const rpm::vector<double>& getWindow(int N) {
 rpm::vector<double> Analysis::fft_n(Analysis::RealFFT& fft, const rpm::vector<double>& signal)
 {
     const int nfft = fft.getInputLength();
-    const int n = signal.size();
+    const int n = (int) signal.size();
 
     if (n <= nfft) {
         for (int i = 0; i < nfft; ++i) {
@@ -40,8 +40,6 @@ rpm::vector<double> Analysis::fft_n(Analysis::RealFFT& fft, const rpm::vector<do
         }
     }
     else {
-        const int N = nfft - 1;
-        
         auto w = getWindow(nfft);
         
         for (int j = 0; j < nfft; ++j) {

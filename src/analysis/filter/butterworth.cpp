@@ -39,7 +39,7 @@ rpm::vector<std::complex<double>> poly(const rpm::vector<std::complex<double>>& 
 rpm::vector<std::array<double, 6>> Analysis::butterworthHighpass(int N, double fc, double fs)
 {
     const double Wn = fc / (fs / 2.0);
-    const double Wo = tanf(Wn * M_PI / 2.0);
+    const double Wo = tan(Wn * M_PI / 2.0);
 
     rpm::vector<std::complex<double>> p;
 
@@ -82,7 +82,7 @@ rpm::vector<std::array<double, 6>> Analysis::butterworthHighpass(int N, double f
 rpm::vector<std::array<double, 6>> Analysis::butterworthLowpass(int N, double fc, double fs)
 {
     const double Wn = fc / (fs / 2.0);
-    const double Wo = tanf(Wn * M_PI / 2.0);
+    const double Wo = tan(Wn * M_PI / 2.0);
 
     rpm::vector<std::complex<double>> p;
 

@@ -9,6 +9,7 @@
 #include "../../../synthesis/synthesis.h"
 #include "../../audio/audio.h"
 
+#include <mutex>
 #include <QObject>
 
 namespace Module::App
@@ -69,6 +70,7 @@ namespace Module::App
         rpm::vector<Analysis::FormantData> realFormants;
         rpm::vector<std::array<double, 6>> realFilter;
         double realFilterShift;
+        mutable std::mutex realFilterMutex;
 
         rpm::vector<rpm::vector<double>> zfNoise;
         rpm::vector<rpm::vector<double>> zfGlot;

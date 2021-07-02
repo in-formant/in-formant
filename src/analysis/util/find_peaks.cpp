@@ -58,12 +58,12 @@ rpm::vector<int> Analysis::findPeaks(const double *data, int length, int sign)
     rpm::vector<double> x0(data, std::next(data, length));
     rpm::vector<int> peakInds;
 
-    int minIdx = distance(x0.begin(), min_element(x0.begin(), x0.end()));
-    int maxIdx = distance(x0.begin(), max_element(x0.begin(), x0.end()));
+    int minIdx = (int) distance(x0.begin(), min_element(x0.begin(), x0.end()));
+    int maxIdx = (int) distance(x0.begin(), max_element(x0.begin(), x0.end()));
 
     double sel = (x0[maxIdx]-x0[minIdx])/4.0;
 
-    int len0 = x0.size();
+    int len0 = (int) x0.size();
 
     rpm::vector<double> dx;
     diff(x0, dx);
@@ -87,10 +87,10 @@ rpm::vector<int> Analysis::findPeaks(const double *data, int length, int sign)
     ind.insert(ind.begin(), 0);
     ind.insert(ind.end(), len0);
 
-    int minMagIdx = distance(x.begin(), min_element(x.begin(), x.end()));
+    int minMagIdx = (int) distance(x.begin(), min_element(x.begin(), x.end()));
     double minMag = x[minMagIdx];
     double leftMin = minMag;
-    int len = x.size();
+    int len = (int) x.size();
 
     if(len>2)
     {
@@ -132,9 +132,9 @@ rpm::vector<int> Analysis::findPeaks(const double *data, int length, int sign)
         else
             ii = 1;
 
-        double maxPeaks = ceil((double)len/2.0);
-        rpm::vector<int> peakLoc(maxPeaks,0);
-        rpm::vector<double> peakMag(maxPeaks,0.0);
+        int maxPeaks = (int) ceil((double)len/2.0);
+        rpm::vector<int> peakLoc(maxPeaks, 0);
+        rpm::vector<double> peakMag(maxPeaks, 0.0);
         int cInd = 1;
         int tempLoc;
     
