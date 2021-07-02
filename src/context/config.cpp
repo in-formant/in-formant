@@ -80,7 +80,11 @@ toml::table Main::getConfigTable()
 {
     auto path = getConfigPath();
 
+#if defined(_WIN32) && defined(UNICODE)
+    std::wcout << "Reading configuration from: " << path << std::endl;
+#else
     std::cout << "Reading configuration from: " << path << std::endl;
+#endif
 
     fs::create_directories(path.parent_path());
 
