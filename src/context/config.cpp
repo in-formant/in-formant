@@ -68,8 +68,8 @@ constexpr bool boolField(toml::node_view<ViewedType> tblNode, const std::string 
 
 fs::path Main::getConfigPath()
 {
-    char cfgdir[MAX_PATH];
-    get_user_config_file(cfgdir, sizeof(cfgdir), "informant");
+    cfgpathchar_t cfgdir[MAX_PATH];
+    get_user_config_file(cfgdir, sizeof(cfgdir) / sizeof(cfgdir[0]), CFGPATHTEXT("informant"));
     if (cfgdir[0] == 0) {
         throw std::runtime_error("ContextManager] Unable to find config path.");
     }
@@ -85,7 +85,13 @@ toml::table Main::getConfigTable()
     fs::create_directories(path.parent_path());
 
     if (fs::exists(path) && fs::is_regular_file(path)) {
-        return toml::parse_file(path.string());
+        std::ifstream ifs(path, std::ios_base::binary);
+#if defined(_WIN32) && defined(UNICODE)
+        const auto pathString = path.wstring();
+#else
+        const auto pathString = path.string();
+#endif
+        return toml::parse(ifs, pathString);
     }
 
     std::cout << "Config not found, using defaults..." << std::endl;

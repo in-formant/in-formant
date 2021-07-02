@@ -409,11 +409,10 @@ if(SYSTEM_DARWIN OR SYSTEM_ANDROID)
 endif()
 
 if(SYSTEM_WINDOWS)
-    target_compile_definitions(in-formant PRIVATE -D_WIN32_WINNT=0x600 -D_USE_MATH_DEFINES -DNOMINMAX)
+    target_compile_definitions(in-formant PRIVATE -D_WIN32_WINNT=0x600 -D_USE_MATH_DEFINES -DNOMINMAX -DUNICODE -DTOML_WINDOWS_COMPAT)
     target_link_libraries(in-formant PRIVATE ntdll dbghelp)
     target_sources(in-formant PRIVATE src/windows_exception_handler.cpp)
-    if(CMAKE_BUILD_TYPE STREQUAL Debug
-            OR CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
+    if(CMAKE_BUILD_TYPE STREQUAL Debug)
         target_compile_definitions(in-formant PRIVATE -DDEBUG_THREAD)
         target_sources(in-formant PRIVATE src/windows_debug.cpp)
     endif()
