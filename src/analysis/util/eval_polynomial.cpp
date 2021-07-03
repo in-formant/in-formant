@@ -5,7 +5,7 @@ rpm::vector<std::complex<double>> Analysis::evaluatePolynomialComplexVector(cons
     rpm::vector<std::complex<double>> y(x.size(), poly[poly.size() - 1]);
 
     for (int i = (int) poly.size() - 2; i >= 0; --i) {
-        for (int k = 0; k < x.size(); ++k) {
+        for (int k = 0; k < (int) x.size(); ++k) {
             y[k] = y[k] * x[k] + poly[i];
         }
     }

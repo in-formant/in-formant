@@ -78,8 +78,6 @@ rpm::vector<double> Synthesis::lfGenFrame(double f0, double Fs, double Rd, doubl
     const double e = state.eps;
 
     rpm::vector<double> glot(period);
-   
-    double posMax = 1e-10;
 
     for (int i = 0; i < period; ++i) {
         double t = (i * T0) / period;

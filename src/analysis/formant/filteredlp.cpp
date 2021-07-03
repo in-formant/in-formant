@@ -1,6 +1,6 @@
 #include "formant.h"
 #include "../util/util.h"
-#include "../util/laguerre.h"
+#include "../util/aberth.h"
 #include "../fft/fft.h"
 #include <algorithm>
 
@@ -8,8 +8,6 @@ using namespace Analysis::Formant;
 using Analysis::FormantResult;
 
 static int cauchyIntegral(const rpm::vector<double>& p, double r1, double r2, double phi, int maxDepth);
-
-static rpm::vector<int> peak_picking(const rpm::vector<double> &nsdf);
 
 FormantResult FilteredLP::solve(const double *lpc, int lpcOrder, double sampleRate)
 {
@@ -34,11 +32,10 @@ FormantResult FilteredLP::solve(const double *lpc, int lpcOrder, double sampleRa
         double r = std::abs(z);
         double phi = std::arg(z);
 
-        if (r >= 0.6 && r < 1.0) {
+        if (r >= 0.6 && r < 1.0
+                && phi > phiDelta && phi < M_PI - phiDelta) {
             FormantData formant = calculateFormant(r, phi, sampleRate);
-            if (formant.frequency > 50.0 && formant.frequency < sampleRate / 2 - 50.0) {
-                pickedRoots.push_back({formant, z});
-            }
+            pickedRoots.push_back({formant, z});
         }
     }
 
@@ -80,15 +77,9 @@ FormantResult FilteredLP::solve(const double *lpc, int lpcOrder, double sampleRa
 
         int n = std::abs(n4 - n3);
 
-        if (n == 2) {
-            rpm::vector<std::complex<double>> pr(polynomial.rbegin(), polynomial.rend());
-            std::complex<double> r1, r2;
-            r1 = Analysis::laguerreRoot(pr, std::polar(0.9, phiPeak), 1e-12);
-            pr = Analysis::laguerreDeflate(pr, r1);
-            r2 = Analysis::laguerreRoot(pr, std::polar(0.9, phiPeak), 1e-12);
-
-            resolvedRoots.push_back(r1);
-            resolvedRoots.push_back(r2);
+        if (n >= 2) {
+            auto extraRoots = Analysis::aberthRootsAroundInitial(polynomial, 0.9, phiPeak, n);
+            resolvedRoots.insert(resolvedRoots.end(), extraRoots.begin(), extraRoots.end());
         }
         else {
             resolvedRoots.push_back(v.r);
@@ -176,7 +167,12 @@ int cauchyIntegral(const rpm::vector<double>& p, double r1, double r2, double ph
 
     rpm::map<double, int> C; // Memoised counts for every value of t encountered.
 
-    rpm::vector<double> initialPartition({0, 0.2, 0.4, 0.6, 0.8, 1.0, 2.0});
+    constexpr int ipc = 7;
+    rpm::vector<double> initialPartition(ipc);
+    for (int i = 0; i < ipc; ++i) {
+        initialPartition[i] = r1 + (r2 - r1) * (double) i / (double) (ipc - 1);
+    }
+
     rpm::vector<double> finalPartition;
     snellCalcPartition(initialPartition, C, p, phi, maxDepth, finalPartition);
 
@@ -215,39 +211,3 @@ int cauchyIntegral(const rpm::vector<double>& p, double r1, double r2, double ph
     return N;
 }
 
-rpm::vector<int> peak_picking(const rpm::vector<double> &nsdf)
-{
-	rpm::vector<int> max_positions{};
-	int pos = 0;
-	int cur_max_pos = 0;
-	int size = (int) nsdf.size();
-
-	while (pos < (size - 1) / 3 && nsdf[pos] > 0)
-		pos++;
-	while (pos < size - 1 && nsdf[pos] <= 0.0)
-		pos++;
-
-	if (pos == 0)
-		pos = 1;
-
-	while (pos < size - 1) {
-		if (nsdf[pos] > nsdf[pos - 1] && nsdf[pos] >= nsdf[pos + 1] &&
-		    (cur_max_pos == 0 || nsdf[pos] > nsdf[cur_max_pos])) {
-			cur_max_pos = pos;
-		}
-		pos++;
-		if (pos < size - 1 && nsdf[pos] <= 0) {
-			if (cur_max_pos > 0) {
-				max_positions.push_back(cur_max_pos);
-				cur_max_pos = 0;
-			}
-			while (pos < size - 1 && nsdf[pos] <= 0.0) {
-				pos++;
-			}
-		}
-	}
-	if (cur_max_pos > 0) {
-		max_positions.push_back(cur_max_pos);
-	}
-	return max_positions;
-}

@@ -12,14 +12,6 @@ IAIF::IAIF(double d)
     lpc = std::make_unique<LP::Burg>();
 }
 
-static void applyWindow(const rpm::vector<double>& w, const rpm::vector<double>& x, rpm::vector<double>& y)
-{
-    y.resize(x.size());
-    for (int i = 0; i < x.size(); ++i) {
-        y[i] = x[i] * w[i];
-    }
-}
-
 static rpm::vector<double> calculateLPC(const rpm::vector<double>& x, const rpm::vector<double>& w, int len, int order, std::unique_ptr<Analysis::LinpredSolver>& lpc)
 {
     static rpm::vector<double> lpcIn;
@@ -39,25 +31,6 @@ static rpm::vector<double> removePreRamp(const rpm::vector<double>& x, int prefl
     return rpm::vector<double>(std::next(x.begin(), preflt), x.end());
 }
 
-inline double G(double x, int L, double alpha)
-{
-    const int N = L - 1;
-    const double k = (x - N / 2.0) / (2 * L * alpha);
-    return expf(-(k * k));
-}
-
-static void calcGaussian(rpm::vector<double>& win, double alpha)
-{
-    const int L = (int) win.size();
-    
-    double Gmh = G(-0.5, L, alpha);
-    double GmhpLpGmhmL = G(-0.5 + L, L, alpha) - G(-0.5 - L, L, alpha);
-
-    for (int n = 0; n < L; ++n) {
-        win[n] = G(n, L, alpha) - (Gmh * (G(n + L, L, alpha) + G(n - L, L, alpha))) / GmhpLpGmhmL;
-    }
-}
-
 InvglotResult IAIF::solve(const double *xData, int length, double sampleRate)
 {
     const int p_gl = 2;
@@ -69,7 +42,7 @@ InvglotResult IAIF::solve(const double *xData, int length, double sampleRate)
     rpm::vector<double> oneMinusD({1.0, -d});
 
     static rpm::vector<double> window;
-    if (window.size() != lpW) {
+    if ((int)window.size() != lpW) {
         window.resize(lpW);
         for (int i = 0; i < lpW; ++i) {
             window[i] = 0.5 - 0.5 * cos((2.0 * M_PI * i) / (double) (length - 1));

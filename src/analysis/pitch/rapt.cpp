@@ -88,7 +88,7 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
 
     rpm::vector<double> s(data, data + length);
     
-    if (s.size() < n + K) {
+    if ((int) s.size() < n + K) {
         s.resize(n + K, 0.0);
     }
 
@@ -96,7 +96,7 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
 
     auto dss = downsampleSignal(s, Fs, Fds);
     
-    if (dss.size() < dsn + dsK2) {
+    if ((int) dss.size() < dsn + dsK2) {
         dss.resize(dsn + dsK2, 0.0);
     }
     
@@ -111,7 +111,7 @@ double RAPT::computeFrame(const double *data, int length, double Fs)
         peaks = findPeaksWithThreshold(nccf, cand_tr, n_cands, false);
     }
 
-    if (frames.size() != nbFrames) {
+    if ((int) frames.size() != nbFrames) {
         Frame defaultFrame = {
             { { vo_bias, false } },
             1e-10,
@@ -212,10 +212,10 @@ rpm::vector<double> RAPT::computePath()
         D[i + 1].resize(frames[i].cands.size());
         ks[i].resize(frames[i].cands.size());
 
-        for (int j = 0; j < frames[i].cands.size(); ++j) {
+        for (int j = 0; j < (int) frames[i].cands.size(); ++j) {
             double min = HUGE_VALF;
-            int kmin;
-            for (int k = 0; k < D[i].size(); ++k) {
+            int kmin = 0;
+            for (int k = 0; k < (int) D[i].size(); ++k) {
                 double val = D[i][k] + i > 0 ? transitionMatrices[i][j][k] : 0.0;
                 if (val < min) {
                     min = val;
@@ -259,7 +259,7 @@ void subtractReferenceMean(rpm::vector<double>& s, int n, int K)
     for (int j = 0; j < n; ++j)
         mu += s[j];
     mu /= (double) n;
-    for (int j = 0; j < s.size(); ++j) 
+    for (int j = 0; j < (int) s.size(); ++j) 
         s[j] -= mu;
 }
 
@@ -278,6 +278,10 @@ rpm::vector<double> downsampleSignal(const rpm::vector<double>& s, const double 
     data.src_ratio = (double) Fds / (double) Fs;
 
     int error = src_simple(&data, SRC_SINC_MEDIUM_QUALITY, 1);
+    
+    if (error) {
+        throw std::runtime_error("Analysis::RAPT] could not downsample signal: " + std::string(src_strerror(error)));
+    }
 
     outFloat.resize(data.output_frames_gen);
 

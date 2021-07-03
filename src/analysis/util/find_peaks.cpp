@@ -34,7 +34,7 @@ static void selectElements(rpm::vector<double> in, rpm::vector<int> indices, rpm
 
 static void selectElements(rpm::vector<int> in, rpm::vector<int> indices, rpm::vector<int>& out)
 {
-    for(int i=0; i<indices.size(); ++i)
+    for(int i=0; i <(int)indices.size(); ++i)
         out.push_back(in[indices[i]]);
 }
 
@@ -136,7 +136,7 @@ rpm::vector<int> Analysis::findPeaks(const double *data, int length, int sign)
         rpm::vector<int> peakLoc(maxPeaks, 0);
         rpm::vector<double> peakMag(maxPeaks, 0.0);
         int cInd = 1;
-        int tempLoc;
+        int tempLoc = 0;
     
         while(ii < len)
         {

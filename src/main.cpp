@@ -1,6 +1,7 @@
 #include "modules/modules.h"
 #include "analysis/analysis.h"
 #include "context/contextmanager.h"
+#include "file_logger.h"
 #include <iostream>
 #include <atomic>
 #include <memory>
@@ -37,8 +38,6 @@ static void signalHandler(int signal) {
     QMetaObject::invokeMethod(qGuiApp, "quit");
 }
 
-int start_logger(const char *app_name);
-
 int Main::argc;
 char **Main::argv;
 
@@ -65,7 +64,7 @@ int main(int argc, char **argv)
     #endif
 #endif
 
-    start_logger("InFormant");
+    openFileLogger("InFormant");
 
     std::signal(SIGTERM, signalHandler);
     std::signal(SIGINT, signalHandler);

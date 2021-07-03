@@ -254,6 +254,10 @@ int PortAudio::captureCallback(
         PaStreamCallbackFlags statusFlags,
         void *userData)
 {
+    (void) output;
+    (void) timeInfo;
+    (void) statusFlags;
+
     auto that = static_cast<PortAudio *>(userData);
 
     that->pushToCaptureBuffer(static_cast<const float *>(input), frameCount);
@@ -271,6 +275,10 @@ int PortAudio::playbackCallback(
         PaStreamCallbackFlags statusFlags,
         void *userData)
 {
+    (void) input;
+    (void) timeInfo;
+    (void) statusFlags;
+    
     auto that = static_cast<PortAudio *>(userData);
 
     that->mPlaybackQueue->pull(static_cast<float *>(output), frameCount);

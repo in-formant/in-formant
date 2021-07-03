@@ -4,21 +4,6 @@
 
 using namespace Module::Audio;
 
-static int wait_for_poll(snd_pcm_t *handle, struct pollfd *ufds, unsigned int count)
-{
-    unsigned short revents;
-
-    while (true) {
-        poll(ufds, count, -1);
-        snd_pcm_poll_descriptors_revents(handle, ufds, count, &revents);
-        if (revents & POLLERR)
-            return -EIO;
-        if (revents & POLLOUT)
-            return 0;
-        usleep(50'000);
-    }
-}
-
 Alsa::Alsa()
     : mDefaultCaptureDevice(Backend::ALSA),
       mDefaultPlaybackDevice(Backend::ALSA),

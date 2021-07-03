@@ -99,7 +99,7 @@ void Pulse::refreshDevices()
         bool found;
         std::string sinkName;
         std::string sourceName;
-    } defArg = { .found = false };
+    } defArg { false, "", "" };
 
     auto opServer = pa_context_get_server_info(
             mContext,
