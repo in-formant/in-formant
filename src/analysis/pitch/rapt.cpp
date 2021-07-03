@@ -2,7 +2,7 @@
 #include "../filter/filter.h"
 #include "rapt.h"
 #include "pitch.h"
-#include <soxr.h>
+#include <samplerate.h>
 #include <cmath>
 #include <algorithm>
 #include <numeric>
@@ -265,22 +265,23 @@ void subtractReferenceMean(rpm::vector<double>& s, int n, int K)
 
 rpm::vector<double> downsampleSignal(const rpm::vector<double>& s, const double Fs, const double Fds)
 {
-    size_t odone, olen = s.size() * Fds / Fs + 0.5;
-
-    rpm::vector<double> out(olen);
-
-    auto ioSpec = soxr_io_spec(SOXR_FLOAT64_I, SOXR_FLOAT64_I);
+    size_t olen = s.size() * Fds / Fs + 0.5;
     
-    soxr_oneshot(Fs, Fds, 1,
-        s.data(), s.size(), nullptr,
-        out.data(), olen, &odone,
-        &ioSpec,
-        nullptr,
-        nullptr);
-    
-    out.resize(odone);
+    rpm::vector<float> sFloat(s.begin(), s.end());
+    rpm::vector<float> outFloat(olen);
 
-    return out;
+    SRC_DATA data;
+    data.data_in = sFloat.data();
+    data.data_out = outFloat.data();
+    data.input_frames = sFloat.size();
+    data.output_frames = olen;
+    data.src_ratio = (double) Fds / (double) Fs;
+
+    int error = src_simple(&data, SRC_SINC_MEDIUM_QUALITY, 1);
+
+    outFloat.resize(data.output_frames_gen);
+
+    return rpm::vector<double>(outFloat.begin(), outFloat.end());
 }
 
 rpm::vector<double> calculateDownsampledNCCF(const rpm::vector<double>& dss, const int dsn, const int dsK1, const int dsK2)

@@ -147,7 +147,17 @@ void ContextManager::analysisThreadLoop()
 {
     while (mAnalysisRunning) {
         mAudioContext->tickAudio();
+        
+#ifdef _WIN32
+        try {
+            mPipeline->processAll();
+        }
+        catch (const std::exception& e) {
+            StdExceptionHandler(e);
+        }
+#else
         mPipeline->processAll();
+#endif
 
         while (mConfig->isPaused() && mAnalysisRunning) {
             std::this_thread::sleep_for(0.5s);
@@ -175,15 +185,14 @@ void ContextManager::datavisThreadLoop()
     rpm::vector<std::complex<double>> wn(frequencies.size());
 
     double maxFrequencySource = 16000;
-    Analysis::RealFFT fft(512);
-    rpm::vector<double> fftFrequencies(fft.getOutputLength());
+    auto fft = std::make_shared<Analysis::RealFFT>(512);
+    rpm::vector<double> fftFrequencies(fft->getOutputLength());
     for (int k = 0; k < fftFrequencies.size(); ++k) {
         fftFrequencies[k] = maxFrequencySource * (double) (k + 1) / (double) fftFrequencies.size();
     }
 
     while (mAnalysisRunning && mSynthesisRunning) {
 #endif // WITHOUT_SYNTH
-
         mDataStore->beginRead();
         
         if (!mDataStore->getSoundTrack().empty()) {
@@ -192,7 +201,7 @@ void ContextManager::datavisThreadLoop()
         if (!mDataStore->getGifTrack().empty()) {
             mDataVisWrapper.setGif(mDataStore->getGifTrack().back(), 8000);
         }
-        
+            
 #ifndef WITHOUT_SYNTH
         if (mSynthWrapper.followPitch()) {
             if (!mDataStore->getPitchTrack().empty()) {
@@ -225,7 +234,7 @@ void ContextManager::datavisThreadLoop()
 #endif // !WITHOUT_SYNTH
 
         mDataStore->endRead();
-        
+            
 #ifndef WITHOUT_SYNTH
         if (mSynthWrapper.enabled()) {
             mSynthesizer->setMasterGain(1.0);
@@ -280,7 +289,16 @@ void ContextManager::startSynthesisThread()
 void ContextManager::synthesisThreadLoop()
 { 
     while (mSynthesisRunning) {
+#ifdef _WIN32
+        try {
+            mPlaybackQueue->pushIfNeeded(mSynthesizer.get());
+        }
+        catch (const std::exception& e) {
+            StdExceptionHandler(e);
+        }
+#else
         mPlaybackQueue->pushIfNeeded(mSynthesizer.get());
+#endif
         std::this_thread::sleep_for(20ms);
     }
 }

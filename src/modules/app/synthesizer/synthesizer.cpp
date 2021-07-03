@@ -310,7 +310,7 @@ void Synthesizer::generateAudio(int requestedLength)
         }
     }
 
-    output = resampler.process(output.data(), (int) output.size());
+    output = resampler.process(output);
 
     surplus.insert(surplus.end(), output.begin(), output.end());
 }

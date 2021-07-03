@@ -2,11 +2,16 @@
 #include "../../../analysis/filter/filter.h"
 #include "../../../synthesis/synthesis.h"
 #include "../../../context/timings.h"
+#include "../../../context/contextmanager.h"
+
+#include "processors/spectrogram.h"
+#include "processors/pitch.h"
+#include "processors/formants.h"
+#include "processors/oscilloscope.h"
 
 #include <cctype>
 #include <chrono>
 #include <iostream>
-#include <soxr.h>
 
 using namespace Module::App;
 
@@ -19,15 +24,15 @@ Pipeline::Pipeline(Module::Audio::Buffer *captureBuffer,
     : mCaptureBuffer(captureBuffer),
       mDataStore(dataStore),
       mConfig(config),
-      mPitchSolver(pitchSolver),
-      mLinpredSolver(linpredSolver),
-      mFormantSolver(formantSolver),
-      mInvglotSolver(invglotSolver),
       mTime(0),
       mThreadRunning(false),
       mStopThread(false),
       mBuffer(16000)
 {
+    mProcessors.push_back(std::make_unique<Processors::Spectrogram>(config, dataStore));
+    mProcessors.push_back(std::make_unique<Processors::Pitch>(config, dataStore, pitchSolver));
+    mProcessors.push_back(std::make_unique<Processors::Formants>(config, dataStore, linpredSolver, formantSolver));
+    mProcessors.push_back(std::make_unique<Processors::Oscilloscope>(config, dataStore, invglotSolver));
 }
 
 Pipeline::~Pipeline()
@@ -44,244 +49,39 @@ Pipeline::~Pipeline()
 void Pipeline::callbackProcessing()
 {
     rpm::vector<double> block;
-    rpm::deque<double> slidingWindow;
+    rpm::vector<double> slidingWindow;
 
     double time = 0;
-    mSpectrogramTime = 0;
-    mPitchTime = 0;
-    mFormantTime = 0;
-    mOscilloscopeTime = 0;
-
-    mSpectrogramHighpassSampleRate = 0;
-    mSpectrogramHold = 1.0;
 
     while (mThreadRunning && !mStopThread) {
-        const double granularity        = mConfig->getAnalysisGranularity()        / 1000;
-
-        const double pitchWindow        = mConfig->getAnalysisPitchWindow()        / 1000;
-        const double formantWindow      = mConfig->getAnalysisFormantWindow()      / 1000;
-        const double oscilloscopeWindow = mConfig->getAnalysisOscilloscopeWindow() / 1000;
-
-        const double pitchSpacing        = mConfig->getAnalysisPitchSpacing()        / 1000;
-        const double formantSpacing      = mConfig->getAnalysisFormantSpacing()      / 1000;
-        const double oscilloscopeSpacing = mConfig->getAnalysisOscilloscopeSpacing() / 1000;
+        const double granularity = mConfig->getAnalysisGranularity() / 1000;
 
         block.resize(granularity * mSampleRate);
         mBuffer.pull(block.data(), (int) block.size());
         
         timer_guard timer(timings::update);
 
-        const double longestWindow = std::max(
-                {granularity, pitchWindow, formantWindow, oscilloscopeWindow});
+        double maxFrameLength = granularity;
+        for (const auto& processor : mProcessors) {
+            const double frameLength = processor->getFrameLength();
+            if (frameLength > maxFrameLength)
+                maxFrameLength = frameLength;
+        }
 
-        slidingWindow.resize(longestWindow * mSampleRate, 0.0);
+        slidingWindow.resize(maxFrameLength * mSampleRate, 0.0);
         std::rotate(slidingWindow.begin(),
                 std::next(slidingWindow.begin(), block.size()),
                 slidingWindow.end());
         std::copy(block.begin(), block.end(), std::prev(slidingWindow.end(), block.size()));
 
-        // Process for spectrogram with the same granularity.
-        const int overlapSamples = granularity * mSampleRate;
-        mSpectrogramTime = time;
-        mSpectrogramOverlap.resize(overlapSamples);
-        std::copy(std::prev(slidingWindow.end(), overlapSamples), slidingWindow.end(),
-                mSpectrogramOverlap.begin());
-
-        processSpectrogram();
-
-        // Process for pitch if needed.
-        if (time - mPitchTime >= pitchSpacing) {
-            const int windowSamples = pitchWindow * mSampleRate;
-            mPitchTime = time;
-            mPitchData.resize(windowSamples);
-            std::copy(std::prev(slidingWindow.end(), windowSamples), slidingWindow.end(),
-                    mPitchData.begin());
-
-            processPitch();
-        }
-
-        // Process for formants if needed.
-        if (time - mFormantTime >= formantSpacing) {
-            const int windowSamples = formantWindow * mSampleRate;
-            mFormantTime = time;
-            mFormantData.resize(windowSamples);
-            std::copy(std::prev(slidingWindow.end(), windowSamples), slidingWindow.end(),
-                    mFormantData.begin());
-
-            processFormants();
-        }
-
-        // Process for oscilloscope if needed.
-        if (time - mOscilloscopeTime >= oscilloscopeSpacing) {
-            const int windowSamples = oscilloscopeWindow * mSampleRate;
-            mOscilloscopeTime = time;
-            mOscilloscopeData.resize(windowSamples);
-            std::copy(std::prev(slidingWindow.end(), windowSamples), slidingWindow.end(),
-                    mOscilloscopeData.begin());
-
-            processOscilloscope();
+        for (auto& processor : mProcessors) {
+            if (processor->canProcess(time)) {
+                processor->process(slidingWindow, mSampleRate, time);
+            }
         }
 
         time += granularity;
     }
-}
-
-void Pipeline::processSpectrogram()
-{
-    timer_guard timer(timings::updateSpectrogram);
-
-    const double fsView = 2 * mConfig->getViewMaxFrequency();
-
-    const int spectrogramSamples = mConfig->getViewFFTSize();
-
-    // Resample.
-    mSpectrogramResampler.setRate(mSampleRate, fsView);
-    auto outOverlap = mSpectrogramResampler.process(mSpectrogramOverlap.data(), (int) mSpectrogramOverlap.size());
-
-    // De-emphasize the very low frequencies.
-    if (mSpectrogramHighpassSampleRate != fsView) {
-        mSpectrogramHighpass = Analysis::butterworthHighpass(8, 60.0, fsView);
-        mSpectrogramHighpassMemory.resize(mSpectrogramHighpass.size(), rpm::vector<double>(2, 0.0));
-    }
-    outOverlap = Synthesis::sosfilter(mSpectrogramHighpass, outOverlap, mSpectrogramHighpassMemory);
-
-    // Sliding window for the spectrogram.
-    mSpectrogramData.resize(spectrogramSamples);
-    std::rotate(mSpectrogramData.begin(),
-            std::next(mSpectrogramData.begin(), outOverlap.size()),
-            mSpectrogramData.end());
-    std::copy(outOverlap.begin(), outOverlap.end(), std::prev(mSpectrogramData.end(), outOverlap.size()));
-
-    // Create the FFT calculator if not already made.
-    int nfft = mConfig->getViewFFTSize();
-    if (!mSpectrogramFFT || mSpectrogramFFT->getInputLength() != nfft) {
-        mSpectrogramFFT = std::make_unique<Analysis::RealFFT>(nfft);
-    }
-
-    auto fftVector = Analysis::fft_n(*mSpectrogramFFT, mSpectrogramData);
-    Eigen::VectorXd spectrum = Eigen::Map<Eigen::VectorXd>(fftVector.data(), fftVector.size());
-
-    double max = spectrum.maxCoeff();
-    mSpectrogramHold = max = std::max(0.995 * mSpectrogramHold + 0.005 * max, max);
-    spectrum /= max;
-
-    mDataStore->beginWrite();
-
-    mDataStore->getSpectrogram().insert(mSpectrogramTime - mSpectrogramData.size() / mSampleRate, {spectrum, fsView});
-
-    mDataStore->endWrite();
-}
-
-void Pipeline::processPitch()
-{
-    timer_guard timer(timings::updatePitch);
-
-    auto pitchResult = mPitchSolver->solve(mPitchData.data(), (int) mPitchData.size(), mSampleRate);
-    
-    mDataStore->beginWrite();
-
-    if (pitchResult.voiced) {
-        mDataStore->getPitchTrack().insert(mPitchTime, pitchResult.pitch);
-    }
-    else {
-        mDataStore->getPitchTrack().insert(mPitchTime, std::nullopt);
-    }
-
-    mDataStore->endWrite();
-}
-
-void Pipeline::processFormants()
-{
-    timer_guard timer(timings::updateFormants);
-
-    constexpr double preemphFrequency = 200;
-    
-    const double preemphFactor = exp(-(2.0 * M_PI * preemphFrequency) / mSampleRate);
-    
-    if (mFormantWindow.size() != mFormantData.size()) {
-        mFormantWindow = Analysis::gaussianWindow((int) mFormantData.size(), 2.5);
-    }
-
-    constexpr double fsLPC = 11000;
-    mFormantResamplerLPC.setRate(mSampleRate, fsLPC);
-
-#ifdef ENABLE_TORCH
-    constexpr double fs16k = 16000;
-    mFormantResampler16k.setRate(mSampleRate, fs16k);
-#endif
-
-    // Preemphasis and windowing.
-    static double lastPreviousSample = 0.0;
-    for (int i = (int) mFormantData.size() - 1; i >= 1; --i) {
-        mFormantData[i] = mFormantWindow[i]
-                            * (mFormantData[i] - preemphFactor * mFormantData[i - 1]);
-    }
-    const double m0 = mFormantData[0];
-    mFormantData[0] = mFormantWindow[0] * (mFormantData[0] - preemphFactor * lastPreviousSample);
-    lastPreviousSample = m0;
-
-    // Resample.
-    auto mLPC = mFormantResamplerLPC.process(mFormantData.data(), (int) mFormantData.size());
-#ifdef ENABLE_TORCH
-    auto m16k = mFormantResampler16k.process(mFormantData.data(), (int) mFormantData.size());
-#endif
-    
-    rpm::vector<double> lpc;
-
-#ifdef ENABLE_TORCH
-    if (auto dfSolver = dynamic_cast<Analysis::Formant::DeepFormants *>(mFormantSolver.get())) {
-        dfSolver->setFrameAudio(m16k);
-        // Pass an empty lpc vector in this case.
-    }
-    else {
-#endif
-        double gain;
-        lpc = mLinpredSolver->solve(mLPC.data(), (int) mLPC.size(), 10, &gain);
-#ifdef ENABLE_TORCH
-    }
-#endif
-
-    auto formantResult = mFormantSolver->solve(lpc.data(), (int) lpc.size(), fsLPC);
-
-    mDataStore->beginWrite();
-
-    for (int i = 0;
-            i < std::min(
-                    mDataStore->getFormantTrackCount(),
-                    (int) formantResult.formants.size());
-            ++i) {
-        const double frequency = formantResult.formants[i].frequency;
-        if (std::isnormal(frequency)) {
-            mDataStore->getFormantTrack(i).insert(mFormantTime, frequency);
-        }
-        else {
-            mDataStore->getFormantTrack(i).insert(mFormantTime, std::nullopt);
-        }
-    }
-    for (int i = (int) formantResult.formants.size(); i < mDataStore->getFormantTrackCount(); ++i) {
-        mDataStore->getFormantTrack(i).insert(mFormantTime, std::nullopt);
-    }
-
-    mDataStore->endWrite();
-}
-
-void Pipeline::processOscilloscope()
-{
-    timer_guard timer(timings::updateOscilloscope);
-
-    constexpr double fsOsc = 8000;
-
-    mOscilloscopeResampler.setRate(mSampleRate, fsOsc);
-
-    auto out = mOscilloscopeResampler.process(mOscilloscopeData.data(), (int) mOscilloscopeData.size());
-    auto invglotResult = mInvglotSolver->solve(out.data(), (int) out.size(), fsOsc);
-
-    mDataStore->beginWrite();
-   
-    mDataStore->getSoundTrack().insert(mOscilloscopeTime, out);
-    mDataStore->getGifTrack().insert(mOscilloscopeTime, invglotResult.glotSig);
-
-    mDataStore->endWrite();
 }
 
 void Pipeline::processAll()

@@ -1,8 +1,6 @@
 #include "fft.h"
 
-static rpm::map<int, rpm::vector<double>> windows;
-
-static const rpm::vector<double>& getWindow(int N) {
+static const rpm::vector<double>& getWindow(rpm::map<int, rpm::vector<double>>& windows, int N) {
     auto wit = windows.find(N);
     if (wit == windows.end()) {
         constexpr double a0 = 0.35875;
@@ -21,41 +19,43 @@ static const rpm::vector<double>& getWindow(int N) {
     return wit->second;
 }
 
-rpm::vector<double> Analysis::fft_n(Analysis::RealFFT& fft, const rpm::vector<double>& signal)
+rpm::vector<double> Analysis::fft_n(std::shared_ptr<Analysis::RealFFT> fft, const rpm::vector<double>& signal)
 {
-    const int nfft = fft.getInputLength();
+    static rpm::map<int, rpm::vector<double>> windows;
+
+    const int nfft = fft->getInputLength();
     const int n = (int) signal.size();
 
     if (n <= nfft) {
         for (int i = 0; i < nfft; ++i) {
-            fft.input(i) = 0.0;
+            fft->input(i) = 0.0;
         }
 
-        auto w = getWindow(n);
+        auto w = getWindow(windows, n);
 
         for (int j = 0; j < n; ++j) {
             double sample = signal[j];
 
-            fft.input(j) = sample * w[j];
+            fft->input(j) = sample * w[j];
         }
     }
     else {
-        auto w = getWindow(nfft);
+        auto w = getWindow(windows, nfft);
         
         for (int j = 0; j < nfft; ++j) {
             int i = n / 2 - nfft / 2 + j;
             
             double sample = signal[i];
 
-            fft.input(j) = sample * w[j];
+            fft->input(j) = sample * w[j];
         }
     }
 
-    fft.computeForward();
+    fft->computeForward();
 
-    rpm::vector<double> h(fft.getOutputLength());
-    for (int k = 0; k < fft.getOutputLength(); ++k) {
-        h[k] = std::abs(fft.output(k) * std::conj(fft.output(k)));
+    rpm::vector<double> h(fft->getOutputLength());
+    for (int k = 0; k < fft->getOutputLength(); ++k) {
+        h[k] = std::abs(fft->output(k) * std::conj(fft->output(k)));
     }
     return h;
 }

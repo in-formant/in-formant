@@ -8,13 +8,14 @@
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/dist/in-formant.exe",
+            "program": "${workspaceFolder}/build/in-formant.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [
                 {"name": "ASAN_OPTIONS", "value": " halt_on_error=0:windows_hook_rtl_allocators=true"},
-                {"name": "QT_DEBUG_PLUGINS", "value": "1"}
+                {"name": "QT_DEBUG_PLUGINS", "value": "0"},
+                {"name": "GL_DEBUG_OUTPUT", "value": "0"}
             ]
         }
     ]

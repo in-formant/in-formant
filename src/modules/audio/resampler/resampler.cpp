@@ -1,6 +1,5 @@
 #include "resampler.h"
-#include "CDSPFIRFilter.h"
-#include <math.h>
+#include <cmath>
 #include <string>
 #include <cmath>
 #include <cstring>
@@ -12,17 +11,19 @@
 using namespace Module::Audio;
 
 std::atomic_int Resampler::sId(0);
-rpm::map<std::pair<int, int>, int> Resampler::sInLenBeforeOutStart;
 
 Resampler::Resampler(int inRate)
     : mId(sId++),
+      mSrc(nullptr),
       mInRate(inRate),
       mOutRate(0)
 {
+    setupResampler();
 }
 
 Resampler::Resampler(int inRate, int outRate)
     : mId(sId++),
+      mSrc(nullptr),
       mInRate(inRate),
       mOutRate(outRate)
 {
@@ -37,7 +38,6 @@ void Resampler::setInputRate(int newInRate)
 {
     if (mInRate != newInRate) {
         mInRate = newInRate;
-        updateRatio();
     }
 }
 
@@ -45,7 +45,6 @@ void Resampler::setOutputRate(int newOutRate)
 {
     if (mOutRate != newOutRate) {
         mOutRate = newOutRate;
-        updateRatio();
     }
 }
 
@@ -54,7 +53,6 @@ void Resampler::setRate(int newInRate, int newOutRate)
     if (mInRate != newInRate || mOutRate != newOutRate) {
         mInRate = newInRate;
         mOutRate = newOutRate;
-        updateRatio();
     }
 }
 
@@ -89,62 +87,42 @@ int Resampler::getExpectedOutLength(int inLength) const
         return 0;
     }
 
-    return (int) (inLength * mOutRate / mInRate + 0.5);
+    return (int) ((double) inLength * mOutRate / mInRate + 0.5);
 }
 
-double Resampler::getLatency() const
+rpm::vector<double> Resampler::process(const rpm::vector<double>& inDouble)
 {
-    return mResampler->getLatency() + mResampler->getLatencyFrac();
-}
+    rpm::vector<float> in(inDouble.begin(), inDouble.end());
+    rpm::vector<float> out(getExpectedOutLength(in.size()));
 
-void Resampler::clear()
-{
-    mResampler->clear();
+    SRC_DATA data;
+    data.data_in = in.data();
+    data.data_out = out.data();
+    data.input_frames = in.size();
+    data.output_frames = out.size();
+    data.src_ratio = (double) mOutRate / (double) mInRate;
+    data.end_of_input = 0;
 
-    const int len = getInLenBeforeOutStart(mInRate, mOutRate, *mResampler);
-    double *op;
-    rpm::vector<double> in(len, 0.0);
-    mResampler->process(in.data(), len, op);
-}
+    int error = src_process(mSrc, &data);
 
-rpm::vector<double> Resampler::process(const double *pIn, int inLength)
-{
-    rpm::vector<double> in(&pIn[0], &pIn[inLength]);
-    double *op;
-    int outLength = mResampler->process(in.data(), inLength, op);
+    if (error != 0) {
+        throw std::runtime_error("Audio::Resampler#" + std::to_string(mId) + "] " + src_strerror(error));
+    }
 
-    return rpm::vector<double>(&op[0], &op[outLength]);
-}
+    out.resize(data.output_frames_gen);
 
-void Resampler::updateRatio()
-{
-    setupResampler();
-    std::cout << "Audio::Resampler#" << mId << "] Created " << mInRate << " --> " << mOutRate << std::endl;
+    return rpm::vector<double>(out.begin(), out.end());
 }
 
 void Resampler::setupResampler()
 {
-    double resTransBand = (mOutRate < 6000 ? 20.0 : 10.0);
+    int error;
 
-    mResampler = std::make_unique<r8b::CDSPResampler>(mInRate, mOutRate, 65536, resTransBand, 206.91, r8b::fprLinearPhase);
+    mSrc = src_new(SRC_SINC_MEDIUM_QUALITY, 1, &error);
 
-    const int len = getInLenBeforeOutStart(mInRate, mOutRate, *mResampler);
-    double *op;
-    rpm::vector<double> in(len, 0.0);
-    mResampler->process(in.data(), len, op);
-}
-
-int Resampler::getInLenBeforeOutStart(int src, int dst, r8b::CDSPResampler& resampler)
-{
-    auto key = std::make_pair(src, dst);
-    auto it = sInLenBeforeOutStart.find(key);
-    int inLen;
-    if (it != sInLenBeforeOutStart.end()) {
-        inLen = it->second;
+    if (error != 0) {
+        throw std::runtime_error("Audio::Resampler#" + std::to_string(mId) + "] " + src_strerror(error));
     }
-    else {
-        inLen = resampler.getInLenBeforeOutStart();
-        sInLenBeforeOutStart[key] = inLen;
-    }
-    return inLen;
+
+    std::cout << "Audio::Resampler#" << mId << "] Created " << mInRate << " --> " << mOutRate << std::endl;
 }

@@ -7,7 +7,6 @@ rpm::vector<double> Autocorr::solve(const double *data, int length, int lpcOrder
     const int n = length;
     const int m = lpcOrder;
 
-    static rpm::vector<double> r, a, rc;
     r.resize(1 + (m + 1));
     a.resize(1 + (m + 1));
     rc.resize(1 + (m));

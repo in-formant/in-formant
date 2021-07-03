@@ -1,9 +1,0 @@
-[submodule "greenffts"]
-	path = greenffts
-	url = https://github.com/hayguen/greenffts.git
-[submodule "kissfft"]
-	path = kissfft
-	url = https://github.com/hayguen/kissfft.git
-[submodule "pocketfft"]
-	path = pocketfft
-	url = https://github.com/hayguen/pocketfft.git

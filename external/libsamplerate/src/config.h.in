@@ -1,0 +1,152 @@
+/* src/config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* Set to 1 if the compile is GNU GCC. */
+#cmakedefine01 COMPILER_IS_GCC
+
+/* Target processor clips on negative float to int conversion. */
+#cmakedefine01 CPU_CLIPS_NEGATIVE
+
+/* Target processor clips on positive float to int conversion. */
+#cmakedefine01 CPU_CLIPS_POSITIVE
+
+/* Target processor is big endian. */
+#cmakedefine01 CPU_IS_BIG_ENDIAN
+
+/* Target processor is little endian. */
+#cmakedefine01 CPU_IS_LITTLE_ENDIAN
+
+/* Major version of GCC or 3 otherwise. */
+/* #undef GCC_MAJOR_VERSION */
+
+/* Define to 1 if you have the `alarm' function. */
+#cmakedefine01 HAVE_ALARM
+
+/* Define to 1 if you have the <alsa/asoundlib.h> header file. */
+#cmakedefine01 HAVE_ALSA_ASOUNDLIB_H
+
+/* Define to 1 if you have the `calloc' function. */
+#cmakedefine01 HAVE_CALLOC
+
+/* Define to 1 if you have the `ceil' function. */
+#cmakedefine01 HAVE_CEIL
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#cmakedefine01 HAVE_DLFCN_H
+
+/* Set to 1 if you have libfftw3. */
+#cmakedefine01 HAVE_FFTW3
+
+/* Define to 1 if you have the `floor' function. */
+#cmakedefine01 HAVE_FLOOR
+
+/* Define to 1 if you have the `fmod' function. */
+#cmakedefine01 HAVE_FMOD
+
+/* Define to 1 if you have the `free' function. */
+#cmakedefine01 HAVE_FREE
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#cmakedefine01 HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `m' library (-lm). */
+#cmakedefine01 HAVE_LIBM
+
+/* Define if you have C99's lrint function. */
+#cmakedefine01 HAVE_LRINT
+
+/* Define if you have C99's lrintf function. */
+#cmakedefine01 HAVE_LRINTF
+
+/* Define to 1 if you have the `malloc' function. */
+#cmakedefine01 HAVE_MALLOC
+
+/* Define to 1 if you have the `memcpy' function. */
+#cmakedefine01 HAVE_MEMCPY
+
+/* Define to 1 if you have the `memmove' function. */
+#cmakedefine01 HAVE_MEMMOVE
+
+/* Define to 1 if you have the <memory.h> header file. */
+#cmakedefine01 HAVE_MEMORY_H
+
+/* Define if you have signal SIGALRM. */
+#cmakedefine01 HAVE_SIGALRM
+
+/* Define to 1 if you have the `signal' function. */
+#cmakedefine01 HAVE_SIGNAL
+
+/* Set to 1 if you have libsndfile. */
+#cmakedefine01 HAVE_SNDFILE
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#cmakedefine01 HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#cmakedefine01 HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#cmakedefine01 HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#cmakedefine01 HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#cmakedefine01 HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/times.h> header file. */
+#cmakedefine01 HAVE_SYS_TIMES_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#cmakedefine01 HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#cmakedefine01 HAVE_UNISTD_H
+
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
+#cmakedefine01 LT_OBJDIR
+
+/* Set to 1 if compiling for Win32 */
+#cmakedefine01 OS_IS_WIN32
+
+/* Name of package */
+#cmakedefine PACKAGE "@PACKAGE@"
+
+/* Define to the address where bug reports for this package should be sent. */
+#cmakedefine PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
+
+/* Define to the full name of this package. */
+#cmakedefine PACKAGE_NAME "@PACKAGE_NAME@"
+
+/* Define to the full name and version of this package. */
+#cmakedefine PACKAGE_STRING "@PACKAGE_STRING@"
+
+/* Define to the one symbol short name of this package. */
+#cmakedefine PACKAGE_TARNAME "@PACKAGE_TARNAME@"
+
+/* Define to the home page for this package. */
+#cmakedefine PACKAGE_URL "@PACKAGE_URL@"
+
+/* Define to the version of this package. */
+#cmakedefine PACKAGE_VERSION "@PACKAGE_VERSION@"
+
+/* The size of `double', as computed by sizeof. */
+#cmakedefine01 SIZEOF_DOUBLE
+
+/* The size of `float', as computed by sizeof. */
+#cmakedefine01 SIZEOF_FLOAT
+
+/* The size of `int', as computed by sizeof. */
+#cmakedefine01 SIZEOF_INT
+
+/* The size of `long', as computed by sizeof. */
+#cmakedefine01 SIZEOF_LONG
+
+/* Define to 1 if you have the ANSI C header files. */
+#cmakedefine01 STDC_HEADERS
+
+/* Version number of package */
+#cmakedefine VERSION "@VERSION@"
+
+#ifdef _MSC_VER
+#define inline __inline
+#endif

@@ -19,6 +19,12 @@
 #define STR(arg) STR_(arg)
 #define INFORMANT_VERSION_STR STR(INFORMANT_VERSION)
 
+#ifdef _WIN32
+#include <windows.h>
+LONG WINAPI TopLevelExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo);
+void StdExceptionHandler(const std::exception& e);
+#endif
+
 namespace Main {
 
     using namespace Module;

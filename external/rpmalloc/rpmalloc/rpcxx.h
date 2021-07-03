@@ -22,6 +22,7 @@
 
 namespace rpm {
 
+/*
 #ifndef __APPLE__
     template<typename T>
     using allocator = rpm::aligned_new_allocator<T>;
@@ -29,6 +30,10 @@ namespace rpm {
     template<typename T>
     using allocator = rpm::new_allocator<T>;
 #endif
+*/
+
+    template<typename T>
+    using allocator = std::allocator<T>;
 
     template<typename T>
     using vector = std::vector<T, rpm::allocator<T>>;

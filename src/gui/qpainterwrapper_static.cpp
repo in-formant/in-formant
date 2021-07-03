@@ -119,7 +119,7 @@ void QPainterWrapper::drawSpectrogram(const rpm::vector<std::pair<double, Main::
         for (int ioff = 0; ioff < sliceCount; ++ioff) {
             const auto& slice = slices[firstSliceIndexToRender + ioff].second;
             const auto& fftData = slice.magnitudes;
-            const int nfft = fftData.size();
+            const int nfft = (int) fftData.size();
             const double sampleRate = slice.sampleRate;
 
             int index;
@@ -135,10 +135,10 @@ void QPainterWrapper::drawSpectrogram(const rpm::vector<std::pair<double, Main::
 
             for (int k = 0; k < nfft; ++k) {
                 if (ioff < sliceCount1) {
-                    data1[k * sliceCount + ioff] = fftData(k);
+                    data1[k * sliceCount + ioff] = fftData[k];
                 }
                 else {
-                    data2[k * sliceCount + (ioff - sliceCount1)] = fftData(k);
+                    data2[k * sliceCount + (ioff - sliceCount1)] = fftData[k];
                 }
             }
         }

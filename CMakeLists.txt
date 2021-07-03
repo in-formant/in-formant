@@ -53,11 +53,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(MSVC)
-    set(CMAKE_C_FLAGS_DEBUG           "/Od /DEBUG /Zi /fsanitize=address")
+    set(CMAKE_C_FLAGS "/MT /EHsc")
+    set(CMAKE_CXX_FLAGS "/MT /EHsc")
+    set(CMAKE_C_FLAGS_DEBUG           "/Od /DEBUG /Zi /RTCsu")
     set(CMAKE_C_FLAGS_RELEASE         "/O2y -DNDEBUG")
     set(CMAKE_C_FLAGS_RELWITHDEBINFO  "/O2y /DEBUG /Zi")
     set(CMAKE_C_FLAGS_MINSIZEREL      "/Os -DNDEBUG")
-    set(CMAKE_CXX_FLAGS_DEBUG           "/Od /DEBUG /Zi /fsanitize=address")
+    set(CMAKE_CXX_FLAGS_DEBUG           "/Od /DEBUG /Zi /RTCsu")
     set(CMAKE_CXX_FLAGS_RELEASE         "/O2y -DNDEBUG")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/O2y /DEBUG /Zi")
     set(CMAKE_CXX_FLAGS_MINSIZEREL      "/Os -DNDEBUG")
@@ -73,8 +75,6 @@ else()
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g")
     set(CMAKE_CXX_FLAGS_MINSIZEREL      "-Os -g0 -DNDEBUG")
 endif()
-
-
 
 set(CMAKE_ENABLE_EXPORTS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -128,6 +128,16 @@ set(SOURCES
     src/modules/audio/resampler/resampler.cpp
     src/modules/audio/resampler/resampler.h
     src/modules/audio/audio.h
+    src/modules/app/pipeline/processors/base.cpp
+    src/modules/app/pipeline/processors/base.h
+    src/modules/app/pipeline/processors/formants.cpp
+    src/modules/app/pipeline/processors/formants.h
+    src/modules/app/pipeline/processors/oscilloscope.cpp
+    src/modules/app/pipeline/processors/oscilloscope.h
+    src/modules/app/pipeline/processors/pitch.cpp
+    src/modules/app/pipeline/processors/pitch.h
+    src/modules/app/pipeline/processors/spectrogram.cpp
+    src/modules/app/pipeline/processors/spectrogram.h
     src/modules/app/pipeline/pipeline.cpp
     src/modules/app/pipeline/pipeline.h
     src/modules/app/synthesizer/synthesizer.cpp
@@ -332,12 +342,9 @@ set(BUILD_SHARED_LIBS)
 add_subdirectory(external/rpmalloc EXCLUDE_FROM_ALL)
 target_link_libraries(in-formant PRIVATE rpcxx_only)
 
-add_subdirectory(external/soxr EXCLUDE_FROM_ALL)
-target_link_libraries(in-formant PRIVATE soxr)
-target_include_directories(in-formant PRIVATE external/soxr/src)
-
-target_sources(in-formant PRIVATE external/r8brain-free-src/r8bbase.cpp)
-target_include_directories(in-formant PRIVATE external/r8brain-free-src)
+add_subdirectory(external/libsamplerate)
+target_link_libraries(in-formant PRIVATE lsr)
+target_include_directories(in-formant PRIVATE external/libsamplerate/src)
 
 target_compile_definitions(in-formant PRIVATE
     -DINFORMANT_VERSION=${CUR_VERSION} -DARMA_DONT_USE_WRAPPER
@@ -409,7 +416,7 @@ if(SYSTEM_DARWIN OR SYSTEM_ANDROID)
 endif()
 
 if(SYSTEM_WINDOWS)
-    target_compile_definitions(in-formant PRIVATE -D_WIN32_WINNT=0x600 -D_USE_MATH_DEFINES -DNOMINMAX -DUNICODE -DTOML_WINDOWS_COMPAT)
+    target_compile_definitions(in-formant PRIVATE -D_WIN32_WINNT=0x600 -D_USE_MATH_DEFINES -DNOMINMAX -DUNICODE -DTOML_WINDOWS_COMPAT -D_CRT_SECURE_NO_WARNINGS)
     target_link_libraries(in-formant PRIVATE ntdll dbghelp)
     target_sources(in-formant PRIVATE src/windows_exception_handler.cpp)
     if(CMAKE_BUILD_TYPE STREQUAL Debug)
@@ -440,24 +447,15 @@ if(SYSTEM_ANDROID)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fuse-ld=lld")
 endif()
 
-if(SYSTEM_DARWIN)
-    target_compile_definitions(in-formant PRIVATE -DGABORATOR_USE_VDSP)
-else()
-    set(USE_TYPE_FLOAT ON)
-    set(USE_TYPE_DOUBLE ON)
-    set(USE_BENCH_FFTW OFF)
-    set(USE_BENCH_GREEN OFF)
-    set(USE_BENCH_KISS OFF)
-    set(USE_BENCH_POCKET OFF)
-    add_subdirectory(external/pffft EXCLUDE_FROM_ALL)
-    target_include_directories(in-formant PRIVATE external/pffft)
-    target_link_libraries(in-formant PRIVATE PFFFT FFTPACK)
-    target_compile_definitions(in-formant PRIVATE -DGABORATOR_USE_PFFFT)
-endif()
-
 if(WITH_PROFILER)
     pkg_check_modules(lprof REQUIRED libprofiler)
     target_include_directories(in-formant PRIVATE ${lprof_INCLUDE_DIRS})
     target_link_libraries(in-formant PRIVATE ${lprof_LIBRARIES})
     target_compile_definitions(in-formant PRIVATE -DWITH_PROFILER)
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo
+        OR CMAKE_BUILD_TYPE STREQUAL Debug)
+    #target_link_options(in-formant PRIVATE "-fsanitize=address")
+    #target_compile_options(in-formant PRIVATE "-fsanitize=address")
 endif()

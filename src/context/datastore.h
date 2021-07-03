@@ -19,7 +19,7 @@ enum class FrequencyScale : unsigned int {
 namespace Main {
 
     struct SpectrogramCoefs {
-        Eigen::VectorXd magnitudes;
+        rpm::vector<double> magnitudes;
         double sampleRate;
     };
 

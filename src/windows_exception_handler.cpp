@@ -1,3 +1,4 @@
+#include <exception>
 #include <excpt.h>
 #ifdef _WIN32
 
@@ -216,9 +217,27 @@ LONG WINAPI TopLevelExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
     }
 
     MessageBoxW(nullptr, ss.str().c_str(), L"InFormant: unhandled exception", MB_OK | MB_ICONSTOP);
+
     exit(EXIT_FAILURE);
 
     return EXCEPTION_EXECUTE_HANDLER;
 }
+
+void StdExceptionHandler(const std::exception& e)
+{
+    std::wstringstream ss;
+
+    ss << "Exception: " << e.what() << std::endl << std::endl;
+    
+    CONTEXT context;
+    RtlCaptureContext(&context);
+    
+    windows_print_stacktrace(ss, &context);
+
+    MessageBoxW(nullptr, ss.str().c_str(), L"InFormant: caught exception", MB_OK | MB_ICONSTOP);
+
+    exit(EXIT_FAILURE);
+}
+
 
 #endif // _WIN32

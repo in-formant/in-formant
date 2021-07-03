@@ -2,6 +2,7 @@
 #include "../context/timings.h"
 #include "../context/rendercontext.h"
 #include "qpainterwrapper.h"
+#include <cstdlib>
 #include <iostream>
 #include <cmath>
 #include <QQuickWindow>
@@ -26,16 +27,19 @@ void CanvasRenderer::initialize(Main::RenderContext *renderContext)
     initializeOpenGLFunctions();
 
 #ifdef GL_DEBUG_OUTPUT
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback([](GLenum source,
-                                GLenum type,
-                                GLuint id,
-                                GLenum severity,
-                                GLsizei length,
-                                const GLchar *message,
-                                const void *userParam) {
-                                    std::cout << message << std::endl;
-                                }, nullptr);
+    const char *glDebugEnv = std::getenv("GL_DEBUG_OUTPUT");
+    if (glDebugEnv != nullptr && strcmp(glDebugEnv, "1") == 0) {
+        glEnable(GL_DEBUG_OUTPUT);
+        glDebugMessageCallback([](GLenum source,
+                                    GLenum type,
+                                    GLuint id,
+                                    GLenum severity,
+                                    GLsizei length,
+                                    const GLchar *message,
+                                    const void *userParam) {
+                                        std::cout << message << std::endl;
+                                    }, nullptr);
+    }
 #endif
 
     mDevicePixelRatio = 1.0;

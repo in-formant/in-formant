@@ -4,6 +4,7 @@
 #include "rpcxx.h"
 #include <fftw3.h>
 #include <complex>
+#include <memory>
 #include <QMutex>
 
 #if defined(EMSCRIPTEN)
@@ -109,7 +110,7 @@ namespace Analysis
         fftw_complex *mData;
     };
 
-    rpm::vector<double> fft_n(Analysis::RealFFT& fft, const rpm::vector<double>& signal);
+    rpm::vector<double> fft_n(std::shared_ptr<Analysis::RealFFT> fft, const rpm::vector<double>& signal);
 }
 
 #endif // ANALYSIS_FFT_H

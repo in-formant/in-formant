@@ -54,7 +54,7 @@ void Queue::pushIfNeeded(void *userdata)
     rpm::vector<double> blockSrc(blockSizeSrc);
     mCallback(blockSrc.data(), blockSizeSrc, userdata);
    
-    rpm::vector<double> blockDst = mResampler.process(blockSrc.data(), blockSizeSrc);
+    rpm::vector<double> blockDst = mResampler.process(blockSrc);
     for (const double& y : blockDst) {
         mQueue.emplace((float) y);
     }

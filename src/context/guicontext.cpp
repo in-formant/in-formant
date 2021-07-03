@@ -4,6 +4,7 @@
 #include "qsurfaceformat.h"
 #include "rendercontext.h"
 #include <QQmlContext>
+#include <excpt.h>
 #include <iostream>
 #include <chrono>
 
@@ -119,4 +120,3 @@ void GuiContext::setShowFormants(bool b)
 {
     mConfig->setViewShowFormants(b);
 }
-

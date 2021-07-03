@@ -2,7 +2,7 @@
 #define AUDIO_RESAMPLER_H
 
 #include "rpcxx.h"
-#include <CDSPResampler.h>
+#include <samplerate.h>
 #include <atomic>
 
 namespace Module::Audio {
@@ -28,10 +28,7 @@ namespace Module::Audio {
         int getRequiredInLength(int outLength) const;
         int getExpectedOutLength(int inLength) const;
 
-        double getLatency() const;
-
-        void clear();
-        rpm::vector<double> process(const double *pIn, int inLength);
+        rpm::vector<double> process(const rpm::vector<double>& in);
 
     private:
         void updateRatio();
@@ -39,13 +36,10 @@ namespace Module::Audio {
         
         int mId;
 
-        std::unique_ptr<r8b::CDSPResampler> mResampler;
+        SRC_STATE *mSrc;
         int mInRate, mOutRate;
 
         static std::atomic_int sId;
-
-        static int getInLenBeforeOutStart(int src, int dst, r8b::CDSPResampler& resampler);
-        static rpm::map<std::pair<int, int>, int> sInLenBeforeOutStart;
     };
 
 }

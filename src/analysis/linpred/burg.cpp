@@ -7,9 +7,11 @@ static double vecBurgBuffered(
         double *lpc,
         const int m,
         const double *data,
-        const int n)
+        const int n,
+        rpm::vector<double>& b1,
+        rpm::vector<double>& b2,
+        rpm::vector<double>& aa)
 {
-    static rpm::vector<double> b1, b2, aa;
     b1.resize(1 + (n));
     b2.resize(1 + (n));
     aa.resize(1 + (m));
@@ -71,7 +73,7 @@ rpm::vector<double> Burg::solve(const double *x, int length, int lpcOrder, doubl
     const int n = length;
     const int m = lpcOrder;
     rpm::vector<double> lpc(m);
-    double gain = vecBurgBuffered(lpc.data(), m, x, n);
+    double gain = vecBurgBuffered(lpc.data(), m, x, n, b1, b2, aa);
     if (gain <= 0.0) {
         lpc.resize(0);
         gain = 1e-10;

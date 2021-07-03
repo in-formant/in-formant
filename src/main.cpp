@@ -45,8 +45,6 @@ char **Main::argv;
 std::unique_ptr<Main::ContextManager> Main::contextManager;
 
 #ifdef _WIN32
-#include <windows.h>
-LONG WINAPI TopLevelExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo);
 #ifdef DEBUG_THREAD
 void windowsDebugCallback(std::future<void> future);
 #endif
