@@ -4,7 +4,6 @@
 #include "qsurfaceformat.h"
 #include "rendercontext.h"
 #include <QQmlContext>
-#include <excpt.h>
 #include <iostream>
 #include <chrono>
 

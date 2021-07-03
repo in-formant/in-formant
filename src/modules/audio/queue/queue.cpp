@@ -1,6 +1,7 @@
 #include "queue.h"
 #include <iostream>
 #include <memory>
+#include <cmath>
 
 using namespace Module::Audio;
 

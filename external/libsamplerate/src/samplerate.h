@@ -24,6 +24,8 @@ extern "C" {
 #else
 #define DLL __declspec(dllimport)
 #endif
+#elif __GNUC__
+#define DLL __attribute__((visibility("default")))
 #else
 #define DLL
 #endif

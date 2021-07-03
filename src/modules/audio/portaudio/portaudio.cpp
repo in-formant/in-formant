@@ -1,5 +1,6 @@
 #include "portaudio.h"
 #include <iostream>
+#include <cmath>
 
 using namespace Module::Audio;
 
