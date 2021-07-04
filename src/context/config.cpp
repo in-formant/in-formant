@@ -173,9 +173,11 @@ void Config::setLinpredAlgorithm(int alg)
 
 FormantAlgorithm Config::getFormantAlgorithm(bool internal)
 {
+#ifndef ENABLE_TORCH
     if (!internal && getFormantAlgorithm(true) == FormantAlgorithm::Deep) {
         setFormantAlgorithm(FormantAlgorithm::Filtered);
     }
+#endif
     return enumField(mTbl["solvers"], "formant", FormantAlgorithm::Filtered);
 }
 

@@ -12,6 +12,10 @@
 #include <atomic>
 #include <thread>
 
+#ifdef ENABLE_TORCH
+#include "../analysis/formant/deepformants/df.h"
+#endif
+
 #include "synthwrapper.h"
 #include "dataviswrapper.h"
 
@@ -72,6 +76,10 @@ namespace Main {
         std::shared_ptr<Analysis::LinpredSolver> mLinpredSolver;
         std::shared_ptr<Analysis::FormantSolver> mFormantSolver;
         std::shared_ptr<Analysis::InvglotSolver> mInvglotSolver;
+
+#ifdef ENABLE_TORCH
+        DFModelHolder *mDfModelHolder;
+#endif
         
         std::unique_ptr<Audio::Buffer> mCaptureBuffer;
         std::unique_ptr<Audio::Queue> mPlaybackQueue;

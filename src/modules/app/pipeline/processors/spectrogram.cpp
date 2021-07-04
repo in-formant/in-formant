@@ -39,10 +39,10 @@ void Spectrogram::processData(const rpm::vector<double>& overlap, double sampleR
 
     // Create the FFT processor.
     if (!mFFT || mFFT->getInputLength() != fftSamples) {
-        mFFT = std::make_shared<Analysis::RealFFT>(fftSamples);
+        mFFT = std::make_unique<Analysis::RealFFT>(fftSamples);
     }
 
-    auto fftVector = Analysis::fft_n(mFFT, mData);
+    auto fftVector = Analysis::fft_n(mFFT.get(), mData, mFFTWindowCache);
 
     double max = 0;
     for (const double& x : fftVector) {

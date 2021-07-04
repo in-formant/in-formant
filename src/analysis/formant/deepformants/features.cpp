@@ -5,35 +5,22 @@
 
 using namespace Eigen;
 
-static int sDctN = 0;
-static std::unique_ptr<Analysis::ReReFFT> sDct;
-
-static int sFft1N = 0;
-static std::unique_ptr<Analysis::RealFFT> sFft1;
-
-static int sFft2N = 0;
-static std::unique_ptr<Analysis::RealFFT> sFft2;
-
 template<typename Derived>
 static ArrayXd dct(const ArrayBase<Derived>& x, int trunc)
 {
     const int N = x.size();
     
-    if (sDctN != N) {
-        sDctN = N;
-        sDct = std::make_unique<Analysis::ReReFFT>(N, FFTW_REDFT10);
-    }
-    auto& dct = *sDct;
+    auto dct = DFModelHolder::instance()->dct(N);
 
     for (int i = 0; i < N; ++i) {
-        dct.data(i) = x(i);
+        dct->data(i) = x(i);
     }
-    dct.compute();
+    dct->compute();
 
     ArrayXd out(trunc);
-    out(0) = dct.data(0) / sqrt(4 * N);
+    out(0) = dct->data(0) / sqrt(4 * N);
     for (int i = 1; i < trunc; ++i) {
-        out(i) = dct.data(i);
+        out(i) = dct->data(i);
     }
     return out;
 }
@@ -43,35 +30,31 @@ static ArrayXd feature_periodogram(const ArrayBase<Derived>& x, int nfft)
 {
     const int N = x.size();
 
-    if (sFft1N != nfft) {
-        sFft1N = nfft;
-        sFft1 = std::make_unique<Analysis::RealFFT>(nfft);
-    }
-    auto& fft = *sFft1;
+    auto fft = DFModelHolder::instance()->fft1(nfft);
     
     if (N < nfft) {
         for (int i = 0; i < nfft; ++i)
-            fft.input(i) = 0.0;
+            fft->input(i) = 0.0;
         for (int i = 0; i < N; ++i) 
-            fft.input(nfft / 2 - N / 2 + i) = x(i);
+            fft->input(nfft / 2 - N / 2 + i) = x(i);
     }
     else if (N > nfft) {
         for (int i = 0; i < nfft; ++i) {
-            fft.input(i) = x(N / 2 - nfft / 2 + i);
+            fft->input(i) = x(N / 2 - nfft / 2 + i);
         }
     }
     else {
         for (int i = 0; i < nfft; ++i) {
-            fft.input(i) = x(i);
+            fft->input(i) = x(i);
         }
     }
 
-    fft.computeForward();
+    fft->computeForward();
 
-    int outLength = fft.getOutputLength();
+    int outLength = fft->getOutputLength();
     ArrayXd out(outLength);
     for (int i = 0; i < outLength; ++i) {
-        double px = std::abs(fft.output(i));
+        double px = std::abs(fft->output(i));
         out(i) = (px * px) / N;
     }
     return out;
@@ -87,24 +70,20 @@ static ArrayXd feature_arspec(const ArrayBase<Derived>& x, int order, int nfft)
         xv[i] = x(i);
     auto a = lpc.solve(xv.data(), xv.size(), order, &e);
 
-    if (sFft2N != nfft) {
-        sFft2N = nfft;
-        sFft2 = std::make_unique<Analysis::RealFFT>(nfft);
-    }
-    auto& fft = *sFft2;
+    auto fft = DFModelHolder::instance()->fft2(nfft);
 
-    fft.input(0) = 1.0;
+    fft->input(0) = 1.0;
     for (int i = 1; i <= a.size(); ++i) 
-        fft.input(i) = a[i - 1];
+        fft->input(i) = a[i - 1];
     for (int i = a.size() + 1; i < nfft; ++i)
-        fft.input(i) = 0.0; 
+        fft->input(i) = 0.0; 
 
-    fft.computeForward();
+    fft->computeForward();
 
-    int outLength = fft.getOutputLength();
+    int outLength = fft->getOutputLength();
     ArrayXd out(outLength);
     for (int i = 0; i < outLength; ++i) {
-        auto px = std::abs(1.0 / fft.output(i));
+        auto px = std::abs(1.0 / fft->output(i));
         out(i) = px * px * e;
     }
     return out;
@@ -138,26 +117,23 @@ static ArrayXd atal(const ArrayBase<Derived>& x, int order, int numCoefs)
     return c;
 }
 
-static constexpr int ncep_ar = 30;
-static constexpr int ncep_ps = 50;
+constexpr int ncep_ar = 30;
+constexpr int ncep_ps = 50;
 
-static constexpr int nfft_ar = 4096;
-static constexpr int nfft_ps = 4096;
+constexpr int nfft_ar = 4096;
+constexpr int nfft_ps = 4096;
 
-static constexpr double epsilon = 1e-10;
+constexpr double epsilon = 1e-10;
 
 template<typename Derived>
 static ArrayXd arSpecs(const ArrayBase<Derived>& x, int order)
 {
     //return atal(x, order, ncep_ar);
 
-    static constexpr int nfft = nfft_ar;
-    static constexpr int pn = nfft / 2 + 1;
+    constexpr int nfft = nfft_ar;
+    constexpr int pn = nfft / 2 + 1;
 
-    static ArrayXd freqs;
-    if (freqs.size() != pn) {
-        freqs.setLinSpaced(pn, 0, 0.5);
-    }
+    ArrayXd freqs = ArrayXd::LinSpaced(pn, 0, 0.5);
 
     ArrayXd ars = feature_arspec(x, order, nfft);
     ArrayXd ar(pn);
@@ -177,13 +153,10 @@ static ArrayXd arSpecs(const ArrayBase<Derived>& x, int order)
 template<typename Derived>
 static ArrayXd specPS(const ArrayBase<Derived>& x, int pitch)
 {
-    static constexpr int nfft = nfft_ps;
-    static constexpr int pn = nfft / 2 + 1;
+    constexpr int nfft = nfft_ps;
+    constexpr int pn = nfft / 2 + 1;
 
-    static ArrayXd freqs;
-    if (freqs.size() != pn) {
-        freqs.setLinSpaced(pn, 0, 0.5);
-    }
+    ArrayXd freqs = ArrayXd::LinSpaced(pn, 0, 0.5);
 
     int samps = x.size() / pitch;
     if (samps == 0)

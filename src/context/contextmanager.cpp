@@ -1,10 +1,6 @@
 #include "contextmanager.h"
 #include "timings.h"
 
-#ifdef ENABLE_TORCH
-#include "../analysis/formant/deepformants/df.h"
-#endif
-
 #include <chrono>
 #include <iostream>
 
@@ -46,7 +42,7 @@ ContextManager::ContextManager(
 {
 #ifdef ENABLE_TORCH
     // Load the DF model.
-    DFModelHolder::initialize();
+    DFModelHolder::initialize(&mDfModelHolder);
 #endif
 
     createViews();
@@ -185,8 +181,9 @@ void ContextManager::datavisThreadLoop()
     rpm::vector<std::complex<double>> wn(frequencies.size());
 
     double maxFrequencySource = 16000;
-    auto fft = std::make_shared<Analysis::RealFFT>(512);
-    rpm::vector<double> fftFrequencies(fft->getOutputLength());
+    rpm::map<int, rpm::vector<double>> fftWindowCache;
+    Analysis::RealFFT fft(512);
+    rpm::vector<double> fftFrequencies(fft.getOutputLength());
     for (int k = 0; k < fftFrequencies.size(); ++k) {
         fftFrequencies[k] = maxFrequencySource * (double) (k + 1) / (double) fftFrequencies.size();
     }
@@ -259,7 +256,7 @@ void ContextManager::datavisThreadLoop()
         auto source = mSynthesizer->getSourceCopy(maxFrequencySource * 2, 25.0);
         mSynthWrapper.setSource(source, maxFrequencySource * 2);
 
-        auto sourceSpectrum = Analysis::fft_n(fft, source);
+        auto sourceSpectrum = Analysis::fft_n(&fft, source, fftWindowCache);
         mSynthWrapper.setSourceSpectrum(fftFrequencies, sourceSpectrum);
 #endif // !WITHOUT_SYNTH
 

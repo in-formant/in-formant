@@ -27,7 +27,8 @@ namespace Module::App::Processors {
         Module::Audio::Resampler mResampler;
         rpm::vector<double> mData;
 
-        std::shared_ptr<Analysis::RealFFT> mFFT;
+        std::unique_ptr<Analysis::RealFFT> mFFT;
+        rpm::map<int, rpm::vector<double>> mFFTWindowCache;
         rpm::vector<std::array<double, 6>> mHighpass;
         rpm::vector<rpm::vector<double>> mHighpassMemory;
         double mHighpassSampleRate;

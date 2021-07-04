@@ -83,7 +83,7 @@ set(CMAKE_AUTOMOC ON)
 
 set(SOURCES
     src/main.cpp
-    src/file_logger.c
+    src/file_logger.cpp
     src/file_logger.h
     src/timetrack.ipp
     src/timetrack.h

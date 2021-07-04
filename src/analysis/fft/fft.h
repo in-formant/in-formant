@@ -110,7 +110,7 @@ namespace Analysis
         fftw_complex *mData;
     };
 
-    rpm::vector<double> fft_n(std::shared_ptr<Analysis::RealFFT> fft, const rpm::vector<double>& signal);
+    rpm::vector<double> fft_n(Analysis::RealFFT *fft, const rpm::vector<double>& signal, rpm::map<int, rpm::vector<double>>& windowCache);
 }
 
 #endif // ANALYSIS_FFT_H

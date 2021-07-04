@@ -1,8 +1,8 @@
 #include "fft.h"
 
-static const rpm::vector<double>& getWindow(rpm::map<int, rpm::vector<double>>& windows, int N) {
-    auto wit = windows.find(N);
-    if (wit == windows.end()) {
+static const rpm::vector<double>& getWindow(int N, rpm::map<int, rpm::vector<double>>& windowCache) {
+    auto wit = windowCache.find(N);
+    if (wit == windowCache.end()) {
         constexpr double a0 = 0.35875;
         constexpr double a1 = 0.48829;
         constexpr double a2 = 0.14128;
@@ -10,19 +10,17 @@ static const rpm::vector<double>& getWindow(rpm::map<int, rpm::vector<double>>& 
         rpm::vector<double> w(N);
         for (int j = 0; j < N; ++j) { 
             w[j] = a0 - a1 * cos((2.0 * M_PI * j) / (N - 1))
-                      + a2 * cos((4.0 * M_PI * j) / (N - 1))
-                      - a3 * cos((6.0 * M_PI * j) / (N - 1));
+                        + a2 * cos((4.0 * M_PI * j) / (N - 1))
+                        - a3 * cos((6.0 * M_PI * j) / (N - 1));
         }
-        windows[N] = w;
-        return windows[N];
+        windowCache[N] = w;
+        return windowCache[N];
     }
     return wit->second;
 }
 
-rpm::vector<double> Analysis::fft_n(std::shared_ptr<Analysis::RealFFT> fft, const rpm::vector<double>& signal)
+rpm::vector<double> Analysis::fft_n(Analysis::RealFFT *fft, const rpm::vector<double>& signal, rpm::map<int, rpm::vector<double>>& windowCache)
 {
-    static rpm::map<int, rpm::vector<double>> windows;
-
     const int nfft = fft->getInputLength();
     const int n = (int) signal.size();
 
@@ -31,7 +29,7 @@ rpm::vector<double> Analysis::fft_n(std::shared_ptr<Analysis::RealFFT> fft, cons
             fft->input(i) = 0.0;
         }
 
-        auto w = getWindow(windows, n);
+        auto w = getWindow(n, windowCache);
 
         for (int j = 0; j < n; ++j) {
             double sample = signal[j];
@@ -40,8 +38,8 @@ rpm::vector<double> Analysis::fft_n(std::shared_ptr<Analysis::RealFFT> fft, cons
         }
     }
     else {
-        auto w = getWindow(windows, nfft);
-        
+        auto w = getWindow(nfft, windowCache);
+
         for (int j = 0; j < nfft; ++j) {
             int i = n / 2 - nfft / 2 + j;
             

@@ -1,7 +1,39 @@
 #include "df.h"
 #include <QFile>
 
-std::unique_ptr<DFModelHolder> DFModelHolder::sInstance(nullptr);
+DFModelHolder *DFModelHolder::sInstance;
+
+DFModelHolder::DFModelHolder()
+    : mDctN(0), mFft1N(0), mFft2N(0)
+{
+}
+
+Analysis::ReReFFT *DFModelHolder::dct(int n)
+{
+    if (mDctN != n) {
+        mDct.reset(new Analysis::ReReFFT(n, FFTW_REDFT10));
+        mDctN = n;
+    }
+    return mDct.get();
+}
+
+Analysis::RealFFT *DFModelHolder::fft1(int n)
+{
+    if (mFft1N != n) {
+        mFft1.reset(new Analysis::RealFFT(n));
+        mFft1N = n;
+    }
+    return mFft1.get();
+}
+
+Analysis::RealFFT *DFModelHolder::fft2(int n)
+{
+    if (mFft2N != n) {
+        mFft2.reset(new Analysis::RealFFT(n));
+        mFft2N = n;
+    }
+    return mFft2.get();
+}
 
 torch::jit::script::Module *DFModelHolder::torchModule() {
     return &mTorchModule;
@@ -11,15 +43,15 @@ DFModelHolder *DFModelHolder::instance() {
     if (sInstance == nullptr) {
         throw std::runtime_error("DeepFormants: ModelHolder singleton instance was not initialized!");
     }
-    return sInstance.get();
+    return sInstance;
 }
 
-void DFModelHolder::initialize() {
+void DFModelHolder::initialize(DFModelHolder **pptr) {
     if (sInstance != nullptr) {
         throw std::runtime_error("DeepFormants: ModelHolder singleton instance can only be initialized once!");
     }
 
-    DFModelHolder *holder = new DFModelHolder;
+    *pptr = new DFModelHolder;
 
     try {
         QFile file(":/model.pt");
@@ -27,7 +59,7 @@ void DFModelHolder::initialize() {
             QByteArray buffer = file.readAll();
             std::string data(buffer.data(), buffer.size());
             std::istringstream stream(data);
-            holder->mTorchModule = torch::jit::load(stream, c10::kCPU);
+            (*pptr)->mTorchModule = torch::jit::load(stream, c10::kCPU);
             file.close();
         }
     }
@@ -35,5 +67,5 @@ void DFModelHolder::initialize() {
         throw std::runtime_error("DeepFormants: Error loading the model.");
     }
 
-    sInstance.reset(holder);
+    sInstance = *pptr;
 }

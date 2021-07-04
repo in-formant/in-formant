@@ -218,7 +218,7 @@ LONG WINAPI TopLevelExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
 
     MessageBoxW(nullptr, ss.str().c_str(), L"InFormant: unhandled exception", MB_OK | MB_ICONSTOP);
 
-    exit(EXIT_FAILURE);
+    ExitProcess(EXIT_FAILURE);
 
     return EXCEPTION_EXECUTE_HANDLER;
 }
@@ -236,7 +236,7 @@ void StdExceptionHandler(const std::exception& e)
 
     MessageBoxW(nullptr, ss.str().c_str(), L"InFormant: caught exception", MB_OK | MB_ICONSTOP);
 
-    exit(EXIT_FAILURE);
+    ExitProcess(EXIT_FAILURE);
 }
 
 
