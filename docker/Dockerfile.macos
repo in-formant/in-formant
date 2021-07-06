@@ -22,132 +22,38 @@ RUN apt-get update -y && \
             zlib1g-dev \
             cmake \
             git \
-            python
+            python3 python3-pip python-is-python3
 
 RUN ln -s /usr/bin/clang-11 /usr/bin/clang && \
         ln -s /usr/bin/clang++-11 /usr/bin/clang++ && \
         ln -s /usr/bin/llvm-config-11 /usr/bin/llvm-config
 
-COPY MacOSX10.14.sdk.tar.xz /dockerbuild/MacOSX10.14.sdk.tar.xz
+COPY MacOSX11.3.sdk.tar.xz /dockerbuild/MacOSX11.3.sdk.tar.xz
 RUN git clone https://github.com/tpoechtrager/osxcross && \
-        mv /dockerbuild/MacOSX10.14.sdk.tar.xz osxcross/tarballs && \
+        mv /dockerbuild/MacOSX11.3.sdk.tar.xz osxcross/tarballs && \
         cd osxcross && \
         UNATTENDED=1 ./build.sh
 
-RUN apt-get update -y && apt-get install -y wget libmpc-dev libmpfr-dev libgmp-dev
-RUN cd osxcross && GCC_VERSION=10.2.0 ENABLE_FORTRAN=1 ./build_gcc.sh
-RUN cd osxcross && ./build_compiler_rt.sh && \
-        mkdir -p /usr/lib/llvm-11/lib/clang/11.0.0/include && \
-        mkdir -p /usr/lib/llvm-11/lib/clang/11.0.0/lib/darwin && \
-        cp -rv /osxcross/build/compiler-rt/compiler-rt/include/sanitizer /usr/lib/llvm-11/lib/clang/11.0.0/include && \
-        cp -v /osxcross/build/compiler-rt/compiler-rt/build/lib/darwin/*.a /usr/lib/llvm-11/lib/clang/11.0.0/lib/darwin && \
-        cp -v /osxcross/build/compiler-rt/compiler-rt/build/lib/darwin/*.dylib /usr/lib/llvm-11/lib/clang/11.0.0/lib/darwin
+ENV HOST x86_64-apple-darwin20.4
 
-WORKDIR /dockerbuild
+# Install qt
+RUN pip install aqtinstall==1.2.2
+COPY aqtinstall-patch/updater.py /usr/local/lib/python3.8/dist-packages/aqt
+RUN aqt install 6.1.2 mac desktop -m addons.qtcharts --outputdir /opt/Qt
 
-ENV HOST x86_64-apple-darwin18
-
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtbase-everywhere-src-$ver.tar.xz && \
-        tar -xvf qtbase-everywhere-src-$ver.tar.xz
-COPY macos-qt/default_pre.prf               qtbase-everywhere-src-$ver/mkspecs/features/mac/default_pre.prf
-COPY macos-qt/g++-base.conf                 qtbase-everywhere-src-$ver/mkspecs/common/g++-base.conf
-COPY macos-qt/mac.conf                      qtbase-everywhere-src-$ver/mkspecs/common/mac.conf
-COPY macos-qt/clang-mac.conf                qtbase-everywhere-src-$ver/mkspecs/common/clang-mac.conf
-#COPY macos-qt/Qt5GuiConfigExtras.cmake.in   qtbase-everywhere-src-$ver/src/gui/Qt5GuiConfigExtras.cmake.in
-RUN cd qtbase-everywhere-src-$ver && \
-        sed -i '1s;^;QMAKE_MAC_SDK.macosx.Path = '"$(/osxcross/target/bin/xcrun --sdk macosx --show-sdk-path)"'\n\
-QMAKE_MAC_SDK.macosx.SDKVersion = '"$(/osxcross/target/bin/xcrun --sdk macosx --show-sdk-version)"'\n\
-QMAKE_MAC_SDK.macosx.PlatformPath = '"/osxcross/target"'\n;' 'mkspecs/features/mac/sdk.prf' && \
-        sed -i 's;/usr/bin/xcrun;/osxcross/target/bin/xcrun;g' 'mkspecs/features/mac/sdk.mk'
+# Replace mac binaries with linux Binaries
+RUN aqt install 6.1.2 linux desktop --noarchives -m qtbase qtdeclarative icu --outputdir /opt/Qt && \
+	rm -r /opt/Qt/6.1.2/macos/bin /opt/Qt/6.1.2/macos/libexec && \
+	ln -s /opt/Qt/6.1.2/gcc_64/bin /opt/Qt/6.1.2/macos/bin && \
+	ln -s /opt/Qt/6.1.2/gcc_64/libexec /opt/Qt/6.1.2/macos/libexec
 
 ENV PATH /osxcross/target/bin:$PATH
-ENV OSXCROSS_XCRUN_NO_ENV_WARNING 1
-
-RUN mkdir qtbase-build && \
-        cd qtbase-build && \
-        ../qtbase-everywhere-src-$ver/configure \
-            -opensource \
-            -confirm-license \
-            -xplatform macx-clang \
-            -no-framework \
-            -device-option CROSS_COMPILE=$HOST- \
-            -device-option PKG_CONFIG='$HOST-pkg-config' \
-            -no-use-gold-linker \
-            -release \
-            -shared \
-            -prefix /osxcross/target/$HOST/qt5 \
-            QMAKE_APPLE_DEVICE_ARCHS=${HOST%%-*}
-
-RUN cd qtbase-build && \
-        ../qtbase-everywhere-src-$ver/configure \
-            -opensource \
-            -confirm-license \
-            -xplatform macx-clang \
-            -no-framework \
-            -device-option CROSS_COMPILE=$HOST- \
-            -device-option PKG_CONFIG='$HOST-pkg-config' \
-            -device-option CROSS_COMPILE_FLAGS=-fpch-preprocess \
-            -no-use-gold-linker \
-            -release \
-            -shared \
-            -prefix /osxcross/target/$HOST/qt5 \
-            -securetransport \
-            -no-icu \
-            -no-glib \
-            -accessibility \
-            -nomake examples \
-            -nomake tests \
-            -qt-zlib \
-            -qt-libpng \
-            -qt-libjpeg \
-            -qt-freetype \
-            -qt-harfbuzz \
-            -qt-pcre \
-            -no-dbus \
-            -no-pch \
-            -no-feature-concurrent \
-            -no-feature-sql \
-            QMAKE_APPLE_DEVICE_ARCHS=${HOST%%-*} && \
-        make -j$(nproc) && \
-        make install
-
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtdeclarative-everywhere-src-$ver.tar.xz && \
-        tar -xvf qtdeclarative-everywhere-src-$ver.tar.xz
-RUN cd qtdeclarative-everywhere-src-$ver && \
-        /osxcross/target/$HOST/qt5/bin/qmake && \
-        make -j$(nproc) && \
-        make install
-
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtquickcontrols2-everywhere-src-$ver.tar.xz && \
-        tar -xvf qtquickcontrols2-everywhere-src-$ver.tar.xz
-RUN cd qtquickcontrols2-everywhere-src-$ver && \
-        /osxcross/target/$HOST/qt5/bin/qmake && \
-        make -j$(nproc) && \
-        make install
-
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtcharts-everywhere-src-$ver.tar.xz && \
-        tar -xvf qtcharts-everywhere-src-$ver.tar.xz
-RUN cd qtcharts-everywhere-src-$ver && \
-        /osxcross/target/$HOST/qt5/bin/qmake && \
-        make -j$(nproc) && \
-        make install
-
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtsvg-everywhere-src-$ver.tar.xz && \
-        tar -xvf qtsvg-everywhere-src-$ver.tar.xz
-RUN cd qtsvg-everywhere-src-$ver && \
-        /osxcross/target/$HOST/qt5/bin/qmake && \
-        make -j$(nproc) && \
-        make install
-
-RUN apt-get update -y && apt-get install -y autoconf
-
 ENV CC /osxcross/target/bin/$HOST-clang
 ENV CXX /osxcross/target/bin/$HOST-clang++
+
+RUN apt-get update -y && apt-get install -y autoconf wget
+
+WORKDIR /dockerbuild
 
 # Build portaudio
 RUN wget http://files.portaudio.com/archives/pa_stable_v190700_20210406.tgz && \
@@ -173,13 +79,6 @@ RUN cd fftw-$ver && \
         make -j$(nproc) && \
         make install
 
-ENV ver=2.2.0
-RUN wget https://downloads.sourceforge.net/project/glew/glew/$ver/glew-$ver.tgz && \
-        tar -xvf glew-$ver.tgz
-RUN cd glew-$ver && \
-        make GLEW_DEST=/osxcross/target/$HOST install.include && \
-        cp src/glew.c /osxcross/target/$HOST
-
 # Build eigen3
 ENV ver=3.3.9
 RUN wget https://gitlab.com/libeigen/eigen/-/archive/$ver/eigen-$ver.tar.gz && \
@@ -203,17 +102,11 @@ RUN cd libdmg-hfsplus && \
         make -j$(nproc) && \
         make install
 
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qttools-everywhere-src-$ver.tar.xz && \
-        tar -xvf qttools-everywhere-src-$ver.tar.xz
-COPY macdeployqt/macdeployqt.pro qttools-everywhere-src-$ver/src/macdeployqt/macdeployqt/macdeployqt.pro
-COPY macdeployqt/main.cpp qttools-everywhere-src-$ver/src/macdeployqt/macdeployqt/main.cpp
-COPY macdeployqt/shared.cpp qttools-everywhere-src-$ver/src/macdeployqt/macdeployqt/shared.cpp
-COPY macdeployqt/shared.h qttools-everywhere-src-$ver/src/macdeployqt/macdeployqt/shared.h
-RUN cd qttools-everywhere-src-$ver/src/macdeployqt/macdeployqt && \
-        qmake && \
+COPY macdeployqt macdeployqt
+RUN cd macdeployqt && \
+        /opt/Qt/6.1.2/macos/bin/qmake && \
         make -j$(nproc) && \
-        cp ../../../bin/macdeployqt /osxcross/target/$HOST/qt5/bin
+        cp macdeployqt /osxcross/target/bin
 
 RUN rm -r /dockerbuild
 
@@ -224,13 +117,14 @@ ENV CCACHE_DIR=/ccache
 
 CMD cd /build && \
         export version=`cat /src/version` && \
-        export MACOSX_DEPLOYMENT_TARGET=10.13 && \
-        cmake \
+        export QT_DIR=/opt/Qt/6.1.2/macos && \
+        export MACOSX_DEPLOYMENT_TARGET=10.14 && \
+        $HOST-cmake \
             -DCUR_VERSION=$version \
             -DCMAKE_TOOLCHAIN_FILE=/usr/macos-toolchain.cmake \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-            -DCMAKE_PREFIX_PATH=/usr/libtorch \
-            -DEigen3_DIR=/osxcross/target/$HOST/share/eigen3/cmake \ 
+            -DCMAKE_PREFIX_PATH="/opt/Qt/6.1.2/macos;/osxcross/target/$HOST;/usr/libtorch" \
+            -DENABLE_TORCH=$ENABLE_TORCH \
             /src && \
         make -j$(nproc) && \
         DIST_SUFFIX=macos-x86_64 \

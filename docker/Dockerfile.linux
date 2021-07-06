@@ -1,16 +1,12 @@
-FROM ubuntu:16.04 AS build
+FROM ubuntu:20.04 AS build
 
-ARG QT_EMAIL
-ARG QT_PW
-ENV QT_EMAIL=$QT_EMAIL QT_PW=$QT_PW
+ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update -y && \
-        apt-get install -y software-properties-common && \
-        add-apt-repository -y ppa:ubuntu-toolchain-r/test && \
         apt-get update -y && \
         apt-get install -y \
-            gcc-9 \
-            g++-9 \
+            gcc-10 \
+            g++-10 \
             wget \
             make \
             libasound-dev \
@@ -23,55 +19,29 @@ RUN apt-get update -y && \
             libxkbcommon-x11-dev \
             libfontconfig1-dev \
             libwayland-cursor0 \
-            libgl1-mesa-glx
+            libgl1-mesa-glx \
+            python3 python3-pip python-is-python3
 
 RUN mkdir /dockerbuild
 WORKDIR /dockerbuild
-ENV CC=/usr/bin/gcc-9 CXX=/usr/bin/g++-9
+ENV CC=/usr/bin/gcc-10 CXX=/usr/bin/g++-10
 
 RUN echo $PKG_CONFIG_PATH
 
 # Install AppImageKit.
-RUN wget https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage && \
+RUN wget https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage && \
         cp appimagetool-x86_64.AppImage /usr/local/bin/appimagetool && \
         chmod +x /usr/local/bin/appimagetool
 
 # Install cmake
-ENV ver=3.19.2
+ENV ver=3.20.5
 RUN wget https://github.com/Kitware/CMake/releases/download/v$ver/cmake-$ver-Linux-x86_64.sh && \
         sh cmake-$ver-Linux-x86_64.sh --skip-license --prefix=/usr/local
 
-# Install qt
-RUN wget https://download.qt.io/archive/online_installers/4.0/qt-unified-linux-x64-4.0.1-1-online.run
-RUN chmod +x qt-unified-linux-x64-4.0.1-1-online.run && \
-        ./qt-unified-linux-x64-4.0.1-1-online.run in \
-            --no-default-installations \
-            --root /opt/Qt5 \
-            --auto-answer telemetry-question=Yes,AssociateCommonFiletypes=Yes,installationError=Retry,installationErrorWithRetry=Retry,DownloadError=Retry,archiveDownloadError=Retry,stopProcessesForUpdates=Retry \
-            --default-answer \
-            --accept-licenses \
-            --accept-obligations \
-            --email $QT_EMAIL \
-            --pw $QT_PW \
-            --confirm-command \
-            --mirror http://www.nic.funet.fi/pub/mirrors/download.qt-project.org \
-            qt.qt5.5152.gcc_64 \
-            qt.qt5.5152.qtcharts \
-        && \
-        rm -f ~/.local/share/Qt/qtlicenses.ini ~/.local/share/Qt/qtaccount.ini
+RUN pip install aqtinstall
+RUN aqt install 6.1.2 linux desktop -m addons.qtcharts --outputdir /opt/Qt 
 
-# Build pkgconfig
-ENV ver=0.29.2
-RUN wget https://pkg-config.freedesktop.org/releases/pkg-config-$ver.tar.gz && \
-        tar -xvf pkg-config-$ver.tar.gz
-RUN cd pkg-config-$ver && \
-        mkdir build && \
-        cd build && \
-        ../configure --with-internal-glib --prefix=/usr/local && \
-        make -j$(nproc) && \
-        make install
-
-ENV PKG_CONFIG_PATH=/usr/lib64/pkgconfig:/usr/share/pkgconfig:/usr/local/pkgconfig:/usr/local/lib64/pkgconfig:/usr/local/share/pkgconfig
+RUN apt-get update -y && apt-get install -y pkg-config
 
 # Build portaudio
 RUN wget http://files.portaudio.com/archives/pa_stable_v190700_20210406.tgz && \
@@ -106,7 +76,7 @@ RUN cd fftw-$ver && \
         make install
 
 RUN apt-get update -y && \
-        apt-get install -y mesa-common-dev freeglut3-dev unzip
+        apt-get install -y mesa-common-dev unzip
 
 RUN wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.7.1%2Bcpu.zip -O libtorch.zip && \
         unzip libtorch.zip && \
@@ -118,14 +88,7 @@ RUN wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous
 RUN wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage -O /usr/bin/linuxdeploy-plugin-qt && \
         chmod 755 /usr/bin/linuxdeploy-plugin-qt
 
-ENV ver=2.2.0
-RUN wget https://downloads.sourceforge.net/project/glew/glew/$ver/glew-$ver.tgz && \
-        tar -xvf glew-$ver.tgz
-RUN cd glew-$ver && \
-        make GLEW_DEST=/usr install.include && \
-        cp src/glew.c /usr
-
-RUN apt-get update -y && apt-get install -y fuse libegl1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0
+RUN apt-get update -y && apt-get install -y fuse libegl1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0 libgssapi-krb5-2 libxcb-shape0
 RUN rm -rf /dockerbuild
 
 RUN apt-get update -y && apt-get install -y ccache
@@ -135,12 +98,11 @@ CMD cd /build && \
         export version=`cat /src/version` && \
         export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64 && \
         export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig:/usr/local/pkgconfig:/usr/local/lib64/pkgconfig:/usr/local/share/pkgconfig && \
-        export GLEW_SOURCE_FILE=/usr/local/src/glew.c && \
         cmake \
             -DCUR_VERSION=$version \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-            -DCMAKE_PREFIX_PATH="/opt/Qt5/5.15.2/gcc_64;/usr/libtorch" \
-            -DENABLE_TORCH=TRUE \
+            -DCMAKE_PREFIX_PATH="/opt/Qt/6.1.2/gcc_64;/usr/libtorch" \
+            -DENABLE_TORCH=$ENABLE_TORCH \
             /src && \
         make -j$(nproc) && \
         /src/docker/deploy-linux.sh

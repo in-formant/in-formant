@@ -12,7 +12,7 @@ function run_or_debug()
     fi
 }
 
-export CMAKE_PREFIX_PATH="/opt/Qt/6.1.2/gcc_64;/usr/local/libtorch"
+export CMAKE_PREFIX_PATH="$HOME/Qt6/6.1.2/gcc_64;/usr/local/libtorch"
 #export CC=clang-8
 #export CXX=clang++-8
 

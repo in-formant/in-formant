@@ -12,16 +12,17 @@ RUN apt-get update -y && \
             gcc-mingw-w64-x86-64 \
             g++-mingw-w64-x86-64 \
             gfortran-mingw-w64-x86-64 \
-            mingw-w64-tools
+            mingw-w64-tools \
+            python3 python3-pip python-is-python3
 
-RUN ln -s /usr/bin/gcc-10 /usr/bin/gcc && \
-        ln -s /usr/bin/g++-10 /usr/bin/g++
+RUN ln -sf /usr/bin/gcc-10 /usr/bin/gcc && \
+        ln -sf /usr/bin/g++-10 /usr/bin/g++
 
 RUN mkdir /dockerbuild
 WORKDIR /dockerbuild
 
 # Install cmake
-ENV ver=3.19.3
+ENV ver=3.20.5
 RUN wget https://github.com/Kitware/CMake/releases/download/v$ver/cmake-$ver-Linux-x86_64.sh && \
         sh cmake-$ver-Linux-x86_64.sh --skip-license --prefix=/usr/local
 
@@ -40,146 +41,14 @@ ENV RANLIB /usr/bin/$HOST-gcc-ranlib-posix
 ENV NM /usr/bin/$HOST-gcc-nm-posix
 ENV RC /usr/bin/$HOST-windres
 
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtbase-everywhere-src-$ver.tar.xz && \
-        tar -xvf qtbase-everywhere-src-$ver.tar.xz
-RUN mkdir qtbase-build && \
-        cd qtbase-build && \
-        ../qtbase-everywhere-src-$ver/configure \
-            -opensource \
-            -confirm-license \
-            -xplatform win32-g++ \
-            -device-option CROSS_COMPILE=$HOST- \
-            -device-option PKG_CONFIG='$HOST-pkg-config' \
-            -release \
-            -shared \
-            -prefix /usr/$HOST/qt5 \
-            -opengl dynamic
+RUN pip install aqtinstall==1.2.2
+COPY aqtinstall-patch/updater.py /usr/local/lib/python3.8/dist-packages/aqt
+RUN aqt install 6.1.2 windows desktop win64_mingw81 -m addons.qtcharts --outputdir /opt/Qt 
 
-ENV ver=1.2.11
-RUN wget https://zlib.net/zlib-$ver.tar.xz && \
-        tar -xvf zlib-$ver.tar.xz
-RUN cd zlib-$ver && \
-        mkdir objs && \
-        cd objs && \
-        sed -i \
-            -e 's/\(cp $(STATICLIB) $(DESTDIR)$(libdir)\)/[ -z ''$(STATICLIB)'' ] || \1/g' \
-            -e 's/\(cp $(SHAREDLIBV) $(DESTDIR)$(sharedlibdir);\)/[ -z ''$(SHAREDLIBV)'' ] || \1/g' \
-            ../Makefile.in && \
-        CHOST=$HOST \
-        make -C .. -f win32/Makefile.gcc \
-            SHARED_MODE=1 \
-            BINARY_PATH=/usr/$HOST/bin \
-            INCLUDE_PATH=/usr/$HOST/include \
-            LIBRARY_PATH=/usr/$HOST/lib \
-            PREFIX=$HOST- \
-            -j$(nproc) install
+# Replace windows binaries with linux Binaries
+RUN aqt install 6.1.2 linux desktop --noarchives -m qtbase qtdeclarative qttools icu --outputdir /opt/Qt
 
-ENV ver=1.1.1i
-RUN wget https://www.openssl.org/source/openssl-$ver.tar.gz && \
-        tar -xvf openssl-$ver.tar.gz
-RUN cd openssl-$ver && \
-        mkdir objs && \
-        cd objs && \
-        ../Configure mingw64 zlib shared no-capieng --prefix=/usr/$HOST && \
-        make all -j$(nproc) && \
-        make install_sw 
-
-ENV ver=2.2.10
-RUN wget https://downloads.sourceforge.net/project/expat/expat/$ver/expat-$ver.tar.bz2 && \
-        tar -xvf expat-$ver.tar.bz2
-RUN cd expat-$ver && \
-        mkdir objs && \
-        cd objs && \
-        ../configure --host=$HOST --prefix=/usr/$HOST --enable-shared --disable-static \
-            --without-docbook && \
-        make -j$(nproc) && \
-        make install
-
-ENV ver=1.12.20
-RUN wget https://dbus.freedesktop.org/releases/dbus/dbus-$ver.tar.gz && \
-        tar -xvf dbus-$ver.tar.gz
-RUN cd dbus-$ver && \
-        mkdir objs && \
-        cd objs && \
-        ../configure --host=$HOST --prefix=/usr/$HOST --enable-shared --disable-static \
-            --disable-tests --disable-verbose-mode --disable-asserts --disable-maintainer-mode \
-            --disable-silent-rules --disable-launchd --disable-doxygen-docs --disable-xml-docs \
-            CFLAGS="-DPROCESS_QUERY_LIMITED_INFORMATION=0x1000" && \
-        make -j$(nproc) && \
-        make install
-
-RUN cd qtbase-build && \
-        OPENSSL_LIBS="`$HOST-pkg-config --libs-only-l openssl`" \
-        ../qtbase-everywhere-src-5.15.2/configure \
-            -opensource \
-            -confirm-license \
-            -xplatform win32-g++ \
-            -device-option CROSS_COMPILE=$HOST- \
-            -device-option PKG_CONFIG='$HOST-pkg-config' \
-            -pkg-config \
-            -force-pkg-config \
-            -no-use-gold-linker \
-            -release \
-            -shared \
-            -prefix /usr/$HOST/qt5 \
-            -no-icu \
-            -opengl desktop \
-            -no-glib \
-            -accessibility \
-            -nomake examples \
-            -nomake tests \
-            -qt-zlib \
-            -qt-libpng \
-            -qt-libjpeg \
-            -qt-freetype \
-            -qt-harfbuzz \
-            -qt-pcre \
-            -openssl-linked \
-            -no-dbus \
-            -no-pch \
-            -no-feature-concurrent \
-            -no-feature-network \
-            -no-feature-sql \
-            -no-feature-testlib && \
-        make -j$(nproc) && \
-        make install
-
-RUN apt-get update -y && apt-get install -y python
-
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtdeclarative-everywhere-src-$ver.tar.xz && \
-        tar -xvf qtdeclarative-everywhere-src-$ver.tar.xz
-RUN cd qtdeclarative-everywhere-src-$ver && \
-        /usr/$HOST/qt5/bin/qmake && \ 
-        make -j$(nproc) && \
-        make install
-
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtquickcontrols2-everywhere-src-$ver.tar.xz && \
-        tar -xvf qtquickcontrols2-everywhere-src-$ver.tar.xz
-RUN cd qtquickcontrols2-everywhere-src-$ver && \
-        /usr/$HOST/qt5/bin/qmake && \
-        make -j$(nproc) && \
-        make install
-
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtcharts-everywhere-src-$ver.tar.xz && \
-        tar -xvf qtcharts-everywhere-src-$ver.tar.xz
-RUN cd qtcharts-everywhere-src-$ver && \
-        /usr/$HOST/qt5/bin/qmake && \
-        make -j$(nproc) && \
-        make install
-
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qtsvg-everywhere-src-$ver.tar.xz && \
-        tar -xvf qtsvg-everywhere-src-$ver.tar.xz
-RUN cd qtsvg-everywhere-src-$ver && \
-        /usr/$HOST/qt5/bin/qmake && \
-        make -j$(nproc) && \
-        make install
-
-ENV ver=8.0.0
+ENV ver=9.0.0
 RUN wget https://downloads.sourceforge.net/project/mingw-w64/mingw-w64/mingw-w64-release/mingw-w64-v$ver.tar.bz2 && \
         tar -xvf mingw-w64-v$ver.tar.bz2
 RUN cd mingw-w64-v$ver && \
@@ -222,13 +91,6 @@ RUN cd fftw-$ver && \
         make -j$(nproc) && \
         make install
 
-ENV ver=2.2.0
-RUN wget https://downloads.sourceforge.net/project/glew/glew/$ver/glew-$ver.tgz && \
-        tar -xvf glew-$ver.tgz
-RUN cd glew-$ver && \
-        make GLEW_DEST=/usr/$HOST install.include && \
-        cp src/glew.c /usr/$HOST
-
 RUN ln -sf /usr/bin/$HOST-gcc-posix /usr/bin/$HOST-gcc && \
         ln -sf /usr/bin/$HOST-g++-posix /usr/bin/$HOST-g++
 
@@ -251,23 +113,27 @@ RUN cd eigen-$ver && \
 
 RUN apt-get update -y && apt-get install -y git zip
 
-RUN git clone -b v1.2.0 https://github.com/trailofbits/pe-parse
+RUN git clone -b v1.3.0 https://github.com/trailofbits/pe-parse
 RUN cd pe-parse && \
         CC= CXX= cmake . -DCMAKE_INSTALL_PREFIX=/usr && \
         make -j$(nproc) && \
         make install
 
-ENV ver=5.15.2
-RUN wget https://download.qt.io/official_releases/qt/5.15/$ver/submodules/qttools-everywhere-src-$ver.tar.xz && \
-        tar -xvf qttools-everywhere-src-$ver.tar.xz
-COPY windeployqt/utils.cpp qttools-everywhere-src-$ver/src/shared/winutils/utils.cpp
-COPY windeployqt/read_pe_linux.cpp qttools-everywhere-src-$ver/src/shared/winutils/read_pe_linux.cpp
-COPY windeployqt/windeployqt.pro qttools-everywhere-src-$ver/src/windeployqt/windeployqt.pro
-COPY windeployqt/main.cpp qttools-everywhere-src-$ver/src/windeployqt/main.cpp
-RUN cd qttools-everywhere-src-$ver/src/windeployqt && \
-        /usr/$HOST/qt5/bin/qmake && \
+RUN for file in $(ls /opt/Qt/6.1.2/gcc_64/bin); do \
+        ln -sf /opt/Qt/6.1.2/gcc_64/bin/${file} /opt/Qt/6.1.2/mingw81_64/bin/${file}.exe; \
+        ln -sf /opt/Qt/6.1.2/gcc_64/bin/${file} /opt/Qt/6.1.2/mingw81_64/bin/${file}; \
+    done && \
+    for file in $(ls /opt/Qt/6.1.2/gcc_64/libexec); do \
+        ln -sf /opt/Qt/6.1.2/gcc_64/libexec/${file} /opt/Qt/6.1.2/mingw81_64/bin/${file}.exe; \
+        ln -sf /opt/Qt/6.1.2/gcc_64/libexec/${file} /opt/Qt/6.1.2/mingw81_64/bin/${file}; \
+    done && \
+    cp /opt/Qt/6.1.2/gcc_64/lib/*.so* /opt/Qt/6.1.2/mingw81_64/lib
+
+COPY windeployqt windeployqt
+RUN cd windeployqt && \
+        /opt/Qt/6.1.2/mingw81_64/bin/qmake && \
         make -j$(nproc) && \
-        make install
+        cp windeployqt /opt/Qt/6.1.2/mingw81_64/bin
 
 RUN rm -r /dockerbuild
 
@@ -280,8 +146,8 @@ CMD cd /build && \
             -DCUR_VERSION=$version \
             -DCMAKE_TOOLCHAIN_FILE=/usr/win64-toolchain.cmake \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-            -DCMAKE_PREFIX_PATH=/usr/libtorch \
-            -DENABLE_TORCH=TRUE \
+            -DCMAKE_PREFIX_PATH="/opt/Qt/6.1.2/mingw81_64;/usr/libtorch" \
+            -DENABLE_TORCH=$ENABLE_TORCH \
             /src && \
         make -j$(nproc) && \
         DIST_SUFFIX=win64-x64 \

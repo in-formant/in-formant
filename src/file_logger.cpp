@@ -2,7 +2,7 @@
 
 #if defined(ANDROID) || defined(__ANDROID__)
 
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
 
 #define _GNU_SOURCE
 #include <fcntl.h>
@@ -13,7 +13,7 @@
 #include <limits.h>
 #include <sys/stat.h>
 #include <signal.h>
-#include <sys/prctl.h>
+//#include <sys/prctl.h>
 #include <string.h>
 #include <time.h>
 
@@ -54,24 +54,23 @@ void openFileLogger(const char *name) {
     }
 
     if (cpid == 0) {
-        int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
+       /* int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
         if (r == -1) {
             perror("prctl");
             exit(EXIT_FAILURE);
         }
         if (getppid() != ppid) {
             exit(EXIT_FAILURE);
-        }
+        } */
 
         close(pipefd[1]);
 
         char linebuf[1024];
         linebuf[0] = '\0';
 
-        int count;
+        int count = 0;
         char rdbuf[33];
-        while (getppid() == ppid) {
-            count = read(pipefd[0], rdbuf, 32);
+        while ((count = read(pipefd[0], rdbuf, 32)) >= 0) {
             if (count == -1) {
                 perror("read");
                 break;

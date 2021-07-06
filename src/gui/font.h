@@ -19,7 +19,7 @@ namespace Gui {
         long         advance;
     };
 
-    class Font {
+    class Font : public QOpenGLFunctions {
     public:
         Font(FT_Library ft, const QString &font, int pixelSize);
         Font(FT_Library ft, const QString &font, double pointSize, double dpi);

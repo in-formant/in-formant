@@ -233,8 +233,6 @@ endif()
 
 find_package(Eigen3 REQUIRED NO_MODULE)
 
-find_package(OpenGL REQUIRED)
-
 find_package(Qt6 COMPONENTS Charts Quick QuickControls2 QuickTemplates2 Qml Widgets OpenGL Gui Core REQUIRED)
 foreach(c Charts Quick QuickControls2 QuickTemplates2 Qml Widgets OpenGL Gui Core)
     if(${Qt6${c}_FOUND})
@@ -333,7 +331,7 @@ else()
 endif()
 
 target_include_directories(in-formant SYSTEM PRIVATE ${ARMADILLO_INCLUDE_DIR} ${FFTW_INCLUDE_DIRS} ${TOMLPP_INCLUDE_DIR})
-target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LIBRARIES} Qt6::Charts Qt6::Quick Qt6::QuickControls2 Qt6::QuickTemplates2 Qt6::Qml Qt6::Widgets Qt6::OpenGL Qt6::Gui Qt6::Core OpenGL::GL)
+target_link_libraries(in-formant PRIVATE Eigen3::Eigen ${FFTW_LIBRARIES} Qt6::Charts Qt6::Quick Qt6::QuickControls2 Qt6::QuickTemplates2 Qt6::Qml Qt6::Widgets Qt6::OpenGL Qt6::Gui Qt6::Core)
 target_link_directories(in-formant PRIVATE ${FFTW_LIBRARY_DIRS})
 
 set(BUILD_SHARED_LIBS TRUE)
@@ -418,7 +416,7 @@ if(SYSTEM_DARWIN OR SYSTEM_ANDROID)
 endif()
 
 if(SYSTEM_WINDOWS)
-    target_compile_definitions(in-formant PRIVATE -D_WIN32_WINNT=0x600 -D_USE_MATH_DEFINES -DNOMINMAX -DUNICODE -DTOML_WINDOWS_COMPAT -D_CRT_SECURE_NO_WARNINGS)
+    target_compile_definitions(in-formant PRIVATE -D_USE_MATH_DEFINES -DNOMINMAX -DUNICODE -DTOML_WINDOWS_COMPAT -D_CRT_SECURE_NO_WARNINGS)
     target_link_libraries(in-formant PRIVATE ntdll dbghelp)
     target_sources(in-formant PRIVATE src/windows_exception_handler.cpp)
     if(CMAKE_BUILD_TYPE STREQUAL Debug)

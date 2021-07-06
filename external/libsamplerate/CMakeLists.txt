@@ -18,55 +18,62 @@ else()
     set(COMPILER_IS_GCC 0)
 endif()
 
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/test-clip-positive.c [[
-#define	_ISOC9X_SOURCE	1
-#define _ISOC99_SOURCE	1
-#define	__USE_ISOC99	1
-#define __USE_ISOC9X	1
-#include <math.h>
-int main (void)
-{	double	fval ;
-    int k, ival ;
-    fval = 1.0 * 0x7FFFFFFF ;
-    for (k = 0 ; k < 100 ; k++)
-    {
-        ival = (lrint (fval)) >> 24 ;
-        if (ival != 127)
-            return 1 ;
-    
-        fval *= 1.2499999 ;
-    } ;
+if (CMAKE_CROSSCOMPILING)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR WIN32)
+        set(CPU_CLIPS_POSITIVE 0)
+        set(CPU_CLIPS_NEGATIVE 0)
+    else()
+        message(FATAL_ERROR "Cross-compiling target is not supported")
+    endif()
+else()
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/test-clip-positive.c [[
+    #define	_ISOC9X_SOURCE	1
+    #define _ISOC99_SOURCE	1
+    #define	__USE_ISOC99	1
+    #define __USE_ISOC9X	1
+    #include <math.h>
+    int main (void)
+    {	double	fval ;
+        int k, ival ;
+        fval = 1.0 * 0x7FFFFFFF ;
+        for (k = 0 ; k < 100 ; k++)
+        {
+            ival = (lrint (fval)) >> 24 ;
+            if (ival != 127)
+                return 1 ;
+        
+            fval *= 1.2499999 ;
+        } ;
 
-    return 0 ;
-}
-]])
+        return 0 ;
+    }
+    ]])
+    try_run(CPU_CLIPS_POSITIVE _compileVar ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/test-clip-positive.c)
 
-try_run(CPU_CLIPS_POSITIVE _compileVar ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/test-clip-positive.c)
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/test-clip-negative.c [[
+    #define	_ISOC9X_SOURCE	1
+    #define _ISOC99_SOURCE	1
+    #define	__USE_ISOC99	1
+    #define __USE_ISOC9X	1
+    #include <math.h>
+    int main (void)
+    {	double	fval ;
+        int k, ival ;
+        fval = -8.0 * 0x10000000 ;
+        for (k = 0 ; k < 100 ; k++)
+        {
+            ival = (lrint (fval)) >> 24 ;
+            if (ival != -128)
+                return 1 ;
+        
+            fval *= 1.2499999 ;
+        } ;
 
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/test-clip-negative.c [[
-#define	_ISOC9X_SOURCE	1
-#define _ISOC99_SOURCE	1
-#define	__USE_ISOC99	1
-#define __USE_ISOC9X	1
-#include <math.h>
-int main (void)
-{	double	fval ;
-    int k, ival ;
-    fval = -8.0 * 0x10000000 ;
-    for (k = 0 ; k < 100 ; k++)
-    {
-        ival = (lrint (fval)) >> 24 ;
-        if (ival != -128)
-            return 1 ;
-    
-        fval *= 1.2499999 ;
-    } ;
-
-    return 0 ;
-}
-]])
-
-try_run(CPU_CLIPS_NEGATIVE _compileVar ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/test-clip-negative.c)
+        return 0 ;
+    }
+    ]])
+    try_run(CPU_CLIPS_NEGATIVE _compileVar ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/test-clip-negative.c)
+endif()
 
 if(CMAKE_C_BYTE_ORDER STREQUAL BIG_ENDIAN)
     set(CPU_IS_BIG_ENDIAN 1)
