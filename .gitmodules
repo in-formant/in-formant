@@ -18,3 +18,6 @@
 [submodule "external/rpmalloc"]
 	path = external/rpmalloc
 	url = https://github.com/mjansson/rpmalloc
+[submodule "docker/MSVCDocker"]
+	path = docker/MSVCDocker
+	url = https://github.com/paleozogt/MSVCDocker

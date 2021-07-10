@@ -1,156 +1,90 @@
-FROM ubuntu:20.04 AS build
+FROM msvc:16 AS build
 
 ENV DEBIAN_FRONTEND noninteractive
 
+USER root
 RUN apt-get update -y && \
         apt-get install -y \
             wget \
-            make \
-            autoconf \
-            gcc-10 \
-            g++-10 \
-            gcc-mingw-w64-x86-64 \
-            g++-mingw-w64-x86-64 \
-            gfortran-mingw-w64-x86-64 \
-            mingw-w64-tools \
+            git \
+            curl zip unzip tar \
             python3 python3-pip python-is-python3
+USER wine
 
-RUN ln -sf /usr/bin/gcc-10 /usr/bin/gcc && \
-        ln -sf /usr/bin/g++-10 /usr/bin/g++
+# cmake in wine
+ARG CMAKE_SERIES_VER=3.20
+ARG CMAKE_VERS=$CMAKE_SERIES_VER.5
+RUN umask $WINE_UMASK && \
+    wget https://cmake.org/files/v$CMAKE_SERIES_VER/cmake-$CMAKE_VERS-windows-x86_64.zip -O cmake.zip && \
+    unzip cmake.zip && \
+    cp -R cmake-*/* $WINEPREFIX/drive_c/tools && \
+    rm -rf cmake*
+RUN vcwine cmake --version
 
-RUN mkdir /dockerbuild
-WORKDIR /dockerbuild
+# jom in wine
+RUN umask $WINE_UMASK && \
+    wget http://download.qt.io/official_releases/jom/jom.zip -O jom.zip && \
+    unzip -d jom jom.zip && \
+    mv jom/jom.exe $WINEPREFIX/drive_c/tools/bin && \
+    rm -rf jom*
+RUN vcwine jom /VERSION
 
-# Install cmake
-ENV ver=3.20.5
-RUN wget https://github.com/Kitware/CMake/releases/download/v$ver/cmake-$ver-Linux-x86_64.sh && \
-        sh cmake-$ver-Linux-x86_64.sh --skip-license --prefix=/usr/local
-
-ENV HOST x86_64-w64-mingw32
-
-ENV PKG_CONFIG /usr/bin/$HOST-pkg-config
-ENV PKG_CONFIG_SYSROOT_DIR /
-ENV PKG_CONFIG_LIBDIR /usr/$HOST/lib/pkgconfig:/usr/$HOST/share/pkgconfig
-ENV PKG_CONFIG_SYSTEM_INCLUDE_PATH /usr/$HOST/include
-ENV PKG_CONFIG_SYSTEM_LIBRARY_PATH /usr/$HOST/lib
-
-ENV CC /usr/bin/$HOST-gcc-posix
-ENV CXX /usr/bin/$HOST-g++-posix
-ENV AR /usr/bin/$HOST-gcc-ar-posix
-ENV RANLIB /usr/bin/$HOST-gcc-ranlib-posix
-ENV NM /usr/bin/$HOST-gcc-nm-posix
-ENV RC /usr/bin/$HOST-windres
-
+USER root
 RUN pip install aqtinstall==1.2.2
 COPY aqtinstall-patch/updater.py /usr/local/lib/python3.8/dist-packages/aqt
-RUN aqt install 6.1.2 windows desktop win64_mingw81 -m addons.qtcharts --outputdir /opt/Qt 
+RUN aqt install 6.1.2 windows desktop win64_msvc2019_64 -m addons.qtcharts --outputdir /opt/Qt 
+USER wine
 
-# Replace windows binaries with linux Binaries
-RUN aqt install 6.1.2 linux desktop --noarchives -m qtbase qtdeclarative qttools icu --outputdir /opt/Qt
+RUN umask $WINE_UMASK && \
+    wget http://files.portaudio.com/archives/pa_stable_v190700_20210406.tgz && \
+    tar xvf pa_stable_v190700_20210406.tgz && \
+    rm pa_stable_v190700_20210406.tgz && \
+    mkdir portaudio/objs && \
+    cd portaudio/objs && \
+    vcwine cmake .. -G "NMake Makefiles JOM" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:\\usr && \
+    vcwine jom && \
+    vcwine jom install && \
+    cd && rm -r portaudio
 
-ENV ver=9.0.0
-RUN wget https://downloads.sourceforge.net/project/mingw-w64/mingw-w64/mingw-w64-release/mingw-w64-v$ver.tar.bz2 && \
-        tar -xvf mingw-w64-v$ver.tar.bz2
-RUN cd mingw-w64-v$ver && \
-        mkdir headers-build && \
-        cd headers-build && \
-        ../mingw-w64-headers/configure --host=$HOST --prefix=/usr/$HOST --with-default-msvcrt=msvcrt --enable-sdk=all --enable-idl && \
-        make install
-RUN cd mingw-w64-v$ver && \
-        mkdir crt-build && \
-        cd crt-build && \
-        ../mingw-w64-crt/configure --host=$HOST --prefix=/usr/$HOST --with-default-msvcrt=msvcrt && \
-        make -j$(nproc) && \
-        make install
-RUN cd mingw-w64-v$ver && \
-        mkdir libraries-winpthreads-build && \
-        cd libraries-winpthreads-build && \
-        ../mingw-w64-libraries/winpthreads/configure --host=$HOST --prefix=/usr/$HOST && \
-        make -j$(nproc) && \
-        make install
+RUN umask $WINE_UMASK && \
+    wget http://www.fftw.org/fftw-3.3.9.tar.gz && \
+    tar xvf fftw-3.3.9.tar.gz && \
+    rm fftw-3.3.9.tar.gz && \
+    mkdir fftw-3.3.9/objs && \
+    cd fftw-3.3.9/objs && \
+    vcwine cmake .. -G "NMake Makefiles JOM" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:\\usr && \
+    vcwine jom && \
+    vcwine jom install && \
+    cd && rm -r fftw-3.3.9
 
-# Build portaudio
-RUN wget http://files.portaudio.com/archives/pa_stable_v190700_20210406.tgz && \
-        tar -xvf pa_stable_v190700_20210406.tgz
-RUN cd portaudio && \
-        autoconf && \
-        mkdir objs && \
-        cd objs && \
-        ../configure --host=$HOST --prefix=/usr/$HOST --enable-shared --disable-static --with-host_os=mingw --with-winapi=wmme,directx,wasapi && \
-        make -j$(nproc) && \
-        make install
+RUN umask $WINE_UMASK && \
+    wget https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz && \
+    tar xvf eigen-3.3.9.tar.gz && \
+    rm eigen-3.3.9.tar.gz && \
+    mkdir eigen-3.3.9/objs && \
+    cd eigen-3.3.9/objs && \
+    vcwine cmake .. -G "NMake Makefiles JOM" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:\\usr && \
+    vcwine jom install && \
+    cd && rm -r eigen-3.3.9
 
-# Build fftw3
-ENV ver=3.3.9
-RUN wget http://www.fftw.org/fftw-$ver.tar.gz && \
-        tar -xvf fftw-$ver.tar.gz
-RUN cd fftw-$ver && \
-        mkdir build && \
-        cd build && \
-        ../configure --host=$HOST --prefix=/usr/$HOST --enable-shared --disable-static && \
-        make -j$(nproc) && \
-        make install
-
-RUN ln -sf /usr/bin/$HOST-gcc-posix /usr/bin/$HOST-gcc && \
-        ln -sf /usr/bin/$HOST-g++-posix /usr/bin/$HOST-g++
-
-RUN apt-get update -y && apt-get install -y git unzip
-RUN wget https://github.com/clo-yunhee/pytorch_mingw_cross/releases/download/1.6.0a0-1/libtorch-x64.tar.gz && \
-        tar -xvf libtorch-x64.tar.gz -C /usr
-
-COPY win64-toolchain.cmake /usr/win64-toolchain.cmake
-
-# Build eigen3
-ENV ver=3.3.9
-RUN wget https://gitlab.com/libeigen/eigen/-/archive/$ver/eigen-$ver.tar.gz && \
-        tar -xvf eigen-$ver.tar.gz
-RUN cd eigen-$ver && \
-        mkdir build && \
-        cd build && \
-        cmake -DCMAKE_TOOLCHAIN_FILE=/usr/win64-toolchain.cmake -DCMAKE_INSTALL_PREFIX=/usr/$HOST .. && \
-        make -j$(nproc) && \
-        make install 
-
-RUN apt-get update -y && apt-get install -y git zip
-
-RUN git clone -b v1.3.0 https://github.com/trailofbits/pe-parse
-RUN cd pe-parse && \
-        CC= CXX= cmake . -DCMAKE_INSTALL_PREFIX=/usr && \
-        make -j$(nproc) && \
-        make install
-
-RUN for file in $(ls /opt/Qt/6.1.2/gcc_64/bin); do \
-        ln -sf /opt/Qt/6.1.2/gcc_64/bin/${file} /opt/Qt/6.1.2/mingw81_64/bin/${file}.exe; \
-        ln -sf /opt/Qt/6.1.2/gcc_64/bin/${file} /opt/Qt/6.1.2/mingw81_64/bin/${file}; \
-    done && \
-    for file in $(ls /opt/Qt/6.1.2/gcc_64/libexec); do \
-        ln -sf /opt/Qt/6.1.2/gcc_64/libexec/${file} /opt/Qt/6.1.2/mingw81_64/bin/${file}.exe; \
-        ln -sf /opt/Qt/6.1.2/gcc_64/libexec/${file} /opt/Qt/6.1.2/mingw81_64/bin/${file}; \
-    done && \
-    cp /opt/Qt/6.1.2/gcc_64/lib/*.so* /opt/Qt/6.1.2/mingw81_64/lib
-
-COPY windeployqt windeployqt
-RUN cd windeployqt && \
-        /opt/Qt/6.1.2/mingw81_64/bin/qmake && \
-        make -j$(nproc) && \
-        cp windeployqt /opt/Qt/6.1.2/mingw81_64/bin
-
-RUN rm -r /dockerbuild
-
+USER root
 RUN apt-get update -y && apt-get install -y ccache
+USER wine
 ENV CCACHE_DIR=/ccache
 
-CMD cd /build && \
-        export version=`cat /src/version` && \
-        cmake \
-            -DCUR_VERSION=$version \
-            -DCMAKE_TOOLCHAIN_FILE=/usr/win64-toolchain.cmake \
-            -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-            -DCMAKE_PREFIX_PATH="/opt/Qt/6.1.2/mingw81_64;/usr/libtorch" \
-            -DENABLE_TORCH=$ENABLE_TORCH \
-            /src && \
-        make -j$(nproc) && \
-        DIST_SUFFIX=win64-x64 \
-        /src/docker/deploy-windows.sh
+ENTRYPOINT []
+CMD umask $WINE_UMASK && \
+    cd /build && \
+    export version=`cat /src/version` && \
+    vcwine cmake \
+        -G "NMake Makefiles JOM" \
+        -DCUR_VERSION=$version \
+        -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+        -DCMAKE_PREFIX_PATH="Z:\\opt\\Qt\\6.1.2\\msvc2019_64;C:\\usr" \
+        -DENABLE_TORCH=$ENABLE_TORCH \
+        /src && \
+    vcwine jom && \
+    DIST_SUFFIX=win64-x64 \
+    /src/docker/deploy-windows.sh
 
 

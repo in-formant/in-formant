@@ -2,19 +2,17 @@
 
 set -e
 
-tmp=/InFormant-$version
+tmp=$HOME/InFormant-$version
 
 mkdir -p $tmp
 
-GCC_DLL_DIR=/usr/lib/gcc/$HOST/9.3-posix
+if [ "x$CMAKE_BUILD_TYPE" = "xDebug" ]; then
+    deploy_extra_args=--debug
+else
+    deploy_extra_args=--release
+fi
 
-touch $GCC_DLL_DIR/g++.exe
-chmod +x $GCC_DLL_DIR/g++.exe
-
-export PATH=/opt/Qt/6.1.2/mingw81_64/bin:$GCC_DLL_DIR:$PATH
-export LD_LIBRARY_PATH=/opt/Qt/6.1.2/gcc_64/lib:$LD_LIBRARY_PATH
-
-/opt/Qt/6.1.2/mingw81_64/bin/windeployqt /build/in-formant.exe --dir $tmp --qmldir /src/src/qml
+vcwine /opt/Qt/6.1.2/msvc2019_64/bin/windeployqt.exe /build/in-formant.exe --dir $tmp --qmldir /src/src/qml $deploy_extra_args
 
 if [ "x$ENABLE_TORCH" = "x1" ]; then
 	name=InFormant-DF-$version
@@ -24,15 +22,16 @@ fi
 
 cp /build/in-formant.exe $tmp/$name.exe
 
-cp /build/external/libsamplerate/liblsr.dll \
-    /build/external/freetype/libfreetype.dll \
-    /usr/lib/gcc/$HOST/9.3-posix/libgomp-1.dll \
-    /usr/lib/gcc/$HOST/9.3-posix/libgfortran-5.dll \
-    /usr/lib/gcc/$HOST/9.3-posix/libquadmath-0.dll \
-    /usr/$HOST/bin/libwinpthread-1.dll \
-    /usr/$HOST/bin/libfftw3-3.dll \
-    /usr/$HOST/lib/libportaudio-2.dll \
+cp /build/external/libsamplerate/lsr.dll \
+    /opt/win/drive_c/usr/bin/fftw3.dll \
+    /opt/win/drive_c/usr/bin/portaudio_x64.dll \
     $tmp
+
+if [ "x$CMAKE_BUILD_TYPE" = "xDebug" ]; then
+    cp /build/external/freetype/freetyped.dll $tmp
+else
+    cp /build/external/freetype/freetype.dll  $tmp
+fi
 
 if [ "x$ENABLE_TORCH" = "x1" ]; then
     cp /usr/libtorch/bin/libopenblas.dll \
@@ -41,5 +40,5 @@ if [ "x$ENABLE_TORCH" = "x1" ]; then
         $tmp
 fi
 
-cd /dist
-zip -9 -r $name-$DIST_SUFFIX.zip $tmp
+cd $HOME
+zip -9 -r /dist/$name-$DIST_SUFFIX.zip $(basename $tmp)

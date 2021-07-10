@@ -22,7 +22,6 @@ Font::Font(FT_Library ft, const QString &font, int pixelSize)
     }
     
     FT_Set_Pixel_Sizes(face, 0, pixelSize);
-    initializeOpenGLFunctions();
     buildTextures(face);
     FT_Done_Face(face);
 }
@@ -62,6 +61,8 @@ const FontCharacter &Font::charFor(char c)
 
 void Font::buildTextures(FT_Face face)
 {
+    initializeOpenGLFunctions();
+    
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     for (unsigned char c = 0; c < 255; ++c) {

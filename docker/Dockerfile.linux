@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 AS build
+ROM ubuntu:20.04 AS build
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -93,6 +93,9 @@ RUN rm -rf /dockerbuild
 
 RUN apt-get update -y && apt-get install -y ccache
 ENV CCACHE_DIR=/ccache
+
+RUN groupadd -g 1000 swu && useradd -m -u 1000 -g swu swu
+USER swu
 
 CMD cd /build && \
         export version=`cat /src/version` && \

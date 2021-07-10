@@ -33,4 +33,5 @@ case $target in
         ;;
 esac
 
+mkdir -p $build/$target-df $dist
 docker run $extra_args --rm -it -e TERM=xterm-256color -e CMAKE_BUILD_TYPE=$build_type -e ENABLE_TORCH=1 -e target=$target -e ARCH=$arch -v $src:/src -v $build/$target-df:/build -v $dist:/dist -v $CCACHE_DIR:/ccache clorika/sabuilder:$tag
