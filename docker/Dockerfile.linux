@@ -1,4 +1,4 @@
-ROM ubuntu:20.04 AS build
+FROM ubuntu:20.04 AS build
 
 ENV DEBIAN_FRONTEND noninteractive
 
