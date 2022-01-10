@@ -20,7 +20,7 @@ static ArrayXd dct(const ArrayBase<Derived>& x, int trunc)
     ArrayXd out(trunc);
     out(0) = dct->data(0) / sqrt(4 * N);
     for (int i = 1; i < trunc; ++i) {
-        out(i) = dct->data(i);
+        out(i) = dct->data(i) / sqrt(2 * N);
     }
     return out;
 }
