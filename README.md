@@ -68,7 +68,7 @@ Before anything, you must install the various dependencies. Specifics will vary 
 * FFTW3
 * Eigen3
 * libtorch built with C++11 ABI (from PyTorch)
-* PortAudio v19 
+* PortAudio v19
 * PulseAudio (optional, unstable due to race condition)
 * ALSA (optional, causes inexplicably high CPU usage)
 
@@ -77,6 +77,7 @@ You will also need CMake and a compiler with C++17 support.
 This should be all, you're ready to start building:
 
 ```sh
+git submodule update --init --recursive external/*
 mkdir local
 cd local
 cmake ..
