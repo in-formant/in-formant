@@ -5,6 +5,11 @@ cmake_policy(SET CMP0077 NEW)
 cmake_policy(SET CMP0071 NEW)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET $ENV{MACOSX_DEPLOYMENT_TARGET})
+# TODO: remove this from the dockerfile so they don't have to be kept in sync?
+if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+    # NOTE: QT 6 uses `std::filesystem::path<char16_6>`, which is only available in 10.15
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15)
+endif()
 
 if("x${CUR_VERSION}" STREQUAL "x")
     set(CUR_VERSION "3.1.2")
@@ -382,6 +387,10 @@ if(AUDIO_USE_OBOE)
     target_include_directories(in-formant SYSTEM PRIVATE ${OBOE_DIR}/include)
     target_link_libraries(in-formant PRIVATE oboe)
     target_compile_definitions(in-formant PRIVATE -DAUDIO_USE_OBOE=1)
+endif()
+
+if( NOT AUDIO_USE_ALSA AND NOT AUDIO_USE_PORTAUDIO AND NOT AUDIO_USE_OBOE AND NOT AUDIO_USE_OBOE)
+    message( SEND_ERROR "must specify at least one audio backend!")
 endif()
 
 if (ENABLE_TORCH)
