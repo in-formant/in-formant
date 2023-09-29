@@ -389,6 +389,10 @@ if(AUDIO_USE_OBOE)
     target_compile_definitions(in-formant PRIVATE -DAUDIO_USE_OBOE=1)
 endif()
 
+if( NOT AUDIO_USE_ALSA AND NOT AUDIO_USE_PORTAUDIO AND NOT AUDIO_USE_OBOE AND NOT AUDIO_USE_OBOE)
+    message( SEND_ERROR "must specify at least one audio backend!")
+endif()
+
 if (ENABLE_TORCH)
     target_include_directories(in-formant SYSTEM PRIVATE ${TORCH_INCLUDE_DIRS})
     target_link_libraries(in-formant PRIVATE ${TORCH_LIBRARIES})
