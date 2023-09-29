@@ -10,6 +10,7 @@ fi
 src=$(pwd)
 build=$(pwd)/build
 dist=$(pwd)/dist
+: ${CCACHE_DIR:=$(pwd)/ccache}
 
 extra_args=
 
@@ -30,6 +31,11 @@ case $target in
         tag=android
         arch=${3:-x86}
         target=android-$arch
+        ;;
+    *)
+        echo "unrecognized target $target!"
+        echo "usage: $0 <target> [Release|RelWithDebInfo|Debug]"
+        exit 1
         ;;
 esac
 
