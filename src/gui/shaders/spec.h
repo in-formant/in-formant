@@ -4,10 +4,10 @@
 namespace Gui::Shaders {
 
 constexpr const char *specVertex = R"foo(
-#version 120
+#version 150
 
-attribute vec4 vertex; // <vec2 pos, vec2 tex>
-varying vec2 TexCoords;
+in vec4 vertex; // <vec2 pos, vec2 tex>
+out vec2 TexCoords;
 
 uniform mat4 projection;
 
@@ -15,13 +15,14 @@ void main()
 {
     gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);
     TexCoords = vertex.zw;
-} 
+}
 )foo";
 
 constexpr const char *specFragment = R"foo(
-#version 120
+#version 150
 
-varying vec2 TexCoords;
+in vec2 TexCoords;
+out vec4 FragColor;
 
 uniform sampler2D tex;
 
@@ -70,29 +71,29 @@ void main()
     float txl_y1 = (2.0 * 4096.0 + 1.0) / (2.0 * 4098.0);
     float txl_y2 = (2.0 * 4097.0 + 1.0) / (2.0 * 4098.0);
 
-    int nfft = int(texture2D(tex, vec2(txl_x, txl_y1)));
-    float sampleRate = float(texture2D(tex, vec2(txl_x, txl_y2)));
+    int nfft = int(texture(tex, vec2(txl_x, txl_y1)).r);
+    float sampleRate = texture(tex, vec2(txl_x, txl_y2)).r;
 
     float ty = TexCoords.y;
 
     float freq = reverse(transform(minFrequency) + ty * (transform(maxFrequency) - transform(minFrequency)));
 
     ty = freq / (sampleRate / 2.0);
-    
+
     ty *= (float(nfft) / 4096.0);
-   
+
     if (ty < 0.0 || ty >= 4096.0 / 4098.0) {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     }
     else {
-        float amplitude = float(texture2D(tex, vec2(TexCoords.x, ty)));
+        float amplitude = texture(tex, vec2(TexCoords.x, ty)).r;
 
         float adjusted = sqrt(amplitude / pow(10.0, maxGain / 20.0)) * 7.0;
         int index = int(clamp(floor(adjusted * 255.0), 0.0, 255.0));
 
-        gl_FragColor = vec4(colorMap[index], 1.0);
+        FragColor = vec4(colorMap[index], 1.0);
     }
-}  
+}
 )foo";
 
 }
