@@ -11,6 +11,7 @@
 
 #include <QApplication>
 #include <QMessageBox>
+#include <QSurfaceFormat>
 
 #ifdef _WIN32
 # include <windows.h>
@@ -65,6 +66,15 @@ int main(int argc, char **argv)
 #endif
 
     openFileLogger("InFormant");
+
+    // Request OpenGL 3.2 Core Profile for Apple Silicon compatibility.
+    // macOS 2.1 compat profile doesn't support GL_R32F textures needed
+    // for the spectrogram.
+    QSurfaceFormat fmt;
+    fmt.setVersion(3, 2);
+    fmt.setProfile(QSurfaceFormat::CoreProfile);
+    fmt.setSamples(4);
+    QSurfaceFormat::setDefaultFormat(fmt);
 
     std::signal(SIGTERM, signalHandler);
     std::signal(SIGINT, signalHandler);

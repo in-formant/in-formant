@@ -339,7 +339,7 @@ ApplicationWindow {
 
     IfCanvas {
         id: canvas
-        anchors.top: header.bottom
+        anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.right: parent.right
 
